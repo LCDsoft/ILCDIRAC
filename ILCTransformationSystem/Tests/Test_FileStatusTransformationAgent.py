@@ -1,5 +1,11 @@
+""" Test FileStatusTransformationAgent """
 
 import unittest
+import importlib
+
+from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import FileStatusTransformationAgent
+
+from mock import MagicMock
 
 from DIRAC import S_OK, S_ERROR
 
@@ -7,17 +13,17 @@ from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import
 
 __RCSID__ = "$Id$"
 
-class TestFileStatusTransformationAgent( unittest.TestCase ):
-
+class TestFSTAgent( unittest.TestCase ):
+  """ Test_fstAgent class """
   def setUp(self):
     self.agent = importlib.import_module('ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent')
     self.agent.AgentModule = MagicMock()
-    self.FSTAgent = FileStatusTransformationAgent()
+    self.fstAgent = FileStatusTransformationAgent()
 
-    self.FSTAgent.log = gLogger
-    self.FSTAgent.tClient = MagicMock( name = "transMock",spec=DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient)
-    self.FSTAgent.fcClient = MagicMock( name = "fcMock" , spec=DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient )
-    self.FSTAgent.reqClient = MagicMock( name = "reqMock" , spec=DIRAC.RequestManagementSystem.Client.ReqClient )
+    self.fstAgent.log = gLogger
+    self.fstAgent.tClient = MagicMock( name = "transMock",spec=DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient)
+    self.fstAgent.fcClient = MagicMock( name = "fcMock" , spec=DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient )
+    self.fstAgent.reqClient = MagicMock( name = "reqMock" , spec=DIRAC.RequestManagementSystem.Client.ReqClient )
 
     self.transformations = [{'Status':'Active',
                              'TransformationID': 1L,
@@ -31,16 +37,17 @@ class TestFileStatusTransformationAgent( unittest.TestCase ):
     pass
 
   def test_init(self):
-    self.assertIsInstance( self.FSTAgent, FileStatusTransformationAgent )
-    self.assertIsInstance( self.FSTAgent.tClient, MagicMock )
-    self.assertIsInstance( self.FSTAgent.fcClient, MagicMock )
-    self.assertIsInstance( self.FSTAgent.reqClient, MagicMock )
-    self.assertFalse( self.FSTAgent.enabled )
-    self.assertEquals( self.FSTAgent.transformationTypes, ['Replication'])
-    self.assertEquals( self.FSTAgent.transformationStatuses, ['Active'])
+    self.assertIsInstance( self.fstAgent, FileStatusTransformationAgent )
+    self.assertIsInstance( self.fstAgent.tClient, MagicMock )
+    self.assertIsInstance( self.fstAgent.fcClient, MagicMock )
+    self.assertIsInstance( self.fstAgent.reqClient, MagicMock )
+    self.assertFalse( self.fstAgent.enabled )
+    self.assertEquals( self.fstAgent.transformationTypes, ['Replication'])
+    self.assertEquals( self.fstAgent.transformationStatuses, ['Active'])
 
-
-  def _createRequestWithStatus(self, status):
+  @staticmethod
+  def createRequestWithStatus(status):
+    """ returns a mock request object with a given status"""
     request = MagicMock()
     request.Status=status
     return request
@@ -49,11 +56,11 @@ class TestFileStatusTransformationAgent( unittest.TestCase ):
     """ test if getRequestsForTasks fucntion returns only Done or Failed requests """
     requestStatuses = ["Waiting", "Failed", "Done", "Scheduled", "Assigned", "Canceled"]
     validStatuses = ['Done','Failed']
-    self.FSTAgent.reqClient.peekRequest = MagicMock()
-    self.FSTAgent.reqClient.peekRequest.side_effect = [S_OK(self._createRequestWithStatus(status)) for status in requestStatuses]
+    self.fstAgent.reqClient.peekRequest = MagicMock()
+    self.fstAgent.reqClient.peekRequest.side_effect = [S_OK(self.createRequestWithStatus(status)) for status in requestStatuses]
     fakeTasks = [{'ExternalID':reqID} for reqID in range(len(requestStatuses))]
 
-    res = self.FSTAgent.getRequestsForTasks(fakeTasks)
+    res = self.fstAgent.getRequestsForTasks(fakeTasks)
     reqObjList = res['Value']
 
     self.assertEquals(2, len(reqObjList))
@@ -68,8 +75,8 @@ class TestFileStatusTransformationAgent( unittest.TestCase ):
     statusDict = {'/ilc/prod/file1': 'Deleted',
                   '/ilc/prod/file2': 'Deleted'}
 
-    self.FSTAgent.treatFilesNotInFileCatalog(self.fakeTransID, lfns)
-    self.FSTAgent.tClient.setFileStatusForTransformation.called_once_with(self.fakeTransID, statusDict)
+    self.fstAgent.setFileStatusDeleted(self.fakeTransID, lfns.keys())
+    self.fstAgent.tClient.setFileStatusForTransformation.called_once_with(self.fakeTransID, statusDict)
 
 
   def test_all_replicas_lost(self):
@@ -85,21 +92,21 @@ class TestFileStatusTransformationAgent( unittest.TestCase ):
                                            'DESY-SRM': '/ilc/prod/file2'}}
 
     #all replicas lost for /ilc/prod/file1
-    self.FSTAgent._getDanglingLFNs = MagicMock(return_value = S_OK(['/ilc/prod/file1']))
-    self.FSTAgent.getReplicasForLFNs = MagicMock(return_value = S_OK({'Successful': replicas_after}))
+    self.fstAgent.getDanglingLFNs = MagicMock(return_value = S_OK(['/ilc/prod/file1']))
+    self.fstAgent.getReplicasForLFNs = MagicMock(return_value = S_OK({'Successful': replicas_after}))
 
-    self.FSTAgent.treatFilesFoundInFileCatalog(self.fakeTransID, replicas_before)
+    self.fstAgent.treatFilesFoundInFileCatalog(self.fakeTransID, replicas_before)
 
-    self.FSTAgent._getDanglingLFNs.assert_any_call('CERN-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
-    self.FSTAgent._getDanglingLFNs.assert_any_call('DESY-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
+    self.fstAgent.getDanglingLFNs.assert_any_call('CERN-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
+    self.fstAgent.getDanglingLFNs.assert_any_call('DESY-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
 
-    self.FSTAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'CERN-SRM'} })
-    self.FSTAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'DESY-SRM'} })
-    assert not self.FSTAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'CERN-SRM'} })
-    assert not self.FSTAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'DESY-SRM'} })
+    self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'CERN-SRM'} })
+    self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'DESY-SRM'} })
+    assert not self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'CERN-SRM'} })
+    assert not self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'DESY-SRM'} })
 
-    self.FSTAgent.getReplicasForLFNs.assert_called_once_with(['/ilc/prod/file1', '/ilc/prod/file2'])
-    self.FSTAgent.fcClient.removeFile.assert_called_once_with(['/ilc/prod/file1'])
+    self.fstAgent.getReplicasForLFNs.assert_called_once_with(['/ilc/prod/file1', '/ilc/prod/file2'])
+    self.fstAgent.fcClient.removeFile.assert_called_once_with(['/ilc/prod/file1'])
 
   def test_one_replica_lost(self):
     """ If one of the replicas is lost, replica entry from File Catalog should be removed"""
@@ -113,21 +120,21 @@ class TestFileStatusTransformationAgent( unittest.TestCase ):
                       '/ilc/prod/file2':  {'CERN-SRM': '/ilc/prod/file2'}}
 
     # mock all files lost on DESY-SRM
-    self.FSTAgent._getDanglingLFNs = MagicMock(side_effect = lambda se,lfns: S_OK(lfns) if se == 'DESY-SRM' else S_OK([]))
-    self.FSTAgent.getReplicasForLFNs = MagicMock(return_value = S_OK({'Successful':replicas_after}))
+    self.fstAgent.getDanglingLFNs = MagicMock(side_effect = lambda se,lfns: S_OK(lfns) if se == 'DESY-SRM' else S_OK([]))
+    self.fstAgent.getReplicasForLFNs = MagicMock(return_value = S_OK({'Successful':replicas_after}))
 
-    self.FSTAgent.treatFilesFoundInFileCatalog(self.fakeTransID, replicas_before)
+    self.fstAgent.treatFilesFoundInFileCatalog(self.fakeTransID, replicas_before)
 
-    self.FSTAgent._getDanglingLFNs.assert_any_call('CERN-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
-    self.FSTAgent._getDanglingLFNs.assert_any_call('DESY-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
+    self.fstAgent.getDanglingLFNs.assert_any_call('CERN-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
+    self.fstAgent.getDanglingLFNs.assert_any_call('DESY-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
 
-    self.FSTAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'DESY-SRM'} })
-    self.FSTAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'DESY-SRM'} })
-    assert not self.FSTAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'CERN-SRM'} })
-    assert not self.FSTAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'CERN-SRM'} })
+    self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'DESY-SRM'} })
+    self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'DESY-SRM'} })
+    assert not self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file1': {'SE': 'CERN-SRM'} })
+    assert not self.fstAgent.fcClient.removeReplica.assert_any_call({ '/ilc/prod/file2': {'SE': 'CERN-SRM'} })
 
-    self.FSTAgent.getReplicasForLFNs.assert_called_once_with(['/ilc/prod/file1', '/ilc/prod/file2'])
-    self.FSTAgent.fcClient.removeFile.assert_not_called()
+    self.fstAgent.getReplicasForLFNs.assert_called_once_with(['/ilc/prod/file1', '/ilc/prod/file2'])
+    self.fstAgent.fcClient.removeFile.assert_not_called()
 
   def test_no_replica_lost(self):
     """If no replica is lost then nothing should be removed from the File Catalog"""
@@ -138,72 +145,72 @@ class TestFileStatusTransformationAgent( unittest.TestCase ):
                                      'DESY-SRM': '/ilc/prod/file2'}}
 
     # mock no files lost on any SE
-    self.FSTAgent._getDanglingLFNs = MagicMock(return_value = S_OK([]))
-    self.FSTAgent.getReplicasForLFNs = MagicMock(return_value = S_OK({'Successful': replicas}))
+    self.fstAgent.getDanglingLFNs = MagicMock(return_value = S_OK([]))
+    self.fstAgent.getReplicasForLFNs = MagicMock(return_value = S_OK({'Successful': replicas}))
 
-    self.FSTAgent.treatFilesFoundInFileCatalog(self.fakeTransID, replicas)
+    self.fstAgent.treatFilesFoundInFileCatalog(self.fakeTransID, replicas)
 
-    self.FSTAgent._getDanglingLFNs.assert_any_call('CERN-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
-    self.FSTAgent._getDanglingLFNs.assert_any_call('DESY-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
+    self.fstAgent.getDanglingLFNs.assert_any_call('CERN-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
+    self.fstAgent.getDanglingLFNs.assert_any_call('DESY-SRM', ['/ilc/prod/file1', '/ilc/prod/file2'])
 
-    self.FSTAgent.fcClient.removeReplica.assert_not_called()
+    self.fstAgent.fcClient.removeReplica.assert_not_called()
 
-    self.FSTAgent.getReplicasForLFNs.assert_called_once_with(['/ilc/prod/file1', '/ilc/prod/file2'])
-    self.FSTAgent.fcClient.removeFile.assert_not_called()
+    self.fstAgent.getReplicasForLFNs.assert_called_once_with(['/ilc/prod/file1', '/ilc/prod/file2'])
+    self.fstAgent.fcClient.removeFile.assert_not_called()
 
 
   def test_get_transformations_failure(self):
-    """ FSTAgent should stop execution cycle if getTransformations returns an error """
-    self.FSTAgent.getTransformationTasks = MagicMock()
-    self.FSTAgent.tClient.getTransformations.return_value = S_ERROR()
+    """ fstAgent should stop execution cycle if getTransformations returns an error """
+    self.fstAgent.getTransformationTasks = MagicMock()
+    self.fstAgent.tClient.getTransformations.return_value = S_ERROR()
 
-    res = self.FSTAgent.execute()
-    self.FSTAgent.getTransformationTasks.assert_not_called()
+    res = self.fstAgent.execute()
+    self.fstAgent.getTransformationTasks.assert_not_called()
     self.assertFalse(res['OK'])
 
 
   def test_no_transformations_found(self):
-    """ FSTAgent should stop execution cycle if no transformations are found """
-    self.FSTAgent.getTransformationTasks = MagicMock()
-    self.FSTAgent.tClient.getTransformations.return_value = S_OK([])
+    """ fstAgent should stop execution cycle if no transformations are found """
+    self.fstAgent.getTransformationTasks = MagicMock()
+    self.fstAgent.tClient.getTransformations.return_value = S_OK([])
 
-    res = self.FSTAgent.execute()
-    self.FSTAgent.getTransformationTasks.assert_not_called()
+    res = self.fstAgent.execute()
+    self.fstAgent.getTransformationTasks.assert_not_called()
     self.assertTrue(res['OK'])
 
 
   def test_get_trans_tasks_failure(self):
-    """ FSTAgent should not fetch request IDs if getTransformationTasks returns an error """
-    self.FSTAgent.tClient.getTransformations.return_value = S_OK(self.transformations)
-    self.FSTAgent.tClient.getTransformationTasks.return_value = S_ERROR()
-    self.FSTAgent.getRequestIDsForTasks = MagicMock()
+    """ fstAgent should not fetch request IDs if getTransformationTasks returns an error """
+    self.fstAgent.tClient.getTransformations.return_value = S_OK(self.transformations)
+    self.fstAgent.tClient.getTransformationTasks.return_value = S_ERROR()
+    self.fstAgent.getRequestIDsForTasks = MagicMock()
 
-    self.FSTAgent.execute()
-    self.FSTAgent.getRequestIDsForTasks.assert_not_called()
+    self.fstAgent.execute()
+    self.fstAgent.getRequestIDsForTasks.assert_not_called()
 
 
   def test_no_tasks_found(self):
-    """ FSTAgent should not fetch request IDs for transformations that have no tasks """
-    self.FSTAgent.tClient.getTransformations.return_value = S_OK(self.transformations)
-    self.FSTAgent.tClient.getTransformationTasks.return_value = S_OK([])
-    self.FSTAgent.getRequestIDsForTasks = MagicMock()
+    """ fstAgent should not fetch request IDs for transformations that have no tasks """
+    self.fstAgent.tClient.getTransformations.return_value = S_OK(self.transformations)
+    self.fstAgent.tClient.getTransformationTasks.return_value = S_OK([])
+    self.fstAgent.getRequestIDsForTasks = MagicMock()
 
-    self.FSTAgent.execute()
-    self.FSTAgent.getRequestIDsForTasks.assert_not_called()
+    self.fstAgent.execute()
+    self.fstAgent.getRequestIDsForTasks.assert_not_called()
 
 
   def test_no_done_failed_requests_found(self):
-    """ FSTAgent should not fetch replicas if there are no Done or Failed requests  """
+    """ fstAgent should not fetch replicas if there are no Done or Failed requests  """
     taskIDs = [{'TaskID':1},{'TaskID':2}]
-    self.FSTAgent.tClient.getTransformations.return_value = S_OK(self.transformations)
-    self.FSTAgent.tClient.getTransformationTasks.return_value = S_OK(taskIDs)
-    self.FSTAgent.getRequestsForTasks = MagicMock(return_value = S_OK([]))
-    self.FSTAgent.getReplicasForLFNs = MagicMock()
+    self.fstAgent.tClient.getTransformations.return_value = S_OK(self.transformations)
+    self.fstAgent.tClient.getTransformationTasks.return_value = S_OK(taskIDs)
+    self.fstAgent.getRequestsForTasks = MagicMock(return_value = S_OK([]))
+    self.fstAgent.getReplicasForLFNs = MagicMock()
 
-    self.FSTAgent.execute()
-    self.FSTAgent.getReplicasForLFNs.assert_not_called()
+    self.fstAgent.execute()
+    self.fstAgent.getReplicasForLFNs.assert_not_called()
 
 
 if __name__ == "__main__":
-  suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestFileStatusTransformationAgent )
-  unittest.TextTestRunner( verbosity = 3 ).run( suite )
+  SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestFSTAgent )
+  TESTRESULT = unittest.TextTestRunner( verbosity = 3 ).run( SUITE )

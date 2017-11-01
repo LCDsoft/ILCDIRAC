@@ -1,22 +1,30 @@
 """
-declare files deleted that no longer exist on storage.....
+FileStatusTransformationAgent handles the following two cases:
+
+1) The file is still registered in the FileCatalog, but was lost on the storageElement,
+   then the replica is removed from the FileCatalog. If there is no other replica then
+   file is removed from the FileCatalog and file status is set to Deleted.
+
+
+2) The file was removed from Storage Element and from the FileCatalog, for example because
+   the DataRecoveryAgent removed it as duplicate. It is still part of the replication
+   transformation file list however and should be set to deleted
 """
+
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
 
-from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
-from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 from DIRAC.Resources.Storage.StorageElement import StorageElement
 
 __RCSID__ = "$Id$"
 
 AGENT_NAME = 'ILCTransformation/FileStatusTransformationAgent'
-MAXRESET = 10
 
 class FileStatusTransformationAgent( AgentModule ):
+  """ FileStatusTransformationAgent """
 
   def __init__( self, *args, **kwargs ):
     AgentModule.__init__( self, *args, **kwargs )
@@ -33,8 +41,7 @@ class FileStatusTransformationAgent( AgentModule ):
     self.reqClient = ReqClient()
 
   def beginExecution(self):
-    """Resets defaults after one cycle
-    """
+    """ Reload the configurations before every cycle """
     self.enabled = self.am_getOption('EnableFlag', False)
     self.transformationTypes = self.am_getOption( 'TransformationTypes', ["Replication"] )
     self.transformationStatuses = self.am_getOption( 'TransformationStatuses', ["Active"] )
@@ -42,7 +49,7 @@ class FileStatusTransformationAgent( AgentModule ):
     return S_OK()
 
   def execute( self ):
-
+    """ main execution loop of Agent"""
     res = self.getTransformations()
     if not res['OK']:
       self.log.error('Failure to get transformations', res['Message'])
@@ -104,7 +111,7 @@ class FileStatusTransformationAgent( AgentModule ):
     return S_OK()
 
   def getTransformations(self):
-    # get all transformation for a given type and statuses
+    """ returns transformations of a given type and status """
     res = self.tClient.getTransformations(condDict = {'Status' : self.transformationStatuses, 'Type' : self.transformationTypes})
     if not res['OK']:
       return res
@@ -112,24 +119,16 @@ class FileStatusTransformationAgent( AgentModule ):
     return S_OK(res['Value'])
 
   def getTransformationTasks(self, transID):
-    # get all tasks for a given transID
+    """ returns all tasks for a given transformation ID"""
     res = self.tClient.getTransformationTasks(condDict = {'TransformationID' : transID})
     if not res['OK']:
       return res
 
     return S_OK(res['Value'])
 
-  def getRequestsForTasks(self, tasks, transID):
-
-    requestIDs = []
-    for task in tasks:
-      requestName = '%08d_%08d' % (transID, task['TaskID'])
-      res = self.reqClient.getRequestIDForName( requestName )
-      if not res['OK']:
-        self.log.error("Failure to get request ID for request name %s" % requestName)
-        continue
-      requestIDs.append( res['Value'] )
-
+  def getRequestsForTasks(self, tasks):
+    """ returns all requests with statuses Done,Failed  which belong to the list of given tasks """
+    requestIDs = [task['ExternalID'] for task in tasks]
     requests = []
     for reqID in requestIDs:
       res = self.reqClient.peekRequest( reqID )
@@ -145,6 +144,7 @@ class FileStatusTransformationAgent( AgentModule ):
     return S_OK(requests)
 
   def getReplicasForLFNs(self, lfns):
+    """ returns all replicas for a list of given LFNs"""
     res = self.fcClient.getReplicas(lfns)
     if not res['OK']:
       self.log.error('Failure to get Replicas for lfns')
@@ -152,13 +152,9 @@ class FileStatusTransformationAgent( AgentModule ):
     
     return S_OK(res['Value'])
 
-  def treatFilesNotInFileCatalog(self, transID, lfns):
-
-    _newLFNStatuses = {}
-    for lfn in lfns:
-      self.log.notice('No Record found in file catalog for LFN: %s' %lfn)
-      # assumption file does not exist on SE
-      _newLFNStatuses[lfn] = 'Deleted'
+  def setFileStatusDeleted(self, transID, lfns):
+    """ sets transformation file status to Deleted """
+    _newLFNStatuses = {lfn: 'Deleted' for lfn in lfns}
 
     if not _newLFNStatuses:
       res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=_newLFNStatuses)
@@ -167,31 +163,38 @@ class FileStatusTransformationAgent( AgentModule ):
       else:
         self.log.notice('File Statuses updated Successfully %s' % res['Value'])
 
+  def getDanglingLFNs(self, se, lfns):
+    """ checks if the given files exist on a storage element and returns all files that were lost on SE """
+    seObj = None
+    if se not in self.seObjDict:
+      self.seObjDict[se] = StorageElement(se)
+    seObj = self.seObjDict[se]
+
+    res = seObj.exists(lfns)
+    if not res['OK']:
+      return res
+
+    filesNotFound = [lfn for lfn in res['Value']['Successful'] if not res['Value']['Successful'][lfn]]
+    return S_OK(filesNotFound)
 
   def treatFilesFoundInFileCatalog(self, transID, lfns):
-
+    """ removes replicas from FC if they no longer exist on SE, if there are no replicas for a file then
+        the file is deleted from FC and it's status is set to Deleted """
     #key is SE, value is list of LFNs which supposedly exist on SE
     seLfnsDict = {}
     _newLFNStatuses = {}
     _filesToBeRemoved = []
 
     for lfn in lfns:
-      SEsContainingReplicas = [se for se in lfns[lfn]]
-      for se in SEsContainingReplicas:
+      storageElements = lfns[lfn].keys()
+      for se in storageElements:
         if not se in seLfnsDict:
           seLfnsDict[se] = list()
         seLfnsDict[se].append(lfn)
 
     #check if files exists on storage elements
     for se in seLfnsDict:
-
-      seObj = None
-      if se not in self.seObjDict:
-        self.seObjDict[se] = StorageElement(se)
-
-      seObj = self.seObjDict[se]
-
-      res = seObj.exists(seLfnsDict[se])
+      res = self.getDanglingLFNs(se, seLfnsDict[se])
       if not res['OK']:
         self.log.error('Failed to determine if Files %s exist on SE %s' % (seLfnsDict[se], se))
         continue
