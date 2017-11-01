@@ -51,7 +51,7 @@ def _runFSTAgent():
   Script.parseCommandLine()
   if not params.checkSettings()['OK']:
     Script.showHelp()
-    dExit(1)
+    dexit(1)
 
   fstAgent = FileStatusTransformationAgent('ILCTransformationSystem/FileStatusTransformationAgent',
                                            'ILCTransformationSystem/FileStatusTransformationAgent',

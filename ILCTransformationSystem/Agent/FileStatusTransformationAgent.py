@@ -104,6 +104,8 @@ class FileStatusTransformationAgent( AgentModule ):
     if res['Value']['Successful']:
       self.treatFilesFoundInFileCatalog( transID, res['Value']['Successful'])
 
+    return S_OK()
+
   def getTransformations(self):
     """ returns transformations of a given type and status """
     res = self.tClient.getTransformations(condDict = {'Status' : self.transformationStatuses, 'Type' : self.transformationTypes})
