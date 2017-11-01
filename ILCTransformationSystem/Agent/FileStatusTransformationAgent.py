@@ -161,7 +161,7 @@ class FileStatusTransformationAgent( AgentModule ):
       _newLFNStatuses[lfn] = 'Deleted'
 
     if not _newLFNStatuses:
-      res = self.tClient(transID, newLFNsStatus=_newLFNStatuses)
+      res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=_newLFNStatuses)
       if not res['OK']:
         self.log.error('Failed to set statuses for LFNs ', res['Message'])
       else:
