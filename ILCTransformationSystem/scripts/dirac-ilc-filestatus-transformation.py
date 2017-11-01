@@ -9,10 +9,6 @@ Options:
 
 __RCSID__ = "$Id$"
 
-import importlib
-
-from mock import MagicMock
-
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR
 from DIRAC import exit as dexit
@@ -29,8 +25,12 @@ class _Params(object):
   def setTransID(self, transID):
     self.transID = transID
 
+  def setEnabled(self, flag):
+    self.enabled = flag
+    return S_OK()
+
   def registerSwitches(self):
-    Script.registerSwitch( "E", "enabled", "perform delete operations on file catalog", self.enabled )
+    Script.registerSwitch( "E", "enable", "perform delete operations on file catalog", self.setEnabled )
     Script.setUsageMessage("""%s <transformationID> -E""" % Script.scriptName)
 
   def checkSettings(self):
@@ -53,9 +53,9 @@ def _runFSTAgent():
     Script.showHelp()
     dExit(1)
 
-  agent = importlib.import_module('ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent')
-  agent.AgentModule = MagicMock()
-  fstAgent = FileStatusTransformationAgent()
+  fstAgent = FileStatusTransformationAgent('ILCTransformationSystem/FileStatusTransformationAgent',
+                                           'ILCTransformationSystem/FileStatusTransformationAgent',
+                                           'dirac-ilc-filestatus-transformation')
   fstAgent.log = gLogger
   fstAgent.enabled = params.enabled
 
