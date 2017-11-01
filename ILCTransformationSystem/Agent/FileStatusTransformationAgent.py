@@ -22,21 +22,20 @@ class FileStatusTransformationAgent( AgentModule ):
     AgentModule.__init__( self, *args, **kwargs )
     self.name = 'FileStatusTransformationAgent'
     self.enabled = False
-    self.shifterProxy = self.am_setOption( 'shifterProxy', 'DataManager' )
-
-    self.transformationTypes = self.am_getOption( 'TransformationTypes', ["Replication"] )
-    self.transformationStatuses = self.am_getOption( 'TransformationStatuses', ["Active"] )
+    self.transformationTypes = ["Replication"]
+    self.transformationStatuses = ["Active"]
     self.seObjDict = {}
 
     self.fcClient = FileCatalogClient()
     self.tClient = TransformationClient()
     self.reqClient = ReqClient()
-    self.dm = DataManager()
 
   def beginExecution(self):
     """Resets defaults after one cycle
     """
     self.enabled = self.am_getOption('EnableFlag', False)
+
+    self.shifterProxy = self.am_setOption( 'shifterProxy', 'DataManager' )
     self.transformationTypes = self.am_getOption( 'TransformationTypes', ["Replication"] )
     self.transformationStatuses = self.am_getOption( 'TransformationStatuses', ["Active"] )
 
@@ -50,15 +49,15 @@ class FileStatusTransformationAgent( AgentModule ):
       return S_ERROR( "Failure to get transformations" )
 
     transformations = res['Value']
+
     if not transformations:
       self.log.notice('No transformations found with Status %s and Type %s ' % (self.transformationStatuses, self.transformationTypes))
-      return S_OK()
+      return S_OK("No transformations found")
 
     #debug
     #transformations.append({'TransformationID': 401003L})
     #self.log.notice(transformations)
 
-    requestIDs = []
     for trans in transformations:
 
       transID = trans['TransformationID']
@@ -78,21 +77,28 @@ class FileStatusTransformationAgent( AgentModule ):
 
       self.log.notice("Number of tasks %d for trans ID %d" %(len(tasks), transID))
 
-      res = self.getRequestsForTasks(tasks, transID)
+      res = self.getRequestIDsForTasks(tasks, transID)
+      requestIDs = res['Value']
+      if not requestIDs:
+        self.log.error("No request IDs found for tasks %s for transformation %s" % (tasks, transID))
+        continue
+
+      res = self.getRequestsForTasks(requestIDs)
       requests = res['Value']
       if not requests:
         self.log.notice("No Requests found in RMS for transformation ID %s" % transID)
         continue
 
       lfns = [f.LFN for request in requests for op in request.__operations__ for f in op.__files__]
-      lfns.append('/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio')
+      #lfns.append('/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio')
 
       res = self.getReplicasForLFNs(lfns)
       if not res['OK']:
         self.log.error('Failure to find replicas for LFNs', res['Message'])
         continue
       
-      self.treatFilesNotInFileCatalog( transID, res['Value']['Failed'] )
+      if res['Value']['Failed']:
+        self.treatFilesNotInFileCatalog( transID, res['Value']['Failed'] )
 
       #debug
       #res['Value']['Successful']['/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio']=\
@@ -100,7 +106,8 @@ class FileStatusTransformationAgent( AgentModule ):
       #'CERN-DST-EOS':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio', \
       #'DESY-SRM':'/ilc/prod/clic/1.4tev/aa_qqll_all/ILD/DST/00004275/000/aa_qqll_all_dst_4275_9441.slcio'}
 
-      self.treatFilesFoundInFileCatalog( transID, res['Value']['Successful'])
+      if res['Value']['Successful']:
+        self.treatFilesFoundInFileCatalog( transID, res['Value']['Successful'])
 
     return S_OK()
 
@@ -120,7 +127,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_OK(res['Value'])
 
-  def getRequestsForTasks(self, tasks, transID):
+  def getRequestIDsForTasks(self, tasks, transID):
 
     requestIDs = []
     for task in tasks:
@@ -131,15 +138,19 @@ class FileStatusTransformationAgent( AgentModule ):
         continue
       requestIDs.append( res['Value'] )
 
+    return S_OK(requestIDs)
+
+  def getRequestsForTasks(self, requestIDs):
+
     requests = []
     for reqID in requestIDs:
       res = self.reqClient.peekRequest( reqID )
       if not res['OK']:
         self.log.error("Failure to get request data for request ID %s" % reqID)
         continue
-      
       #only consider done and failed requests
       request = res['Value']
+      self.log.notice('Status %s '%request.Status)
       if request.Status in ['Done', 'Failed']:
         requests.append( request )
 
@@ -214,7 +225,7 @@ class FileStatusTransformationAgent( AgentModule ):
     res = self.getReplicasForLFNs(lfns.keys())
     if not res['OK']:
       self.log.error('Failure to find replicas for LFNs', res['Message'])
-      continue
+      return S_ERROR()
 
     result = res['Value']['Successful']
 
