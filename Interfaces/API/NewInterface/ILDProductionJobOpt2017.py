@@ -41,6 +41,7 @@ class ILDProductionJobOpt2017( ProductionJob ):
         self.genprocname = ''
         self.usesofttag = False
         self.matchToInput=''
+        self.detector_basename = ''  # detector name for basename
 
 
     def setMatchToInput( self, matchToInput ):
@@ -103,6 +104,9 @@ class ILDProductionJobOpt2017( ProductionJob ):
         """ This is because in the ProductionJob, it's called Config
         """
         return self.setConfig( version )
+
+    def setDetectorForBasename(self, detector_basename):
+        self.detector_basename = detector_basename
         
     def setInputDataQuery( self, metadata ):
         """ Define the input data query needed, also get from the data the meta info requested to build the path
@@ -335,7 +339,7 @@ class ILDProductionJobOpt2017( ProductionJob ):
         path = self.basepath
 
         if not self._recBasePaths:
-          self.setReconstructionBasePaths( self.basepath, self.basepath )
+            self.setReconstructionBasePaths( self.basepath, self.basepath )
 
         # ##Need to resolve file names and paths
         # TODO: change basepath for ILD Don't forget LOG PATH in ProductionOutpuData module
@@ -353,8 +357,12 @@ class ILDProductionJobOpt2017( ProductionJob ):
                 metaPath = joinPathForMetaData( metaPath, self.evttype )
                 self.finalMetaDict[ metaPath ] = {'EvtType' : self.evttype.strip('/') }
 
-                metaPath = joinPathForMetaData( metaPath, self.detector )
-                self.finalMetaDict[ metaPath ] = { 'DetectorModel' : self.detector.strip('/') }
+                if self.detector_basename:
+                    metaPath = joinPathForMetaData( metaPath, self.detector_basename )
+                    self.finalMetaDict[ metaPath ] = { 'DetectorModel' : self.detector_basename.strip('/') }
+                else:
+                    metaPath = joinPathForMetaData( metaPath, self.detector )
+                    self.finalMetaDict[ metaPath ] = { 'DetectorModel' : self.detector.strip('/') }
 
                 metaPath = joinPathForMetaData( metaPath, ildConfigPath )
                 self.finalMetaDict[ metaPath ] = { 'ILDConfig': self.prodparameters['ILDConfigVersion'] }
@@ -442,10 +450,10 @@ class ILDProductionJobOpt2017( ProductionJob ):
         ## Add software to non-searchable metadata
         curpackage = "%s.%s" % (application.appname, application.version)
         if "SWPackages" in self.prodparameters:
-          if not self.prodparameters["SWPackages"].count(curpackage):
-            self.prodparameters["SWPackages"] += ";%s" % curpackage
+            if not self.prodparameters["SWPackages"].count(curpackage):
+                self.prodparameters["SWPackages"] += ";%s" % curpackage
         else:
-          self.prodparameters["SWPackages"] = curpackage
+            self.prodparameters["SWPackages"] = curpackage
 
         softmeta = application.appname + "." + application.version
         print "++++Software meta for", application.appname, "=", softmeta
@@ -510,7 +518,9 @@ class ILDProductionJobOpt2017( ProductionJob ):
                     
                     return self._reportError( "'ILDConfigVersion' should be defined to build the path")
 
-        if 'DetectorModel' in self.compatmeta:
+        if self.detector_basename:
+            self.basename += '.m' + self.detector_basename
+        elif 'DetectorModel' in self.compatmeta:
             self.basename += '.m' + self.compatmeta['DetectorModel']
         elif self.detector:
             self.basename += '.m' + self.detector
