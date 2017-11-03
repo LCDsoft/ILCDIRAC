@@ -58,17 +58,18 @@ Use flake8 and its git-hook to ensure compliance of any touched line of code::
   
   pip install flake8
   flake8 --install-hook git
-  git config flake8.strict true
+  git config --global flake8.strict true
   
 This doesn't allow commit if something is wrong. Use::
 
   git commit -m"message" --no-verify
 
 to overrule, but only if the messages are about lines not touched in the current
-commit, which can be checked with the following git aliases::
+commit, which can be checked with the following git aliases, add them to your ``.gitconfig``::
 
-  git config alias.flakeS = "!git diff --staged | flake8 --diff"
-  git config alias.flake = "!git diff | flake8 --diff"
+  [alias]
+    flakeS = "!git diff -U0 --staged | flake8 --diff"
+    flake = "!git diff -U0 | flake8 --diff"
 
 ``git flakeS`` works on staged changes, ``git flake`` on unstaged changes. These
 will print out any wrong formatting on staged changes. The iLCDirac continuous

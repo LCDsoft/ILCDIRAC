@@ -152,7 +152,7 @@ checkFormat:
     - source ../bashrc
     - git remote add CLICDP https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC.git
     - git fetch CLICDP ${ILCDIRAC_BRANCH}:${ILCDIRAC_BRANCH}
-    - git diff $(git merge-base HEAD CLICDP/$ILCDIRAC_BRANCH) | flake8 --diff
+    - git diff -U0 $(git merge-base HEAD CLICDP/$ILCDIRAC_BRANCH) | flake8 --diff
     - echo "Formatting correct"
 
 
