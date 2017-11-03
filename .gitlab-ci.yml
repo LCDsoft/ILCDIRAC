@@ -211,10 +211,19 @@ cvmfstests:SL6:
     - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
     - unset PYTHONOPTIMIZE
-    - .gitlab-ci.d/run-cvmfstests.sh
+    - .gitlab-ci.d/run-cvmfstests.sh || echo "arg"
+    - pwd || echo "arg"
+    - ls -l || echo "arg"
+    - ls -l */tmp* || echo "arg"
+    - ls -lR cvmfstests || echo "arg"
   coverage: '/\d+\%\s*$/'
   allow_failure: true
   retry: 2
+  artifacts:
+    paths:
+      - installation/ILCDIRAC/tmp*/Local_*/*Step*.log
+    when: on_failure
+    expire_in: 2 days
 
 
 cvmfstests:SL6Prod:
@@ -241,6 +250,11 @@ cvmfstests:SL6Prod:
   retry: 2
   only:
     - branches@CLICdp/iLCDirac/ILCDIRAC
+  artifacts:
+    paths:
+      - installation/ILCDIRAC/tmp*/Local_*/*Step*.log
+    when: on_failure
+    expire_in: 2 days
 
 
 cvmfstests:CC7:
@@ -266,7 +280,11 @@ cvmfstests:CC7:
   coverage: '/\d+\%\s*$/'
   allow_failure: true
   retry: 2
-
+  artifacts:
+    paths:
+      - installation/ILCDIRAC/tmp*/Local_*/*Step*.log
+    when: on_failure
+    expire_in: 2 days
 
 
 cvmfstests:CC7Prod:
@@ -293,6 +311,12 @@ cvmfstests:CC7Prod:
   retry: 2
   only:
     - branches@CLICdp/iLCDirac/ILCDIRAC
+  artifacts:
+    paths:
+      - installation/ILCDIRAC/tmp*/Local_*/*Step*.log
+    when: on_failure
+    expire_in: 2 days
+
 
 setests:SL6:
   stage: integration
