@@ -83,6 +83,19 @@ and references for iLCDirac and DIRAC can be found `here
 <DOC/Files/acknowledgements>`.
 
 
+
+Developer Guide
+===============
+
+Some hints for developing or contributing to iLCDirac are described in the
+Developer Guide
+
+.. toctree::
+   :maxdepth: 1
+
+   DOC/Files/DevGuide/index
+
+
 Indices and tables
 ==================
 

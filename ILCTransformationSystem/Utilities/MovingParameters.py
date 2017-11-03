@@ -122,6 +122,7 @@ class Params(object):
     trafoType = trafo['Value'][0]['Type'].split("_")[0]
 
     dataTypes = { 'MCGeneration': ['GEN'],
+                  'Split': ['GEN'],
                   'MCSimulation': ['SIM'],
                   'MCReconstruction': ['REC', 'DST'],
                 }.get( trafoType, [] )
