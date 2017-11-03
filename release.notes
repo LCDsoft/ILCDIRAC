@@ -1,3 +1,13 @@
+[v27r0p2]
+
+*ILCTransformationSystem
+
+CHANGE: (!170) ILDProductionJobOpt2017: The detector model in output path, basename and meta value for DetectorModel meta key can now be defined by a function ``setDetectorForBasename``. If the variable ``detector_basename`` is defined by the function, it is used for the detector name. Otherwise, the detector name is obtained from the detector name found in the input file.
+CHANGE: (!171) Allow `dirac-ilc-moving-transformation` to create moving transformation for Split productions
+CHANGE: (!167) FilenameEncoder: Detector model in the rec and dst file names could be different from the input sim files for ILD detector optimization production. In previous version, detector model in sim file name was used for the rec and dst file names. It is modified to use a detector model given by the production, namely given by the second argument of resolvePathsAndNames.getProdFilenameFromInput
+FIX: (!167) FilenameEncoder: Avoid "%" in the file name when constructing rec and dst files from sim file produced during DBD era.
+
+
 [v27r0p1]
 
 *WorkloadManagementSystem
