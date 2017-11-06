@@ -31,7 +31,7 @@ or both to register yourself as a VO member.
 
 .. note ::
 
-  Don't forget to send an email to the VO adminstrators if you are registering
+  Don't forget to send an email to the VO administrators if you are registering
   for the first time.
 
 
