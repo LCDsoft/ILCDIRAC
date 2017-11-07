@@ -158,19 +158,32 @@ class FileStatusTransformationAgent( AgentModule ):
       else:
         self.log.notice('File Statuses updated Successfully %s' % res['Value'])
 
-  def getDanglingLFNs(self, se, lfns):
-    """ checks if the given files exist on a storage element and returns all files that were lost on SE """
-    seObj = None
-    if se not in self.seObjDict:
-      self.seObjDict[se] = StorageElement(se)
-    seObj = self.seObjDict[se]
 
-    res = seObj.exists(lfns)
+  def exists(self, se, lfns):
+    """ checks if the given files exist on a storage element and returns all files that were lost on SE """
+
+    # check if replica exists in FC for the given storage element
+    res = self.fcClient.getReplicas(lfns)
     if not res['OK']:
       return res
 
-    filesNotFound = [lfn for lfn in res['Value']['Successful'] if not res['Value']['Successful'][lfn]]
-    return S_OK(filesNotFound)
+    result = res['Value']['Successful']
+    filesFoundInFC = [lfn for lfn, replicas in result.items() if se in replicas.keys()]
+
+    if se not in self.seObjDict:
+        self.seObjDict[se] = StorageElement(se)
+    seObj = self.seObjDict[se]
+
+    # for all replicas found in FC check if they physically exist on SE
+    res = seObj.exists(filesFoundInFC)
+    if not res['OK']:
+      return res
+
+    result = res['Value']['Successful']
+    filesFound = [lfn for lfn in result if result[lfn]]
+    filesNotFound = [lfn for lfn in lfns if lfn not in filesFound]
+
+    return S_OK({'Successful': filesFound, 'Failed': filesNotFound})
 
   def treatFilesFoundInFileCatalog(self, transID, lfns):
     """ removes replicas from FC if they no longer exist on SE, if there are no replicas for a file then
