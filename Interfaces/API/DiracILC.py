@@ -295,7 +295,8 @@ class DiracILC(Dirac):
 
        :param job: Instance of Job class or JDL string
        :type job: `ILCDIRAC.Interfaces.API.NewInterface.Job.Job` or str
-       :param mode: Submit job locally with mode = 'wms' (default), 'local' to run workflow or 'agent' to run full Job Wrapper locally
+       :param mode: Submit job locally with mode = ``'wms'`` (default), ``'local'`` to run workflow or ``'agent'`` to
+           run full Job Wrapper locally
        :type mode: str
        :returns: S_OK,S_ERROR
     """

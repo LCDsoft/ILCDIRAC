@@ -1,10 +1,14 @@
+.. _examplejobs:
+
+
 Complete Example Submission Scripts
 ===================================
 
 For description of the functions please see the
 :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob` class and the
 :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications` modules and finally at
-the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class.
+the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class. There are also some more
+instructions about :ref:`submittingjobs`.
 
 .. Note ::
 
@@ -44,7 +48,7 @@ Running Marlin
   marl.setNumberOfEvents(3)
 
   job.append(marl)
-  job.submit(dIlc)
+  job.submitJob(dIlc)
 
 Running DDSim
 -------------
@@ -77,7 +81,7 @@ Running DDSim
   D.setExtraCLIArguments( "--enableGun --gun.particle mu-" )
 
   job.append(D)
-  job.submit(dIlc)
+  job.submitJob(dIlc)
 
 
 Running DDSim and then Marlin
@@ -117,7 +121,7 @@ Running DDSim and then Marlin
   marlin.setOutputFile( recoFile )
 
   myJob.append( marlin )
-  myJob.submit( dIlc )
+  myJob.submitJob(dIlc)
 
 
 Running Overlay and Marlin
@@ -164,7 +168,7 @@ Running Overlay and Marlin
   job.append( marlin )
 
 
-  job.submit( dIlc )
+  job.submitJob(dIlc)
 
 
 Running Overlay and Marlin with CLIC_o3_v12
@@ -212,7 +216,7 @@ Running Overlay and Marlin with CLIC_o3_v12
   job.append( marlin )
 
 
-  job.submit( dIlc )
+  job.submitJob(dIlc)
 
 
 Automatic Job Splitting
@@ -253,4 +257,4 @@ There is also the option to automatically split jobs over inputfiles, see
   ddsim.setSteeringFile( "clic_steer.py" )
   ddsim.setOutputFile( "ddsimout.slcio" )
   myJob.append(ddsim)
-  myJob.submit( dIlc )
+  myJob.submitJob(dIlc)
