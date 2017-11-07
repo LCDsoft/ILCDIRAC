@@ -435,12 +435,13 @@ compiledoc:
     - export PYTHONPATH=$PWD/source:$PYTHONPATH
     - bash patchSphinx.sh
     - SPHINXOPTS=-wsphinxWarnings make completeDocumentation
-    - if [ -s sphinxWarnings ]; then cat sphinxWarnings; echo "Warnings When Creating Doc"; exit 1; fi
     - mv build/html ../../../ilcdiracdoc
+    - if [ -s sphinxWarnings ]; then cat sphinxWarnings; echo "Warnings When Creating Doc"; exit 1; fi
   artifacts:
     paths:
       - ilcdiracdoc
     expire_in: 2 hours
+    when: always
   allow_failure: true
   retry: 2
 

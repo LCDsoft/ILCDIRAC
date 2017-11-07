@@ -22,9 +22,9 @@ the right environment. For example, for CERN users, you can run::
 
 
   # bash users
-  source /afs/cern.ch/eng/clic/software/DIRAC/bashrc
+  source /cvmfs/clicdp.cern.ch/DIRAC/bashrc
   # (t)csh users
-  source /afs/cern.ch/eng/clic/software/DIRAC/cshrc
+  source /cvmfs/clicdp.cern.ch/DIRAC/cshrc
 
 Once this file has been sourced, you get access to all the DIRAC and iLCDirac
 commands, as well as the python API. You can proceed to the `Job section <submittingjobs>`_.

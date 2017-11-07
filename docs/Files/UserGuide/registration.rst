@@ -31,7 +31,7 @@ or both to register yourself as a VO member.
 
 .. note ::
 
-  Don't forget to send an email to the VO adminstrators if you are registering
+  Don't forget to send an email to the VO administrators if you are registering
   for the first time.
 
 
@@ -43,12 +43,33 @@ Use your Certificate to Obtain a DIRAC proxy
 
 Export your Certificate from the Browser
 ````````````````````````````````````````
+Depending on the way the certificate is delivered you either have to export it
+from you browser or import it in your browser. In the end you need to have it
+both in your browser, to sign up to a Virtual Organization and use the iLCDirac
+web interface; and in your file system to submit jobs, download files etc.
 
-You need to export your certificate from the broswers to the ``$HOME/.globus``
+If you cannot find the option, please use `your favourite search engine
+<https://google.com>`_ to find a guide for your browser, version and operating
+system combination.
+
+Export From the Browser
+.......................
+
+You need to export your certificate from the browsers to the ``$HOME/.globus``
 folder. Depending on which browser you have the option to export the certificate
 varies.
 
 In Firefox 52: Edit ► Preferences ► Advanced ► Certificates ► View certificates ► Your Certificates ► Backup
+
+
+Import to the Browser
+.....................
+
+Remember where you downloaded the certificate to and then import it to your
+browser, for example:
+
+In Firefox 52: Edit ► Preferences ► Advanced ► Certificates ► View certificates ► Your Certificates ► Import
+
 
 
 .. _convCert:
