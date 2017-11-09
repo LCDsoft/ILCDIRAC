@@ -561,6 +561,8 @@ deployToCVMFS:
     - cvmfs
   only:
     - tags@CLICdp/iLCDirac/ILCDIRAC
+  except:
+    - /.*-pre[0-9]*/
   dependencies: []
   script:
     - sudo -u cvclicdp -i scripts/installILCDIRAC.sh $CI_COMMIT_TAG $CERT_PASSPHRASE
