@@ -454,7 +454,7 @@ maketarballs:
     - docker
   dependencies:
     - install:SL6
-  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:cc7
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:slc6
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
