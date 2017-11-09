@@ -473,6 +473,26 @@ maketarballs:
   retry: 2
 
 
+makeILCConfig:
+  stage: create
+  only:
+    - tags@CLICdp/iLCDirac/ILCDIRAC
+  except:
+    - /.*-pre[0-9]*/
+  tags:
+    - docker
+  dependencies:
+    - install:SL6
+  image: gitlab-registry.cern.ch/clicdp/ilcdirac/ilcdirac-ci-images:slc6
+  script:
+    - mkdir -p ILCDIRACTars/defaults;  echo -e "Releases = https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC/raw/master/releases.cfg\nUploadCommand = ( cd %OUTLOCATION% ; tar -cf - *.tar.gz *.md5 *.cfg *.pdf *.html ) | ssh \`whoami\`@lxplus.cern.ch \'cd  /eos/project/l/lcd-web/www/ILCDIRACTars &&  tar -xvf - && ls *.tar.gz > tars.list\'\nBaseURL = http://lcd-data.web.cern.ch/lcd-data/ILCDIRACTars\nLocalInstallation\n{\n  Project = ILCDIRAC\n  ExternalsType = client\n  PythonVersion = 27\n  Release = $CI_COMMIT_TAG\n  LcgVer = $LCG_BUNDLE_VERSION\n  Setup = ILC-Production\n  ConfigurationServer = dips://voilcdirac01.cern.ch:9135/Configuration/Server, dips://voilcdirac012.cern.ch:9135/Configuration/Server\n}\n" > ILCDIRACTars/defaults/ilc.cfg
+  artifacts:
+    paths:
+      - ILCDIRACTars
+    expire_in: 2 hours
+  retry: 2
+
+
 deploydoc:
   stage: deploy
   tags:
@@ -546,6 +566,7 @@ deploytag:
     - tags@CLICdp/iLCDirac/ILCDIRAC
   dependencies:
     - maketarballs
+    - makeILCConfig
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/ILCDIRACTars/"
     CI_OUTPUT_DIR: "ILCDIRACTars"
