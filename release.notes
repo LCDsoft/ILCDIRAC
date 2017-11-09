@@ -1,3 +1,15 @@
+[v28r0p1]
+
+*Core
+
+NEW: Based on Dirac v6r19p4
+
+NEW: (!175) New utility for Configuration: :func:`~ILCDIRAC.Core.Utilities.Configuration.getOptionValue` to get option from any level of given path in Configuration
+
+*Workflow
+
+CHANGE: (!175) MaxNbFilesToGet can now be set at any level of the Overlay hierarchy
+
 [v28r0]
 
 *Core
