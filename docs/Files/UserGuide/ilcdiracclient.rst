@@ -12,6 +12,8 @@ Setting up an iLCDirac environment
 .. contents::
 
 
+.. _client:
+
 Using a pre existing installation (e.g. at CERN)
 ------------------------------------------------
 

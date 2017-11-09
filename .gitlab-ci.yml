@@ -10,13 +10,14 @@ stages:
   - integration
   - create
   - deploy
+  - deployToCVMFS
 
 variables:
   LCG_BUNDLE_VERSION: "v13r0"
-  ILCDIRAC_VERSION: "v28r0-pre1"
-  DIRAC_BRANCH: "integration"
-  SETUP: "ILC-Development"
-  ILCDIRAC_BRANCH: "master"
+  ILCDIRAC_VERSION: "v28r0"
+  DIRAC_BRANCH: "rel-v6r19"
+  SETUP: "ILC-Production"
+  ILCDIRAC_BRANCH: "Rel-v28r0"
 
 install:SL6:
   stage: install
@@ -551,3 +552,15 @@ deploytag:
   before_script: []
   after_script: []
   retry: 2
+
+deployToCVMFS:
+  stage: deployToCVMFS
+  tags:
+    - cvmfs
+  only:
+    - tags@CLICdp/iLCDirac/ILCDIRAC
+  dependencies: []
+  script:
+    - sudo -u cvclicdp -i scripts/installILCDIRAC.sh $CI_COMMIT_TAG $CERT_PASSPHRASE
+  before_script: []
+  after_script: []
