@@ -25,6 +25,7 @@ from DIRAC                                                   import S_OK, S_ERRO
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.WasteCPU                        import wasteCPUCycles
 from ILCDIRAC.Core.Utilities.OverlayFiles                    import energyWithLowerCaseUnit
+from ILCDIRAC.Core.Utilities.Configuration import getOptionValue
 
 
 __RCSID__ = "$Id$"
@@ -286,7 +287,10 @@ class OverlayInput (ModuleBase):
     totnboffilestoget = int(ceil(self.NbSigEvtsPerJob * numberofeventstoget / self.nbofeventsperfile))
 
     ##Limit ourself to some configuration maximum
-    maxNbFilesToGet = self.ops.getValue("/Overlay/MaxNbFilesToGet", 20)
+    levels = [self.machine, self.energytouse, self.detectormodel, self.BkgEvtType]
+    maxNbFilesToGet = getOptionValue(ops=self.ops, basePath="/Overlay", optionName="MaxNbFilesToGet", defaultValue=20,
+                                     levels=levels)
+
     if totnboffilestoget > maxNbFilesToGet:
       totnboffilestoget = maxNbFilesToGet
 #    res = self.ops.getOption("/Overlay/MaxConcurrentRunning",200)
