@@ -37,6 +37,7 @@ install:SL6:
     - git clone https://github.com/DIRACGrid/DIRAC.git --single-branch -b $DIRAC_BRANCH DIRAC
     - rm -rf ILCDIRAC
     - mv ../../ILCDIRAC_commit ILCDIRAC
+    - rm -rf .installCache
     - source bashrc
     - dirac-deploy-scripts
     - unset REQUESTS_CA_BUNDLE
@@ -72,6 +73,7 @@ install:CC7:
     - git clone https://github.com/DIRACGrid/DIRAC.git --single-branch -b $DIRAC_BRANCH DIRAC
     - rm -rf ILCDIRAC
     - mv ../../ILCDIRAC_commit ILCDIRAC
+    - rm -rf .installCache
     - source bashrc
     - dirac-deploy-scripts
     - unset REQUESTS_CA_BUNDLE
