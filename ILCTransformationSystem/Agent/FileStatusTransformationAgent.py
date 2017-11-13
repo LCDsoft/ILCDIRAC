@@ -1,15 +1,8 @@
 """
-FileStatusTransformationAgent handles the following two cases:
-
-1) The file is still registered in the FileCatalog, but was lost on the storageElement,
-   then the replica is removed from the FileCatalog. If there is no other replica then
-   file is removed from the FileCatalog and file status is set to Deleted.
-
-
-2) The file was removed from Storage Element and from the FileCatalog, for example because
-   the DataRecoveryAgent removed it as duplicate. It is still part of the replication
-   transformation file list however and should be set to deleted
+FST Agent DESCRIPTION HEREE
 """
+
+import json
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
@@ -23,6 +16,16 @@ __RCSID__ = "$Id$"
 
 AGENT_NAME = 'ILCTransformation/FileStatusTransformationAgent'
 
+ACTION_PROCESSED = 'set_processed'
+ACTION_DELETED = 'set_deleted'
+
+ACTION_RETRY = 'retry'
+ACTION_UNUSED = 'set_unused'
+ACTION_RESET_REQUEST = 'reset_request'
+
+REPLICATION_TRANS = 'Replication'
+MOVING_TRANS = 'Moving'
+
 class FileStatusTransformationAgent( AgentModule ):
   """ FileStatusTransformationAgent """
 
@@ -32,6 +35,7 @@ class FileStatusTransformationAgent( AgentModule ):
     self.enabled = False
     self.transformationTypes = ["Replication"]
     self.transformationStatuses = ["Active"]
+    self.transformationFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
     self.seObjDict = {}
 
     self.fcClient = FileCatalogClient()
@@ -43,6 +47,13 @@ class FileStatusTransformationAgent( AgentModule ):
     self.enabled = self.am_getOption('EnableFlag', False)
     self.transformationTypes = self.am_getOption( 'TransformationTypes', ["Replication"] )
     self.transformationStatuses = self.am_getOption( 'TransformationStatuses', ["Active"] )
+    self.transformationFileStatuses = self.am_getOption( 'TransformationFileStatuses', ["Assigned", "Problematic", "Processed", "Unused"] )
+
+    for status in self.transformationFileStatuses:
+      processFileFuncName = "check_%s_files" % (status.lower())
+      if not (hasattr(self, processFileFuncName) and callable(getattr(self, processFileFuncName))):
+        self.log.warn("Unable to process transformation files with status %s" % status)
+        self.transformationFileStatuses.remove(status)
 
     return S_OK()
 
@@ -61,49 +72,10 @@ class FileStatusTransformationAgent( AgentModule ):
     for trans in transformations:
 
       transID = trans['TransformationID']
-      res = self.processTransformation( transID )
+      res = self.processTransformation( transID, trans['SourceSE'], trans['TargetSE'] )
       if not res['OK']:
         self.log.error('Failure to process transformation with ID: %s' % transID)
         continue
-    return S_OK()
-
-  def processTransformation(self, transID):
-    """ process transformation for a given transformation ID """
-
-    self.log.notice('Processing Transformation ID: %s' % transID)
-    self.log.notice( "Get all tasks for transformation ID %s " % transID )
-
-    res = self.getTransformationTasks(transID)
-    if not res['OK']:
-      self.log.error('Failure to get Tasks for transformation', res['Message'])
-      return res
-
-    tasks = res['Value']
-    if not tasks:
-      self.log.notice('No Tasks found for transformation %s' % transID)
-      return res
-
-    self.log.notice("Number of tasks %d for trans ID %d" %(len(tasks), transID))
-
-    res = self.getRequestsForTasks(tasks)
-    requests = res['Value']
-    if not requests:
-      self.log.notice("No Requests found in RMS for transformation ID %s" % transID)
-      return res
-
-    lfns = [f.LFN for request in requests for op in request.__operations__ for f in op.__files__]
-
-    res = self.getReplicasForLFNs(lfns)
-    if not res['OK']:
-      self.log.error('Failure to find replicas for LFNs', res['Message'])
-      return res
-
-    if res['Value']['Failed']:
-      self.setFileStatusDeleted( transID, res['Value']['Failed'].keys() )
-
-    if res['Value']['Successful']:
-      self.treatFilesFoundInFileCatalog( transID, res['Value']['Successful'])
-
     return S_OK()
 
   def getTransformations(self):
@@ -112,7 +84,20 @@ class FileStatusTransformationAgent( AgentModule ):
     if not res['OK']:
       return res
 
-    return S_OK(res['Value'])
+    result = res['Value']
+    for trans in result:
+      res = self.tClient.getTransformationParameters(trans['TransformationID'], ['SourceSE', 'TargetSE'])
+      if not res['OK']:
+        self.log.error('Failure to get SourceSE and TargetSE parameters for Transformation ID %d' % trans['TransformationID'])
+        return res
+
+      if res['Value']['SourceSE']:
+        trans['SourceSE'] = eval( res['Value']['SourceSE'])
+
+      if res['Value']['TargetSE']:
+        trans['TargetSE'] = eval( res['Value']['TargetSE'])
+
+    return S_OK(result)
 
   def getTransformationTasks(self, transID):
     """ returns all tasks for a given transformation ID"""
@@ -122,34 +107,40 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_OK(res['Value'])
 
-  def getRequestsForTasks(self, tasks):
-    """ returns all requests with statuses Done,Failed  which belong to the list of given tasks """
-    requestIDs = [task['ExternalID'] for task in tasks]
-    requests = []
-    for reqID in requestIDs:
-      res = self.reqClient.peekRequest( reqID )
-      if not res['OK']:
-        self.log.error("Failure to get request data for request ID %s" % reqID)
-        continue
-      #only consider done and failed requests
-      request = res['Value']
-      if request.Status in ['Done', 'Failed']:
-        requests.append( request )
+  def getRequestStatus(self, transID, taskIDs):
 
-    return S_OK(requests)
-
-  def getReplicasForLFNs(self, lfns):
-    """ returns all replicas for a list of given LFNs"""
-    res = self.fcClient.getReplicas(lfns)
+    res = self.tClient.getTransformationTasks(condDict={'TransformationID':transID, 'TaskID':taskIDs})
     if not res['OK']:
-      self.log.error('Failure to get Replicas for lfns')
       return res
 
-    return S_OK(res['Value'])
+    result = res['Value']
+    requestStatus = []
+    for task in result:
+      requestStatus.append({task['TaskID']: {'RequestStatus': task['ExternalStatus'], 'RequestID': task['ExternalID']}})
 
-  def setFileStatusDeleted(self, transID, lfns):
+    return S_OK( requestStatus )
+
+  def getDataTransformationType(self, transID):
+
+    res = self.getTransformationParameters(transID, 'Body')
+    if not res['OK']:
+      return res
+
+    try:
+      body = json.loads(res['Value'])
+      for operation in body:
+        if 'RemoveReplica' in operation:
+          return S_OK( MOVING_TRANS )
+    except:
+      if 'RemoveReplica' in res['Value']:
+        return S_OK( MOVING_TRANS )
+
+    return S_OK( REPLICATION_TRANS )
+
+
+  def setFileStatus(self, transID, lfns, status):
     """ sets transformation file status to Deleted """
-    _newLFNStatuses = {lfn: 'Deleted' for lfn in lfns}
+    _newLFNStatuses = {lfn: status for lfn in lfns}
 
     if self.enabled and _newLFNStatuses:
       res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=_newLFNStatuses)
@@ -158,85 +149,215 @@ class FileStatusTransformationAgent( AgentModule ):
       else:
         self.log.notice('File Statuses updated Successfully %s' % res['Value'])
 
+  def selectFailedRequests( self, transFile):
 
-  def exists(self, se, lfns):
-    """ checks if the given files exist on a storage element and returns all files that were lost on SE """
+    res = self.getRequestStatus(transID, transFile['TaskID'])
+    if not res['OK']:
+      self.log.error('Failure to get Request Status for Assigned File')
+      return False
+    result = res['Value']
 
-    # check if replica exists in FC for the given storage element
+    if result[taskID]['ExternalStatus'] == 'Failed':
+      return True
+
+    return False
+
+  def retryStategyForFiles(self, transFiles):
+
+    taskIDs = [f['TaskID'] for f in transFiles]]
+    res = self.getRequestStatus( transID, taskIDs)
+    if not res['OK']:
+      self.log.error('Failure to get Request Status')
+      return res
+
+    result = {}
+    for f in res['Value']:
+      res = self.reqClient.peekRequest(f['ExternalID'])
+      if not res['OK']:
+        self.log.notice('Request does not exist %d setting file status to unused' % reqID)
+        result['TaskID'] = ACTION_UNUSED
+      else:
+        result['TaskID'] = ACTION_RESET_REQUEST
+
+    return S_OK(result)
+
+
+  def check_assigned_files(self, actions, transFiles, transType):
+
+    for f in trasFiles:
+      if f['AvailableOnSource'] and f['AvailableOnTarget']:
+        if transType == 'Replication':
+          actions[ACTION_PROCESSED].append(f)
+        elif transType == 'Moving':
+          actions[ACTION_RETRY].append(f)
+        else:
+          self.log.warn('Unknown TransType %s '%transType)
+
+      elif f['AvailableOnSource'] and not f['AvailableOnTarget']:
+        actions[ACTION_RETRY].append(f)
+
+      elif not f['AvailableOnSource'] and f['AvailableOnTarget']:
+        actions[ACTION_PROCESSED].append(f)
+
+      else:
+        #not on src and target
+        actions[ACTION_DELETED].append(f)
+
+  def check_unused_files(self, actions, transFiles, transType):
+
+    for f in transFiles:
+      if not f['AvailableOnSource'] and not f['AvailableOnTarget']:
+        actions[ACTION_DELETED].append(f)
+
+      if not f['AvailableOnSource'] and f['AvailableOnTarget']:
+        actions[ACTION_PROCESSED].append(f)
+
+  def check_processed_files(self, actions, transFiles, transType):
+
+    for f in transFiles:
+      if f['AvailableOnSource'] and f['AvailableOnTarget'] and transType is 'Moving':
+        actions[ACTION_RETRY].append(f)
+
+      if f['AvailableOnSource'] and not f['AvailableOnTarget']:
+        actions[ACTION_RETRY].append(f)
+
+      if not f['AvailableOnSource'] and not f['AvailableOnTarget']:
+        actions[ACTION_DELETED].append(f)
+
+  def check_problematic_files(self, actions, transFiles, transType):
+
+    for f in transFiles:
+      if f['AvailableOnSource'] and f['AvailableOnTarget'] and transType is 'Moving':
+        actions[ACTION_RETRY].append(f)
+
+      elif f['AvailableOnSource'] and not f['AvailableOnTarget']:
+        actions[ACTION_RETRY].append(f)
+
+      elif not f['AvailableOnSource'] and f['AvailableOnTarget']:
+        actions[ACTION_PROCESSED].append(f)
+
+      else:
+        #not available on source and target
+        actions[ACTION_DELETED].append(f)
+
+
+  def applyActions( self, transID, actions):
+
+    for action in actions:
+      if action is ACTION_PROCESSED:
+        lfns = [f['LFN'] for f in actions[ACTION_PROCESSED]]
+        self.setFileStatus( transID, lfns, 'Processed')
+
+      elif action is ACTION_DELETED:
+        lfns = [f['LFN'] for f in actions[ACTION_DELETED]]
+        self.setFileStatus( transID, lfns, 'Deleted')
+
+      elif action is ACTION_RETRY:
+        #if there is a request in RMS then reset request otherwise set file status unused
+        res = retryStategyForFiles(action[ACTION_RETRY])
+        if not res['OK']:
+          self.log.error('Failure to determine retry strategy ( set unused / reset request) for transformation files')
+          continue
+
+        retryStrategy = res['value']
+        for f in action[ACTION_RETRY]:
+          if retryStategy[f['TaskID']] is ACTION_RESET_REQUEST:
+
+            res = self.reqClient.resetFailedRequest(f['ExternalID'])
+            if not res['OK']:
+              self.log.error('Failure to reset request %s' %f['ExternalID'])
+              continue
+
+            res = self.tClient.setTaskStatus( transID, f['TaskID'], 'Waiting' )
+            if not res['OK']:
+              self.log.error('Failure to set Waiting status for Task ID %d', f['TaskID'])
+              continue
+
+          if retryStategy[f['TaskID']] is ACTION_UNUSED:
+            self.setFileStatus( transID, f['LFN'], 'Unused')
+
+      else:
+        self.log.warn('Unknown action %s' % action)
+
+
+  def exists(self, SEs, lfns):
+    """ checks if the given files exist on a list of storage elements"""
+
     res = self.fcClient.getReplicas(lfns)
     if not res['OK']:
       return res
 
     result = res['Value']['Successful']
-    filesFoundInFC = [lfn for lfn, replicas in result.items() if se in replicas.keys()]
+    filesFound = [lfn for lfn, replicas in result.items() if set(SEs).issubset(replicas.keys())]
 
-    if se not in self.seObjDict:
+    for se in SEs:
+      if se not in self.seObjDict:
         self.seObjDict[se] = StorageElement(se)
-    seObj = self.seObjDict[se]
+      seObj = self.seObjDict[se]
 
-    # for all replicas found in FC check if they physically exist on SE
-    res = seObj.exists(filesFoundInFC)
+      res = seObj.exists(filesFound)
+      if not res['OK']:
+        return res
+      result = res['Value']['Successful']
+      filesFound = [lfn for lfn in result if result[lfn]]
+
+    result = {lfn: True if lfn in filesFound else False for lfn in lfns}
+
+    return S_OK( result )
+
+  def processTransformation(self, transID, sourceSE, targetSEs ):
+    """ process transformation for a given transformation ID """
+    res = self.getDataTransformationType(transID)
     if not res['OK']:
+      self.log.error('Failure to determine Data Transformation Type')
       return res
 
-    result = res['Value']['Successful']
-    filesFound = [lfn for lfn in result if result[lfn]]
-    filesNotFound = [lfn for lfn in lfns if lfn not in filesFound]
+    transType = res['Value']
 
-    return S_OK({'Successful': filesFound, 'Failed': filesNotFound})
+    actions = {}
+    actions[ACTION_PROCESSED] = []
+    actions[ACTION_RETRY] = []
+    actions[ACTION_DELETED] = []
 
-  def treatFilesFoundInFileCatalog(self, transID, lfns):
-    """ removes replicas from FC if they no longer exist on SE, if there are no replicas for a file then
-        the file is deleted from FC and it's status is set to Deleted """
-    #key is SE, value is list of LFNs which supposedly exist on SE
-    seLfnsDict = {}
-    _filesRemoved = []
-    _filesToBeRemoved = []
-
-    for lfn, replicas in lfns.items():
-      storageElements = replicas.keys()
-      for se in storageElements:
-        if not se in seLfnsDict:
-          seLfnsDict[se] = list()
-        seLfnsDict[se].append(lfn)
-
-    #check if files exists on storage elements
-    for se, files in seLfnsDict.items():
-      res = self.getDanglingLFNs(se, files)
+    for status in self.transformationFileStatuses:
+      res = self.tClient.getTransformationFiles(condDict={'TransformationID': transID, 'Status': status})
       if not res['OK']:
-        self.log.error('Failed to determine if Files %s exist on SE %s' % (files, se))
+        self.log.error('Failure to get Transformation Files with Status %s for Transformation ID %d' % (status, transID))
+        return res
+
+      transFiles = res['Value']
+      if not transFiles:
+        self.log.notice("No Transformation Files found with status %s for Transformation ID %d" %(status, transID))
         continue
+      else:
+        self.log.notice("Processing Transformation Files with status %s for TransformationID %s " %(status, transID))
 
-      for lfn in res['Value']:
-        self.log.notice("File %s does not physically exists on SE %s " % (lfn , se))
-        #remove replica from catalog
-        if self.enabled:
-          res = self.fcClient.removeReplica( { lfn:{'SE': se} } )
-          if not res['OK']:
-            self.log.error('Failed to remove Replica %s on SE %s from File Catalog ' % (lfn, se))
-            continue
-          self.log.notice('Successfully removed Replica %s on SE %s from File Catalog ' %(lfn, se))
+      # only process Assigned files with failed requests
+      if status == 'Assigned':
+        transFiles = filter(self.selectFailedRequests, transFiles)
 
-    res = self.getReplicasForLFNs(lfns.keys())
-    if not res['OK']:
-      self.log.error('Failure to find replicas for LFNs', res['Message'])
-      return S_ERROR()
+      lfns = [f['LFN'] for f in transFiles]
 
-    result = res['Value']['Successful']
-
-    for lfn in result:
-      if not result[lfn]:
-        self.log.notice('LFN %s does not have any replicas, removing file from File Catalog' % lfn)
-        _filesToBeRemoved.append(lfn)
-
-    if self.enabled and _filesToBeRemoved:
-      res = self.fcClient.removeFile( _filesToBeRemoved )
+      res = self.exists(sourceSE, lfns)
       if not res['OK']:
-        self.log.notice('Failed to remove files from File Catalog', res['Message'])
+        return res
 
-      for lfn in res['Value']['Successful']:
-        self.log.notice('File %s successfully removed from File Catalog' % lfn)
-        _filesRemoved.append(lfn)
+      resultSourceSe = res['Value']
 
-      if _filesRemoved:
-        self.setFileStatusDeleted(transID, _filesRemoved)
+      res = self.exists(targetSEs, lfns)
+      if not res['OK']:
+        return res
+
+      resultTargetSEs = res['Value']
+
+      #fill transFile dict with files availability on Source and Target SE information
+      for transFile in transFiles:
+        lfn = transFile['LFN']
+        transFile['AvailableOnSource'] = resultSourceSe[lfn]
+        transFile['AvailableOnTarget'] = resultTargetSEs[lfn]
+
+      checkFilesFuncName = "check_%s_files" % status.lower()
+      checkFiles = getattr(self, checkFilesFuncName)
+      checkFiles( actions, transFiles, transType )
+
+    self.applyActions( transID, actions )
