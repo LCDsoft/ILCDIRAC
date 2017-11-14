@@ -1,5 +1,5 @@
 """
-FST Agent DESCRIPTION HEREE
+FST Agent DESCRIPTION HERE
 """
 
 import json
@@ -16,12 +16,12 @@ __RCSID__ = "$Id$"
 
 AGENT_NAME = 'ILCTransformation/FileStatusTransformationAgent'
 
-ACTION_PROCESSED = 'set_processed'
-ACTION_DELETED = 'set_deleted'
+SET_PROCESSED = 'set_processed'
+SET_DELETED = 'set_deleted'
 
-ACTION_RETRY = 'retry'
-ACTION_UNUSED = 'set_unused'
-ACTION_RESET_REQUEST = 'reset_request'
+RETRY = 'retry'
+SET_UNUSED = 'set_unused'
+RESET_REQUEST = 'reset_request'
 
 REPLICATION_TRANS = 'Replication'
 MOVING_TRANS = 'Moving'
@@ -70,12 +70,12 @@ class FileStatusTransformationAgent( AgentModule ):
       return S_OK()
 
     for trans in transformations:
-
       transID = trans['TransformationID']
-      res = self.processTransformation( transID, trans['SourceSE'], trans['TargetSE'] )
+      res = self.processTransformation( transID, trans['SourceSE'], trans['TargetSE'], trans['DataTransType'] )
       if not res['OK']:
         self.log.error('Failure to process transformation with ID: %s' % transID)
         continue
+
     return S_OK()
 
   def getTransformations(self):
@@ -91,11 +91,17 @@ class FileStatusTransformationAgent( AgentModule ):
         self.log.error('Failure to get SourceSE and TargetSE parameters for Transformation ID %d' % trans['TransformationID'])
         return res
 
-      if res['Value']['SourceSE']:
+      if res['Value']['SourceSE'] and res['Value']['TargetSE']:
         trans['SourceSE'] = eval( res['Value']['SourceSE'])
-
-      if res['Value']['TargetSE']:
         trans['TargetSE'] = eval( res['Value']['TargetSE'])
+      else:
+        return S_ERROR()
+
+      res = self.getDataTransformationType(transID)
+      if not res['OK']:
+        self.log.error('Failure to determine Data Transformation Type')
+        return res
+      trans['DataTransType'] = res['Value']
 
     return S_OK(result)
 
@@ -111,12 +117,13 @@ class FileStatusTransformationAgent( AgentModule ):
 
     res = self.tClient.getTransformationTasks(condDict={'TransformationID':transID, 'TaskID':taskIDs})
     if not res['OK']:
+      self.log.error('Failure to get Transformation Tasks for Transformation ID %s ' % transID)
       return res
 
     result = res['Value']
-    requestStatus = []
+    requestStatus = {}
     for task in result:
-      requestStatus.append({task['TaskID']: {'RequestStatus': task['ExternalStatus'], 'RequestID': task['ExternalID']}})
+      requestStatus[task['TaskID']]= {'RequestStatus': task['ExternalStatus'], 'RequestID': task['ExternalID']}
 
     return S_OK( requestStatus )
 
@@ -162,119 +169,124 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return False
 
-  def retryStategyForFiles(self, transFiles):
+  def retryStrategyForFiles(self, transFiles):
 
-    taskIDs = [f['TaskID'] for f in transFiles]]
+    taskIDs = [transFile['TaskID'] for transFile in transFiles]]
     res = self.getRequestStatus( transID, taskIDs)
     if not res['OK']:
-      self.log.error('Failure to get Request Status')
       return res
+    result = res['Value']
 
-    result = {}
-    for f in res['Value']:
-      res = self.reqClient.peekRequest(f['ExternalID'])
+    retryStrategy = {}
+    for taskID in taskIDs:
+      res = self.reqClient.peekRequest(result[taskID]['ExternalID'])
       if not res['OK']:
-        self.log.notice('Request does not exist %d setting file status to unused' % reqID)
-        result['TaskID'] = ACTION_UNUSED
+        self.log.notice('Request %s does not exist setting file status to unused' % result[taskID]['ExternalID'])
+        retryStrategy[taskID] = SET_UNUSED
       else:
-        result['TaskID'] = ACTION_RESET_REQUEST
+        retryStrategy[taskID] = RESET_REQUEST
 
-    return S_OK(result)
+    return S_OK(retryStrategy)
 
 
   def check_assigned_files(self, actions, transFiles, transType):
 
-    for f in trasFiles:
-      if f['AvailableOnSource'] and f['AvailableOnTarget']:
-        if transType == 'Replication':
-          actions[ACTION_PROCESSED].append(f)
-        elif transType == 'Moving':
-          actions[ACTION_RETRY].append(f)
+    for transFile in trasFiles:
+      if transFile['AvailableOnSource'] and transFile['AvailableOnTarget']:
+        if transType == REPLICATION_TRANS:
+          actions[SET_PROCESSED].append(transFile)
+        elif transType == MOVING_TRANS:
+          actions[RETRY].append(transFile)
         else:
           self.log.warn('Unknown TransType %s '%transType)
 
-      elif f['AvailableOnSource'] and not f['AvailableOnTarget']:
-        actions[ACTION_RETRY].append(f)
+      elif transFile['AvailableOnSource'] and not transFile['AvailableOnTarget']:
+        actions[RETRY].append(transFile)
 
-      elif not f['AvailableOnSource'] and f['AvailableOnTarget']:
-        actions[ACTION_PROCESSED].append(f)
+      elif not transFile['AvailableOnSource'] and transFile['AvailableOnTarget']:
+        actions[SET_PROCESSED].append(transFile)
 
       else:
         #not on src and target
-        actions[ACTION_DELETED].append(f)
+        actions[SET_DELETED].append(transFile)
 
   def check_unused_files(self, actions, transFiles, transType):
 
-    for f in transFiles:
-      if not f['AvailableOnSource'] and not f['AvailableOnTarget']:
-        actions[ACTION_DELETED].append(f)
+    for transFile in transFiles:
+      if not transFile['AvailableOnSource'] and transFile['AvailableOnTarget']:
+        actions[SET_PROCESSED].append(transFile)
 
-      if not f['AvailableOnSource'] and f['AvailableOnTarget']:
-        actions[ACTION_PROCESSED].append(f)
+      if not transFile['AvailableOnSource'] and not transFile['AvailableOnTarget']:
+        actions[SET_DELETED].append(transFile)
 
   def check_processed_files(self, actions, transFiles, transType):
 
-    for f in transFiles:
-      if f['AvailableOnSource'] and f['AvailableOnTarget'] and transType is 'Moving':
-        actions[ACTION_RETRY].append(f)
+    for transFile in transFiles:
+      if transFile['AvailableOnSource'] and transFile['AvailableOnTarget'] and transType == MOVING_TRANS:
+        actions[RETRY].append(transFile)
 
-      if f['AvailableOnSource'] and not f['AvailableOnTarget']:
-        actions[ACTION_RETRY].append(f)
+      if transFile['AvailableOnSource'] and not transFile['AvailableOnTarget']:
+        actions[RETRY].append(transFile)
 
-      if not f['AvailableOnSource'] and not f['AvailableOnTarget']:
-        actions[ACTION_DELETED].append(f)
+      if not transFile['AvailableOnSource'] and not transFile['AvailableOnTarget']:
+        actions[SET_DELETED].append(transFile)
 
   def check_problematic_files(self, actions, transFiles, transType):
 
-    for f in transFiles:
-      if f['AvailableOnSource'] and f['AvailableOnTarget'] and transType is 'Moving':
-        actions[ACTION_RETRY].append(f)
+    for transFile in transFiles:
+      if transFile['AvailableOnSource'] and transFile['AvailableOnTarget']:
+        if transType == REPLICATION_TRANS:
+          actions[SET_PROCESSED].append(transFile)
+        elif transType == MOVING_TRANS:
+          actions[RETRY].append(transFile)
+        else:
+          self.log.warn('Unknown TransType %s '%transType)
 
-      elif f['AvailableOnSource'] and not f['AvailableOnTarget']:
-        actions[ACTION_RETRY].append(f)
+      elif transFile['AvailableOnSource'] and not transFile['AvailableOnTarget']:
+        actions[RETRY].append(transFile)
 
-      elif not f['AvailableOnSource'] and f['AvailableOnTarget']:
-        actions[ACTION_PROCESSED].append(f)
+      elif not transFile['AvailableOnSource'] and transFile['AvailableOnTarget']:
+        actions[SET_PROCESSED].append(transFile)
 
       else:
         #not available on source and target
-        actions[ACTION_DELETED].append(f)
+        actions[SET_DELETED].append(transFile)
 
 
   def applyActions( self, transID, actions):
 
-    for action in actions:
-      if action is ACTION_PROCESSED:
-        lfns = [f['LFN'] for f in actions[ACTION_PROCESSED]]
+    for action in actions.keys():
+      if action == SET_PROCESSED:
+        lfns = [transFile['LFN'] for transFile in actions[SET_PROCESSED]]
         self.setFileStatus( transID, lfns, 'Processed')
 
-      elif action is ACTION_DELETED:
-        lfns = [f['LFN'] for f in actions[ACTION_DELETED]]
+      elif action == SET_DELETED:
+        lfns = [transFile['LFN'] for transFile in actions[SET_DELETED]]
         self.setFileStatus( transID, lfns, 'Deleted')
 
-      elif action is ACTION_RETRY:
+      elif action == RETRY:
         #if there is a request in RMS then reset request otherwise set file status unused
-        res = retryStategyForFiles(action[ACTION_RETRY])
+        res = retryStrategyForFiles(action[RETRY])
         if not res['OK']:
           self.log.error('Failure to determine retry strategy ( set unused / reset request) for transformation files')
           continue
 
         retryStrategy = res['value']
-        for f in action[ACTION_RETRY]:
-          if retryStategy[f['TaskID']] is ACTION_RESET_REQUEST:
+        for transFile in action[RETRY]:
+          if retryStrategy[transFile['TaskID']] == RESET_REQUEST:
 
-            res = self.reqClient.resetFailedRequest(f['ExternalID'])
+            res = self.reqClient.resetFailedRequest(transFile['ExternalID'])
             if not res['OK']:
-              self.log.error('Failure to reset request %s' %f['ExternalID'])
+              self.log.error('Failure to reset request %s' % transFile['ExternalID'])
               continue
 
-            res = self.tClient.setTaskStatus( transID, f['TaskID'], 'Waiting' )
+            res = self.tClient.setTaskStatus( transID, transFile['TaskID'], 'Waiting' )
             if not res['OK']:
-              self.log.error('Failure to set Waiting status for Task ID %d', f['TaskID'])
+              self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
               continue
 
-          if retryStategy[f['TaskID']] is ACTION_UNUSED:
-            self.setFileStatus( transID, f['LFN'], 'Unused')
+          if retryStategy[transFile['TaskID']] == SET_UNUSED:
+            self.setFileStatus( transID, transFile['LFN'], 'Unused')
 
       else:
         self.log.warn('Unknown action %s' % action)
@@ -305,52 +317,48 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_OK( result )
 
-  def processTransformation(self, transID, sourceSE, targetSEs ):
+  def processTransformation(self, transID, sourceSE, targetSEs, transType ):
     """ process transformation for a given transformation ID """
-    res = self.getDataTransformationType(transID)
-    if not res['OK']:
-      self.log.error('Failure to determine Data Transformation Type')
-      return res
-
-    transType = res['Value']
 
     actions = {}
-    actions[ACTION_PROCESSED] = []
-    actions[ACTION_RETRY] = []
-    actions[ACTION_DELETED] = []
+    actions[SET_PROCESSED] = []
+    actions[RETRY] = []
+    actions[SET_DELETED] = []
 
     for status in self.transformationFileStatuses:
       res = self.tClient.getTransformationFiles(condDict={'TransformationID': transID, 'Status': status})
       if not res['OK']:
         self.log.error('Failure to get Transformation Files with Status %s for Transformation ID %d' % (status, transID))
-        return res
+        continue
 
       transFiles = res['Value']
       if not transFiles:
         self.log.notice("No Transformation Files found with status %s for Transformation ID %d" %(status, transID))
         continue
-      else:
-        self.log.notice("Processing Transformation Files with status %s for TransformationID %s " %(status, transID))
+
+      self.log.notice("Processing Transformation Files with status %s for TransformationID %s " %(status, transID))
 
       # only process Assigned files with failed requests
       if status == 'Assigned':
         transFiles = filter(self.selectFailedRequests, transFiles)
 
-      lfns = [f['LFN'] for f in transFiles]
+      lfns = [transFile['LFN'] for transFile in transFiles]
 
       res = self.exists(sourceSE, lfns)
       if not res['OK']:
-        return res
+        self.log.notice('Failure to determine if Transformation Files with status %s and TransformationID %s exist on source se %s' % (status, transID, sourceSE))
+        continue
 
       resultSourceSe = res['Value']
 
       res = self.exists(targetSEs, lfns)
       if not res['OK']:
-        return res
+        self.log.notice('Failure to determine if Transformation Files with status %s and TransformationID %s exist on source se %s' % (status, transID, sourceSE))
+        continue
 
       resultTargetSEs = res['Value']
 
-      #fill transFile dict with files availability on Source and Target SE information
+      #fill transFile dict with file availability information on Source and Target SE
       for transFile in transFiles:
         lfn = transFile['LFN']
         transFile['AvailableOnSource'] = resultSourceSe[lfn]
@@ -361,3 +369,4 @@ class FileStatusTransformationAgent( AgentModule ):
       checkFiles( actions, transFiles, transType )
 
     self.applyActions( transID, actions )
+    return S_OK()
