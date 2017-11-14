@@ -42,6 +42,14 @@ class FileStatusTransformationAgent( AgentModule ):
     self.tClient = TransformationClient()
     self.reqClient = ReqClient()
 
+  def checkFileStatusFuncExists( self, status):
+    checkFileStatusFuncName = "check_%s_files" % (status.lower())
+    if not (hasattr(self, checkFileStatusFuncName) and callable(getattr(self, checkFileStatusFuncName))):
+      self.log.warn("Unable to process transformation files with status %s" % status)
+      return False
+
+    return True
+
   def beginExecution(self):
     """ Reload the configurations before every cycle """
     self.enabled = self.am_getOption('EnableFlag', False)
@@ -49,12 +57,7 @@ class FileStatusTransformationAgent( AgentModule ):
     self.transformationStatuses = self.am_getOption( 'TransformationStatuses', ["Active"] )
     self.transformationFileStatuses = self.am_getOption( 'TransformationFileStatuses', ["Assigned", "Problematic", "Processed", "Unused"] )
 
-    for status in self.transformationFileStatuses:
-      processFileFuncName = "check_%s_files" % (status.lower())
-      if not (hasattr(self, processFileFuncName) and callable(getattr(self, processFileFuncName))):
-        self.log.warn("Unable to process transformation files with status %s" % status)
-        self.transformationFileStatuses.remove(status)
-
+    self.transformationFileStatuses = filter(self.checkFileStatusFuncExists, self.transformationFileStatuses)
     return S_OK()
 
   def execute( self ):
@@ -164,14 +167,14 @@ class FileStatusTransformationAgent( AgentModule ):
       return False
     result = res['Value']
 
-    if result[taskID]['ExternalStatus'] == 'Failed':
+    if result[transFile['TaskID']]['RequestStatus'] == 'Failed':
       return True
 
     return False
 
   def retryStrategyForFiles(self, transFiles):
 
-    taskIDs = [transFile['TaskID'] for transFile in transFiles]]
+    taskIDs = [transFile['TaskID'] for transFile in transFiles]
     res = self.getRequestStatus( transID, taskIDs)
     if not res['OK']:
       return res
@@ -179,9 +182,9 @@ class FileStatusTransformationAgent( AgentModule ):
 
     retryStrategy = {}
     for taskID in taskIDs:
-      res = self.reqClient.peekRequest(result[taskID]['ExternalID'])
+      res = self.reqClient.peekRequest(result[taskID]['RequestID'])
       if not res['OK']:
-        self.log.notice('Request %s does not exist setting file status to unused' % result[taskID]['ExternalID'])
+        self.log.notice('Request %s does not exist setting file status to unused' % result[taskID]['RequestID'])
         retryStrategy[taskID] = SET_UNUSED
       else:
         retryStrategy[taskID] = RESET_REQUEST
