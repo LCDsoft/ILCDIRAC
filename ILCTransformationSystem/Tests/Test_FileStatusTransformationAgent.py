@@ -79,6 +79,64 @@ class TestFSTAgent( unittest.TestCase ):
     self.assertItemsEqual(self.fstAgent.transformationFileStatuses, allowedFileStatuses)
 
 
+  def test_get_data_transformation_type(self):
+    """ Test if getDataTransformationType function correctly returns the Data Transformation Type (Replication / Moving) """
+    self.fstAgent.getTransformationParameters = MagicMock()
+    replicationTrans = "Replication"
+    movingTrans = "Moving"
+
+    #empty body of transformation
+    self.fstAgent.getTransformationParameters.return_value = S_OK("")
+    res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
+    self.assertEquals(res, replicationTrans)
+
+    self.fstAgent.getTransformationParameters.return_value = S_OK('[["ReplicateAndRegister", {"TargetSE": ["CERN-SRM"], "SourceSE": "CERN-DST-EOS"}], ["RemoveReplica", {"TargetSE": "CERN-DST-EOS"}]]')
+    res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
+    self.assertEquals(res, movingTrans)
+
+    self.fstAgent.getTransformationParameters.return_value = S_OK('RemoveReplica:CERN-DST-EOS;ReplicateAndRegister')
+    res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
+    self.assertEquals(res, movingTrans)
+
+    self.fstAgent.getTransformationParameters.return_value = S_OK('[["ReplicateAndRegister", {"TargetSE": ["CERN-SRM"], "SourceSE": "CERN-DST-EOS"}]]')
+    res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
+    self.assertEquals(res, replicationTrans)
+
+    self.fstAgent.getTransformationParameters.return_value = S_OK('ReplicateAndRegister')
+    res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
+    self.assertEquals(res, replicationTrans)
+
+  def test_exists(self):
+    """ Test if the exists function correctly determines if a file exists in both FileCatalog and StorageElement or not """
+
+    se1 = 'CERN-SRM'
+    se2 = 'DESY-SRM'
+    SEs = [se1, se2]
+
+    fakeLfn = '/ilc/fake/file'
+
+    self.fstAgent.seObjDict[se1] = MagicMock()
+    self.fstAgent.seObjDict[se2] = MagicMock()
+
+    #file does not exist in FC
+    self.fstAgent.fcClient.getReplicas.return_value = S_OK({'Successful': {}, 'Failed': {fakeLfn: 'No such file or directory'}})
+    res = self.fstAgent.exists(SEs, [fakeLfn] )['Value']
+    self.assertFalse(res[fakeLfn])
+
+    # file exists in FC and on all SEs
+    self.fstAgent.seObjDict[se1].exists.return_value = S_OK({'Successful': {fakeLfn: True}, 'Failed': {}})
+    self.fstAgent.seObjDict[se2].exists.return_value = S_OK({'Successful': {fakeLfn: True}, 'Failed': {}})
+    self.fstAgent.fcClient.getReplicas.return_value = S_OK({'Successful': {fakeLfn: {se1: fakeLfn, se2: fakeLfn}}, 'Failed': {}})
+    res = self.fstAgent.exists(SEs, [fakeLfn] )['Value']
+    self.assertTrue(res[fakeLfn])
+
+    #file doesn't exist on one of the SEs
+    self.fstAgent.seObjDict[se2].exists.return_value = S_OK({'Successful': {fakeLfn: False}, 'Failed': {}})
+    res = self.fstAgent.exists(SEs, [fakeLfn] )['Value']
+    self.assertFalse(res[fakeLfn])
+
+
+
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestFSTAgent )
   TESTRESULT = unittest.TextTestRunner( verbosity = 3 ).run( SUITE )

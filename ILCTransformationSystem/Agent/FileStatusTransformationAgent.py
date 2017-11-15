@@ -304,7 +304,6 @@ class FileStatusTransformationAgent( AgentModule ):
 
     result = res['Value']['Successful']
     filesFound = [lfn for lfn, replicas in result.items() if set(SEs).issubset(replicas.keys())]
-
     for se in SEs:
       if se not in self.seObjDict:
         self.seObjDict[se] = StorageElement(se)
@@ -317,7 +316,6 @@ class FileStatusTransformationAgent( AgentModule ):
       filesFound = [lfn for lfn in result if result[lfn]]
 
     result = {lfn: True if lfn in filesFound else False for lfn in lfns}
-
     return S_OK( result )
 
   def processTransformation(self, transID, sourceSE, targetSEs, transType ):
