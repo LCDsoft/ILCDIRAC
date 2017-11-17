@@ -113,29 +113,38 @@ class TestFSTAgent( unittest.TestCase ):
     se2 = 'DESY-SRM'
     SEs = [se1, se2]
 
-    fakeLfn = '/ilc/fake/file'
+    # file exists in FC and all SEs
+    fileExists = '/ilc/file/file1'
+
+    # file exists in FC, but one replica is lost on SE
+    fileOneRepLost = '/ilc/file/file2'
+
+    # file exists in FC, but all replicas are lost on SEs
+    fileAllRepLost = '/ilc/file/file3'
+
+    #file does not exist in FC
+    fileRemoved = '/ilc/file/file4'
+
+    files = [fileExists, fileOneRepLost, fileAllRepLost, fileRemoved]
 
     self.fstAgent.seObjDict[se1] = MagicMock()
     self.fstAgent.seObjDict[se2] = MagicMock()
 
     #file does not exist in FC
-    self.fstAgent.fcClient.getReplicas.return_value = S_OK({'Successful': {}, 'Failed': {fakeLfn: 'No such file or directory'}})
-    res = self.fstAgent.exists(SEs, [fakeLfn] )['Value']
-    self.assertFalse(res[fakeLfn])
+    self.fstAgent.fcClient.getReplicas.return_value = S_OK({'Successful': {fileExists: {se1: fileExists, se2: fileExists},
+                                                                           fileOneRepLost: {se1: fileOneRepLost, se2: fileOneRepLost},
+                                                                           fileAllRepLost: {se1: fileAllRepLost, se2: fileAllRepLost}},
+                                                            'Failed': {fileRemoved: 'No such file or directory'}})
 
-    # file exists in FC and on all SEs
-    self.fstAgent.seObjDict[se1].exists.return_value = S_OK({'Successful': {fakeLfn: True}, 'Failed': {}})
-    self.fstAgent.seObjDict[se2].exists.return_value = S_OK({'Successful': {fakeLfn: True}, 'Failed': {}})
-    self.fstAgent.fcClient.getReplicas.return_value = S_OK({'Successful': {fakeLfn: {se1: fakeLfn, se2: fakeLfn}}, 'Failed': {}})
-    res = self.fstAgent.exists(SEs, [fakeLfn] )['Value']
-    self.assertTrue(res[fakeLfn])
+    self.fstAgent.seObjDict[se1].exists.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLost: True, fileAllRepLost: False}, 'Failed': {}})
+    self.fstAgent.seObjDict[se2].exists.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLost: False, fileAllRepLost: False}, 'Failed': {}})
 
-    #file doesn't exist on one of the SEs
-    self.fstAgent.seObjDict[se2].exists.return_value = S_OK({'Successful': {fakeLfn: False}, 'Failed': {}})
-    res = self.fstAgent.exists(SEs, [fakeLfn] )['Value']
-    self.assertFalse(res[fakeLfn])
+    res = self.fstAgent.exists(SEs, files )['Value']
 
-
+    self.assertFalse(res[fileRemoved])
+    self.assertFalse(res[fileOneRepLost])
+    self.assertFalse(res[fileAllRepLost])
+    self.assertTrue(res[fileExists])
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestFSTAgent )
