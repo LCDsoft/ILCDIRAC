@@ -161,7 +161,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
   def selectFailedRequests( self, transFile):
 
-    res = self.getRequestStatus(transID, transFile['TaskID'])
+    res = self.getRequestStatus(transFile['TransformationID'], transFile['TaskID'])
     if not res['OK']:
       self.log.error('Failure to get Request Status for Assigned File')
       return False
@@ -172,17 +172,16 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return False
 
-  def retryStrategyForFiles(self, transFiles):
+  def retryStrategyForFiles(self, transID, transFiles):
 
     taskIDs = [transFile['TaskID'] for transFile in transFiles]
     res = self.getRequestStatus( transID, taskIDs)
     if not res['OK']:
       return res
     result = res['Value']
-
     retryStrategy = {}
     for taskID in taskIDs:
-      res = self.reqClient.peekRequest(result[taskID]['RequestID'])
+      res = self.reqClient.getRequest(requestID = result[taskID]['RequestID'])
       if not res['OK']:
         self.log.notice('Request %s does not exist setting file status to unused' % result[taskID]['RequestID'])
         retryStrategy[taskID] = SET_UNUSED
@@ -269,7 +268,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
       elif action == RETRY:
         #if there is a request in RMS then reset request otherwise set file status unused
-        res = retryStrategyForFiles(action[RETRY])
+        res = retryStrategyForFiles(transID, action[RETRY])
         if not res['OK']:
           self.log.error('Failure to determine retry strategy ( set unused / reset request) for transformation files')
           continue

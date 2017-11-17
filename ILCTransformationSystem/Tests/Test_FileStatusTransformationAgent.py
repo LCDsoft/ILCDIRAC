@@ -3,6 +3,7 @@
 import unittest
 import importlib
 
+import ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent as FST
 from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import FileStatusTransformationAgent
 
 from mock import MagicMock
@@ -34,6 +35,23 @@ class TestFSTAgent( unittest.TestCase ):
                              'TransformationName':'replicate_777_CERN-DST-EOS'}]
     self.fakeTransID = 1L
 
+    self.failedTask = {'TargetSE': 'DESY-SRM',
+                       'TransformationID': 400103L,
+                       'ExternalStatus': 'Failed',
+                       'ExternalID' :0,
+                       'TaskID': 0}
+
+    self.doneTask = {'TargetSE': 'DESY-SRM',
+                     'TransformationID': 400103L,
+                     'ExternalID' :1,
+                     'ExternalStatus': 'Done',
+                     'TaskID': 1}
+
+    self.waitingTask = {'TargetSE': 'DESY-SRM',
+                        'TransformationID': 400103L,
+                        'ExternalID' :2,
+                        'ExternalStatus': 'Waiting',
+                        'TaskID': 2}
 
   def tearDown(self):
     pass
@@ -145,6 +163,42 @@ class TestFSTAgent( unittest.TestCase ):
     self.assertFalse(res[fileOneRepLost])
     self.assertFalse(res[fileAllRepLost])
     self.assertTrue(res[fileExists])
+
+
+  def test_select_failed_requests(self):
+    """ Test if selectFailedRequests function returns True if transfile has a failed request """
+
+    transFileWithFailedReq = {'TransformationID': 400103, 'TaskID': 0, 'LFN': '/ilc/file1'}
+    transFileWithDoneReq = {'TransformationID': 400103, 'TaskID': 1, 'LFN': '/ilc/file2'}
+
+    self.fstAgent.tClient.getTransformationTasks.return_value = S_OK([self.failedTask])
+    res = self.fstAgent.selectFailedRequests(transFileWithFailedReq)
+    self.assertTrue(res)
+
+    self.fstAgent.tClient.getTransformationTasks.return_value = S_OK([self.doneTask])
+    res = self.fstAgent.selectFailedRequests(transFileWithDoneReq)
+    self.assertFalse(res)
+
+  def test_retry_strategy_for_files(self):
+    """ Test if the request exists then retry strategy is resetting the request otherwise set the file to unused """
+
+    taskIDfile1 = 1
+    taskIDfile2 = 2
+    transFiles = [{'TransformationID': self.fakeTransID, 'TaskID': taskIDfile1, 'LFN': '/ilc/file1'},
+                  {'TransformationID': self.fakeTransID, 'TaskID': taskIDfile2, 'LFN': '/ilc/file2'}]
+
+    self.fstAgent.getRequestStatus = MagicMock(return_value = S_OK({taskIDfile1: {'RequestStatus': 'Problematic', 'RequestID': 1},
+                                                                    taskIDfile2: {'RequestStatus': 'Problematic', 'RequestID': 2}}))
+
+    #no request exists for first trans file and one request exists for second trans file
+    self.fstAgent.reqClient.getRequest = MagicMock()
+    self.fstAgent.reqClient.getRequest.side_effect = [S_ERROR('Request does not exist'), S_OK('Request exists') ]
+
+    res = self.fstAgent.retryStrategyForFiles(self.fakeTransID, transFiles)['Value']
+
+    self.assertEquals(res[taskIDfile1], FST.SET_UNUSED)
+    self.assertEquals(res[taskIDfile2], FST.RESET_REQUEST)
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestFSTAgent )
