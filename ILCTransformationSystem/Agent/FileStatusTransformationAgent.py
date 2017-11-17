@@ -100,7 +100,7 @@ class FileStatusTransformationAgent( AgentModule ):
       else:
         return S_ERROR()
 
-      res = self.getDataTransformationType(transID)
+      res = self.getDataTransformationType(trans['TransformationID'])
       if not res['OK']:
         self.log.error('Failure to determine Data Transformation Type')
         return res
@@ -132,7 +132,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
   def getDataTransformationType(self, transID):
 
-    res = self.getTransformationParameters(transID, 'Body')
+    res = self.tClient.getTransformationParameters(transID, 'Body')
     if not res['OK']:
       return res
 
@@ -193,7 +193,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
   def check_assigned_files(self, actions, transFiles, transType):
 
-    for transFile in trasFiles:
+    for transFile in transFiles:
       if transFile['AvailableOnSource'] and transFile['AvailableOnTarget']:
         if transType == REPLICATION_TRANS:
           actions[SET_PROCESSED].append(transFile)
@@ -268,7 +268,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
       elif action == RETRY:
         #if there is a request in RMS then reset request otherwise set file status unused
-        res = retryStrategyForFiles(transID, action[RETRY])
+        res = self.retryStrategyForFiles(transID, action[RETRY])
         if not res['OK']:
           self.log.error('Failure to determine retry strategy ( set unused / reset request) for transformation files')
           continue
@@ -287,7 +287,7 @@ class FileStatusTransformationAgent( AgentModule ):
               self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
               continue
 
-          if retryStategy[transFile['TaskID']] == SET_UNUSED:
+          if retryStrategy[transFile['TaskID']] == SET_UNUSED:
             self.setFileStatus( transID, transFile['LFN'], 'Unused')
 
       else:
