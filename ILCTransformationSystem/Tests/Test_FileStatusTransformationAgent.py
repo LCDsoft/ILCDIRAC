@@ -26,6 +26,10 @@ class TestFSTAgent( unittest.TestCase ):
     self.fstAgent.tClient = MagicMock( name = "transMock",spec=DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient)
     self.fstAgent.fcClient = MagicMock( name = "fcMock" , spec=DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient )
     self.fstAgent.reqClient = MagicMock( name = "reqMock" , spec=DIRAC.RequestManagementSystem.Client.ReqClient )
+
+    self.fstAgent.reqClient.resetFailedRequest = MagicMock()
+    self.fstAgent.tClient.setTaskStatus = MagicMock()
+    self.fstAgent.setFileStatus = MagicMock()
     self.fstAgent.enabled = True
 
     self.transformations = [{'Status':'Active',
@@ -47,11 +51,19 @@ class TestFSTAgent( unittest.TestCase ):
                      'ExternalStatus': 'Done',
                      'TaskID': 1}
 
-    self.waitingTask = {'TargetSE': 'DESY-SRM',
-                        'TransformationID': 400103L,
-                        'ExternalID' :2,
-                        'ExternalStatus': 'Waiting',
-                        'TaskID': 2}
+    self.notAvailableOnSrc = '/ilc/file_not_available_on_src'
+    self.notAvailableOnDst = '/ilc/file_not available_on_target'
+    self.available = '/ilc/file_available_on_src_and_target'
+    self.notAvailable = '/ilc/file_not_available_on_src_and_target'
+
+    self.tFile1 = { 'TransformationID': self.fakeTransID, 'TaskID': 1, 'LFN': self.notAvailableOnSrc }
+    self.tFile2 = { 'TransformationID': self.fakeTransID, 'TaskID': 2, 'LFN': self.notAvailableOnDst }
+    self.tFile3 = { 'TransformationID': self.fakeTransID, 'TaskID': 3, 'LFN': self.available }
+    self.tFile4 = { 'TransformationID': self.fakeTransID, 'TaskID': 4, 'LFN': self.notAvailable }
+
+    self.transFiles = [self.tFile1, self.tFile2, self.tFile3, self.tFile4]
+    self.sourceSE = ['CERN-SRM']
+    self.targetSE = ['DESY-SRM']
 
   def tearDown(self):
     pass
@@ -99,28 +111,28 @@ class TestFSTAgent( unittest.TestCase ):
 
   def test_get_data_transformation_type(self):
     """ Test if getDataTransformationType function correctly returns the Data Transformation Type (Replication / Moving) """
-    self.fstAgent.getTransformationParameters = MagicMock()
+    self.fstAgent.tClient.getTransformationParameters = MagicMock()
     replicationTrans = "Replication"
     movingTrans = "Moving"
 
     #empty body of transformation
-    self.fstAgent.getTransformationParameters.return_value = S_OK("")
+    self.fstAgent.tClient.getTransformationParameters.return_value = S_OK("")
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
     self.assertEquals(res, replicationTrans)
 
-    self.fstAgent.getTransformationParameters.return_value = S_OK('[["ReplicateAndRegister", {"TargetSE": ["CERN-SRM"], "SourceSE": "CERN-DST-EOS"}], ["RemoveReplica", {"TargetSE": "CERN-DST-EOS"}]]')
+    self.fstAgent.tClient.getTransformationParameters.return_value = S_OK('[["ReplicateAndRegister", {"TargetSE": ["CERN-SRM"], "SourceSE": "CERN-DST-EOS"}], ["RemoveReplica", {"TargetSE": "CERN-DST-EOS"}]]')
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
     self.assertEquals(res, movingTrans)
 
-    self.fstAgent.getTransformationParameters.return_value = S_OK('RemoveReplica:CERN-DST-EOS;ReplicateAndRegister')
+    self.fstAgent.tClient.getTransformationParameters.return_value = S_OK('RemoveReplica:CERN-DST-EOS;ReplicateAndRegister')
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
     self.assertEquals(res, movingTrans)
 
-    self.fstAgent.getTransformationParameters.return_value = S_OK('[["ReplicateAndRegister", {"TargetSE": ["CERN-SRM"], "SourceSE": "CERN-DST-EOS"}]]')
+    self.fstAgent.tClient.getTransformationParameters.return_value = S_OK('[["ReplicateAndRegister", {"TargetSE": ["CERN-SRM"], "SourceSE": "CERN-DST-EOS"}]]')
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
     self.assertEquals(res, replicationTrans)
 
-    self.fstAgent.getTransformationParameters.return_value = S_OK('ReplicateAndRegister')
+    self.fstAgent.tClient.getTransformationParameters.return_value = S_OK('ReplicateAndRegister')
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
     self.assertEquals(res, replicationTrans)
 
@@ -199,6 +211,89 @@ class TestFSTAgent( unittest.TestCase ):
     self.assertEquals(res[taskIDfile1], FST.SET_UNUSED)
     self.assertEquals(res[taskIDfile2], FST.RESET_REQUEST)
 
+  def exists(self, se, lfns):
+    result = {}
+    for lfn in lfns:
+      if (lfn == self.notAvailableOnSrc or lfn == self.notAvailable) and se == self.sourceSE:
+        result[lfn] = False
+      elif (lfn == self.notAvailableOnDst or lfn == self.notAvailable) and se == self.targetSE:
+        result[lfn] = False
+      else:
+        result[lfn] = True
+
+    return S_OK({'Successful': result})
+
+  def test_trans_files_treatment(self):
+    """ test transformation files are treated properly (set new status / reset request) for replication and moving transformations """
+
+    self.fstAgent.tClient.getTransformationFiles.return_value = S_OK(self.transFiles)
+    #all trans files have failed requests
+    self.fstAgent.selectFailedRequests = MagicMock(return_value = {tFile['TaskID']: True for tFile in self.transFiles})
+
+    #no assosiated request in rms
+    self.fstAgent.retryStrategyForFiles = MagicMock( return_value = S_OK({tFile['TaskID']: FST.SET_UNUSED for tFile in self.transFiles}))
+
+    self.fstAgent.exists = MagicMock( side_effect = self.exists)
+
+
+    self.fstAgent.transformationFileStatuses = ['Assigned']
+
+    #check replication transformation treatment for assigned files
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnSrc, self.available], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnDst], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailable], 'Deleted')
+
+    #check moving transformation treatment for assigned files
+    self.fstAgent.setFileStatus.reset_mock()
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnSrc], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnDst, self.available], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailable], 'Deleted')
+
+    self.fstAgent.transformationFileStatuses = ['Processed']
+
+    #check replication transformation treatment for processed files
+    self.fstAgent.setFileStatus.reset_mock()
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnDst], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailable], 'Deleted')
+
+    #check moving transformation treatment for processed files
+    self.fstAgent.setFileStatus.reset_mock()
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnDst, self.available], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailable], 'Deleted')
+
+    self.fstAgent.transformationFileStatuses = ['Problematic']
+
+    #check replication transformation treatment for problematic files
+    self.fstAgent.setFileStatus.reset_mock()
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnSrc, self.available], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnDst], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailable], 'Deleted')
+
+    #check moving transformation treatment for problematic files
+    self.fstAgent.setFileStatus.reset_mock()
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnSrc], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnDst, self.available], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailable], 'Deleted')
+
+    self.fstAgent.transformationFileStatuses = ['Unused']
+
+    #check replication transformation treatment for unused files
+    self.fstAgent.setFileStatus.reset_mock()
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnSrc], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailable], 'Deleted')
+
+    #check moving transformation treatment for unused files
+    self.fstAgent.setFileStatus.reset_mock()
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailableOnSrc], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [self.notAvailable], 'Deleted')
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestFSTAgent )

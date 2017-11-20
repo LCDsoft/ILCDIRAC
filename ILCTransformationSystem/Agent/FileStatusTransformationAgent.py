@@ -212,6 +212,7 @@ class FileStatusTransformationAgent( AgentModule ):
         #not on src and target
         actions[SET_DELETED].append(transFile)
 
+
   def check_unused_files(self, actions, transFiles, transType):
 
     for transFile in transFiles:
@@ -254,31 +255,37 @@ class FileStatusTransformationAgent( AgentModule ):
         #not available on source and target
         actions[SET_DELETED].append(transFile)
 
-
   def applyActions( self, transID, actions):
 
     for action in actions.keys():
-      if action == SET_PROCESSED:
+      if action == SET_PROCESSED and actions[SET_PROCESSED]:
         lfns = [transFile['LFN'] for transFile in actions[SET_PROCESSED]]
         self.setFileStatus( transID, lfns, 'Processed')
 
-      elif action == SET_DELETED:
+      elif action == SET_DELETED and actions[SET_DELETED]:
         lfns = [transFile['LFN'] for transFile in actions[SET_DELETED]]
         self.setFileStatus( transID, lfns, 'Deleted')
 
-      elif action == RETRY:
+      elif action == RETRY and actions[RETRY]:
         #if there is a request in RMS then reset request otherwise set file status unused
-        res = self.retryStrategyForFiles(transID, action[RETRY])
+        res = self.retryStrategyForFiles(transID, actions[RETRY])
         if not res['OK']:
           self.log.error('Failure to determine retry strategy ( set unused / reset request) for transformation files')
           continue
 
-        retryStrategy = res['value']
-        for transFile in action[RETRY]:
+        lfnsSetUnused = []
+        retryStrategy = res['Value']
+        for transFile in actions[RETRY]:
           if retryStrategy[transFile['TaskID']] == RESET_REQUEST:
 
-            res = self.reqClient.resetFailedRequest(transFile['ExternalID'])
+            res = self.tClient.getTransformationTasks(condDict = {'TransformationID': transID, 'TaskID': transFile['TaskID']})
             if not res['OK']:
+              self.log.error('Failure to get Transformation Task for Transformation File %s' % transFile['LFN'])
+              continue
+
+            requestID = res['Value'][0]['ExternalID']
+            res = self.reqClient.resetFailedRequest(requestID)
+            if not res['OK'] or res['Value'] == "Not reset":
               self.log.error('Failure to reset request %s' % transFile['ExternalID'])
               continue
 
@@ -287,8 +294,11 @@ class FileStatusTransformationAgent( AgentModule ):
               self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
               continue
 
-          if retryStrategy[transFile['TaskID']] == SET_UNUSED:
-            self.setFileStatus( transID, transFile['LFN'], 'Unused')
+          else:
+            lfnsSetUnused.append(transFile['LFN'])
+
+        if lfnsSetUnused:
+          self.setFileStatus( transID, lfnsSetUnused, 'Unused')
 
       else:
         self.log.warn('Unknown action %s' % action)
@@ -349,14 +359,14 @@ class FileStatusTransformationAgent( AgentModule ):
         self.log.notice('Failure to determine if Transformation Files with status %s and TransformationID %s exist on source se %s' % (status, transID, sourceSE))
         continue
 
-      resultSourceSe = res['Value']
+      resultSourceSe = res['Value']['Successful']
 
       res = self.exists(targetSEs, lfns)
       if not res['OK']:
         self.log.notice('Failure to determine if Transformation Files with status %s and TransformationID %s exist on source se %s' % (status, transID, sourceSE))
         continue
 
-      resultTargetSEs = res['Value']
+      resultTargetSEs = res['Value']['Successful']
 
       #fill transFile dict with file availability information on Source and Target SE
       for transFile in transFiles:
