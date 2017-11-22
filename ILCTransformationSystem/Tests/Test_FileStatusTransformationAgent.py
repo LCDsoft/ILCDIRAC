@@ -51,17 +51,11 @@ class TestFSTAgent( unittest.TestCase ):
                      'ExternalStatus': 'Done',
                      'TaskID': 1}
 
-    self.notAvailableOnSrc = '/ilc/file_not_available_on_src'
-    self.notAvailableOnDst = '/ilc/file_not available_on_target'
-    self.available = '/ilc/file_available_on_src_and_target'
-    self.notAvailable = '/ilc/file_not_available_on_src_and_target'
+    self.notAvailableOnSrc = '/ilc/file_not_self.available_on_src'
+    self.notAvailableOnDst = '/ilc/file_not self.available_on_target'
+    self.available = '/ilc/file_self.available_on_src_and_target'
+    self.notAvailable = '/ilc/file_not_self.available_on_src_and_target'
 
-    self.tFile1 = { 'TransformationID': self.fakeTransID, 'TaskID': 1, 'LFN': self.notAvailableOnSrc }
-    self.tFile2 = { 'TransformationID': self.fakeTransID, 'TaskID': 2, 'LFN': self.notAvailableOnDst }
-    self.tFile3 = { 'TransformationID': self.fakeTransID, 'TaskID': 3, 'LFN': self.available }
-    self.tFile4 = { 'TransformationID': self.fakeTransID, 'TaskID': 4, 'LFN': self.notAvailable }
-
-    self.transFiles = [self.tFile1, self.tFile2, self.tFile3, self.tFile4]
     self.sourceSE = ['CERN-SRM']
     self.targetSE = ['DESY-SRM']
 
@@ -112,44 +106,41 @@ class TestFSTAgent( unittest.TestCase ):
   def test_get_data_transformation_type(self):
     """ Test if getDataTransformationType function correctly returns the Data Transformation Type (Replication / Moving) """
     self.fstAgent.tClient.getTransformationParameters = MagicMock()
-    replicationTrans = "Replication"
-    movingTrans = "Moving"
 
     #empty body of transformation
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK("")
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
-    self.assertEquals(res, replicationTrans)
+    self.assertEquals(res, FST.REPLICATION_TRANS)
 
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK('[["ReplicateAndRegister", {"TargetSE": ["CERN-SRM"], "SourceSE": "CERN-DST-EOS"}], ["RemoveReplica", {"TargetSE": "CERN-DST-EOS"}]]')
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
-    self.assertEquals(res, movingTrans)
+    self.assertEquals(res, FST.MOVING_TRANS)
 
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK('RemoveReplica:CERN-DST-EOS;ReplicateAndRegister')
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
-    self.assertEquals(res, movingTrans)
+    self.assertEquals(res, FST.MOVING_TRANS)
 
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK('[["ReplicateAndRegister", {"TargetSE": ["CERN-SRM"], "SourceSE": "CERN-DST-EOS"}]]')
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
-    self.assertEquals(res, replicationTrans)
+    self.assertEquals(res, FST.REPLICATION_TRANS)
 
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK('ReplicateAndRegister')
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
-    self.assertEquals(res, replicationTrans)
+    self.assertEquals(res, FST.REPLICATION_TRANS)
 
-  def test_exists(self):
-    """ Test if the exists function correctly determines if a file exists in both FileCatalog and StorageElement or not """
-
+  def test_exists_in_FC(self):
+    """ Test if the existsInFC function correctly determines if all replicas of files are registered in FC """
     se1 = 'CERN-SRM'
     se2 = 'DESY-SRM'
     SEs = [se1, se2]
 
-    # file exists in FC and all SEs
+    # file exists in FC and all replicas are registered
     fileExists = '/ilc/file/file1'
 
-    # file exists in FC, but one replica is lost on SE
+    # file exists in FC, but one replica is missing in FC
     fileOneRepLost = '/ilc/file/file2'
 
-    # file exists in FC, but all replicas are lost on SEs
+    # file exists in FC, but no replicas are registered in FC
     fileAllRepLost = '/ilc/file/file3'
 
     #file does not exist in FC
@@ -157,24 +148,79 @@ class TestFSTAgent( unittest.TestCase ):
 
     files = [fileExists, fileOneRepLost, fileAllRepLost, fileRemoved]
 
+    self.fstAgent.fcClient.getReplicas.return_value = S_OK({'Successful': {fileExists: {se1: fileExists, se2: fileExists},
+                                                                           fileOneRepLost: {se1: fileOneRepLost},
+                                                                           fileAllRepLost: {}},
+                                                            'Failed' : {fileRemoved: 'No such file or directory'}})
+    res = self.fstAgent.existsInFC(SEs, files )['Value']
+    self.assertTrue(res['Successful'][fileExists])
+    self.assertFalse(res['Successful'][fileOneRepLost])
+    self.assertFalse(res['Successful'][fileAllRepLost])
+    self.assertFalse(res['Successful'][fileRemoved])
+
+  def test_exists_on_storage_element(self):
+    """ Test if the existsOnSE function correctly determines if a file exists on all provided Storage Elements or not """
+
+    se1 = 'CERN-SRM'
+    se2 = 'DESY-SRM'
+    SEs = [se1, se2]
+
+    # file exists on all SEs
+    fileExists = '/ilc/file/file1'
+
+    # file is lost on one SE
+    fileOneRepLost = '/ilc/file/file2'
+
+    # file is lost on all SEs
+    fileAllRepLost = '/ilc/file/file3'
+
+    # some error to get file status on SE
+    fileFailed = '/ilc/file/file4'
+
+    files = [fileExists, fileOneRepLost, fileAllRepLost, fileFailed]
+
     self.fstAgent.seObjDict[se1] = MagicMock()
     self.fstAgent.seObjDict[se2] = MagicMock()
 
-    #file does not exist in FC
-    self.fstAgent.fcClient.getReplicas.return_value = S_OK({'Successful': {fileExists: {se1: fileExists, se2: fileExists},
-                                                                           fileOneRepLost: {se1: fileOneRepLost, se2: fileOneRepLost},
-                                                                           fileAllRepLost: {se1: fileAllRepLost, se2: fileAllRepLost}},
-                                                            'Failed': {fileRemoved: 'No such file or directory'}})
+    self.fstAgent.seObjDict[se1].exists.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLost: True, fileAllRepLost: False, fileFailed: True}, 'Failed': {}})
+    self.fstAgent.seObjDict[se2].exists.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLost: False, fileAllRepLost: False}, 'Failed': {fileFailed: 'permission denied'}})
 
-    self.fstAgent.seObjDict[se1].exists.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLost: True, fileAllRepLost: False}, 'Failed': {}})
-    self.fstAgent.seObjDict[se2].exists.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLost: False, fileAllRepLost: False}, 'Failed': {}})
+    res = self.fstAgent.existsOnSE(SEs, files )['Value']
 
-    res = self.fstAgent.exists(SEs, files )['Value']
+    self.assertTrue(res['Successful'][fileExists])
+    self.assertFalse(res['Successful'][fileAllRepLost])
+    self.assertFalse(res['Successful'][fileOneRepLost])
+    self.assertTrue(fileFailed in res['Failed'][se2])
 
-    self.assertFalse(res[fileRemoved])
-    self.assertFalse(res[fileOneRepLost])
-    self.assertFalse(res[fileAllRepLost])
+
+  def test_exists(self):
+    """ Tests if the exists function correctly determines if a file exists in File Catalog and Storage Elements """
+
+    SEs = ['CERN-SRM', 'DESY-SRM']
+
+    # file exists in fc and all SEs
+    fileExists = '/ilc/file/file1'
+
+    # file exists in fc but one replica is lost on SE
+    fileOneRepLostOnSE = '/ilc/file/file2'
+
+    # file exists in fc but all replicas are lost on SEs
+    fileAllRepLostOnSEs = '/ilc/file/file3'
+
+    # file does not exists in FC
+    fileRemoved = '/ilc/file/file4'
+
+    files = [fileExists, fileOneRepLostOnSE, fileAllRepLostOnSEs, fileRemoved]
+
+    self.fstAgent.existsInFC = MagicMock(return_value = S_OK({'Successful': {fileExists: True, fileOneRepLostOnSE: True, fileAllRepLostOnSEs: True, fileRemoved: False}}))
+    self.fstAgent.existsOnSE = MagicMock(return_value = S_OK({'Successful': {fileExists: True, fileOneRepLostOnSE: False, fileAllRepLostOnSEs: False}}))
+
+    res = self.fstAgent.exists(SEs, files)['Value']['Successful']
+    self.fstAgent.existsOnSE.assert_called_once_with(SEs, [fileExists, fileOneRepLostOnSE, fileAllRepLostOnSEs])
     self.assertTrue(res[fileExists])
+    self.assertFalse(res[fileOneRepLostOnSE])
+    self.assertFalse(res[fileAllRepLostOnSEs])
+    self.assertFalse(res[fileRemoved])
 
 
   def test_select_failed_requests(self):
@@ -211,6 +257,7 @@ class TestFSTAgent( unittest.TestCase ):
     self.assertEquals(res[taskIDfile1], FST.SET_UNUSED)
     self.assertEquals(res[taskIDfile2], FST.RESET_REQUEST)
 
+
   def exists(self, se, lfns):
     result = {}
     for lfn in lfns:
@@ -226,12 +273,19 @@ class TestFSTAgent( unittest.TestCase ):
   def test_trans_files_treatment(self):
     """ test transformation files are treated properly (set new status / reset request) for replication and moving transformations """
 
-    self.fstAgent.tClient.getTransformationFiles.return_value = S_OK(self.transFiles)
+    tFile1 = { 'TransformationID': self.fakeTransID, 'TaskID': 1, 'LFN': self.notAvailableOnSrc }
+    tFile2 = { 'TransformationID': self.fakeTransID, 'TaskID': 2, 'LFN': self.notAvailableOnDst }
+    tFile3 = { 'TransformationID': self.fakeTransID, 'TaskID': 3, 'LFN': self.available }
+    tFile4 = { 'TransformationID': self.fakeTransID, 'TaskID': 4, 'LFN': self.notAvailable }
+
+    transFiles = [tFile1, tFile2, tFile3, tFile4]
+
+    self.fstAgent.tClient.getTransformationFiles.return_value = S_OK(transFiles)
     #all trans files have failed requests
-    self.fstAgent.selectFailedRequests = MagicMock(return_value = {tFile['TaskID']: True for tFile in self.transFiles})
+    self.fstAgent.selectFailedRequests = MagicMock(return_value = {tFile['TaskID']: True for tFile in transFiles})
 
     #no assosiated request in rms
-    self.fstAgent.retryStrategyForFiles = MagicMock( return_value = S_OK({tFile['TaskID']: FST.SET_UNUSED for tFile in self.transFiles}))
+    self.fstAgent.retryStrategyForFiles = MagicMock( return_value = S_OK({tFile['TaskID']: FST.SET_UNUSED for tFile in transFiles}))
 
     self.fstAgent.exists = MagicMock( side_effect = self.exists)
 

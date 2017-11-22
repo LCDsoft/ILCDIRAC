@@ -303,29 +303,84 @@ class FileStatusTransformationAgent( AgentModule ):
       else:
         self.log.warn('Unknown action %s' % action)
 
-
-  def exists(self, SEs, lfns):
-    """ checks if the given files exist on a list of storage elements"""
+  def existsInFC(self, SEs, lfns):
 
     res = self.fcClient.getReplicas(lfns)
     if not res['OK']:
       return res
 
-    result = res['Value']['Successful']
-    filesFound = [lfn for lfn, replicas in result.items() if set(SEs).issubset(replicas.keys())]
+    result = {}
+    result['Successful'] = {}
+    result['Failed'] = {}
+    setOfSEs = set(SEs)
+
+    for lfn, msg in res['Value']['Failed'].items():
+      if msg == 'No such file or directory':
+        result['Successful'][lfn] = False
+      else:
+        result['Failed'][lfn] = msg
+
+    #check if all replicas are registered in FC
+    filesFoundInFC = res['Value']['Successful']
+    for lfn,replicas in filesFoundInFC.items():
+      if setOfSEs.issubset(replicas.keys()):
+        result['Successful'][lfn] = True
+      else:
+        result['Successful'][lfn] = False
+
+    return S_OK(result)
+
+  def existsOnSE(self, SEs, lfns):
+    """ checks if the given files exist on a list of storage elements"""
+
+    result = {}
+    result['Failed'] = {}
+    result['Successful'] = {}
+
+
     for se in SEs:
       if se not in self.seObjDict:
         self.seObjDict[se] = StorageElement(se)
       seObj = self.seObjDict[se]
 
-      res = seObj.exists(filesFound)
+      res = seObj.exists(lfns)
       if not res['OK']:
         return res
-      result = res['Value']['Successful']
-      filesFound = [lfn for lfn in result if result[lfn]]
 
-    result = {lfn: True if lfn in filesFound else False for lfn in lfns}
+      for lfn, status in res['Value']['Successful'].items():
+        if lfn not in result['Successful']:
+          result['Successful'][lfn] = status
+        else:
+          if result['Successful'] and not status:
+            result['Successful'][lfn] = False
+
+      result['Failed'][se] = res['Value']['Failed']
+
     return S_OK( result )
+
+
+  def exists(self, SEs, lfns):
+    """ checks if files exists on both file catalog and storage elements """
+
+    fcRes = self.existsInFC(SEs, lfns)
+    if not fcRes['OK']:
+      self.log.error('Failure to determine if files exists in File Catalog, %s' % fcRes['Message'])
+      return fcRes
+
+    # check if files found in file catalog also exist on SE
+    checkLFNsOnStorage = [lfn for lfn in fcRes['Value']['Successful'] if fcRes['Value']['Successful'][lfn]]
+    seRes = self.existsOnSE(SEs, checkLFNsOnStorage)
+    if not seRes['OK']:
+      self.log.error('Failure to determine if files exists on SE, %s' % seRes['Message'])
+      return seRes
+
+    fcResult = fcRes['Value']['Successful']
+    seResult = seRes['Value']['Successful']
+    for lfn, status in fcResult.items():
+      if fcResult[lfn] and not seResult[lfn]:
+        fcRes['Value']['Successful'][lfn] = False
+
+    return fcRes
 
   def processTransformation(self, transID, sourceSE, targetSEs, transType ):
     """ process transformation for a given transformation ID """
@@ -356,16 +411,12 @@ class FileStatusTransformationAgent( AgentModule ):
 
       res = self.exists(sourceSE, lfns)
       if not res['OK']:
-        self.log.notice('Failure to determine if Transformation Files with status %s and TransformationID %s exist on source se %s' % (status, transID, sourceSE))
         continue
-
       resultSourceSe = res['Value']['Successful']
 
       res = self.exists(targetSEs, lfns)
       if not res['OK']:
-        self.log.notice('Failure to determine if Transformation Files with status %s and TransformationID %s exist on source se %s' % (status, transID, sourceSE))
         continue
-
       resultTargetSEs = res['Value']['Successful']
 
       #fill transFile dict with file availability information on Source and Target SE
