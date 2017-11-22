@@ -414,6 +414,12 @@ class FileStatusTransformationAgent( AgentModule ):
       if fcResult[lfn] and not seResult[lfn]:
         fcRes['Value']['Successful'][lfn] = False
 
+    if 'Failed' in fcRes['Value']:
+      self.log.notice("FAILED FileCatalog Response %s" % fcRes['Value']['Failed'])
+
+    if 'Failed' in seRes['Value']:
+      self.log.notice("FAILED StorageElement Response %s" % seRes['Value']['Failed'])
+
     return fcRes
 
   def processTransformation(self, transID, sourceSE, targetSEs, transType ):
