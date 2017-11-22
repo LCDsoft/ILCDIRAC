@@ -37,6 +37,7 @@ class FileStatusTransformationAgent( AgentModule ):
     self.transformationStatuses = ["Active"]
     self.transformationFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
     self.seObjDict = {}
+    self.accounting = {}
 
     self.fcClient = FileCatalogClient()
     self.tClient = TransformationClient()
@@ -58,6 +59,15 @@ class FileStatusTransformationAgent( AgentModule ):
     self.transformationFileStatuses = self.am_getOption( 'TransformationFileStatuses', ["Assigned", "Problematic", "Processed", "Unused"] )
 
     self.transformationFileStatuses = filter(self.checkFileStatusFuncExists, self.transformationFileStatuses)
+    return S_OK()
+
+  def finalize(self):
+    self.log.notice('Accounting Information')
+    for trans, actions in self.accounting.items():
+      for action, values in  actions.items():
+        self.log.notice("Action: %s" % action)
+        self.log.notice("Values: %s" % values)
+
     return S_OK()
 
   def execute( self ):
@@ -152,11 +162,18 @@ class FileStatusTransformationAgent( AgentModule ):
     """ sets transformation file status to Deleted """
     _newLFNStatuses = {lfn: status for lfn in lfns}
 
-    if self.enabled and _newLFNStatuses:
+    if _newLFNStatuses:
       res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=_newLFNStatuses)
       if not res['OK']:
-        self.log.error('Failed to set statuses for LFNs ', res['Message'])
+        self.log.error('Failed to set statuses for LFNs %s ' % res['Message'])
       else:
+        if transID not in self.accounting:
+          self.accounting[transID] = {}
+
+        if status not in self.accounting[transID]:
+          self.accounting[transID][status] = []
+
+        self.accounting[transID][status].append(lfns)
         self.log.notice('File Statuses updated Successfully %s' % res['Value'])
 
   def selectFailedRequests( self, transFile):
@@ -260,11 +277,17 @@ class FileStatusTransformationAgent( AgentModule ):
     for action in actions.keys():
       if action == SET_PROCESSED and actions[SET_PROCESSED]:
         lfns = [transFile['LFN'] for transFile in actions[SET_PROCESSED]]
-        self.setFileStatus( transID, lfns, 'Processed')
+        if not self.enabled:
+          self.log.notice('Would have set file status to Processesd, %s ' % lfns)
+        else:
+          self.setFileStatus( transID, lfns, 'Processed')
 
       elif action == SET_DELETED and actions[SET_DELETED]:
         lfns = [transFile['LFN'] for transFile in actions[SET_DELETED]]
-        self.setFileStatus( transID, lfns, 'Deleted')
+        if not self.enabled:
+          self.log.notice('Would have set file status to Deleted, %s ' % lfns)
+        else:
+          self.setFileStatus( transID, lfns, 'Deleted')
 
       elif action == RETRY and actions[RETRY]:
         #if there is a request in RMS then reset request otherwise set file status unused
@@ -273,8 +296,8 @@ class FileStatusTransformationAgent( AgentModule ):
           self.log.error('Failure to determine retry strategy ( set unused / reset request) for transformation files')
           continue
 
-        lfnsSetUnused = []
         retryStrategy = res['Value']
+        setLfnsUnused = []
         for transFile in actions[RETRY]:
           if retryStrategy[transFile['TaskID']] == RESET_REQUEST:
 
@@ -284,21 +307,29 @@ class FileStatusTransformationAgent( AgentModule ):
               continue
 
             requestID = res['Value'][0]['ExternalID']
-            res = self.reqClient.resetFailedRequest(requestID)
-            if not res['OK'] or res['Value'] == "Not reset":
-              self.log.error('Failure to reset request %s' % transFile['ExternalID'])
-              continue
+            if not self.enabled:
+              self.log.notice('Would have re-submitted the request %s if it exists in RMS otherwise the file status would be set to Unused' % requestID)
+            else:
+              res = self.reqClient.resetFailedRequest(requestID)
+              if res['OK'] and res['Value'] != "Not reset":
+                if transID not in self.accounting:
+                  self.accounting[transID] = {}
 
-            res = self.tClient.setTaskStatus( transID, transFile['TaskID'], 'Waiting' )
-            if not res['OK']:
-              self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
-              continue
+                if RESET_REQUEST not in self.accounting[transID]:
+                  self.accounting[transID][RESET_REQUEST] = []
 
+                self.accounting[transID][RESET_REQUEST].append(requestID)
+
+                res = self.tClient.setTaskStatus( transID, transFile['TaskID'], 'Waiting' )
+                if not res['OK']:
+                  self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
+              else:
+                setLfnsUnused.append(transFile['LFN'])
           else:
-            lfnsSetUnused.append(transFile['LFN'])
+            setLfnsUnused.append(transFile['LFN'])
 
-        if lfnsSetUnused:
-          self.setFileStatus( transID, lfnsSetUnused, 'Unused')
+        if setLfnsUnused:
+          self.setFileStatus(transID, setLfnsUnused, 'Unused')
 
       else:
         self.log.warn('Unknown action %s' % action)
