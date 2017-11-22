@@ -326,7 +326,10 @@ class FileStatusTransformationAgent( AgentModule ):
               else:
                 setLfnsUnused.append(transFile['LFN'])
           else:
-            setLfnsUnused.append(transFile['LFN'])
+            if not self.enabled:
+              self.log.notice('Would have set the file %s status to Unused' % transFile['LFN'])
+            else:
+              setLfnsUnused.append(transFile['LFN'])
 
         if setLfnsUnused:
           self.setFileStatus(transID, setLfnsUnused, 'Unused')
