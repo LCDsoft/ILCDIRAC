@@ -86,6 +86,20 @@ file has been staged the staging request is removed from the Database and this
 command will return that the file has no staging request pending.
 
 
+How to find files at SE1 but not at SE2
+```````````````````````````````````````
+
+Use the command
+:doc:`UserGuide/CommandReference/DataManagement/dirac-dms-find-lfns` with the
+**SE** metadata for SE1 and SE2 and compare the sorted list. For example, this
+command will print out a diff between files at CERN-DST-EOS and CERN-SRM, filter
+by leading character "<" or ">"::
+
+
+  diff <(dirac-dms-find-lfns Path=/ ProdID=8887 Datatype=REC SE=CERN-DST-EOS | sort) <(dirac-dms-find-lfns Path=/ ProdID=8887 Datatype=REC SE=CERN-SRM | sort) | grep "^>"
+
+
+
 Jobs
 ----
 
