@@ -411,7 +411,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
     if 'Failed' in seRes['Value'] and seRes['Value']['Failed']:
       self.log.error('Failed to determine if files exist on SE, %s' % seRes['Value']['Failed'])
-      return res
+      return S_ERROR()
 
     fcResult = fcRes['Value']['Successful']
     seResult = seRes['Value']['Successful']
