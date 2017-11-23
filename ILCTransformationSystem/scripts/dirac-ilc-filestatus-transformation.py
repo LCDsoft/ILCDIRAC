@@ -53,13 +53,18 @@ def _runFSTAgent():
     Script.showHelp()
     dexit(1)
 
-  fstAgent = FileStatusTransformationAgent('ILCTransformationSystem/FileStatusTransformationAgent',
-                                           'ILCTransformationSystem/FileStatusTransformationAgent',
+  fstAgent = FileStatusTransformationAgent('ILCTransformation/FileStatusTransformationAgent',
+                                           'ILCTransformation/FileStatusTransformationAgent',
                                            'dirac-ilc-filestatus-transformation')
   fstAgent.log = gLogger
   fstAgent.enabled = params.enabled
 
-  res = fstAgent.processTransformation(params.transID)
+  res = fstAgent.getTransformations(transID = params.transID)
+  if not res["OK"]:
+    dexit(1)
+  trans = res['Value']
+
+  res = fstAgent.processTransformation( params.transID, trans['SourceSE'], trans['TargetSE'], trans['DataTransType'])
   if not res["OK"]:
     dexit(1)
 

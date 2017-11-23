@@ -91,9 +91,14 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_OK()
 
-  def getTransformations(self):
+  def getTransformations(self, transID = None):
     """ returns transformations of a given type and status """
-    res = self.tClient.getTransformations(condDict = {'Status' : self.transformationStatuses, 'Type' : self.transformationTypes})
+    res = None
+    if transID:
+      res = self.tClient.getTransformations(condDict = {'TransformationID': transID, 'Status' : self.transformationStatuses, 'Type' : self.transformationTypes})
+    else:
+      res = self.tClient.getTransformations(condDict = {'Status' : self.transformationStatuses, 'Type' : self.transformationTypes})
+
     if not res['OK']:
       return res
 
