@@ -1,3 +1,10 @@
+[v28r0p2]
+
+*Workflow
+
+FIX: (!177) MarlinAnalysis: When obtaining the MARLIN_DLL from the init_script, suppress output from sourcing that script
+
+
 [v28r0p1]
 
 *Core
