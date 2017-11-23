@@ -2,7 +2,7 @@
 
 *Interfaces
 
-CHANGE: (!179) At job submission a check is done that ensure LFNs in the input sandbox have more than one replica, or a replica at a decent storage element
+CHANGE: (!179) At job submission a check is done that ensure LFNs in the input sandbox have more than one replica, or a replica at a decent storage element (ILCDIRAC-805)
 
 *Workflow
 
