@@ -289,6 +289,21 @@ class DiracILCTestCase( unittest.TestCase ):
       assertDiracSucceeds( self.dilc.checkInputSandboxLFNs( job_mock ), self )
       replica_mock.assert_called_once_with( [ '/my/dir/inputsandbox/in1.stdio', '/my/dir/inputsandbox/in2.pdf' ] )
 
+  def test_checkinputsb_notInputSB(self):
+    job_mock = Mock()
+    job_mock.workflow.findParameter.return_value = None
+    assertDiracSucceeds(self.dilc.checkInputSandboxLFNs(job_mock), self)
+
+  def test_checkinputsb_notInputSB_Value(self):
+    job_mock = Mock()
+    job_mock.workflow.findParameter.return_value.getValue.return_value = ''
+    assertDiracSucceeds(self.dilc.checkInputSandboxLFNs(job_mock), self)
+
+  def test_checkinputsb_noLFNs(self):
+    job_mock = Mock()
+    job_mock.workflow.findParameter.return_value.getValue.return_value = '/some/file.txt;/other/some/file.stdhep'
+    assertDiracSucceeds(self.dilc.checkInputSandboxLFNs(job_mock), self)
+
   def test_checkinputsb_noRepl(self):
     job_mock = Mock()
     job_mock.workflow.findParameter.return_value.getValue.return_value = 'LFN:/some/file.txt'
