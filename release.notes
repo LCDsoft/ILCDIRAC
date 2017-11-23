@@ -1,5 +1,9 @@
 [v28r0p2]
 
+*Interfaces
+
+CHANGE: (!179) At job submission a check is done that ensure LFNs in the input sandbox have more than one replica, or a replica at a decent storage element
+
 *Workflow
 
 FIX: (!177) MarlinAnalysis: When obtaining the MARLIN_DLL from the init_script, suppress output from sourcing that script
