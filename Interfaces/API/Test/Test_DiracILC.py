@@ -29,6 +29,19 @@ class DiracILCTestCase( unittest.TestCase ):
     from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
     self.dilc = DiracILC()
 
+    def setOptions(*args):
+      if 'SingleReplicaSEs' in args[0]:
+        return ['SE']
+      if 'Minimum' in args[0]:
+        return 1
+      if args[0].endswith('PreferredSEs'):
+        return ['Awesome-Tape-SE']
+
+    ops_mock = Mock()
+    ops_mock.getValue = Mock()
+    ops_mock.getValue.side_effect = setOptions
+    self.dilc.ops = ops_mock
+
   def tearDown( self ):
     self.module_patcher.stop()
 
