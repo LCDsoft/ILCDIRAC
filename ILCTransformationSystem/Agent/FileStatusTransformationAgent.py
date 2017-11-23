@@ -340,7 +340,7 @@ class FileStatusTransformationAgent( AgentModule ):
           self.setFileStatus(transID, setLfnsUnused, 'Unused')
 
       else:
-        self.log.warn('Unknown action %s' % action)
+        self.log.notice('No %s actions to apply' % action)
 
   def existsInFC(self, SEs, lfns):
 
@@ -376,11 +376,13 @@ class FileStatusTransformationAgent( AgentModule ):
     result['Failed'] = {}
     result['Successful'] = {}
 
+    if not lfns:
+      return S_OK(result)
 
-    #TODO: remove hardcoded vo name
     for se in SEs:
       if se not in self.seObjDict:
-        self.seObjDict[se] = StorageElement(se, vo='ilc')
+        voName = lfns[0].split('/')[1]
+        self.seObjDict[se] = StorageElement(se, vo=voName)
       seObj = self.seObjDict[se]
 
       res = seObj.exists(lfns)
@@ -407,6 +409,9 @@ class FileStatusTransformationAgent( AgentModule ):
       self.log.error('Failure to determine if files exists in File Catalog, %s' % fcRes['Message'])
       return fcRes
 
+    if 'Failed' in fcRes['Value'] and fcRes['Value']['Failed']:
+      self.log.notice("FAILED FileCatalog Response %s" % fcRes['Value']['Failed'])
+
     # check if files found in file catalog also exist on SE
     checkLFNsOnStorage = [lfn for lfn in fcRes['Value']['Successful'] if fcRes['Value']['Successful'][lfn]]
     seRes = self.existsOnSE(SEs, checkLFNsOnStorage)
@@ -414,21 +419,16 @@ class FileStatusTransformationAgent( AgentModule ):
       self.log.error('Failure to determine if files exist on SE, %s' % seRes['Message'])
       return seRes
 
-    if 'Failed' in seRes['Value'] and seRes['Value']['Failed']:
-      self.log.error('Failed to determine if files exist on SE, %s' % seRes['Value']['Failed'])
-      return S_ERROR()
+    for se in SEs:
+      if 'Failed' in seRes['Value'] and seRes['Value']['Failed'][se]:
+        self.log.error('Failed to determine if files exist on %s, %s' % (se, seRes['Value']['Failed']))
+        return S_ERROR()
 
     fcResult = fcRes['Value']['Successful']
     seResult = seRes['Value']['Successful']
     for lfn, status in fcResult.items():
       if fcResult[lfn] and not seResult[lfn]:
         fcRes['Value']['Successful'][lfn] = False
-
-    if 'Failed' in fcRes['Value']:
-      self.log.notice("FAILED FileCatalog Response %s" % fcRes['Value']['Failed'])
-
-    if 'Failed' in seRes['Value']:
-      self.log.notice("FAILED StorageElement Response %s" % seRes['Value']['Failed'])
 
     return fcRes
 
@@ -451,7 +451,7 @@ class FileStatusTransformationAgent( AgentModule ):
         self.log.notice("No Transformation Files found with status %s for Transformation ID %d" %(status, transID))
         continue
 
-      self.log.notice("Processing Transformation Files with status %s for TransformationID %s " %(status, transID))
+      self.log.notice("Processing Transformation Files with status %s for TransformationID %d " %(status, transID))
 
       # only process Assigned files with failed requests
       if status == 'Assigned':
@@ -459,9 +459,13 @@ class FileStatusTransformationAgent( AgentModule ):
 
       lfns = [transFile['LFN'] for transFile in transFiles]
 
+      if not lfns:
+        continue
+
       res = self.exists(sourceSE, lfns)
       if not res['OK']:
         continue
+
       resultSourceSe = res['Value']['Successful']
 
       res = self.exists(targetSEs, lfns)

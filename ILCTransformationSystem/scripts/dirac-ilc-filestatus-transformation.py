@@ -13,8 +13,6 @@ from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR
 from DIRAC import exit as dexit
 
-from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import FileStatusTransformationAgent
-
 class _Params(object):
   """ parameters object """
 
@@ -25,8 +23,8 @@ class _Params(object):
   def setTransID(self, transID):
     self.transID = transID
 
-  def setEnabled(self, flag):
-    self.enabled = flag
+  def setEnabled(self, opt):
+    self.enabled = True
     return S_OK()
 
   def registerSwitches(self):
@@ -37,7 +35,7 @@ class _Params(object):
     """ parse arguments """
 
     args = Script.getPositionalArgs()
-    if len(args) < 2:
+    if len(args) < 1:
       return S_ERROR()
     else:
       self.setTransID( args[0] )
@@ -53,6 +51,7 @@ def _runFSTAgent():
     Script.showHelp()
     dexit(1)
 
+  from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import FileStatusTransformationAgent
   fstAgent = FileStatusTransformationAgent('ILCTransformation/FileStatusTransformationAgent',
                                            'ILCTransformation/FileStatusTransformationAgent',
                                            'dirac-ilc-filestatus-transformation')
@@ -60,11 +59,16 @@ def _runFSTAgent():
   fstAgent.enabled = params.enabled
 
   res = fstAgent.getTransformations(transID = params.transID)
-  if not res["OK"]:
+  if not res['OK']:
     dexit(1)
-  trans = res['Value']
 
-  res = fstAgent.processTransformation( params.transID, trans['SourceSE'], trans['TargetSE'], trans['DataTransType'])
+  if not res['Value']:
+    print "Transformation Not Found"
+    dexit(1)
+
+  trans = res['Value'][0]
+
+  res = fstAgent.processTransformation( int(params.transID), trans['SourceSE'], trans['TargetSE'], trans['DataTransType'])
   if not res["OK"]:
     dexit(1)
 
