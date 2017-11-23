@@ -375,7 +375,7 @@ class FileStatusTransformationAgent( AgentModule ):
     #TODO: remove hardcoded vo name
     for se in SEs:
       if se not in self.seObjDict:
-        self.seObjDict[se] = StorageElement(se, 'ilc')
+        self.seObjDict[se] = StorageElement(se, vo='ilc')
       seObj = self.seObjDict[se]
 
       res = seObj.exists(lfns)
