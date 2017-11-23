@@ -385,7 +385,7 @@ class FileStatusTransformationAgent( AgentModule ):
         if lfn not in result['Successful']:
           result['Successful'][lfn] = status
         else:
-          if result['Successful'] and not status:
+          if result['Successful'][lfn] and not status:
             result['Successful'][lfn] = False
 
       result['Failed'][se] = res['Value']['Failed']
@@ -405,8 +405,12 @@ class FileStatusTransformationAgent( AgentModule ):
     checkLFNsOnStorage = [lfn for lfn in fcRes['Value']['Successful'] if fcRes['Value']['Successful'][lfn]]
     seRes = self.existsOnSE(SEs, checkLFNsOnStorage)
     if not seRes['OK']:
-      self.log.error('Failure to determine if files exists on SE, %s' % seRes['Message'])
+      self.log.error('Failure to determine if files exist on SE, %s' % seRes['Message'])
       return seRes
+
+    if 'Failed' in seRes['Value'] and seRes['Value']['Failed']:
+      self.log.error('Failed to determine if files exist on SE, %s' % seRes['Value']['Failed'])
+      return res
 
     fcResult = fcRes['Value']['Successful']
     seResult = seRes['Value']['Successful']
