@@ -220,7 +220,7 @@ class FileStatusTransformationAgent( AgentModule ):
           self.log.error('Failed to set statuses for LFNs %s ' % res['Message'])
         else:
           if status not in self.accounting[transID]:
-            self.accounting[tranID][status] = {}
+            self.accounting[transID][status] = {}
           for transFile in transFiles:
             self.accounting[transID][status][transFile['LFN']] = {'Status': transFile['Status'],
                                                                   'NewStatus': status,
