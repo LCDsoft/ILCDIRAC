@@ -412,9 +412,11 @@ class FileStatusTransformationAgent( AgentModule ):
 
     voName = lfns[0].split('/')[1]
     for se in storageElements:
-      if se not in self.seObjDict:
-        self.seObjDict[se][voName] = StorageElement(se, vo=voName)
-      seObj = self.seObjDict[se][voName]
+      if voName not in self.seObjDict:
+        self.seObjDict[voName] = {}
+      if se not in self.seObjDict[voName]:
+        self.seObjDict[voName][se] = StorageElement(se, vo=voName)
+      seObj = self.seObjDict[voName][se]
 
       res = seObj.exists(lfns)
       if not res['OK']:
