@@ -77,16 +77,27 @@ class FileStatusTransformationAgent( AgentModule ):
     self.transformationFileStatuses = self.am_getOption( 'TransformationFileStatuses', ["Assigned", "Problematic", "Processed", "Unused"] )
 
     self.transformationFileStatuses = filter(self.checkFileStatusFuncExists, self.transformationFileStatuses)
+    self.accounting.clear()
+
     return S_OK()
 
   def finalize(self):
     """ Runs after a cycle is completed """
     self.log.notice('Accounting Information')
-    for transID, actions in self.accounting.items():
+    for transID, action in self.accounting.items():
       self.log.notice("Transformation ID: %s" % transID)
-      for action, values in  actions.items():
-        self.log.notice("Action: %s" % action)
-        self.log.notice("Values: %s" % values)
+      for lfn, details in  action.items():
+        if action == RESET_REQUEST:
+          self.log.notice("LFN: %s, request resubmitted, file status: %s, avialable on source: %s ,available on target: %s " % (lfn,
+                                                                                                                                details['Status'],
+                                                                                                                                details['AvailableOnSource'],
+                                                                                                                                details['AvailableOnTarget']))
+        else:
+          self.log.notice("LFN: %s, old file status: %s, new file status: %s, avialable on source: %s, available on target: %s " % (lfn,
+                                                                                                                                    details['Status'],
+                                                                                                                                    details['NewStatus'],
+                                                                                                                                    details['AvailableOnSource'],
+                                                                                                                                    details['AvailableOnTarget']))
 
     return S_OK()
 
@@ -208,13 +219,14 @@ class FileStatusTransformationAgent( AgentModule ):
         if not res['OK']:
           self.log.error('Failed to set statuses for LFNs %s ' % res['Message'])
         else:
-          if transID not in self.accounting:
-            self.accounting[transID] = {}
-
           if status not in self.accounting[transID]:
-            self.accounting[transID][status] = []
+            self.accounting[tranID][status] = {}
+          for transFile in transFiles:
+            self.accounting[transID][status][transFile['LFN']] = {'Status': transFile['Status'],
+                                                                  'NewStatus': status,
+                                                                  'AvailableOnSource': transFile['AvailableOnSource'],
+                                                                  'AvailableOnTarget': transFile['AvailableOnTarget']}
 
-          self.accounting[transID][status].append(lfns)
           self.log.notice('File Statuses updated Successfully %s' % res['Value'])
 
   def selectFailedRequests( self, transFile):
@@ -333,13 +345,11 @@ class FileStatusTransformationAgent( AgentModule ):
           else:
             res = self.reqClient.resetFailedRequest(requestID)
             if res['OK'] and res['Value'] != "Not reset":
-              if transID not in self.accounting:
-                self.accounting[transID] = {}
-
               if RESET_REQUEST not in self.accounting[transID]:
-                self.accounting[transID][RESET_REQUEST] = []
-
-              self.accounting[transID][RESET_REQUEST].append(requestID)
+                self.accounting[transID][RESET_REQUEST] = {}
+              self.accounting[transID][RESET_REQUEST][transFile['LFN']] = {'Status': transFile['Status'],
+                                                                           'AvailableOnSource': transFile['AvailableOnSource'],
+                                                                           'AvailableOnTarget': transFile['AvailableOnTarget']}
 
               res = self.tClient.setTaskStatus( transID, transFile['TaskID'], 'Waiting' )
               if not res['OK']:
@@ -465,6 +475,8 @@ class FileStatusTransformationAgent( AgentModule ):
     actions[SET_PROCESSED] = []
     actions[RETRY] = []
     actions[SET_DELETED] = []
+
+    self.accounting[transID] = {}
 
     for status in self.transformationFileStatuses:
       res = self.tClient.getTransformationFiles(condDict={'TransformationID': transID, 'Status': status})
