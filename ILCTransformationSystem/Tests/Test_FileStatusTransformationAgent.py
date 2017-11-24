@@ -190,11 +190,12 @@ class TestFSTAgent( unittest.TestCase ):
 
     files = [fileExists, fileOneRepLost, fileAllRepLost, fileFailed]
 
-    self.fstAgent.seObjDict[se1] = MagicMock()
-    self.fstAgent.seObjDict[se2] = MagicMock()
+    self.fstAgent.seObjDict['ilc'] = {}
+    self.fstAgent.seObjDict['ilc'][se1] = MagicMock()
+    self.fstAgent.seObjDict['ilc'][se2] = MagicMock()
 
-    self.fstAgent.seObjDict[se1]['ilc'].exists.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLost: True, fileAllRepLost: False, fileFailed: True}, 'Failed': {}})
-    self.fstAgent.seObjDict[se2]['ilc'].exists.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLost: False, fileAllRepLost: False}, 'Failed': {fileFailed: 'permission denied'}})
+    self.fstAgent.seObjDict['ilc'][se1].exists.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLost: True, fileAllRepLost: False, fileFailed: True}, 'Failed': {}})
+    self.fstAgent.seObjDict['ilc'][se2].exists.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLost: False, fileAllRepLost: False}, 'Failed': {fileFailed: 'permission denied'}})
 
     res = self.fstAgent.existsOnSE(SEs, files )['Value']
 
