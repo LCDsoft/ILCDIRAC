@@ -1,5 +1,22 @@
 """
-FST Agent DESCRIPTION HERE
+FileStatusTransformation Agent performs the following actions:
+
++-----------------------+------------------+----------------------------+---------------+---------------+---------------------------+
+|  Transformation Type  |  Request Status  | Transformation File Status |    Source     |    Target     |          Action           |
++-----------------------+------------------+----------------------------+---------------+---------------+---------------------------+
+| Moving                | *                | Problematic / Processed    | Available     | Available     | Retry                     |
+| Replication / Moving  | *                | Problematic / Processed    | Available     | Not Available | Retry                     |
+| Moving                | Failed           | Assigned                   | Available     | Available     | Retry                     |
+| Replication / Moving  | Failed           | Assigned                   | Available     | Not Available | Retry                     |
+| Replication           | Failed           | Assigned                   | Available     | Available     | Set file status PROCESSED |
+| Replication / Moving  | *                | Other than Processed       | Not Available | Available     | Set file Status PROCESSED |
+| Replication / Moving  | *                | *                          | Not Available | Not Available | Set File status DELETED   |
++-----------------------+------------------+----------------------------+---------------+---------------+---------------------------+
+
+- If the action is Retry then the request is reset if it exists in Request Management System, otherwise the file status is set to unused
+- Available means the file exists in File Catalog and also exists physically on Storage Elements
+- Not Available means the file doesn't exist in File Catalog or one or more replicas are lost on the Storage Elements
+
 """
 
 import json
