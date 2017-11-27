@@ -35,9 +35,9 @@ AGENT_NAME = 'ILCTransformation/FileStatusTransformationAgent'
 
 SET_PROCESSED = 'set_processed'
 SET_DELETED = 'set_deleted'
+SET_UNUSED = 'set_unused'
 
 RETRY = 'retry'
-SET_UNUSED = 'set_unused'
 RESET_REQUEST = 'reset_request'
 
 REPLICATION_TRANS = 'Replication'
@@ -83,26 +83,24 @@ class FileStatusTransformationAgent( AgentModule ):
 
   def finalize(self):
     """ Runs after a cycle is completed """
-    self.log.notice('Accounting Information')
-    for transID, action in self.accounting.items():
-      self.log.notice("Transformation ID: %s" % transID)
-      for lfn, details in  action.items():
-        if action == RESET_REQUEST:
-          self.log.notice("LFN: %s, request resubmitted, file status: %s, avialable on source: %s ,available on target: %s " % (lfn,
-                                                                                                                                details['Status'],
-                                                                                                                                details['AvailableOnSource'],
-                                                                                                                                details['AvailableOnTarget']))
-        else:
-          self.log.notice("LFN: %s, old file status: %s, new file status: %s, avialable on source: %s, available on target: %s " % (lfn,
-                                                                                                                                    details['Status'],
-                                                                                                                                    details['NewStatus'],
-                                                                                                                                    details['AvailableOnSource'],
-                                                                                                                                    details['AvailableOnTarget']))
 
+    self.log.notice('Accounting Information')
+    for transType, transformations in self.accounting.items():
+      self.log.notice("Transformation Type: %s" % transType)
+      for transID, actions in transformations.items():
+        self.log.notice("Transformation ID: %s" % transID)
+        for action, transFiles in actions.items():
+          self.log.notice("Action: %s" % action)
+          for transFile in transFiles:
+            self.log.notice("LFN: %s \tStatus: %s \tAvailable On Source: %s \tAvailable On Target: %s" %(transFile['LFN'],
+                                                                                                         transFile['Status'],
+                                                                                                         transFile['AvailableOnSource'],
+                                                                                                         transFile['AvailableOnTarget']))
     return S_OK()
 
   def execute( self ):
     """ main execution loop of Agent """
+
     res = self.getTransformations()
     if not res['OK']:
       self.log.error('Failure to get transformations', res['Message'])
@@ -205,7 +203,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_ERROR( "Unknown Transformation Type %s" % res['Value'] )
 
-  def setFileStatus(self, transID, transFiles, status):
+  def setFileStatus(self, transID, transType, transFiles, status):
     """ sets transformation file status  """
 
     lfns = [transFile['LFN'] for transFile in transFiles]
@@ -219,13 +217,13 @@ class FileStatusTransformationAgent( AgentModule ):
         if not res['OK']:
           self.log.error('Failed to set statuses for LFNs %s ' % res['Message'])
         else:
-          if status not in self.accounting[transID]:
-            self.accounting[transID][status] = {}
+          if status not in self.accounting[transType][transID]:
+            self.accounting[transType][transID][status] = []
           for transFile in transFiles:
-            self.accounting[transID][status][transFile['LFN']] = {'Status': transFile['Status'],
-                                                                  'NewStatus': status,
-                                                                  'AvailableOnSource': transFile['AvailableOnSource'],
-                                                                  'AvailableOnTarget': transFile['AvailableOnTarget']}
+            self.accounting[transType][transID][status].append({'LFN': transFile['LFN'],
+                                                                'Status': transFile['Status'],
+                                                                'AvailableOnSource': transFile['AvailableOnSource'],
+                                                                'AvailableOnTarget': transFile['AvailableOnTarget']})
 
           self.log.notice('File Statuses updated Successfully %s' % res['Value'])
 
@@ -327,7 +325,7 @@ class FileStatusTransformationAgent( AgentModule ):
         #not available on source and target
         actions[SET_DELETED].append(transFile)
 
-  def retryFiles(self, transID, transFiles):
+  def retryFiles(self, transID, transType, transFiles):
     """ resubmits request or sets file status to unused based on the retry strategy of transformation file """
     setFilesUnused = []
 
@@ -345,11 +343,12 @@ class FileStatusTransformationAgent( AgentModule ):
           else:
             res = self.reqClient.resetFailedRequest(requestID)
             if res['OK'] and res['Value'] != "Not reset":
-              if RESET_REQUEST not in self.accounting[transID]:
-                self.accounting[transID][RESET_REQUEST] = {}
-              self.accounting[transID][RESET_REQUEST][transFile['LFN']] = {'Status': transFile['Status'],
-                                                                           'AvailableOnSource': transFile['AvailableOnSource'],
-                                                                           'AvailableOnTarget': transFile['AvailableOnTarget']}
+              if RESET_REQUEST not in self.accounting[transType][transID]:
+                self.accounting[transType][transID][RESET_REQUEST] = []
+              self.accounting[transType][transID][RESET_REQUEST].append({'LFN': transFile['LFN'],
+                                                                         'Status': transFile['Status'],
+                                                                         'AvailableOnSource': transFile['AvailableOnSource'],
+                                                                         'AvailableOnTarget': transFile['AvailableOnTarget']})
 
               res = self.tClient.setTaskStatus( transID, transFile['TaskID'], 'Waiting' )
               if not res['OK']:
@@ -358,20 +357,20 @@ class FileStatusTransformationAgent( AgentModule ):
           setFilesUnused.append(transFile)
 
     if setFilesUnused:
-      self.setFileStatus(transID, setFilesUnused, 'Unused')
+      self.setFileStatus(transID, transType, setFilesUnused, 'Unused')
 
 
-  def applyActions( self, transID, actions):
+  def applyActions( self, transID, transType, actions):
     for action, transFiles in actions.items():
       if action == SET_PROCESSED and transFiles:
-        self.setFileStatus( transID, transFiles, 'Processed')
+        self.setFileStatus( transID, transType, transFiles, 'Processed')
 
       elif action == SET_DELETED and transFiles:
-        self.setFileStatus( transID, transFiles, 'Deleted')
+        self.setFileStatus( transID, transType, transFiles, 'Deleted')
 
       elif action == RETRY and transFiles:
         #if there is a request in RMS then reset request otherwise set file status unused
-        self.retryFiles(transID, transFiles)
+        self.retryFiles(transID, transType, transFiles)
 
       else:
         self.log.notice('No %s action to apply for trans ID %s' % (action, transID))
@@ -478,7 +477,10 @@ class FileStatusTransformationAgent( AgentModule ):
     actions[RETRY] = []
     actions[SET_DELETED] = []
 
-    self.accounting[transID] = {}
+    if transType not in self.accounting:
+      self.accounting[transType] = {}
+
+    self.accounting[transType][transID] = {}
 
     for status in self.transformationFileStatuses:
       res = self.tClient.getTransformationFiles(condDict={'TransformationID': transID, 'Status': status})
@@ -523,5 +525,5 @@ class FileStatusTransformationAgent( AgentModule ):
       checkFiles = getattr(self, checkFilesFuncName)
       checkFiles( actions, transFiles, transType )
 
-    self.applyActions( transID, actions )
+    self.applyActions( transID, transType, actions )
     return S_OK()
