@@ -20,10 +20,10 @@ FileStatusTransformation Agent performs the following actions:
 """
 
 import json
-import prettytable
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
+from DIRAC.Core.Utilities.PrettyPrint import printTable
 
 from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
@@ -92,30 +92,28 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_OK()
 
-  def finalize(self):
-    """ Runs after a cycle is completed """
+  def sendNotification(self, transID, transType):
+    """ sends email notification about accounting information of a transformation """
+    emailBody = "Accounting Information\n\n"
+    columns = ["LFN", "Source", "Target", "Old Status", "Action"]
 
-    emailBody = "Accounting Information"
-    table = prettytable.PrettyTable()
-    table.field_names = ["Trans ID", "LFN", "Source", "Target", "Old Status", "Action"]
-    for transType, transformations in self.accounting.items():
-      emailBody += str("\n\nTransformation Type: %s\n" % transType)
-      emailBody += str("Total number of %s Transformations Processed: %s\n" % (transType, len(transformations)))
-      for transID, actions in transformations.items():
-        for action, transFiles in actions.items():
-          for transFile in transFiles:
-            table.add_row([transID, transFile['LFN'], transFile['AvailableOnSource'], transFile['AvailableOnTarget'], transFile['Status'], action])
-      if table._rows:
-        emailBody += table.get_string()
-        table.clear_rows()
+    emailBody += str("Transformation ID: %s\n" % transID)
+    emailBody += str("Transformation Type: %s\n" % transType)
 
-    self.log.notice(emailBody)
+    rows = []
+    for action, transFiles in self.accounting[transID].items():
+      for transFile in transFiles:
+        rows.append([[transFile['LFN']], [str(transFile['AvailableOnSource'])], [str(transFile['AvailableOnTarget'])], [transFile['Status']], [action]])
 
-    for address in self.addressTo:
-      res = self.nClient.sendMail( address, self.emailSubject, emailBody, self.addressFrom, localAttempt = False )
-      if not res['OK']:
-        self.log.error( "Failure to send Email notification" )
-        return res
+    if rows:
+      emailBody += printTable(columns, rows, printOut = False, numbering = False, columnSeparator = ' | ')
+      self.log.notice(emailBody)
+
+      for address in self.addressTo:
+        res = self.nClient.sendMail( address, self.emailSubject, emailBody, self.addressFrom, localAttempt = False )
+        if not res['OK']:
+          self.log.error( "Failure to send Email notification" )
+          return res
 
     return S_OK()
 
@@ -224,7 +222,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_ERROR( "Unknown Transformation Type %s" % res['Value'] )
 
-  def setFileStatus(self, transID, transType, transFiles, status):
+  def setFileStatus(self, transID, transFiles, status):
     """ sets transformation file status  """
 
     lfns = [transFile['LFN'] for transFile in transFiles]
@@ -238,13 +236,13 @@ class FileStatusTransformationAgent( AgentModule ):
         if not res['OK']:
           self.log.error('Failed to set statuses for LFNs %s ' % res['Message'])
         else:
-          if status not in self.accounting[transType][transID]:
-            self.accounting[transType][transID][status] = []
+          if status not in self.accounting[transID]:
+            self.accounting[transID][status] = []
           for transFile in transFiles:
-            self.accounting[transType][transID][status].append({'LFN': transFile['LFN'],
-                                                                'Status': transFile['Status'],
-                                                                'AvailableOnSource': transFile['AvailableOnSource'],
-                                                                'AvailableOnTarget': transFile['AvailableOnTarget']})
+            self.accounting[transID][status].append({'LFN': transFile['LFN'],
+                                                     'Status': transFile['Status'],
+                                                     'AvailableOnSource': transFile['AvailableOnSource'],
+                                                     'AvailableOnTarget': transFile['AvailableOnTarget']})
 
           self.log.notice('File Statuses updated Successfully %s' % res['Value'])
 
@@ -346,7 +344,7 @@ class FileStatusTransformationAgent( AgentModule ):
         #not available on source and target
         actions[SET_DELETED].append(transFile)
 
-  def retryFiles(self, transID, transType, transFiles):
+  def retryFiles(self, transID, transFiles):
     """ resubmits request or sets file status to unused based on the retry strategy of transformation file """
     setFilesUnused = []
 
@@ -364,12 +362,12 @@ class FileStatusTransformationAgent( AgentModule ):
           else:
             res = self.reqClient.resetFailedRequest(requestID)
             if res['OK'] and res['Value'] != "Not reset":
-              if RESET_REQUEST not in self.accounting[transType][transID]:
-                self.accounting[transType][transID][RESET_REQUEST] = []
-              self.accounting[transType][transID][RESET_REQUEST].append({'LFN': transFile['LFN'],
-                                                                         'Status': transFile['Status'],
-                                                                         'AvailableOnSource': transFile['AvailableOnSource'],
-                                                                         'AvailableOnTarget': transFile['AvailableOnTarget']})
+              if RESET_REQUEST not in self.accounting[transID]:
+                self.accounting[transID][RESET_REQUEST] = []
+              self.accounting[transID][RESET_REQUEST].append({'LFN': transFile['LFN'],
+                                                              'Status': transFile['Status'],
+                                                              'AvailableOnSource': transFile['AvailableOnSource'],
+                                                              'AvailableOnTarget': transFile['AvailableOnTarget']})
 
               res = self.tClient.setTaskStatus( transID, transFile['TaskID'], 'Waiting' )
               if not res['OK']:
@@ -378,20 +376,20 @@ class FileStatusTransformationAgent( AgentModule ):
           setFilesUnused.append(transFile)
 
     if setFilesUnused:
-      self.setFileStatus(transID, transType, setFilesUnused, 'Unused')
+      self.setFileStatus(transID, setFilesUnused, 'Unused')
 
 
-  def applyActions( self, transID, transType, actions):
+  def applyActions( self, transID, actions):
     for action, transFiles in actions.items():
       if action == SET_PROCESSED and transFiles:
-        self.setFileStatus( transID, transType, transFiles, 'Processed')
+        self.setFileStatus( transID, transFiles, 'Processed')
 
       elif action == SET_DELETED and transFiles:
-        self.setFileStatus( transID, transType, transFiles, 'Deleted')
+        self.setFileStatus( transID, transFiles, 'Deleted')
 
       elif action == RETRY and transFiles:
         #if there is a request in RMS then reset request otherwise set file status unused
-        self.retryFiles(transID, transType, transFiles)
+        self.retryFiles(transID, transFiles)
 
       else:
         self.log.notice('No %s action to apply for trans ID %s' % (action, transID))
@@ -498,10 +496,8 @@ class FileStatusTransformationAgent( AgentModule ):
     actions[RETRY] = []
     actions[SET_DELETED] = []
 
-    if transType not in self.accounting:
-      self.accounting[transType] = {}
 
-    self.accounting[transType][transID] = {}
+    self.accounting[transID] = {}
 
     for status in self.transformationFileStatuses:
       res = self.tClient.getTransformationFiles(condDict={'TransformationID': transID, 'Status': status})
@@ -546,5 +542,7 @@ class FileStatusTransformationAgent( AgentModule ):
       checkFiles = getattr(self, checkFilesFuncName)
       checkFiles( actions, transFiles, transType )
 
-    self.applyActions( transID, transType, actions )
+    self.applyActions( transID,  actions )
+    self.sendNotification( transID, transType )
+
     return S_OK()

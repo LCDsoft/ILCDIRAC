@@ -302,60 +302,60 @@ class TestFSTAgent( unittest.TestCase ):
     #check replication transformation treatment for assigned files
     self.fstAgent.setFileStatus.reset_mock()
     self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.REPLICATION_TRANS, [fileNotAvailableOnSrc, fileAvailable], 'Processed')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.REPLICATION_TRANS, [fileNotAvailableOnDst], 'Unused')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.REPLICATION_TRANS, [fileNotAvailable], 'Deleted')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc, fileAvailable], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     #check moving transformation treatment for assigned files
     self.fstAgent.setFileStatus.reset_mock()
     self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailableOnSrc], 'Processed')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailableOnDst, fileAvailable], 'Unused')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailable], 'Deleted')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst, fileAvailable], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     self.fstAgent.transformationFileStatuses = ['Processed']
 
     #check replication transformation treatment for processed files
     self.fstAgent.setFileStatus.reset_mock()
     self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.REPLICATION_TRANS, [fileNotAvailableOnDst], 'Unused')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.REPLICATION_TRANS, [fileNotAvailable], 'Deleted')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     #check moving transformation treatment for processed files
     self.fstAgent.setFileStatus.reset_mock()
     self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailableOnDst, fileAvailable], 'Unused')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailable], 'Deleted')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst, fileAvailable], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     self.fstAgent.transformationFileStatuses = ['Problematic']
 
     #check replication transformation treatment for problematic files
     self.fstAgent.setFileStatus.reset_mock()
     self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.REPLICATION_TRANS, [fileNotAvailableOnSrc, fileAvailable], 'Processed')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.REPLICATION_TRANS, [fileNotAvailableOnDst], 'Unused')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.REPLICATION_TRANS, [fileNotAvailable], 'Deleted')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc, fileAvailable], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     #check moving transformation treatment for problematic files
     self.fstAgent.setFileStatus.reset_mock()
     self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailableOnSrc], 'Processed')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailableOnDst, fileAvailable], 'Unused')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailable], 'Deleted')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst, fileAvailable], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     self.fstAgent.transformationFileStatuses = ['Unused']
 
     #check replication transformation treatment for unused files
     self.fstAgent.setFileStatus.reset_mock()
     self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.REPLICATION_TRANS, [fileNotAvailableOnSrc], 'Processed')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.REPLICATION_TRANS, [fileNotAvailable], 'Deleted')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     #check moving transformation treatment for unused files
     self.fstAgent.setFileStatus.reset_mock()
     self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailableOnSrc], 'Processed')
-    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailable], 'Deleted')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc], 'Processed')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
 
 if __name__ == "__main__":
