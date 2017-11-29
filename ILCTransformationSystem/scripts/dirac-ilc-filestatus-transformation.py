@@ -72,8 +72,6 @@ def _runFSTAgent():
   if not res["OK"]:
     dexit(1)
 
-  fstAgent.finalize()
-
   dexit(0)
 
 if __name__=="__main__":
