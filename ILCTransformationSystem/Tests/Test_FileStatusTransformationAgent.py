@@ -93,16 +93,6 @@ class TestFSTAgent( unittest.TestCase ):
     self.assertTrue(res['OK'])
 
 
-  def test_unknown_file_status(self):
-    """ fstAgent should not process file statuses other than Assigned, Problematic, Processed, Unused """
-    allowedFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
-    self.fstAgent.am_getOption = MagicMock()
-    self.fstAgent.am_getOption.side_effect = [False, ["Replication"], ["Active"], ["UnknownStatus", "Failed", "Done"]+allowedFileStatuses ]
-
-    self.fstAgent.beginExecution()
-    self.assertItemsEqual(self.fstAgent.transformationFileStatuses, allowedFileStatuses)
-
-
   def test_get_data_transformation_type(self):
     """ Test if getDataTransformationType function correctly returns the Data Transformation Type (Replication / Moving) """
     self.fstAgent.tClient.getTransformationParameters = MagicMock()
@@ -139,6 +129,7 @@ class TestFSTAgent( unittest.TestCase ):
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
     self.assertEquals(res, FST.REPLICATION_TRANS)
 
+
   def test_exists_in_FC(self):
     """ Test if the existsInFC function correctly determines if all replicas of files are registered in FC """
     se1 = 'CERN-SRM'
@@ -168,6 +159,7 @@ class TestFSTAgent( unittest.TestCase ):
     self.assertFalse(res['Successful'][fileOneRepLost])
     self.assertFalse(res['Successful'][fileAllRepLost])
     self.assertFalse(res['Successful'][fileRemoved])
+
 
   def test_exists_on_storage_element(self):
     """ Test if the existsOnSE function correctly determines if a file exists on all provided Storage Elements or not """
@@ -249,6 +241,7 @@ class TestFSTAgent( unittest.TestCase ):
     res = self.fstAgent.selectFailedRequests(transFileWithDoneReq)
     self.assertFalse(res)
 
+
   def test_retry_strategy_for_files(self):
     """ Test if the request exists then retry strategy is resetting the request otherwise set the file to unused """
 
@@ -282,6 +275,7 @@ class TestFSTAgent( unittest.TestCase ):
         result[lfn] = True
 
     return S_OK({'Successful': result})
+
 
   def test_trans_files_treatment(self):
     """ test transformation files are treated properly (set new status / reset request) for replication and moving transformations """
@@ -362,6 +356,7 @@ class TestFSTAgent( unittest.TestCase ):
     self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailableOnSrc], 'Processed')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, FST.MOVING_TRANS, [fileNotAvailable], 'Deleted')
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestFSTAgent )

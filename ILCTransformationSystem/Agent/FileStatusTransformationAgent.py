@@ -13,17 +13,19 @@ FileStatusTransformation Agent performs the following actions:
 | Replication / Moving  | *                | *                          | Not Available | Not Available | Set File status DELETED   |
 +-----------------------+------------------+----------------------------+---------------+---------------+---------------------------+
 
-- If the action is Retry then the request is reset if it exists in Request Management System, otherwise the file status is set to unused
-- Available means the file exists in File Catalog and also exists physically on Storage Elements
-- Not Available means the file doesn't exist in File Catalog or one or more replicas are lost on the Storage Elements
+* If the action is Retry then the request is reset if it exists in Request Management System, otherwise the file status is set to unused
+* Available means the file exists in File Catalog and also exists physically on Storage Elements
+* Not Available means the file doesn't exist in File Catalog or one or more replicas are lost on the Storage Elements
 
 """
 
 import json
+from prettytable import PrettyTable
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
 
+from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
@@ -33,12 +35,12 @@ __RCSID__ = "$Id$"
 
 AGENT_NAME = 'ILCTransformation/FileStatusTransformationAgent'
 
-SET_PROCESSED = 'set_processed'
-SET_DELETED = 'set_deleted'
-SET_UNUSED = 'set_unused'
+SET_PROCESSED = 'SET_PROCESSED'
+SET_DELETED = 'SET_DELETED'
+SET_UNUSED = 'SET_UNUSED'
 
 RETRY = 'retry'
-RESET_REQUEST = 'reset_request'
+RESET_REQUEST = 'RESET_REQUEST'
 
 REPLICATION_TRANS = 'Replication'
 MOVING_TRANS = 'Moving'
@@ -53,12 +55,18 @@ class FileStatusTransformationAgent( AgentModule ):
     self.transformationTypes = ["Replication"]
     self.transformationStatuses = ["Active"]
     self.transformationFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
+
+    self.addressTo = ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"]
+    self.addressFrom = "ilcdirac-admin@cern.ch" 
+    self.emailSubject = "FileStatusTransformationAgent"
+
     self.seObjDict = {}
     self.accounting = {}
 
     self.fcClient = FileCatalogClient()
     self.tClient = TransformationClient()
     self.reqClient = ReqClient()
+    self.nClient = NotificationClient()
 
   def checkFileStatusFuncExists( self, status):
     """ returns True/False if a function to check transformation files with a given status exists or not """
@@ -76,6 +84,9 @@ class FileStatusTransformationAgent( AgentModule ):
     self.transformationStatuses = self.am_getOption( 'TransformationStatuses', ["Active"] )
     self.transformationFileStatuses = self.am_getOption( 'TransformationFileStatuses', ["Assigned", "Problematic", "Processed", "Unused"] )
 
+    self.addressTo = self.am_getOption( 'MailTo', ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"] )
+    self.addressFrom = self.am_getOption( 'MailFrom', "ilcdirac-admin@cern.ch" )
+
     self.transformationFileStatuses = filter(self.checkFileStatusFuncExists, self.transformationFileStatuses)
     self.accounting.clear()
 
@@ -84,18 +95,28 @@ class FileStatusTransformationAgent( AgentModule ):
   def finalize(self):
     """ Runs after a cycle is completed """
 
-    self.log.notice('Accounting Information')
+    emailBody = "Accounting Information"
+    table = PrettyTable()
+    table.field_names = ["Trans ID", "LFN", "Source", "Target", "Old Status", "Action"]
     for transType, transformations in self.accounting.items():
-      self.log.notice("Transformation Type: %s" % transType)
+      emailBody += str("\n\nTransformation Type: %s\n" % transType)
+      emailBody += str("Total number of %s Transformations Processed: %s\n" % (transType, len(transformations)))
       for transID, actions in transformations.items():
-        self.log.notice("Transformation ID: %s" % transID)
         for action, transFiles in actions.items():
-          self.log.notice("Action: %s" % action)
           for transFile in transFiles:
-            self.log.notice("LFN: %s \tStatus: %s \tAvailable On Source: %s \tAvailable On Target: %s" %(transFile['LFN'],
-                                                                                                         transFile['Status'],
-                                                                                                         transFile['AvailableOnSource'],
-                                                                                                         transFile['AvailableOnTarget']))
+            table.add_row([transID, transFile['LFN'], transFile['AvailableOnSource'], transFile['AvailableOnTarget'], transFile['Status'], action])
+      if table._rows:
+        emailBody += table.get_string()
+        table.clear_rows()
+
+    self.log.notice(emailBody)
+
+    for address in self.addressTo:
+      res = self.nClient.sendMail( address, self.emailSubject, emailBody, self.addressFrom, localAttempt = False )
+      if not res['OK']:
+        self.log.error( "Failure to send Email notification" )
+        return res
+
     return S_OK()
 
   def execute( self ):
