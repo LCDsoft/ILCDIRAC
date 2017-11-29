@@ -385,15 +385,13 @@ class FileStatusTransformationAgent( AgentModule ):
       if action == SET_PROCESSED and transFiles:
         self.setFileStatus( transID, transFiles, 'Processed')
 
-      elif action == SET_DELETED and transFiles:
+      if action == SET_DELETED and transFiles:
         self.setFileStatus( transID, transFiles, 'Deleted')
 
-      elif action == RETRY and transFiles:
+      if action == RETRY and transFiles:
         #if there is a request in RMS then reset request otherwise set file status unused
         self.retryFiles(transID, transFiles)
 
-      else:
-        self.log.notice('No %s action to apply for trans ID %s' % (action, transID))
 
   def existsInFC(self, storageElements, lfns):
     """ checks if files have replicas registered in File Catalog for all given storageElements """
