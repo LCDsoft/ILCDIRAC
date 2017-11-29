@@ -94,11 +94,9 @@ class FileStatusTransformationAgent( AgentModule ):
 
   def sendNotification(self, transID, transType):
     """ sends email notification about accounting information of a transformation """
-    emailBody = "Accounting Information\n\n"
-    columns = ["LFN", "Source", "Target", "Old Status", "Action"]
 
-    emailBody += str("Transformation ID: %s\n" % transID)
-    emailBody += str("Transformation Type: %s\n" % transType)
+    columns = ["LFN", "Source", "Target", "Old Status", "Action"]
+    emailBody = "Accounting Information for Transformation ID: %s Transformation Type: %s\n" % (transID, transType)
 
     rows = []
     for action, transFiles in self.accounting[transID].items():
@@ -229,22 +227,20 @@ class FileStatusTransformationAgent( AgentModule ):
     lfnStatuses = {lfn: status for lfn in lfns}
 
     if lfnStatuses:
-      if not self.enabled:
-        self.log.notice('Would have set status %s for files %s' % (status, lfns))
-      else:
+      if self.enabled:
         res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=lfnStatuses)
         if not res['OK']:
           self.log.error('Failed to set statuses for LFNs %s ' % res['Message'])
-        else:
-          if status not in self.accounting[transID]:
-            self.accounting[transID][status] = []
-          for transFile in transFiles:
-            self.accounting[transID][status].append({'LFN': transFile['LFN'],
-                                                     'Status': transFile['Status'],
-                                                     'AvailableOnSource': transFile['AvailableOnSource'],
-                                                     'AvailableOnTarget': transFile['AvailableOnTarget']})
+          return res
 
-          self.log.notice('File Statuses updated Successfully %s' % res['Value'])
+      if status not in self.accounting[transID]:
+        self.accounting[transID][status] = []
+      for transFile in transFiles:
+        self.accounting[transID][status].append({'LFN': transFile['LFN'],
+                                                 'Status': transFile['Status'],
+                                                 'AvailableOnSource': transFile['AvailableOnSource'],
+                                                 'AvailableOnTarget': transFile['AvailableOnTarget']})
+    return S_OK()
 
   def selectFailedRequests( self, transFile):
     """ returns True if transformation file has a failed request otherwise returns False """
@@ -351,32 +347,37 @@ class FileStatusTransformationAgent( AgentModule ):
     res = self.retryStrategyForFiles(transID, transFiles)
     if not res['OK']:
       self.log.error('Failure to determine retry strategy ( set unused / reset request) for transformation files')
-    else:
-      retryStrategy = res['Value']
-      for transFile in transFiles:
-        if retryStrategy[transFile['TaskID']]['Strategy'] == RESET_REQUEST:
-          requestID = retryStrategy[transFile['TaskID']]['RequestID']
+      return res
 
-          if not self.enabled:
-            self.log.notice('Would have re-submitted the request %s ' % requestID)
-          else:
-            res = self.reqClient.resetFailedRequest(requestID)
-            if res['OK'] and res['Value'] != "Not reset":
-              if RESET_REQUEST not in self.accounting[transID]:
-                self.accounting[transID][RESET_REQUEST] = []
-              self.accounting[transID][RESET_REQUEST].append({'LFN': transFile['LFN'],
-                                                              'Status': transFile['Status'],
-                                                              'AvailableOnSource': transFile['AvailableOnSource'],
-                                                              'AvailableOnTarget': transFile['AvailableOnTarget']})
+    retryStrategy = res['Value']
+    for transFile in transFiles:
+      if retryStrategy[transFile['TaskID']]['Strategy'] == RESET_REQUEST:
+        requestID = retryStrategy[transFile['TaskID']]['RequestID']
 
-              res = self.tClient.setTaskStatus( transID, transFile['TaskID'], 'Waiting' )
-              if not res['OK']:
-                self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
-        else:
-          setFilesUnused.append(transFile)
+        if self.enabled:
+          res = self.reqClient.resetFailedRequest(requestID)
+          if not res['OK'] or res['Value'] == "Not reset":
+            self.log.error('Failed to reset request %s' % res['Message'])
+            return res
+
+          res = self.tClient.setTaskStatus( transID, transFile['TaskID'], 'Waiting' )
+          if not res['OK']:
+            self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
+            return res
+
+        if RESET_REQUEST not in self.accounting[transID]:
+          self.accounting[transID][RESET_REQUEST] = []
+        self.accounting[transID][RESET_REQUEST].append({'LFN': transFile['LFN'],
+                                                        'Status': transFile['Status'],
+                                                        'AvailableOnSource': transFile['AvailableOnSource'],
+                                                        'AvailableOnTarget': transFile['AvailableOnTarget']})
+      else:
+        setFilesUnused.append(transFile)
 
     if setFilesUnused:
       self.setFileStatus(transID, setFilesUnused, 'Unused')
+
+    return S_OK()
 
 
   def applyActions( self, transID, actions):
