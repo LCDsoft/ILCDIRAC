@@ -20,7 +20,7 @@ FileStatusTransformation Agent performs the following actions:
 """
 
 import json
-from prettytable import PrettyTable
+import prettytable
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
@@ -96,7 +96,7 @@ class FileStatusTransformationAgent( AgentModule ):
     """ Runs after a cycle is completed """
 
     emailBody = "Accounting Information"
-    table = PrettyTable()
+    table = prettytable.PrettyTable()
     table.field_names = ["Trans ID", "LFN", "Source", "Target", "Old Status", "Action"]
     for transType, transformations in self.accounting.items():
       emailBody += str("\n\nTransformation Type: %s\n" % transType)
