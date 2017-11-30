@@ -13,7 +13,7 @@ FileStatusTransformation Agent performs the following actions:
 | Replication / Moving  | Any              | Any                       | Not Available| Not Available | Set DELETED   |
 +-----------------------+------------------+---------------------------+--------------+---------------+---------------+
 
-* If the action is Retry then the request is reset if it exists in Request Management System, otherwise the file status is set to unused
+* If the action is Retry then the request is reset if it exists in RMS, otherwise the file status is set to unused
 * Available means the file exists in File Catalog and also exists physically on Storage Elements
 * Not Available means the file doesn't exist in File Catalog or one or more replicas are lost on the Storage Elements
 
@@ -147,7 +147,9 @@ class FileStatusTransformationAgent(AgentModule):
     res = None
     if transID:
       res = self.tClient.getTransformations(
-          condDict={'TransformationID': transID, 'Status': self.transformationStatuses, 'Type': self.transformationTypes})
+          condDict={'TransformationID': transID,
+                    'Status': self.transformationStatuses,
+                    'Type': self.transformationTypes})
     else:
       res = self.tClient.getTransformations(
           condDict={'Status': self.transformationStatuses, 'Type': self.transformationTypes})
@@ -214,7 +216,7 @@ class FileStatusTransformationAgent(AgentModule):
           replication = True
         if 'RemoveReplica' in operation:
           rmReplica = True
-    except:
+    except ValueError:
       if 'ReplicateAndRegister' in res['Value']:
         replication = True
         if 'RemoveReplica' in res['Value']:
@@ -301,7 +303,7 @@ class FileStatusTransformationAgent(AgentModule):
         actions[SET_PROCESSED].append(transFile)
 
       else:
-        #not on src and target
+        # not on src and target
         actions[SET_DELETED].append(transFile)
 
   def check_unused_files(self, actions, transFiles, transType):
@@ -341,7 +343,7 @@ class FileStatusTransformationAgent(AgentModule):
         actions[SET_PROCESSED].append(transFile)
 
       else:
-        #not available on source and target
+        # not available on source and target
         actions[SET_DELETED].append(transFile)
 
   def retryFiles(self, transID, transFiles):
@@ -393,7 +395,7 @@ class FileStatusTransformationAgent(AgentModule):
         self.setFileStatus(transID, transFiles, 'Deleted')
 
       if action == RETRY and transFiles:
-        #if there is a request in RMS then reset request otherwise set file status unused
+        # if there is a request in RMS then reset request otherwise set file status unused
         self.retryFiles(transID, transFiles)
 
   def existsInFC(self, storageElements, lfns):
@@ -413,7 +415,7 @@ class FileStatusTransformationAgent(AgentModule):
       else:
         result['Failed'][lfn] = msg
 
-    #check if all replicas are registered in FC
+    # check if all replicas are registered in FC
     filesFoundInFC = res['Value']['Successful']
     for lfn, replicas in filesFoundInFC.items():
       result['Successful'][lfn] = setOfSEs.issubset(replicas.keys())
@@ -513,7 +515,6 @@ class FileStatusTransformationAgent(AgentModule):
 
       self.log.notice("Processing Transformation Files with status %s for TransformationID %d " % (status, transID))
 
-      # only process Assigned files with failed requests
       if status == 'Assigned':
         transFiles = filter(self.selectFailedRequests, transFiles)
 
@@ -533,7 +534,6 @@ class FileStatusTransformationAgent(AgentModule):
         continue
       resultTargetSEs = res['Value']['Successful']
 
-      #fill transFile dict with file availability information on Source and Target SE
       for transFile in transFiles:
         lfn = transFile['LFN']
         transFile['AvailableOnSource'] = resultSourceSe[lfn]
