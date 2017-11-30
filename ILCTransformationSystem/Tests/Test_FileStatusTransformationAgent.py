@@ -105,7 +105,7 @@ class TestFSTAgent(unittest.TestCase):
     self.assertFalse(res['OK'])
 
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK(
-        '[["ReplicateAndRegister", {"TargetSE": ["CERN-SRM"], "SourceSE": "CERN-DST-EOS"}],'\
+        '[["ReplicateAndRegister", {"TargetSE": ["CERN-SRM"], "SourceSE": "CERN-DST-EOS"}],'
         '["RemoveReplica", {"TargetSE": "CERN-DST-EOS"}]]')
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
     self.assertEquals(res, FST.MOVING_TRANS)
@@ -195,8 +195,10 @@ class TestFSTAgent(unittest.TestCase):
                                                                                    fileAllRepLost: False,
                                                                                    fileFailed: True},
                                                                     'Failed': {}})
-    self.fstAgent.seObjDict['ilc'][se2].exists.return_value = S_OK(
-        {'Successful': {fileExists: True, fileOneRepLost: False, fileAllRepLost: False}, 'Failed': {fileFailed: 'permission denied'}})
+    self.fstAgent.seObjDict['ilc'][se2].exists.return_value = S_OK({'Successful': {fileExists: True,
+                                                                                   fileOneRepLost: False,
+                                                                                   fileAllRepLost: False},
+                                                                    'Failed': {fileFailed: 'permission denied'}})
 
     res = self.fstAgent.existsOnSE(storageElements, files)['Value']
 
