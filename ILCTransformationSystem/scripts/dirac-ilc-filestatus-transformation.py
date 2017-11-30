@@ -13,6 +13,7 @@ from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK, S_ERROR
 from DIRAC import exit as dexit
 
+
 class _Params(object):
   """ parameters object """
 
@@ -28,7 +29,7 @@ class _Params(object):
     return S_OK()
 
   def registerSwitches(self):
-    Script.registerSwitch( "E", "enable", "perform delete operations on file catalog", self.setEnabled )
+    Script.registerSwitch("E", "enable", "perform delete operations on file catalog", self.setEnabled)
     Script.setUsageMessage("""%s <transformationID> -E""" % Script.scriptName)
 
   def checkSettings(self):
@@ -38,9 +39,10 @@ class _Params(object):
     if len(args) < 1:
       return S_ERROR()
     else:
-      self.setTransID( args[0] )
+      self.setTransID(args[0])
 
     return S_OK()
+
 
 def _runFSTAgent():
   """ read commands line params and run FST agent for a given transformation ID """
@@ -58,7 +60,7 @@ def _runFSTAgent():
   fstAgent.log = gLogger
   fstAgent.enabled = params.enabled
 
-  res = fstAgent.getTransformations(transID = params.transID)
+  res = fstAgent.getTransformations(transID=params.transID)
   if not res['OK']:
     dexit(1)
 
@@ -68,11 +70,13 @@ def _runFSTAgent():
 
   trans = res['Value'][0]
 
-  res = fstAgent.processTransformation( int(params.transID), trans['SourceSE'], trans['TargetSE'], trans['DataTransType'])
+  res = fstAgent.processTransformation(
+      int(params.transID), trans['SourceSE'], trans['TargetSE'], trans['DataTransType'])
   if not res["OK"]:
     dexit(1)
 
   dexit(0)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
   _runFSTAgent()

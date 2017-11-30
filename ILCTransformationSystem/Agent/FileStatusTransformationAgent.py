@@ -1,17 +1,17 @@
 """
 FileStatusTransformation Agent performs the following actions:
 
-+-----------------------+------------------+----------------------------+---------------+---------------+---------------------------+
-|  Transformation Type  |  Request Status  | Transformation File Status |    Source     |    Target     |          Action           |
-+-----------------------+------------------+----------------------------+---------------+---------------+---------------------------+
-| Moving                | *                | Problematic / Processed    | Available     | Available     | Retry                     |
-| Replication / Moving  | *                | Problematic / Processed    | Available     | Not Available | Retry                     |
-| Moving                | Failed           | Assigned                   | Available     | Available     | Retry                     |
-| Replication / Moving  | Failed           | Assigned                   | Available     | Not Available | Retry                     |
-| Replication           | Failed           | Assigned                   | Available     | Available     | Set file status PROCESSED |
-| Replication / Moving  | *                | Other than Processed       | Not Available | Available     | Set file Status PROCESSED |
-| Replication / Moving  | *                | *                          | Not Available | Not Available | Set File status DELETED   |
-+-----------------------+------------------+----------------------------+---------------+---------------+---------------------------+
++-----------------------+------------------+---------------------------+--------------+---------------+---------------+
+|  Transformation Type  |  Request Status  | Transformation File Status|    Source    |    Target     |    Action     |
++-----------------------+------------------+---------------------------+--------------+---------------+---------------+
+| Moving                | Any              | Problematic / Processed   | Available    | Available     | Retry         |
+| Replication / Moving  | Any              | Problematic / Processed   | Available    | Not Available | Retry         |
+| Moving                | Failed           | Assigned                  | Available    | Available     | Retry         |
+| Replication / Moving  | Failed           | Assigned                  | Available    | Not Available | Retry         |
+| Replication           | Failed           | Assigned                  | Available    | Available     | Set PROCESSED |
+| Replication / Moving  | Any              | Other than Processed      | Not Available| Available     | Set PROCESSED |
+| Replication / Moving  | Any              | Any                       | Not Available| Not Available | Set DELETED   |
++-----------------------+------------------+---------------------------+--------------+---------------+---------------+
 
 * If the action is Retry then the request is reset if it exists in Request Management System, otherwise the file status is set to unused
 * Available means the file exists in File Catalog and also exists physically on Storage Elements
@@ -45,11 +45,12 @@ RESET_REQUEST = 'RESET_REQUEST'
 REPLICATION_TRANS = 'Replication'
 MOVING_TRANS = 'Moving'
 
-class FileStatusTransformationAgent( AgentModule ):
+
+class FileStatusTransformationAgent(AgentModule):
   """ FileStatusTransformationAgent """
 
-  def __init__( self, *args, **kwargs ):
-    AgentModule.__init__( self, *args, **kwargs )
+  def __init__(self, *args, **kwargs):
+    AgentModule.__init__(self, *args, **kwargs)
     self.name = 'FileStatusTransformationAgent'
     self.enabled = False
     self.transformationTypes = ["Replication"]
@@ -57,7 +58,7 @@ class FileStatusTransformationAgent( AgentModule ):
     self.transformationFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
 
     self.addressTo = ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"]
-    self.addressFrom = "ilcdirac-admin@cern.ch" 
+    self.addressFrom = "ilcdirac-admin@cern.ch"
     self.emailSubject = "FileStatusTransformationAgent"
 
     self.seObjDict = {}
@@ -68,7 +69,7 @@ class FileStatusTransformationAgent( AgentModule ):
     self.reqClient = ReqClient()
     self.nClient = NotificationClient()
 
-  def checkFileStatusFuncExists( self, status):
+  def checkFileStatusFuncExists(self, status):
     """ returns True/False if a function to check transformation files with a given status exists or not """
     checkFileStatusFuncName = "check_%s_files" % (status.lower())
     if not (hasattr(self, checkFileStatusFuncName) and callable(getattr(self, checkFileStatusFuncName))):
@@ -80,12 +81,13 @@ class FileStatusTransformationAgent( AgentModule ):
   def beginExecution(self):
     """ Reload the configurations before every cycle """
     self.enabled = self.am_getOption('EnableFlag', False)
-    self.transformationTypes = self.am_getOption( 'TransformationTypes', ["Replication"] )
-    self.transformationStatuses = self.am_getOption( 'TransformationStatuses', ["Active"] )
-    self.transformationFileStatuses = self.am_getOption( 'TransformationFileStatuses', ["Assigned", "Problematic", "Processed", "Unused"] )
+    self.transformationTypes = self.am_getOption('TransformationTypes', ["Replication"])
+    self.transformationStatuses = self.am_getOption('TransformationStatuses', ["Active"])
+    self.transformationFileStatuses = self.am_getOption(
+        'TransformationFileStatuses', ["Assigned", "Problematic", "Processed", "Unused"])
 
-    self.addressTo = self.am_getOption( 'MailTo', ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"] )
-    self.addressFrom = self.am_getOption( 'MailFrom', "ilcdirac-admin@cern.ch" )
+    self.addressTo = self.am_getOption('MailTo', ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"])
+    self.addressFrom = self.am_getOption('MailFrom', "ilcdirac-admin@cern.ch")
 
     self.transformationFileStatuses = filter(self.checkFileStatusFuncExists, self.transformationFileStatuses)
     self.accounting.clear()
@@ -102,49 +104,53 @@ class FileStatusTransformationAgent( AgentModule ):
     for action, transFiles in self.accounting[transID].items():
       emailBody += "Total number of files with action %s: %s\n" % (action, len(transFiles))
       for transFile in transFiles:
-        rows.append([[transFile['LFN']], [str(transFile['AvailableOnSource'])], [str(transFile['AvailableOnTarget'])], [transFile['Status']], [action]])
+        rows.append([[transFile['LFN']], [str(transFile['AvailableOnSource'])], [
+                    str(transFile['AvailableOnTarget'])], [transFile['Status']], [action]])
 
     if rows:
-      emailBody += printTable(columns, rows, printOut = False, numbering = False, columnSeparator = ' | ')
+      emailBody += printTable(columns, rows, printOut=False, numbering=False, columnSeparator=' | ')
       self.log.notice(emailBody)
 
       for address in self.addressTo:
-        res = self.nClient.sendMail( address, self.emailSubject, emailBody, self.addressFrom, localAttempt = False )
+        res = self.nClient.sendMail(address, self.emailSubject, emailBody, self.addressFrom, localAttempt=False)
         if not res['OK']:
-          self.log.error( "Failure to send Email notification" )
+          self.log.error("Failure to send Email notification")
           return res
 
     return S_OK()
 
-  def execute( self ):
+  def execute(self):
     """ main execution loop of Agent """
 
     res = self.getTransformations()
     if not res['OK']:
       self.log.error('Failure to get transformations', res['Message'])
-      return S_ERROR( "Failure to get transformations" )
+      return S_ERROR("Failure to get transformations")
 
     transformations = res['Value']
     if not transformations:
-      self.log.notice('No transformations found with Status %s and Type %s ' % (self.transformationStatuses, self.transformationTypes))
+      self.log.notice('No transformations found with Status %s and Type %s ' %
+                      (self.transformationStatuses, self.transformationTypes))
       return S_OK()
 
     for trans in transformations:
       transID = trans['TransformationID']
-      res = self.processTransformation( transID, trans['SourceSE'], trans['TargetSE'], trans['DataTransType'] )
+      res = self.processTransformation(transID, trans['SourceSE'], trans['TargetSE'], trans['DataTransType'])
       if not res['OK']:
         self.log.error('Failure to process transformation with ID: %s' % transID)
         continue
 
     return S_OK()
 
-  def getTransformations(self, transID = None):
+  def getTransformations(self, transID=None):
     """ returns transformations of a given type and status """
     res = None
     if transID:
-      res = self.tClient.getTransformations(condDict = {'TransformationID': transID, 'Status' : self.transformationStatuses, 'Type' : self.transformationTypes})
+      res = self.tClient.getTransformations(
+          condDict={'TransformationID': transID, 'Status': self.transformationStatuses, 'Type': self.transformationTypes})
     else:
-      res = self.tClient.getTransformations(condDict = {'Status' : self.transformationStatuses, 'Type' : self.transformationTypes})
+      res = self.tClient.getTransformations(
+          condDict={'Status': self.transformationStatuses, 'Type': self.transformationTypes})
 
     if not res['OK']:
       return res
@@ -153,12 +159,13 @@ class FileStatusTransformationAgent( AgentModule ):
     for trans in result:
       res = self.tClient.getTransformationParameters(trans['TransformationID'], ['SourceSE', 'TargetSE'])
       if not res['OK']:
-        self.log.error('Failure to get SourceSE and TargetSE parameters for Transformation ID %d' % trans['TransformationID'])
+        self.log.error('Failure to get SourceSE and TargetSE parameters for Transformation ID %d' %
+                       trans['TransformationID'])
         return res
 
       if res['Value']['SourceSE'] and res['Value']['TargetSE']:
-        trans['SourceSE'] = eval( res['Value']['SourceSE'])
-        trans['TargetSE'] = eval( res['Value']['TargetSE'])
+        trans['SourceSE'] = eval(res['Value']['SourceSE'])
+        trans['TargetSE'] = eval(res['Value']['TargetSE'])
       else:
         return S_ERROR()
 
@@ -172,7 +179,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
   def getTransformationTasks(self, transID):
     """ returns all tasks for a given transformation ID """
-    res = self.tClient.getTransformationTasks(condDict = {'TransformationID' : transID})
+    res = self.tClient.getTransformationTasks(condDict={'TransformationID': transID})
     if not res['OK']:
       return res
 
@@ -180,7 +187,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
   def getRequestStatus(self, transID, taskIDs):
     """ returns request statuses for a given list of task IDs """
-    res = self.tClient.getTransformationTasks(condDict={'TransformationID':transID, 'TaskID':taskIDs})
+    res = self.tClient.getTransformationTasks(condDict={'TransformationID': transID, 'TaskID': taskIDs})
     if not res['OK']:
       self.log.error('Failure to get Transformation Tasks for Transformation ID %s ' % transID)
       return res
@@ -188,9 +195,9 @@ class FileStatusTransformationAgent( AgentModule ):
     result = res['Value']
     requestStatus = {}
     for task in result:
-      requestStatus[task['TaskID']]= {'RequestStatus': task['ExternalStatus'], 'RequestID': long(task['ExternalID'])}
+      requestStatus[task['TaskID']] = {'RequestStatus': task['ExternalStatus'], 'RequestID': long(task['ExternalID'])}
 
-    return S_OK( requestStatus )
+    return S_OK(requestStatus)
 
   def getDataTransformationType(self, transID):
     """ returns transformation types Replication/Moving/Unknown for a given transformation """
@@ -219,7 +226,7 @@ class FileStatusTransformationAgent( AgentModule ):
     if replication:
       return S_OK(REPLICATION_TRANS)
 
-    return S_ERROR( "Unknown Transformation Type %s" % res['Value'] )
+    return S_ERROR("Unknown Transformation Type %s" % res['Value'])
 
   def setFileStatus(self, transID, transFiles, status):
     """ sets transformation file status  """
@@ -243,7 +250,7 @@ class FileStatusTransformationAgent( AgentModule ):
                                                  'AvailableOnTarget': transFile['AvailableOnTarget']})
     return S_OK()
 
-  def selectFailedRequests( self, transFile):
+  def selectFailedRequests(self, transFile):
     """ returns True if transformation file has a failed request otherwise returns False """
     res = self.getRequestStatus(transFile['TransformationID'], transFile['TaskID'])
     if not res['OK']:
@@ -259,13 +266,13 @@ class FileStatusTransformationAgent( AgentModule ):
   def retryStrategyForFiles(self, transID, transFiles):
     """ returns retryStrategy Reset Request if a request is found in RMS, otherwise returns set file status to unused"""
     taskIDs = [transFile['TaskID'] for transFile in transFiles]
-    res = self.getRequestStatus( transID, taskIDs)
+    res = self.getRequestStatus(transID, taskIDs)
     if not res['OK']:
       return res
     result = res['Value']
     retryStrategy = {}
     for taskID in taskIDs:
-      res = self.reqClient.getRequest(requestID = result[taskID]['RequestID'])
+      res = self.reqClient.getRequest(requestID=result[taskID]['RequestID'])
       retryStrategy[taskID] = {}
       if not res['OK']:
         self.log.notice('Request %s does not exist setting file status to unused' % result[taskID]['RequestID'])
@@ -276,7 +283,6 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_OK(retryStrategy)
 
-
   def check_assigned_files(self, actions, transFiles, transType):
     """ treatment for transformation files with assigned status """
     for transFile in transFiles:
@@ -286,7 +292,7 @@ class FileStatusTransformationAgent( AgentModule ):
         elif transType == MOVING_TRANS:
           actions[RETRY].append(transFile)
         else:
-          self.log.warn('Unknown TransType %s '%transType)
+          self.log.warn('Unknown TransType %s ' % transType)
 
       elif transFile['AvailableOnSource'] and not transFile['AvailableOnTarget']:
         actions[RETRY].append(transFile)
@@ -297,7 +303,6 @@ class FileStatusTransformationAgent( AgentModule ):
       else:
         #not on src and target
         actions[SET_DELETED].append(transFile)
-
 
   def check_unused_files(self, actions, transFiles, transType):
     """ treatment for transformation files with unused status """
@@ -359,7 +364,7 @@ class FileStatusTransformationAgent( AgentModule ):
             self.log.error('Failed to reset request %s' % res['Message'])
             return res
 
-          res = self.tClient.setTaskStatus( transID, transFile['TaskID'], 'Waiting' )
+          res = self.tClient.setTaskStatus(transID, transFile['TaskID'], 'Waiting')
           if not res['OK']:
             self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
             return res
@@ -378,20 +383,18 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return S_OK()
 
-
-  def applyActions( self, transID, actions):
+  def applyActions(self, transID, actions):
     """ sets new file statuses and resets requests """
     for action, transFiles in actions.items():
       if action == SET_PROCESSED and transFiles:
-        self.setFileStatus( transID, transFiles, 'Processed')
+        self.setFileStatus(transID, transFiles, 'Processed')
 
       if action == SET_DELETED and transFiles:
-        self.setFileStatus( transID, transFiles, 'Deleted')
+        self.setFileStatus(transID, transFiles, 'Deleted')
 
       if action == RETRY and transFiles:
         #if there is a request in RMS then reset request otherwise set file status unused
         self.retryFiles(transID, transFiles)
-
 
   def existsInFC(self, storageElements, lfns):
     """ checks if files have replicas registered in File Catalog for all given storageElements """
@@ -412,7 +415,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
     #check if all replicas are registered in FC
     filesFoundInFC = res['Value']['Successful']
-    for lfn,replicas in filesFoundInFC.items():
+    for lfn, replicas in filesFoundInFC.items():
       result['Successful'][lfn] = setOfSEs.issubset(replicas.keys())
 
     return S_OK(result)
@@ -448,8 +451,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
       result['Failed'][se] = res['Value']['Failed']
 
-    return S_OK( result )
-
+    return S_OK(result)
 
   def exists(self, storageElements, lfns):
     """ checks if files exists on both file catalog and storage elements """
@@ -487,7 +489,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
     return fcRes
 
-  def processTransformation(self, transID, sourceSE, targetSEs, transType ):
+  def processTransformation(self, transID, sourceSE, targetSEs, transType):
     """ process transformation for a given transformation ID """
 
     actions = {}
@@ -495,21 +497,21 @@ class FileStatusTransformationAgent( AgentModule ):
     actions[RETRY] = []
     actions[SET_DELETED] = []
 
-
     self.accounting[transID] = {}
 
     for status in self.transformationFileStatuses:
       res = self.tClient.getTransformationFiles(condDict={'TransformationID': transID, 'Status': status})
       if not res['OK']:
-        self.log.error('Failure to get Transformation Files with Status %s for Transformation ID %d' % (status, transID))
+        self.log.error('Failure to get Transformation Files with Status %s for Transformation ID %d' %
+                       (status, transID))
         continue
 
       transFiles = res['Value']
       if not transFiles:
-        self.log.notice("No Transformation Files found with status %s for Transformation ID %d" %(status, transID))
+        self.log.notice("No Transformation Files found with status %s for Transformation ID %d" % (status, transID))
         continue
 
-      self.log.notice("Processing Transformation Files with status %s for TransformationID %d " %(status, transID))
+      self.log.notice("Processing Transformation Files with status %s for TransformationID %d " % (status, transID))
 
       # only process Assigned files with failed requests
       if status == 'Assigned':
@@ -539,9 +541,9 @@ class FileStatusTransformationAgent( AgentModule ):
 
       checkFilesFuncName = "check_%s_files" % status.lower()
       checkFiles = getattr(self, checkFilesFuncName)
-      checkFiles( actions, transFiles, transType )
+      checkFiles(actions, transFiles, transType)
 
-    self.applyActions( transID,  actions )
-    self.sendNotification( transID, transType )
+    self.applyActions(transID, actions)
+    self.sendNotification(transID, transType)
 
     return S_OK()
