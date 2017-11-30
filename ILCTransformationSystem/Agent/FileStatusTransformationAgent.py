@@ -100,6 +100,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
     rows = []
     for action, transFiles in self.accounting[transID].items():
+      emailBody += "Total number of files with action %s: %s\n" % (action, len(transFiles))
       for transFile in transFiles:
         rows.append([[transFile['LFN']], [str(transFile['AvailableOnSource'])], [str(transFile['AvailableOnTarget'])], [transFile['Status']], [action]])
 
@@ -325,10 +326,8 @@ class FileStatusTransformationAgent( AgentModule ):
       if transFile['AvailableOnSource'] and transFile['AvailableOnTarget']:
         if transType == REPLICATION_TRANS:
           actions[SET_PROCESSED].append(transFile)
-        elif transType == MOVING_TRANS:
+        if transType == MOVING_TRANS:
           actions[RETRY].append(transFile)
-        else:
-          self.log.warn('Unknown TransType %s '%transType)
 
       elif transFile['AvailableOnSource'] and not transFile['AvailableOnTarget']:
         actions[RETRY].append(transFile)
@@ -381,6 +380,7 @@ class FileStatusTransformationAgent( AgentModule ):
 
 
   def applyActions( self, transID, actions):
+    """ sets new file statuses and resets requests """
     for action, transFiles in actions.items():
       if action == SET_PROCESSED and transFiles:
         self.setFileStatus( transID, transFiles, 'Processed')
