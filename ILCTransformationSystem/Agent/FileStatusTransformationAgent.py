@@ -93,11 +93,13 @@ class FileStatusTransformationAgent(AgentModule):
 
     return S_OK()
 
-  def sendNotification(self, transID, transType):
+  def sendNotification(self, transID, transType, sourceSEs, targetSEs):
     """ sends email notification about accounting information of a transformation """
-
     columns = ["LFN", "Source", "Target", "Old Status", "Action"]
-    emailBody = "Accounting Information for Transformation ID: %s Transformation Type: %s\n" % (transID, transType)
+    emailBody = "Transformation ID: %s\n" % transID
+    emailBody += "Transformation Type: %s\n" % transType
+    emailBody += "Source SE: %s\n" % (" ".join(str(source) for source in sourceSEs))
+    emailBody += "Target SE: %s\n\n" % (" ".join(str(target) for target in targetSEs))
 
     rows = []
     for action, transFiles in self.accounting[transID].items():
@@ -536,6 +538,6 @@ class FileStatusTransformationAgent(AgentModule):
       checkFiles(actions, transFiles, transType)
 
     self.applyActions(transID, actions)
-    self.sendNotification(transID, transType)
+    self.sendNotification(transID, transType, sourceSE, targetSEs)
 
     return S_OK()
