@@ -61,7 +61,6 @@ class FileStatusTransformationAgent(AgentModule):
     self.addressFrom = "ilcdirac-admin@cern.ch"
     self.emailSubject = "FileStatusTransformationAgent"
 
-    self.seObjDict = {}
     self.accounting = {}
 
     self.fcClient = FileCatalogClient()
@@ -434,16 +433,9 @@ class FileStatusTransformationAgent(AgentModule):
 
     voName = lfns[0].split('/')[1]
     for se in storageElements:
-      if voName not in self.seObjDict:
-        self.seObjDict[voName] = {}
-      if se not in self.seObjDict[voName]:
-        self.seObjDict[voName][se] = StorageElement(se, vo=voName)
-      seObj = self.seObjDict[voName][se]
-
-      res = seObj.exists(lfns)
+      res = StorageElement(se, vo=voName).exists(lfns)
       if not res['OK']:
         return res
-
       for lfn, status in res['Value']['Successful'].items():
         if lfn not in result['Successful']:
           result['Successful'][lfn] = status

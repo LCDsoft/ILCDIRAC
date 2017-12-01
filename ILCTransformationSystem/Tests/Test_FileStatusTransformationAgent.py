@@ -1,9 +1,9 @@
 """ Test FileStatusTransformationAgent """
 
 import unittest
-import importlib
 
 import ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent as FST
+import DIRAC.Resources.Storage.StorageElement as SeModule
 from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import FileStatusTransformationAgent
 
 from mock import MagicMock
@@ -186,20 +186,13 @@ class TestFSTAgent(unittest.TestCase):
 
     files = [fileExists, fileOneRepLost, fileAllRepLost, fileFailed]
 
-    self.fstAgent.seObjDict['ilc'] = {}
-    self.fstAgent.seObjDict['ilc'][se1] = MagicMock()
-    self.fstAgent.seObjDict['ilc'][se2] = MagicMock()
+    se1Result = S_OK({'Successful': {fileExists: True, fileOneRepLost: True, fileAllRepLost: False, fileFailed: True},
+                      'Failed': {}})
 
-    self.fstAgent.seObjDict['ilc'][se1].exists.return_value = S_OK({'Successful': {fileExists: True,
-                                                                                   fileOneRepLost: True,
-                                                                                   fileAllRepLost: False,
-                                                                                   fileFailed: True},
-                                                                    'Failed': {}})
-    self.fstAgent.seObjDict['ilc'][se2].exists.return_value = S_OK({'Successful': {fileExists: True,
-                                                                                   fileOneRepLost: False,
-                                                                                   fileAllRepLost: False},
-                                                                    'Failed': {fileFailed: 'permission denied'}})
+    se2Result = S_OK({'Successful': {fileExists: True, fileOneRepLost: False, fileAllRepLost: False},
+                      'Failed': {fileFailed: 'permission denied'}})
 
+    SeModule.StorageElementItem.exists = MagicMock(side_effect=[se1Result, se2Result])
     res = self.fstAgent.existsOnSE(storageElements, files)['Value']
 
     self.assertTrue(res['Successful'][fileExists])
