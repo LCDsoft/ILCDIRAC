@@ -19,7 +19,7 @@ class TestFSTAgent(unittest.TestCase):
   """ Test_fstAgent class """
 
   def setUp(self):
-    self.agent = importlib.import_module('ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent')
+    self.agent = FST
     self.agent.AgentModule = MagicMock()
     self.fstAgent = FileStatusTransformationAgent()
 

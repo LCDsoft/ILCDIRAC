@@ -104,8 +104,8 @@ class FileStatusTransformationAgent(AgentModule):
     for action, transFiles in self.accounting[transID].items():
       emailBody += "Total number of files with action %s: %s\n" % (action, len(transFiles))
       for transFile in transFiles:
-        rows.append([[transFile['LFN']], [str(transFile['AvailableOnSource'])], [
-                    str(transFile['AvailableOnTarget'])], [transFile['Status']], [action]])
+        rows.append([[transFile['LFN']], [str(transFile['AvailableOnSource'])],
+                     [str(transFile['AvailableOnTarget'])], [transFile['Status']], [action]])
 
     if rows:
       emailBody += printTable(columns, rows, printOut=False, numbering=False, columnSeparator=' | ')
@@ -165,11 +165,11 @@ class FileStatusTransformationAgent(AgentModule):
                        trans['TransformationID'])
         return res
 
-      if res['Value']['SourceSE'] and res['Value']['TargetSE']:
-        trans['SourceSE'] = eval(res['Value']['SourceSE'])
-        trans['TargetSE'] = eval(res['Value']['TargetSE'])
-      else:
+      if not res['Value']['SourceSE'] and not res['Value']['TargetSE']:
         return S_ERROR()
+
+      trans['SourceSE'] = eval(res['Value']['SourceSE'])
+      trans['TargetSE'] = eval(res['Value']['TargetSE'])
 
       res = self.getDataTransformationType(trans['TransformationID'])
       if not res['OK']:

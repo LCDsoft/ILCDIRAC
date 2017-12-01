@@ -1,10 +1,11 @@
 #!/bin/env python
 """
+Execute the FileStatusTransformationAgent on a given Transformation ID
 
-Example:
+Example: dirac-ilc-filestatus-transformation <transformationID> -x
 
 Options:
-
+   -x, --enable		Perform actions on databases
 """
 
 __RCSID__ = "$Id$"
@@ -29,8 +30,8 @@ class _Params(object):
     return S_OK()
 
   def registerSwitches(self):
-    Script.registerSwitch("E", "enable", "perform delete operations on file catalog", self.setEnabled)
-    Script.setUsageMessage("""%s <transformationID> -E""" % Script.scriptName)
+    Script.registerSwitch("x", "enable", "perform delete operations on file catalog", self.setEnabled)
+    Script.setUsageMessage("""%s <transformationID> -x""" % Script.scriptName)
 
   def checkSettings(self):
     """ parse arguments """
@@ -38,8 +39,8 @@ class _Params(object):
     args = Script.getPositionalArgs()
     if len(args) < 1:
       return S_ERROR()
-    else:
-      self.setTransID(args[0])
+
+    self.setTransID(args[0])
 
     return S_OK()
 
