@@ -103,7 +103,7 @@ class FileStatusTransformationAgent(AgentModule):
     emailBody += "Target SE: %s\n\n" % (" ".join(str(target) for target in targetSEs))
 
     rows = []
-    for action, transFiles in self.accounting.items():
+    for action, transFiles in self.accounting.iteritems():
       emailBody += "Total number of files with action %s: %s\n" % (action, len(transFiles))
       for transFile in transFiles:
         rows.append([[transFile['LFN']], [str(transFile['AvailableOnSource'])],
@@ -386,7 +386,7 @@ class FileStatusTransformationAgent(AgentModule):
 
   def applyActions(self, transID, actions):
     """ sets new file statuses and resets requests """
-    for action, transFiles in actions.items():
+    for action, transFiles in actions.iteritems():
       if action == SET_PROCESSED and transFiles:
         self.setFileStatus(transID, transFiles, 'Processed')
 
@@ -408,7 +408,7 @@ class FileStatusTransformationAgent(AgentModule):
     result['Failed'] = {}
     setOfSEs = set(storageElements)
 
-    for lfn, msg in res['Value']['Failed'].items():
+    for lfn, msg in res['Value']['Failed'].iteritems():
       if msg == 'No such file or directory':
         result['Successful'][lfn] = False
       else:
@@ -416,7 +416,7 @@ class FileStatusTransformationAgent(AgentModule):
 
     # check if all replicas are registered in FC
     filesFoundInFC = res['Value']['Successful']
-    for lfn, replicas in filesFoundInFC.items():
+    for lfn, replicas in filesFoundInFC.iteritems():
       result['Successful'][lfn] = setOfSEs.issubset(replicas.keys())
 
     return S_OK(result)
@@ -436,7 +436,7 @@ class FileStatusTransformationAgent(AgentModule):
       res = StorageElement(se, vo=voName).exists(lfns)
       if not res['OK']:
         return res
-      for lfn, status in res['Value']['Successful'].items():
+      for lfn, status in res['Value']['Successful'].iteritems():
         if lfn not in result['Successful']:
           result['Successful'][lfn] = status
         else:
