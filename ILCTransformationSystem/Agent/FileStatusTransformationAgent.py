@@ -358,7 +358,10 @@ class FileStatusTransformationAgent(AgentModule):
 
     retryStrategy = res['Value']
     for transFile in transFiles:
-      if retryStrategy[transFile['TaskID']]['Strategy'] == RESET_REQUEST:
+      if retryStrategy[transFile['TaskID']]['Strategy'] != RESET_REQUEST:
+        setFilesUnused.append(transFile)
+        continue
+
         requestID = retryStrategy[transFile['TaskID']]['RequestID']
 
         if self.enabled:
@@ -376,8 +379,6 @@ class FileStatusTransformationAgent(AgentModule):
                                                'Status': transFile['Status'],
                                                'AvailableOnSource': transFile['AvailableOnSource'],
                                                'AvailableOnTarget': transFile['AvailableOnTarget']})
-      else:
-        setFilesUnused.append(transFile)
 
     if setFilesUnused:
       self.setFileStatus(transID, setFilesUnused, 'Unused')
@@ -439,9 +440,9 @@ class FileStatusTransformationAgent(AgentModule):
       for lfn, status in res['Value']['Successful'].iteritems():
         if lfn not in result['Successful']:
           result['Successful'][lfn] = status
-        else:
-          if result['Successful'][lfn] and not status:
-            result['Successful'][lfn] = False
+
+        if not status:
+          result['Successful'][lfn] = False
 
       result['Failed'][se] = res['Value']['Failed']
 
@@ -477,7 +478,7 @@ class FileStatusTransformationAgent(AgentModule):
 
     fcResult = fcRes['Value']['Successful']
     seResult = seRes['Value']['Successful']
-    for lfn in fcResult.keys():
+    for lfn in fcResult:
       if fcResult[lfn] and not seResult[lfn]:
         fcRes['Value']['Successful'][lfn] = False
 
