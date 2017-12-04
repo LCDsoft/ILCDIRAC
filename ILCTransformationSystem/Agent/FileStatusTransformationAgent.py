@@ -20,6 +20,7 @@ FileStatusTransformation Agent performs the following actions:
 """
 
 import json
+from collections import defaultdict
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
@@ -61,7 +62,7 @@ class FileStatusTransformationAgent(AgentModule):
     self.addressFrom = "ilcdirac-admin@cern.ch"
     self.emailSubject = "FileStatusTransformationAgent"
 
-    self.accounting = {}
+    self.accounting = defaultdict(list)
 
     self.fcClient = FileCatalogClient()
     self.tClient = TransformationClient()
@@ -102,7 +103,7 @@ class FileStatusTransformationAgent(AgentModule):
     emailBody += "Target SE: %s\n\n" % (" ".join(str(target) for target in targetSEs))
 
     rows = []
-    for action, transFiles in self.accounting[transID].items():
+    for action, transFiles in self.accounting.items():
       emailBody += "Total number of files with action %s: %s\n" % (action, len(transFiles))
       for transFile in transFiles:
         rows.append([[transFile['LFN']], [str(transFile['AvailableOnSource'])],
@@ -118,6 +119,7 @@ class FileStatusTransformationAgent(AgentModule):
           self.log.error("Failure to send Email notification")
           return res
 
+    self.accounting.clear()
     return S_OK()
 
   def execute(self):
@@ -244,13 +246,11 @@ class FileStatusTransformationAgent(AgentModule):
           self.log.error('Failed to set statuses for LFNs %s ' % res['Message'])
           return res
 
-      if status not in self.accounting[transID]:
-        self.accounting[transID][status] = []
       for transFile in transFiles:
-        self.accounting[transID][status].append({'LFN': transFile['LFN'],
-                                                 'Status': transFile['Status'],
-                                                 'AvailableOnSource': transFile['AvailableOnSource'],
-                                                 'AvailableOnTarget': transFile['AvailableOnTarget']})
+        self.accounting[status].append({'LFN': transFile['LFN'],
+                                        'Status': transFile['Status'],
+                                        'AvailableOnSource': transFile['AvailableOnSource'],
+                                        'AvailableOnTarget': transFile['AvailableOnTarget']})
     return S_OK()
 
   def selectFailedRequests(self, transFile):
@@ -372,12 +372,10 @@ class FileStatusTransformationAgent(AgentModule):
             self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
             return res
 
-        if RESET_REQUEST not in self.accounting[transID]:
-          self.accounting[transID][RESET_REQUEST] = []
-        self.accounting[transID][RESET_REQUEST].append({'LFN': transFile['LFN'],
-                                                        'Status': transFile['Status'],
-                                                        'AvailableOnSource': transFile['AvailableOnSource'],
-                                                        'AvailableOnTarget': transFile['AvailableOnTarget']})
+        self.accounting[RESET_REQUEST].append({'LFN': transFile['LFN'],
+                                               'Status': transFile['Status'],
+                                               'AvailableOnSource': transFile['AvailableOnSource'],
+                                               'AvailableOnTarget': transFile['AvailableOnTarget']})
       else:
         setFilesUnused.append(transFile)
 
@@ -492,8 +490,6 @@ class FileStatusTransformationAgent(AgentModule):
     actions[SET_PROCESSED] = []
     actions[RETRY] = []
     actions[SET_DELETED] = []
-
-    self.accounting[transID] = {}
 
     for status in self.transformationFileStatuses:
       res = self.tClient.getTransformationFiles(condDict={'TransformationID': transID, 'Status': status})
