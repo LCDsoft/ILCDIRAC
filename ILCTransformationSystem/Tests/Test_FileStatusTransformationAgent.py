@@ -200,6 +200,22 @@ class TestFSTAgent(unittest.TestCase):
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
     self.assertEquals(res, FST.REPLICATION_TRANS)
 
+  def test_get_request_status(self):
+    """ Test getRequestStatus function """
+    taskID = 1
+    taskIDs = [taskID]
+    self.fstAgent.tClient.getTransformationTasks.return_value = S_ERROR()
+    res = self.fstAgent.getRequestStatus(self.fakeTransID, taskIDs)
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.tClient.getTransformationTasks.return_value = S_OK([{'TaskID': taskID,
+                                                                       'ExternalStatus': 'Failed',
+                                                                       'ExternalID': 123}])
+    res = self.fstAgent.getRequestStatus(self.fakeTransID, taskIDs)
+    result = res['Value']
+    self.assertEquals(result[taskID]['RequestStatus'], 'Failed')
+    self.assertEquals(result[taskID]['RequestID'], 123)
+
   def test_exists_in_FC(self):
     """ Test if the existsInFC function correctly determines if all replicas of files are registered in FC """
     se1 = 'CERN-SRM'
