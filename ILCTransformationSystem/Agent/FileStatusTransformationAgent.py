@@ -182,14 +182,6 @@ class FileStatusTransformationAgent(AgentModule):
 
     return S_OK(result)
 
-  def getTransformationTasks(self, transID):
-    """ returns all tasks for a given transformation ID """
-    res = self.tClient.getTransformationTasks(condDict={'TransformationID': transID})
-    if not res['OK']:
-      return res
-
-    return S_OK(res['Value'])
-
   def getRequestStatus(self, transID, taskIDs):
     """ returns request statuses for a given list of task IDs """
     res = self.tClient.getTransformationTasks(condDict={'TransformationID': transID, 'TaskID': taskIDs})
