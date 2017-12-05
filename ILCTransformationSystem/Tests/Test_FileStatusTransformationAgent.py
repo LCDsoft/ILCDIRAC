@@ -32,7 +32,6 @@ class TestFSTAgent(unittest.TestCase):
 
     self.fstAgent.reqClient.resetFailedRequest = MagicMock()
     self.fstAgent.tClient.setTaskStatus = MagicMock()
-    self.fstAgent.setFileStatus = MagicMock()
     self.fstAgent.enabled = True
 
     self.transformations = [{'Status': 'Active',
@@ -216,6 +215,24 @@ class TestFSTAgent(unittest.TestCase):
     self.assertEquals(result[taskID]['RequestStatus'], 'Failed')
     self.assertEquals(result[taskID]['RequestID'], 123)
 
+  def test_set_file_status(self):
+    """ Test for setFileStatus function """
+    transFiles = []
+    newStatus = "processed"
+    self.fstAgent.setFileStatus(self.fakeTransID, transFiles, newStatus)
+    self.fstAgent.tClient.setFileStatusForTransformation.assert_not_called()
+
+    lfn1 = '/ilc/fake/lfn1'
+    lfn2 = '/ilc/fake/lfn2'
+    transFiles = [{'LFN': lfn1, 'Status': 'Problematic', 'AvailableOnSource': True, 'AvailableOnTarget': True},
+                  {'LFN': lfn2, 'Status': 'Problematic', 'AvailableOnSource': True, 'AvailableOnTarget': True}]
+
+    self.fstAgent.setFileStatus(self.fakeTransID, transFiles, newStatus)
+    self.fstAgent.tClient.setFileStatusForTransformation.assert_called_once_with(self.fakeTransID, newLFNsStatus={
+                                                                                 lfn1: newStatus, lfn2: newStatus})
+    self.assertTrue(newStatus in self.fstAgent.accounting)
+    self.assertEquals(len(self.fstAgent.accounting[newStatus]), 2)
+
   def test_exists_in_FC(self):
     """ Test if the existsInFC function correctly determines if all replicas of files are registered in FC """
     se1 = 'CERN-SRM'
@@ -367,7 +384,7 @@ class TestFSTAgent(unittest.TestCase):
   def test_trans_files_treatment(self):
     """ test transformation files are treated properly (set new status / reset request)
         for replication and moving transformations """
-
+    self.fstAgent.setFileStatus = MagicMock()
     fileNotAvailableOnSrc = {'TransformationID': self.fakeTransID, 'TaskID': 1, 'LFN': self.notAvailableOnSrc}
     fileNotAvailableOnDst = {'TransformationID': self.fakeTransID, 'TaskID': 2, 'LFN': self.notAvailableOnDst}
     fileAvailable = {'TransformationID': self.fakeTransID, 'TaskID': 3, 'LFN': self.available}
