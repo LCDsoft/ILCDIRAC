@@ -30,7 +30,6 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.reqClient = MagicMock(name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient)
     self.fstAgent.nClient = MagicMock(name="nMock", spec=DIRAC.FrameworkSystem.Client.NotificationClient)
 
-    self.fstAgent.reqClient.resetFailedRequest = MagicMock()
     self.fstAgent.tClient.setTaskStatus = MagicMock()
     self.fstAgent.enabled = True
 
@@ -53,10 +52,10 @@ class TestFSTAgent(unittest.TestCase):
                      'ExternalStatus': 'Done',
                      'TaskID': 1}
 
-    self.notAvailableOnSrc = '/ilc/file_not_self.available_on_src'
-    self.notAvailableOnDst = '/ilc/file_not self.available_on_target'
-    self.available = '/ilc/file_self.available_on_src_and_target'
-    self.notAvailable = '/ilc/file_not_self.available_on_src_and_target'
+    self.notAvailableOnSrc = '/ilc/file_not_available_on_src'
+    self.notAvailableOnDst = '/ilc/file_not_available_on_target'
+    self.available = '/ilc/file_on_src_and_target'
+    self.notAvailable = '/ilc/file_not_on_src_and_target'
 
     self.sourceSE = ['CERN-SRM']
     self.targetSE = ['DESY-SRM']
@@ -368,6 +367,42 @@ class TestFSTAgent(unittest.TestCase):
     self.assertEquals(res[taskIDfile1]['Strategy'], FST.SET_UNUSED)
     self.assertEquals(res[taskIDfile2]['Strategy'], FST.RESET_REQUEST)
 
+  def test_retry_files(self):
+    """ Test for retryFiles function """
+    requestID = 1
+    transFiles = [{'LFN': '/ilc/file1', 'Status': 'Problematic', 'AvailableOnSource': True,
+                   'AvailableOnTarget': True, 'TaskID': 1},
+                  {'LFN': '/ilc/file2', 'Status': 'Problematic', 'AvailableOnSource': True,
+                   'AvailableOnTarget': True, 'TaskID': 2}]
+
+    self.fstAgent.retryStrategyForFiles = MagicMock()
+    self.fstAgent.setFileStatus = MagicMock()
+    self.fstAgent.reqClient.resetFailedRequest = MagicMock()
+
+    self.fstAgent.retryStrategyForFiles.return_value = S_ERROR()
+    res = self.fstAgent.retryFiles(self.fakeTransID, transFiles)
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.retryStrategyForFiles.return_value = S_OK({1: {'Strategy': FST.RESET_REQUEST,
+                                                                 'RequestID': requestID},
+                                                             2: {'Strategy': FST.SET_UNUSED}})
+    self.fstAgent.reqClient.resetFailedRequest.return_value = S_ERROR()
+    res = self.fstAgent.retryFiles(self.fakeTransID, transFiles)
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.reqClient.resetFailedRequest.return_value = S_OK()
+    self.fstAgent.tClient.setTaskStatus.return_value = S_ERROR()
+    res = self.fstAgent.retryFiles(self.fakeTransID, transFiles)
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.tClient.setTaskStatus.return_value = S_OK()
+    self.fstAgent.reqClient.resetFailedRequest.reset_mock()
+    self.fstAgent.tClient.setTaskStatus.reset_mock()
+    self.fstAgent.retryFiles(self.fakeTransID, transFiles)
+    self.fstAgent.reqClient.resetFailedRequest.assert_called_once_with(requestID)
+    self.fstAgent.tClient.setTaskStatus.assert_called_once_with(self.fakeTransID, 1, 'Waiting')
+    self.fstAgent.setFileStatus.assert_called_once_with(self.fakeTransID, [transFiles[1]], 'Unused')
+
   def exists(self, se, lfns):
     """ returns lfns availability information """
     result = {}
@@ -385,6 +420,7 @@ class TestFSTAgent(unittest.TestCase):
     """ test transformation files are treated properly (set new status / reset request)
         for replication and moving transformations """
     self.fstAgent.setFileStatus = MagicMock()
+
     fileNotAvailableOnSrc = {'TransformationID': self.fakeTransID, 'TaskID': 1, 'LFN': self.notAvailableOnSrc}
     fileNotAvailableOnDst = {'TransformationID': self.fakeTransID, 'TaskID': 2, 'LFN': self.notAvailableOnDst}
     fileAvailable = {'TransformationID': self.fakeTransID, 'TaskID': 3, 'LFN': self.available}

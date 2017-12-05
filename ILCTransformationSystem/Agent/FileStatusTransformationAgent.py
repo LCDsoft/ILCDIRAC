@@ -342,7 +342,6 @@ class FileStatusTransformationAgent(AgentModule):
   def retryFiles(self, transID, transFiles):
     """ resubmits request or sets file status to unused based on the retry strategy of transformation file """
     setFilesUnused = []
-
     res = self.retryStrategyForFiles(transID, transFiles)
     if not res['OK']:
       self.log.error('Failure to determine retry strategy ( set unused / reset request) for transformation files')
@@ -354,23 +353,22 @@ class FileStatusTransformationAgent(AgentModule):
         setFilesUnused.append(transFile)
         continue
 
-        requestID = retryStrategy[transFile['TaskID']]['RequestID']
+      requestID = retryStrategy[transFile['TaskID']]['RequestID']
+      if self.enabled:
+        res = self.reqClient.resetFailedRequest(requestID)
+        if not res['OK'] or res['Value'] == "Not reset":
+          self.log.error('Failed to reset request %s' % res['Message'])
+          return res
 
-        if self.enabled:
-          res = self.reqClient.resetFailedRequest(requestID)
-          if not res['OK'] or res['Value'] == "Not reset":
-            self.log.error('Failed to reset request %s' % res['Message'])
-            return res
+        res = self.tClient.setTaskStatus(transID, transFile['TaskID'], 'Waiting')
+        if not res['OK']:
+          self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
+          return res
 
-          res = self.tClient.setTaskStatus(transID, transFile['TaskID'], 'Waiting')
-          if not res['OK']:
-            self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
-            return res
-
-        self.accounting[RESET_REQUEST].append({'LFN': transFile['LFN'],
-                                               'Status': transFile['Status'],
-                                               'AvailableOnSource': transFile['AvailableOnSource'],
-                                               'AvailableOnTarget': transFile['AvailableOnTarget']})
+      self.accounting[RESET_REQUEST].append({'LFN': transFile['LFN'],
+                                             'Status': transFile['Status'],
+                                             'AvailableOnSource': transFile['AvailableOnSource'],
+                                             'AvailableOnTarget': transFile['AvailableOnTarget']})
 
     if setFilesUnused:
       self.setFileStatus(transID, setFilesUnused, 'Unused')
