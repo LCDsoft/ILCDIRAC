@@ -105,6 +105,35 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.beginExecution()
     self.assertItemsEqual(self.fstAgent.transformationFileStatuses, allowedFileStatuses)
 
+  def test_get_transformations(self):
+    """ Test for getTransformations function """
+    self.fstAgent.tClient.getTransformationParameters = MagicMock()
+    self.fstAgent.getDataTransformationType = MagicMock()
+
+    self.fstAgent.tClient.getTransformations.return_value = S_ERROR()
+    res = self.fstAgent.getTransformations()
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.tClient.getTransformations.return_value = S_OK([{'Status': 'Active',
+                                                                   'TransformationID': 1,
+                                                                   'Type': 'Replication'}])
+    self.fstAgent.tClient.getTransformationParameters.return_value = S_ERROR()
+    res = self.fstAgent.getTransformations()
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.tClient.getTransformationParameters.return_value = S_OK({'TargetSE': "['CERN-DST-EOS']",
+                                                                           'SourceSE': "['CERN-SRM']"})
+    self.fstAgent.getDataTransformationType.return_value = S_ERROR()
+    res = self.fstAgent.getTransformations()
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.getDataTransformationType.return_value = S_OK(FST.REPLICATION_TRANS)
+    res = self.fstAgent.getTransformations()
+    trans = res['Value'][0]
+    self.assertEquals(trans['SourceSE'], ['CERN-SRM'])
+    self.assertEquals(trans['TargetSE'], ['CERN-DST-EOS'])
+    self.assertEquals(trans['DataTransType'], FST.REPLICATION_TRANS)
+
   def test_send_notification(self):
     """ Test for sendNotification function """
     dataTransType = FST.REPLICATION_TRANS
