@@ -91,6 +91,19 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.processTransformation.assert_not_called()
     self.assertTrue(res['OK'])
 
+  def _getOption(self, option, defaultVal):
+    if option != "TransformationFileStatuses":
+      return defaultVal
+    defaultVal.append("UnknownStatus")
+    return defaultVal
+
+  def test_unknown_file_status(self):
+    """ fstAgent should not process file statuses for whom check files function is not implemented """
+    allowedFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
+    self.fstAgent.am_getOption = MagicMock(side_effect = self._getOption)
+    self.fstAgent.beginExecution()
+    self.assertItemsEqual(self.fstAgent.transformationFileStatuses, allowedFileStatuses)
+
   def test_get_data_transformation_type(self):
     """ Test if getDataTransformationType function correctly returns the
         Data Transformation Type (Replication / Moving) """
