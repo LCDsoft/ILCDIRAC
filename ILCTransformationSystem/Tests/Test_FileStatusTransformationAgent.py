@@ -28,6 +28,7 @@ class TestFSTAgent(unittest.TestCase):
         name="transMock", spec=DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient)
     self.fstAgent.fcClient = MagicMock(name="fcMock", spec=DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient)
     self.fstAgent.reqClient = MagicMock(name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient)
+    self.fstAgent.nClient = MagicMock(name="nMock", spec=DIRAC.FrameworkSystem.Client.NotificationClient)
 
     self.fstAgent.reqClient.resetFailedRequest = MagicMock()
     self.fstAgent.tClient.setTaskStatus = MagicMock()
@@ -100,9 +101,33 @@ class TestFSTAgent(unittest.TestCase):
   def test_unknown_file_status(self):
     """ fstAgent should not process file statuses for whom check files function is not implemented """
     allowedFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
-    self.fstAgent.am_getOption = MagicMock(side_effect = self._getOption)
+    self.fstAgent.am_getOption = MagicMock(side_effect=self._getOption)
     self.fstAgent.beginExecution()
     self.assertItemsEqual(self.fstAgent.transformationFileStatuses, allowedFileStatuses)
+
+  def test_send_notification(self):
+    """ Test for sendNotification function """
+    dataTransType = FST.REPLICATION_TRANS
+    sourceSE = ['CERN-SRM']
+    targetSE = ['DESY-SRM']
+
+    # no email should be send if accounting dict is empty
+    self.fstAgent.accounting = {}
+    self.fstAgent.nClient.sendMail = MagicMock()
+    self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
+    self.fstAgent.nClient.sendMail.assert_not_called()
+
+    # email should be sent if accounting dict is not empty
+    self.fstAgent.accounting = {FST.SET_PROCESSED: [{'LFN': '/ilc/fake/lfn',
+                                                     'Status': 'Problematic',
+                                                     'AvailableOnSource': True,
+                                                     'AvailableOnTarget': True}]}
+    self.fstAgent.nClient.sendMail.reset_mock()
+    self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
+    self.fstAgent.nClient.sendMail.assert_called()
+
+    # accounting dict should be cleared after the notification is sent
+    self.assertEquals(self.fstAgent.accounting, {})
 
   def test_get_data_transformation_type(self):
     """ Test if getDataTransformationType function correctly returns the
