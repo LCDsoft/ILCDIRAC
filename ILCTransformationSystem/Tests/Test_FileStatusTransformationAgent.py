@@ -121,8 +121,13 @@ class TestFSTAgent(unittest.TestCase):
     res = self.fstAgent.getTransformations()
     self.assertFalse(res['OK'])
 
+    res = self.fstAgent.getTransformations(transID=100)
+    self.fstAgent.tClient.getTransformation.called_once_with(condDict={'TransformationID': 100,
+                                                                       'Status': self.fstAgent.transformationStatuses,
+                                                                       'Type': self.fstAgent.transformationTypes})
+
     self.fstAgent.tClient.getTransformations.return_value = S_OK([{'Status': 'Active',
-                                                                   'TransformationID': 1,
+                                                                   'TransformationID': 100,
                                                                    'Type': 'Replication'}])
     self.fstAgent.tClient.getTransformationParameters.return_value = S_ERROR()
     res = self.fstAgent.getTransformations()
