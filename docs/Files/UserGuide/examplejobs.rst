@@ -48,7 +48,7 @@ Running Marlin
   marl.setNumberOfEvents(3)
 
   job.append(marl)
-  job.submitJob(dIlc)
+  job.submit(dIlc)
 
 Running DDSim
 -------------
@@ -81,7 +81,7 @@ Running DDSim
   D.setExtraCLIArguments( "--enableGun --gun.particle mu-" )
 
   job.append(D)
-  job.submitJob(dIlc)
+  job.submit(dIlc)
 
 
 Running DDSim and then Marlin
@@ -121,7 +121,7 @@ Running DDSim and then Marlin
   marlin.setOutputFile( recoFile )
 
   myJob.append( marlin )
-  myJob.submitJob(dIlc)
+  myJob.submit(dIlc)
 
 
 Running Overlay and Marlin
@@ -168,7 +168,7 @@ Running Overlay and Marlin
   job.append( marlin )
 
 
-  job.submitJob(dIlc)
+  job.submit(dIlc)
 
 
 Running Overlay and Marlin with CLIC_o3_v12
@@ -216,7 +216,7 @@ Running Overlay and Marlin with CLIC_o3_v12
   job.append( marlin )
 
 
-  job.submitJob(dIlc)
+  job.submit(dIlc)
 
 
 Automatic Job Splitting
@@ -257,4 +257,4 @@ There is also the option to automatically split jobs over inputfiles, see
   ddsim.setSteeringFile( "clic_steer.py" )
   ddsim.setOutputFile( "ddsimout.slcio" )
   myJob.append(ddsim)
-  myJob.submitJob(dIlc)
+  myJob.submit(dIlc)

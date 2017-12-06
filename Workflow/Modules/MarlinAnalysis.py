@@ -238,7 +238,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     with open("temp.sh",'w') as script:
       script.write("#!/bin/bash\n")
       lines = []
-      lines.append("source %s" % env_script_path)
+      lines.append('source %s > /dev/null' % env_script_path)
       lines.append('echo $MARLIN_DLL')
       script.write("\n".join(lines))
     os.chmod("temp.sh", 0755)

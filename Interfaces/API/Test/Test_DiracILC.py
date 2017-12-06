@@ -29,6 +29,19 @@ class DiracILCTestCase( unittest.TestCase ):
     from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
     self.dilc = DiracILC()
 
+    def setOptions(*args):
+      if 'SingleReplicaSEs' in args[0]:
+        return ['SE']
+      if 'Minimum' in args[0]:
+        return 1
+      if args[0].endswith('PreferredSEs'):
+        return ['Awesome-Tape-SE']
+
+    ops_mock = Mock()
+    ops_mock.getValue = Mock()
+    ops_mock.getValue.side_effect = setOptions
+    self.dilc.ops = ops_mock
+
   def tearDown( self ):
     self.module_patcher.stop()
 
@@ -284,7 +297,64 @@ class DiracILCTestCase( unittest.TestCase ):
   def test_checkinputsb( self ):
     job_mock = Mock()
     job_mock.workflow.findParameter.return_value.getValue.return_value = '/some/file.txt;/other/some/file.stdhep;LFN:/my/dir/inputsandbox/in1.stdio;lfn:/my/dir/inputsandbox/in2.pdf'
-    ret_dict = { 'Failed' : [], 'Successful' : { '/one/replica' : True} }
+    ret_dict = {'Failed': [], 'Successful': {'/one/replica': {'SE': 'surl'}}}
     with patch('%s.DiracILC.getReplicas' % MODULE_NAME, new=Mock(return_value=S_OK(ret_dict))) as replica_mock:
       assertDiracSucceeds( self.dilc.checkInputSandboxLFNs( job_mock ), self )
       replica_mock.assert_called_once_with( [ '/my/dir/inputsandbox/in1.stdio', '/my/dir/inputsandbox/in2.pdf' ] )
+
+  def test_checkinputsb_notInputSB(self):
+    job_mock = Mock()
+    job_mock.workflow.findParameter.return_value = None
+    assertDiracSucceeds(self.dilc.checkInputSandboxLFNs(job_mock), self)
+
+  def test_checkinputsb_notInputSB_Value(self):
+    job_mock = Mock()
+    job_mock.workflow.findParameter.return_value.getValue.return_value = ''
+    assertDiracSucceeds(self.dilc.checkInputSandboxLFNs(job_mock), self)
+
+  def test_checkinputsb_noLFNs(self):
+    job_mock = Mock()
+    job_mock.workflow.findParameter.return_value.getValue.return_value = '/some/file.txt;/other/some/file.stdhep'
+    assertDiracSucceeds(self.dilc.checkInputSandboxLFNs(job_mock), self)
+
+  def test_checkinputsb_noRepl(self):
+    job_mock = Mock()
+    job_mock.workflow.findParameter.return_value.getValue.return_value = 'LFN:/some/file.txt'
+    ret_dict = {'Failed': [], 'Successful': {'/some/file.txt': {'Bad-SE': 'surl'}}}
+
+    def setOptions(*args):
+      if 'SingleReplicaSEs' in args[0]:
+        return ['Awesome-Disk-SE']
+      if 'Minimum' in args[0]:
+        return 2
+      if args[0].endswith('PreferredSEs'):
+        return ['Awesome-Tape-SE']
+
+    ops_mock = Mock()
+    ops_mock.getValue = setOptions
+    self.dilc.ops = ops_mock
+
+    with patch('%s.DiracILC.getReplicas' % MODULE_NAME, new=Mock(return_value=S_OK(ret_dict))) as replica_mock:
+      assertDiracFailsWith(self.dilc.checkInputSandboxLFNs(job_mock), 'Not enough replicas', self)
+      replica_mock.assert_called_once_with(['/some/file.txt'])
+
+  def test_checkinputsb_goodRepl(self):
+    job_mock = Mock()
+    job_mock.workflow.findParameter.return_value.getValue.return_value = 'LFN:/some/file.txt'
+    ret_dict = {'Failed': [], 'Successful': {'/some/file.txt': {'Awesome-Disk-SE': 'surl'}}}
+
+    def setOptions(*args):
+      if 'SingleReplicaSEs' in args[0]:
+        return ['Awesome-Disk-SE']
+      if 'Minimum' in args[0]:
+        return 2
+      if args[0].endswith('PreferredSEs'):
+        return ['Awesome-Tape-SE']
+
+    ops_mock = Mock()
+    ops_mock.getValue = setOptions
+    self.dilc.ops = ops_mock
+
+    with patch('%s.DiracILC.getReplicas' % MODULE_NAME, new=Mock(return_value=S_OK(ret_dict))) as replica_mock:
+      assertDiracSucceeds(self.dilc.checkInputSandboxLFNs(job_mock), self)
+      replica_mock.assert_called_once_with(['/some/file.txt'])

@@ -262,16 +262,38 @@ class DiracILC(Dirac):
         for inBoxFile in isblist:
           if inBoxFile.lower().count('lfn:'):
             lfns.append(inBoxFile.replace('LFN:', '').replace('lfn:', ''))
-    if len(lfns):
-      res = self.getReplicas(lfns)
-      if not res["OK"]:
-        return S_ERROR('Could not get replicas')
-      failed = res['Value']['Failed']
-      if failed:
-        self.log.error('Failed to find replicas for the following files %s' % string.join(failed, ', '))
-        return S_ERROR('Failed to find replicas')
-      else:
-        self.log.info('All LFN files have replicas available')
+
+    if not lfns:
+      return S_OK()
+
+    res = self.getReplicas(lfns)
+    if not res["OK"]:
+      return S_ERROR('Could not get replicas')
+    failed = res['Value']['Failed']
+    if failed:
+      self.log.error('Failed to find replicas for the following files %s' % string.join(failed, ', '))
+      return S_ERROR('Failed to find replicas')
+
+    self.log.info('All LFN files have replicas available')
+    singleReplicaSEs = set(self.ops.getValue("/UserJobs/InputSandbox/SingleReplicaSEs", []))
+    preferredSEs = set(self.ops.getValue("/UserJobs/InputSandbox/PreferredSEs", []))
+    minimumNumberOfReplicas = self.ops.getValue("/UserJobs/InputSandbox/MinimumNumberOfReplicas", 2)
+    failSubmission = []
+    for lfn, replicas in res['Value']['Successful'].iteritems():
+      sites = set(replicas.keys())
+      if singleReplicaSEs.intersection(sites):
+        continue
+      if len(replicas) < minimumNumberOfReplicas:
+        self.log.error("ERROR: File %r has less than %s replicas,"
+                       "please use dirac-dms-replicate-lfn to replicate to e.g.,:%s"
+                       % (lfn, minimumNumberOfReplicas, ", ".join(preferredSEs - set(replicas.keys()))))
+        failSubmission.append(lfn)
+        for site in set((preferredSEs - set(replicas.keys()))):
+          self.log.error("  dirac-dms-replicate-lfn %s %s" % (lfn, site))
+        self.log.error("Or use job.setInputData for data files")
+    if failSubmission:
+      return S_ERROR("Not enough replicas for %s" % ",".join(failSubmission))
+
     return S_OK()
 
 

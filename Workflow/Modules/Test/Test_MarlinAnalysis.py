@@ -454,7 +454,7 @@ class MarlinAnalysisPrepareDLLCase( MarlinAnalysisFixture, unittest.TestCase ):
       result = self.marAna.prepareMARLIN_DLL( 'some_path' )
       open_mock.assert_called_once_with( 'temp.sh', 'w' )
       assertMockCalls( handles[0].__enter__().write,
-                       [ '#!/bin/bash\n', 'source some_path\necho $MARLIN_DLL' ], self )
+                       ['#!/bin/bash\n', 'source some_path > /dev/null\necho $MARLIN_DLL'], self)
       assertEqualsImproved( len( handles ), 1, self )
       chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
       shell_mock.assert_called_once_with( 0, './temp.sh' )
@@ -474,7 +474,7 @@ class MarlinAnalysisPrepareDLLCase( MarlinAnalysisFixture, unittest.TestCase ):
       result = self.marAna.prepareMARLIN_DLL( 'some_path' )
       open_mock.assert_called_once_with( 'temp.sh', 'w' )
       assertMockCalls( handles[0].__enter__().write,
-                       [ '#!/bin/bash\n', 'source some_path\necho $MARLIN_DLL' ], self )
+                       ['#!/bin/bash\n', 'source some_path > /dev/null\necho $MARLIN_DLL'], self)
       assertEqualsImproved( len( handles ), 1, self )
       chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
       shell_mock.assert_called_once_with( 0, './temp.sh' )
@@ -491,7 +491,7 @@ class MarlinAnalysisPrepareDLLCase( MarlinAnalysisFixture, unittest.TestCase ):
       result = self.marAna.prepareMARLIN_DLL( 'some_path' )
       open_mock.assert_called_once_with( 'temp.sh', 'w' )
       assertMockCalls( handles[0].__enter__().write,
-                       [ '#!/bin/bash\n', 'source some_path\necho $MARLIN_DLL' ], self )
+                       ['#!/bin/bash\n', 'source some_path > /dev/null\necho $MARLIN_DLL'], self)
       assertEqualsImproved( len( handles ), 1, self )
       chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
       shell_mock.assert_called_once_with( 0, './temp.sh' )
@@ -514,7 +514,7 @@ class MarlinAnalysisPrepareDLLCase( MarlinAnalysisFixture, unittest.TestCase ):
       result = self.marAna.prepareMARLIN_DLL( 'some_path' )
       open_mock.assert_called_once_with( 'temp.sh', 'w' )
       assertMockCalls( handles[0].__enter__().write,
-                       [ '#!/bin/bash\n', 'source some_path\necho $MARLIN_DLL' ], self )
+                       ['#!/bin/bash\n', 'source some_path > /dev/null\necho $MARLIN_DLL'], self)
       assertEqualsImproved( len( handles ), 1, self )
       chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
       shell_mock.assert_called_once_with( 0, './temp.sh' )
@@ -540,7 +540,7 @@ class MarlinAnalysisPrepareDLLCase( MarlinAnalysisFixture, unittest.TestCase ):
       result = self.marAna.prepareMARLIN_DLL( 'some_path' )
       open_mock.assert_called_once_with( 'temp.sh', 'w' )
       assertMockCalls( handles[0].__enter__().write,
-                       [ '#!/bin/bash\n', 'source some_path\necho $MARLIN_DLL' ], self )
+                       ['#!/bin/bash\n', 'source some_path > /dev/null\necho $MARLIN_DLL'], self)
       assertEqualsImproved( len( handles ), 1, self )
       chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
       shell_mock.assert_called_once_with( 0, './temp.sh' )
@@ -565,7 +565,7 @@ class MarlinAnalysisPrepareDLLCase( MarlinAnalysisFixture, unittest.TestCase ):
       result = self.marAna.prepareMARLIN_DLL( 'some_path' )
       open_mock.assert_called_once_with( 'temp.sh', 'w' )
       assertMockCalls( handles[0].__enter__().write,
-                       [ '#!/bin/bash\n', 'source some_path\necho $MARLIN_DLL' ], self )
+                       ['#!/bin/bash\n', 'source some_path > /dev/null\necho $MARLIN_DLL'], self)
       assertEqualsImproved( len( handles ), 1, self )
       chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
       shell_mock.assert_called_once_with( 0, './temp.sh' )
@@ -591,7 +591,7 @@ class MarlinAnalysisPrepareDLLCase( MarlinAnalysisFixture, unittest.TestCase ):
       result = self.marAna.prepareMARLIN_DLL( 'some_path' )
       open_mock.assert_called_once_with( 'temp.sh', 'w' )
       assertMockCalls( handles[0].__enter__().write,
-                       [ '#!/bin/bash\n', 'source some_path\necho $MARLIN_DLL' ], self )
+                       ['#!/bin/bash\n', 'source some_path > /dev/null\necho $MARLIN_DLL'], self)
       assertEqualsImproved( len( handles ), 1, self )
       chmod_mock.assert_called_once_with( 'temp.sh', 0755 )
       shell_mock.assert_called_once_with( 0, './temp.sh' )

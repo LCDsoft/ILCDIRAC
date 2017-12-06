@@ -91,7 +91,11 @@ class UploadLogFile(ModuleBase):
     elif "/ilc/prod/ilc/sid" in example_file:
       self.experiment = 'ILC_SID'
     elif "/ilc/prod/ilc/mc-dbd" in example_file:
-      self.experiment = 'ILC_ILD' 
+      self.experiment = 'ILC_ILD'
+    elif "/ilc/prod/ilc/mc-opt" in example_file:
+      self.experiment = 'ILC_ILD'
+    elif "/ilc/prod/ilc/ild" in example_file:
+      self.experiment = 'ILC_ILD'
     else:
       self.log.warn("Failed to determine experiment, reverting to default: %s" % self.experiment)
 
