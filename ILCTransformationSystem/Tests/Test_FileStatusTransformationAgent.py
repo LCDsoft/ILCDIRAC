@@ -252,6 +252,10 @@ class TestFSTAgent(unittest.TestCase):
 
     files = [fileExists, fileOneRepLost, fileAllRepLost, fileRemoved]
 
+    self.fstAgent.fcClient.getReplicas.return_value = S_ERROR()
+    res = self.fstAgent.existsInFC(storageElements, files)
+    self.assertFalse(res['OK'])
+
     self.fstAgent.fcClient.getReplicas.return_value = S_OK({'Successful': {fileExists: {se1: fileExists,
                                                                                         se2: fileExists},
                                                                            fileOneRepLost: {se1: fileOneRepLost},
@@ -291,7 +295,12 @@ class TestFSTAgent(unittest.TestCase):
     se2Result = S_OK({'Successful': {fileExists: True, fileOneRepLost: False, fileAllRepLost: False},
                       'Failed': {fileFailed: 'permission denied'}})
 
-    SeModule.StorageElementItem.exists = MagicMock(side_effect=[se1Result, se2Result])
+    SeModule.StorageElementItem.exists = MagicMock()
+    SeModule.StorageElementItem.exists.return_value = S_ERROR()
+    res = self.fstAgent.existsOnSE(storageElements, files)
+    self.assertFalse(res['OK'])
+
+    SeModule.StorageElementItem.exists.side_effect = [se1Result, se2Result]
     res = self.fstAgent.existsOnSE(storageElements, files)['Value']
 
     self.assertTrue(res['Successful'][fileExists])
@@ -318,14 +327,22 @@ class TestFSTAgent(unittest.TestCase):
 
     files = [fileExists, fileOneRepLostOnSE, fileAllRepLostOnSEs, fileRemoved]
 
-    self.fstAgent.existsInFC = MagicMock(return_value=S_OK(
-        {'Successful': {fileExists: True, fileOneRepLostOnSE: True, fileAllRepLostOnSEs: True, fileRemoved: False}}))
-    self.fstAgent.existsOnSE = MagicMock(return_value=S_OK(
-        {'Successful': {fileExists: True, fileOneRepLostOnSE: False, fileAllRepLostOnSEs: False}}))
+    self.fstAgent.existsInFC = MagicMock()
+    self.fstAgent.existsOnSE = MagicMock()
 
+    self.fstAgent.existsInFC.return_value = S_ERROR()
+    res = self.fstAgent.exists(storageElements, files)
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.existsInFC.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLostOnSE: True,
+                                                                 fileAllRepLostOnSEs: True, fileRemoved: False}})
+    self.fstAgent.existsOnSE.return_value = S_ERROR()
+    res = self.fstAgent.exists(storageElements, files)
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.existsOnSE.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLostOnSE: False,
+                                                                 fileAllRepLostOnSEs: False}})
     res = self.fstAgent.exists(storageElements, files)['Value']['Successful']
-    self.fstAgent.existsOnSE.assert_called_once_with(
-        storageElements, [fileExists, fileOneRepLostOnSE, fileAllRepLostOnSEs])
     self.assertTrue(res[fileExists])
     self.assertFalse(res[fileOneRepLostOnSE])
     self.assertFalse(res[fileAllRepLostOnSEs])
