@@ -33,11 +33,6 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.tClient.setTaskStatus = MagicMock()
     self.fstAgent.enabled = True
 
-    self.transformations = [{'Status': 'Active',
-                             'TransformationID': 1L,
-                             'Description': 'Replicate files for prodID 777 to CERN-DST-EOS',
-                             'Type': 'Replication',
-                             'TransformationName': 'replicate_777_CERN-DST-EOS'}]
     self.fakeTransID = 1L
 
     self.failedTask = {'TargetSE': 'DESY-SRM',
@@ -89,6 +84,20 @@ class TestFSTAgent(unittest.TestCase):
     res = self.fstAgent.execute()
     self.fstAgent.processTransformation.assert_not_called()
     self.assertTrue(res['OK'])
+
+  def test_process_transformation_failure(self):
+    """ fstAgent should not exit if processing of some transformation returns an Error,
+        all transformations should be processed independently """
+    self.fstAgent.processTransformation = MagicMock()
+    self.fstAgent.getTransformations = MagicMock()
+
+    transformations = [{'TransformationID': 1, 'SourceSE': ['CERN'], 'TargetSE': ['DESY'], 'DataTransType': 'x'},
+                       {'TransformationID': 2, 'SourceSE': ['CERN'], 'TargetSE': ['DESY'], 'DataTransType': 'x'}]
+    self.fstAgent.getTransformations.return_value = S_OK(transformations)
+    self.fstAgent.processTransformation.return_value = S_ERROR()
+
+    self.fstAgent.execute()
+    self.assertEquals(len(self.fstAgent.processTransformation.mock_calls), 2)
 
   def _getOption(self, option, defaultVal):
     if option != "TransformationFileStatuses":
@@ -144,12 +153,17 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
     self.fstAgent.nClient.sendMail.assert_not_called()
 
-    # email should be sent if accounting dict is not empty
     self.fstAgent.accounting = {FST.SET_PROCESSED: [{'LFN': '/ilc/fake/lfn',
                                                      'Status': 'Problematic',
                                                      'AvailableOnSource': True,
                                                      'AvailableOnTarget': True}]}
-    self.fstAgent.nClient.sendMail.reset_mock()
+    # sendNotification returns error if sendMail returns error
+    self.fstAgent.nClient.sendMail.return_value = S_ERROR()
+    res = self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
+    self.assertFalse(res['OK'])
+
+    # testing successful delivery of email
+    self.fstAgent.nClient.sendMail.return_value = S_OK()
     self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
     self.fstAgent.nClient.sendMail.assert_called()
 
