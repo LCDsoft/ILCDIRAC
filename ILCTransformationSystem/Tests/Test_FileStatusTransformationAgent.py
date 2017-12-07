@@ -180,6 +180,10 @@ class TestFSTAgent(unittest.TestCase):
         Data Transformation Type (Replication / Moving) """
     self.fstAgent.tClient.getTransformationParameters = MagicMock()
 
+    self.fstAgent.tClient.getTransformationParameters.return_value = S_ERROR()
+    res = self.fstAgent.getDataTransformationType(self.fakeTransID)
+    self.assertFalse(res['OK'])
+
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK("")
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)
     self.assertFalse(res['OK'])
@@ -245,6 +249,12 @@ class TestFSTAgent(unittest.TestCase):
     transFiles = [{'LFN': lfn1, 'Status': 'Problematic', 'AvailableOnSource': True, 'AvailableOnTarget': True},
                   {'LFN': lfn2, 'Status': 'Problematic', 'AvailableOnSource': True, 'AvailableOnTarget': True}]
 
+    self.fstAgent.tClient.setFileStatusForTransformation.return_value = S_ERROR()
+    res = self.fstAgent.setFileStatus(self.fakeTransID, transFiles, newStatus)
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.tClient.setFileStatusForTransformation.reset_mock()
+    self.fstAgent.tClient.setFileStatusForTransformation.return_value = S_OK()
     self.fstAgent.setFileStatus(self.fakeTransID, transFiles, newStatus)
     self.fstAgent.tClient.setFileStatusForTransformation.assert_called_once_with(self.fakeTransID, newLFNsStatus={
                                                                                  lfn1: newStatus, lfn2: newStatus})
@@ -319,6 +329,11 @@ class TestFSTAgent(unittest.TestCase):
     res = self.fstAgent.existsOnSE(storageElements, files)
     self.assertFalse(res['OK'])
 
+    res = self.fstAgent.existsOnSE(storageElements, [])
+    self.assertTrue(res['OK'])
+    self.assertEquals(res['Value']['Successful'], {})
+    self.assertEquals(res['Value']['Failed'], {})
+
     SeModule.StorageElementItem.exists.side_effect = [se1Result, se2Result]
     res = self.fstAgent.existsOnSE(storageElements, files)['Value']
 
@@ -330,6 +345,8 @@ class TestFSTAgent(unittest.TestCase):
   def test_exists(self):
     """ Tests if the exists function correctly determines if a file exists in File Catalog and Storage Elements """
 
+    se1 = 'CERN-SRM'
+    se2 = 'DESY-SRM'
     storageElements = ['CERN-SRM', 'DESY-SRM']
 
     # file exists in fc and all SEs
@@ -353,14 +370,22 @@ class TestFSTAgent(unittest.TestCase):
     res = self.fstAgent.exists(storageElements, files)
     self.assertFalse(res['OK'])
 
+    # if no files were found in FC, no need to check the lfns on storage
+    self.fstAgent.existsInFC.return_value = S_OK({'Successful': {fileRemoved: False},
+                                                  'Failed': {}})
+    self.fstAgent.exists(storageElements, [fileRemoved])
+    self.fstAgent.existsOnSE.not_called()
+
     self.fstAgent.existsInFC.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLostOnSE: True,
-                                                                 fileAllRepLostOnSEs: True, fileRemoved: False}})
+                                                                 fileAllRepLostOnSEs: True, fileRemoved: False},
+                                                  'Failed': {}})
     self.fstAgent.existsOnSE.return_value = S_ERROR()
     res = self.fstAgent.exists(storageElements, files)
     self.assertFalse(res['OK'])
 
     self.fstAgent.existsOnSE.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLostOnSE: False,
-                                                                 fileAllRepLostOnSEs: False}})
+                                                                 fileAllRepLostOnSEs: False},
+                                                  'Failed': {se1: {}, se2: {}}})
     res = self.fstAgent.exists(storageElements, files)['Value']['Successful']
     self.assertTrue(res[fileExists])
     self.assertFalse(res[fileOneRepLostOnSE])
@@ -372,6 +397,10 @@ class TestFSTAgent(unittest.TestCase):
 
     transFileWithFailedReq = {'TransformationID': 400103, 'TaskID': 0, 'LFN': '/ilc/file1'}
     transFileWithDoneReq = {'TransformationID': 400103, 'TaskID': 1, 'LFN': '/ilc/file2'}
+
+    self.fstAgent.tClient.getTransformationTasks.return_value = S_ERROR()
+    res = self.fstAgent.selectFailedRequests(transFileWithFailedReq)
+    self.assertFalse(res)
 
     self.fstAgent.tClient.getTransformationTasks.return_value = S_OK([self.failedTask])
     res = self.fstAgent.selectFailedRequests(transFileWithFailedReq)
@@ -389,10 +418,15 @@ class TestFSTAgent(unittest.TestCase):
     transFiles = [{'TransformationID': self.fakeTransID, 'TaskID': taskIDfile1, 'LFN': '/ilc/file1'},
                   {'TransformationID': self.fakeTransID, 'TaskID': taskIDfile2, 'LFN': '/ilc/file2'}]
 
-    self.fstAgent.getRequestStatus = MagicMock(return_value=S_OK({taskIDfile1: {'RequestStatus': 'Problematic',
-                                                                                'RequestID': 1},
-                                                                  taskIDfile2: {'RequestStatus': 'Problematic',
-                                                                                'RequestID': 2}}))
+    self.fstAgent.getRequestStatus = MagicMock()
+    self.fstAgent.getRequestStatus.return_value = S_ERROR()
+    res = self.fstAgent.retryStrategyForFiles(self.fakeTransID, transFiles)
+    self.assertFalse(res['OK'])
+
+    self.fstAgent.getRequestStatus.return_value = S_OK({taskIDfile1: {'RequestStatus': 'Problematic',
+                                                                      'RequestID': 1},
+                                                        taskIDfile2: {'RequestStatus': 'Problematic',
+                                                                      'RequestID': 2}})
 
     # no request exists for first trans file and one request exists for second trans file
     self.fstAgent.reqClient.getRequest = MagicMock()
@@ -405,7 +439,6 @@ class TestFSTAgent(unittest.TestCase):
 
   def test_retry_files(self):
     """ Test for retryFiles function """
-    requestID = 1
     transFiles = [{'LFN': '/ilc/file1', 'Status': 'Problematic', 'AvailableOnSource': True,
                    'AvailableOnTarget': True, 'TaskID': 1},
                   {'LFN': '/ilc/file2', 'Status': 'Problematic', 'AvailableOnSource': True,
@@ -420,7 +453,7 @@ class TestFSTAgent(unittest.TestCase):
     self.assertFalse(res['OK'])
 
     self.fstAgent.retryStrategyForFiles.return_value = S_OK({1: {'Strategy': FST.RESET_REQUEST,
-                                                                 'RequestID': requestID},
+                                                                 'RequestID': 1},
                                                              2: {'Strategy': FST.SET_UNUSED}})
     self.fstAgent.reqClient.resetFailedRequest.return_value = S_ERROR()
     res = self.fstAgent.retryFiles(self.fakeTransID, transFiles)
@@ -435,11 +468,22 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.reqClient.resetFailedRequest.reset_mock()
     self.fstAgent.tClient.setTaskStatus.reset_mock()
     self.fstAgent.retryFiles(self.fakeTransID, transFiles)
-    self.fstAgent.reqClient.resetFailedRequest.assert_called_once_with(requestID)
+    self.fstAgent.reqClient.resetFailedRequest.assert_called_once_with(1)
     self.fstAgent.tClient.setTaskStatus.assert_called_once_with(self.fakeTransID, 1, 'Waiting')
     self.fstAgent.setFileStatus.assert_called_once_with(self.fakeTransID, [transFiles[1]], 'Unused')
 
-  def exists(self, se, lfns):
+    # set file statues to unused should not be called if all files have reset request strategy
+    self.fstAgent.retryStrategyForFiles.return_value = S_OK({1: {'Strategy': FST.RESET_REQUEST,
+                                                                 'RequestID': 1},
+                                                             2: {'Strategy': FST.RESET_REQUEST,
+                                                                 'RequestID': 2}})
+    self.fstAgent.setFileStatus.reset_mock()
+    self.fstAgent.reqClient.resetFailedRequest.reset_mock()
+    self.fstAgent.retryFiles(self.fakeTransID, transFiles)
+    self.assertEquals(len(self.fstAgent.reqClient.resetFailedRequest.mock_calls), 2)
+    self.fstAgent.setFileStatus.not_called()
+
+  def _exists(self, se, lfns):
     """ returns lfns availability information """
     result = {}
     for lfn in lfns:
@@ -464,7 +508,6 @@ class TestFSTAgent(unittest.TestCase):
 
     transFiles = [fileNotAvailableOnSrc, fileNotAvailableOnDst, fileAvailable, fileNotAvailable]
 
-    self.fstAgent.tClient.getTransformationFiles.return_value = S_OK(transFiles)
     # all trans files have failed requests
     self.fstAgent.selectFailedRequests = MagicMock(return_value={tFile['TaskID']: True for tFile in transFiles})
 
@@ -472,8 +515,30 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.retryStrategyForFiles = MagicMock(return_value=S_OK(
         {tFile['TaskID']: {'Strategy': FST.SET_UNUSED} for tFile in transFiles}))
 
-    self.fstAgent.exists = MagicMock(side_effect=self.exists)
+    self.fstAgent.exists = MagicMock()
 
+    # all file statuses should be processed even if getTransformationFiles returns an error for some status
+    self.fstAgent.transformationFileStatuses = ['Assigned', 'Problematic']
+    self.fstAgent.tClient.getTransformationFiles.return_value = S_ERROR()
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.assertEquals(len(self.fstAgent.tClient.getTransformationFiles.mock_calls), 2)
+
+    # all file statuses should be processed even if no transformation files are found for some status
+    self.fstAgent.tClient.getTransformationFiles.reset_mock()
+    self.fstAgent.tClient.getTransformationFiles.return_value = S_OK([])
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.assertEquals(len(self.fstAgent.tClient.getTransformationFiles.mock_calls), 2)
+
+    # all file statuses should be processed even if we get a failure to determine if transformation files
+    # with some status exists in FileCatalog and StorageElements
+    self.fstAgent.tClient.getTransformationFiles.reset_mock()
+    self.fstAgent.tClient.getTransformationFiles.return_value = S_OK(transFiles)
+    self.fstAgent.exists.return_value = S_ERROR()
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.assertEquals(len(self.fstAgent.tClient.getTransformationFiles.mock_calls), 2)
+
+    self.fstAgent.tClient.getTransformationFiles.return_value = S_OK(transFiles)
+    self.fstAgent.exists.side_effect = self._exists
     self.fstAgent.transformationFileStatuses = ['Assigned']
 
     # check replication transformation treatment for assigned files

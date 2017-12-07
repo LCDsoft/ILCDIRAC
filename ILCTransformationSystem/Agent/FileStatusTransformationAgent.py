@@ -96,13 +96,12 @@ class FileStatusTransformationAgent(AgentModule):
 
   def sendNotification(self, transID, transType, sourceSEs, targetSEs):
     """ sends email notification about accounting information of a transformation """
-    columns = ["LFN", "Source", "Target", "Old Status", "Action"]
     emailBody = "Transformation ID: %s\n" % transID
     emailBody += "Transformation Type: %s\n" % transType
     emailBody += "Source SE: %s\n" % (" ".join(str(source) for source in sourceSEs))
     emailBody += "Target SE: %s\n\n" % (" ".join(str(target) for target in targetSEs))
-
     rows = []
+
     for action, transFiles in self.accounting.iteritems():
       emailBody += "Total number of files with action %s: %s\n" % (action, len(transFiles))
       for transFile in transFiles:
@@ -110,6 +109,7 @@ class FileStatusTransformationAgent(AgentModule):
                      [str(transFile['AvailableOnTarget'])], [transFile['Status']], [action]])
 
     if rows:
+      columns = ["LFN", "Source", "Target", "Old Status", "Action"]
       emailBody += printTable(columns, rows, printOut=False, numbering=False, columnSeparator=' | ')
       self.log.notice(emailBody)
 
@@ -167,9 +167,6 @@ class FileStatusTransformationAgent(AgentModule):
         self.log.error('Failure to get SourceSE and TargetSE parameters for Transformation ID %d' %
                        trans['TransformationID'])
         return res
-
-      if not res['Value']['SourceSE'] and not res['Value']['TargetSE']:
-        return S_ERROR()
 
       trans['SourceSE'] = eval(res['Value']['SourceSE'])
       trans['TargetSE'] = eval(res['Value']['TargetSE'])
@@ -284,10 +281,8 @@ class FileStatusTransformationAgent(AgentModule):
       if transFile['AvailableOnSource'] and transFile['AvailableOnTarget']:
         if transType == REPLICATION_TRANS:
           actions[SET_PROCESSED].append(transFile)
-        elif transType == MOVING_TRANS:
+        if transType == MOVING_TRANS:
           actions[RETRY].append(transFile)
-        else:
-          self.log.warn('Unknown TransType %s ' % transType)
 
       elif transFile['AvailableOnSource'] and not transFile['AvailableOnTarget']:
         actions[RETRY].append(transFile)
@@ -446,7 +441,7 @@ class FileStatusTransformationAgent(AgentModule):
       self.log.error('Failure to determine if files exists in File Catalog, %s' % fcRes['Message'])
       return fcRes
 
-    if 'Failed' in fcRes['Value'] and fcRes['Value']['Failed']:
+    if fcRes['Value']['Failed']:
       self.log.notice("FAILED FileCatalog Response %s" % fcRes['Value']['Failed'])
 
     # check if files found in file catalog also exist on SE
@@ -462,7 +457,7 @@ class FileStatusTransformationAgent(AgentModule):
       return seRes
 
     for se in storageElements:
-      if 'Failed' in seRes['Value'] and seRes['Value']['Failed'][se]:
+      if seRes['Value']['Failed'][se]:
         self.log.error('Failed to determine if files exist on %s, %s' % (se, seRes['Value']['Failed'][se]))
         return S_ERROR()
 
