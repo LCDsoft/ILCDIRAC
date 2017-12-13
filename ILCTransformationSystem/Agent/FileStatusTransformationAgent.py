@@ -54,6 +54,7 @@ class FileStatusTransformationAgent(AgentModule):
     AgentModule.__init__(self, *args, **kwargs)
     self.name = 'FileStatusTransformationAgent'
     self.enabled = False
+    self.shifterProxy = self.am_setOption('shifterProxy', 'DataManager')
     self.transformationTypes = ["Replication"]
     self.transformationStatuses = ["Active"]
     self.transformationFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
