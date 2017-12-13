@@ -54,7 +54,7 @@ class FileStatusTransformationAgent(AgentModule):
     AgentModule.__init__(self, *args, **kwargs)
     self.name = 'FileStatusTransformationAgent'
     self.enabled = False
-    self.shifterProxy = self.am_setOption('shifterProxy', 'DataManager')
+    self.shifterProxy = 'DataManager'
     self.transformationTypes = ["Replication"]
     self.transformationStatuses = ["Active"]
     self.transformationFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
@@ -82,6 +82,7 @@ class FileStatusTransformationAgent(AgentModule):
   def beginExecution(self):
     """ Reload the configurations before every cycle """
     self.enabled = self.am_getOption('EnableFlag', False)
+    self.shifterProxy = self.am_setOption('shifterProxy', 'DataManager')
     self.transformationTypes = self.am_getOption('TransformationTypes', ["Replication"])
     self.transformationStatuses = self.am_getOption('TransformationStatuses', ["Active"])
     self.transformationFileStatuses = self.am_getOption(
@@ -212,6 +213,10 @@ class FileStatusTransformationAgent(AgentModule):
     res = self.tClient.getTransformationParameters(transID, 'Body')
     if not res['OK']:
       return res
+
+    # if body is empty then we assume that it is a replication transformation
+    if not res['Value']:
+      return S_OK(REPLICATION_TRANS)
 
     replication = False
     rmReplica = False

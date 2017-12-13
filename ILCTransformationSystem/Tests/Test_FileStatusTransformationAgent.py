@@ -109,6 +109,7 @@ class TestFSTAgent(unittest.TestCase):
     """ fstAgent should not process file statuses for whom check files function is not implemented """
     allowedFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
     self.fstAgent.am_getOption = MagicMock(side_effect=self._getOption)
+    self.fstAgent.am_setOption = MagicMock(side_effect=self._getOption)
     self.fstAgent.beginExecution()
     self.assertItemsEqual(self.fstAgent.transformationFileStatuses, allowedFileStatuses)
 
@@ -186,8 +187,8 @@ class TestFSTAgent(unittest.TestCase):
     self.assertFalse(res['OK'])
 
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK("")
-    res = self.fstAgent.getDataTransformationType(self.fakeTransID)
-    self.assertFalse(res['OK'])
+    res = self.fstAgent.getDataTransformationType(self.fakeTransID)['Value']
+    self.assertEquals(res, FST.REPLICATION_TRANS)
 
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK("sdfdsfdsfs")
     res = self.fstAgent.getDataTransformationType(self.fakeTransID)
