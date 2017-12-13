@@ -138,6 +138,18 @@ class FileStatusTransformationAgent(AgentModule):
 
     for trans in transformations:
       transID = trans['TransformationID']
+      if 'SourceSE' not in trans:
+        self.log.error("SourceSE not set for transID %s, skip processing" % transID)
+        continue
+
+      if 'TargetSE' not in trans:
+        self.log.error("TargetSE not set for transID %s, skip processing" % transID)
+        continue
+
+      if 'DataTransType' not in trans:
+        self.log.error("Transformation Type not set for transID %s, skip processing" % transID)
+        continue
+
       res = self.processTransformation(transID, trans['SourceSE'], trans['TargetSE'], trans['DataTransType'])
       if not res['OK']:
         self.log.error('Failure to process transformation with ID: %s' % transID)
@@ -166,15 +178,16 @@ class FileStatusTransformationAgent(AgentModule):
       if not res['OK']:
         self.log.error('Failure to get SourceSE and TargetSE parameters for Transformation ID %d' %
                        trans['TransformationID'])
-        return res
+        continue
 
       trans['SourceSE'] = eval(res['Value']['SourceSE'])
       trans['TargetSE'] = eval(res['Value']['TargetSE'])
 
       res = self.getDataTransformationType(trans['TransformationID'])
       if not res['OK']:
-        self.log.error('Failure to determine Data Transformation Type: %s' % res['Message'])
-        return res
+        self.log.error('Failure to determine Data Transformation Type for TransID: %s' % trans['TransformationID'])
+        continue
+
       trans['DataTransType'] = res['Value']
 
     return S_OK(result)

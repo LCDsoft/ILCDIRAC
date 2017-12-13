@@ -68,7 +68,7 @@ class TestFSTAgent(unittest.TestCase):
     self.assertEquals(self.fstAgent.transformationStatuses, ['Active'])
 
   def test_get_transformations_failure(self):
-    """ fstAgent should stop execution cycle if getTransformations returns an error """
+    """ fstAgent should stop execution cycle if tClient getTransformations returns an error """
     self.fstAgent.processTransformation = MagicMock()
     self.fstAgent.tClient.getTransformations.return_value = S_ERROR()
 
@@ -116,35 +116,36 @@ class TestFSTAgent(unittest.TestCase):
     """ Test for getTransformations function """
     self.fstAgent.tClient.getTransformationParameters = MagicMock()
     self.fstAgent.getDataTransformationType = MagicMock()
+    self.fstAgent.processTransformation = MagicMock()
 
     self.fstAgent.tClient.getTransformations.return_value = S_ERROR()
     res = self.fstAgent.getTransformations()
     self.assertFalse(res['OK'])
 
-    res = self.fstAgent.getTransformations(transID=100)
-    self.fstAgent.tClient.getTransformation.called_once_with(condDict={'TransformationID': 100,
+    res = self.fstAgent.getTransformations(transID=self.fakeTransID)
+    self.fstAgent.tClient.getTransformation.called_once_with(condDict={'TransformationID': self.fakeTransID,
                                                                        'Status': self.fstAgent.transformationStatuses,
                                                                        'Type': self.fstAgent.transformationTypes})
 
     self.fstAgent.tClient.getTransformations.return_value = S_OK([{'Status': 'Active',
-                                                                   'TransformationID': 100,
+                                                                   'TransformationID': self.fakeTransID,
                                                                    'Type': 'Replication'}])
     self.fstAgent.tClient.getTransformationParameters.return_value = S_ERROR()
-    res = self.fstAgent.getTransformations()
-    self.assertFalse(res['OK'])
+    self.fstAgent.execute()
+    self.fstAgent.processTransformation.assert_not_called()
 
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK({'TargetSE': "['CERN-DST-EOS']",
                                                                            'SourceSE': "['CERN-SRM']"})
+    self.fstAgent.processTransformation.reset_mock()
     self.fstAgent.getDataTransformationType.return_value = S_ERROR()
-    res = self.fstAgent.getTransformations()
-    self.assertFalse(res['OK'])
+    self.fstAgent.execute()
+    self.fstAgent.processTransformation.assert_not_called()
 
     self.fstAgent.getDataTransformationType.return_value = S_OK(FST.REPLICATION_TRANS)
-    res = self.fstAgent.getTransformations()
-    trans = res['Value'][0]
-    self.assertEquals(trans['SourceSE'], ['CERN-SRM'])
-    self.assertEquals(trans['TargetSE'], ['CERN-DST-EOS'])
-    self.assertEquals(trans['DataTransType'], FST.REPLICATION_TRANS)
+    self.fstAgent.processTransformation.reset_mock()
+    self.fstAgent.execute()
+    self.fstAgent.processTransformation.assert_called_once_with(self.fakeTransID, ['CERN-SRM'], ['CERN-DST-EOS'],
+                                                                FST.REPLICATION_TRANS)
 
   def test_send_notification(self):
     """ Test for sendNotification function """
