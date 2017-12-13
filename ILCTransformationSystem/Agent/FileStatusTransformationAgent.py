@@ -115,8 +115,9 @@ class FileStatusTransformationAgent(AgentModule):
       emailBody += printTable(columns, rows, printOut=False, numbering=False, columnSeparator=' | ')
       self.log.notice(emailBody)
 
+      subject = "%s: %s" % (self.emailSubject, transID)
       for address in self.addressTo:
-        res = self.nClient.sendMail(address, self.emailSubject, emailBody, self.addressFrom, localAttempt=False)
+        res = self.nClient.sendMail(address, subject, emailBody, self.addressFrom, localAttempt=False)
         if not res['OK']:
           self.log.error("Failure to send Email notification")
           return res
