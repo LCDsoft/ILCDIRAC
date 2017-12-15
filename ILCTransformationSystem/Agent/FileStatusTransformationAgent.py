@@ -142,20 +142,20 @@ class FileStatusTransformationAgent(AgentModule):
     for trans in transformations:
       transID = trans['TransformationID']
       if 'SourceSE' not in trans:
-        self.log.error("SourceSE not set for transID %s, skip processing" % transID)
+        self.log.error("SourceSE not set for transformation, skip processing", "transID: %s" % transID)
         continue
 
       if 'TargetSE' not in trans:
-        self.log.error("TargetSE not set for transID %s, skip processing" % transID)
+        self.log.error("TargetSE not set for transformation, skip processing", "transID: %s" % transID)
         continue
 
       if 'DataTransType' not in trans:
-        self.log.error("Transformation Type not set for transID %s, skip processing" % transID)
+        self.log.error("Transformation Type not set for transformation, skip processing", "transID: %s" % transID)
         continue
 
       res = self.processTransformation(transID, trans['SourceSE'], trans['TargetSE'], trans['DataTransType'])
       if not res['OK']:
-        self.log.error('Failure to process transformation with ID: %s' % transID)
+        self.log.error('Failure to process transformation with ID:', transID)
         continue
 
     return S_OK()
@@ -179,7 +179,7 @@ class FileStatusTransformationAgent(AgentModule):
     for trans in result:
       res = self.tClient.getTransformationParameters(trans['TransformationID'], ['SourceSE', 'TargetSE'])
       if not res['OK']:
-        self.log.error('Failure to get SourceSE and TargetSE parameters for Transformation ID %d' %
+        self.log.error('Failure to get SourceSE and TargetSE parameters for Transformation ID:',
                        trans['TransformationID'])
         continue
 
@@ -188,7 +188,8 @@ class FileStatusTransformationAgent(AgentModule):
 
       res = self.getDataTransformationType(trans['TransformationID'])
       if not res['OK']:
-        self.log.error('Failure to determine Data Transformation Type for TransID: %s' % trans['TransformationID'])
+        self.log.error('Failure to determine Data Transformation Type for Transformation ID:',
+                       trans['TransformationID'])
         continue
 
       trans['DataTransType'] = res['Value']
@@ -199,7 +200,7 @@ class FileStatusTransformationAgent(AgentModule):
     """ returns request statuses for a given list of task IDs """
     res = self.tClient.getTransformationTasks(condDict={'TransformationID': transID, 'TaskID': taskIDs})
     if not res['OK']:
-      self.log.error('Failure to get Transformation Tasks for Transformation ID %s ' % transID)
+      self.log.error('Failure to get Transformation Tasks for Transformation ID:', transID)
       return res
 
     result = res['Value']
@@ -252,7 +253,7 @@ class FileStatusTransformationAgent(AgentModule):
       if self.enabled:
         res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=lfnStatuses)
         if not res['OK']:
-          self.log.error('Failed to set statuses for LFNs %s ' % res['Message'])
+          self.log.error('Failed to set statuses for LFNs', res['Message'])
           return res
 
       for transFile in transFiles:
@@ -372,12 +373,12 @@ class FileStatusTransformationAgent(AgentModule):
       if self.enabled:
         res = self.reqClient.resetFailedRequest(requestID)
         if not res['OK'] or res['Value'] == "Not reset":
-          self.log.error('Failed to reset request %s' % res['Message'])
+          self.log.error('Failed to reset request', res['Message'])
           return res
 
         res = self.tClient.setTaskStatus(transID, transFile['TaskID'], 'Waiting')
         if not res['OK']:
-          self.log.error('Failure to set Waiting status for Task ID %d', transFile['TaskID'])
+          self.log.error('Failure to set Waiting status for Task ID:', transFile['TaskID'])
           return res
 
       self.accounting[RESET_REQUEST].append({'LFN': transFile['LFN'],
@@ -458,7 +459,7 @@ class FileStatusTransformationAgent(AgentModule):
 
     fcRes = self.existsInFC(storageElements, lfns)
     if not fcRes['OK']:
-      self.log.error('Failure to determine if files exists in File Catalog, %s' % fcRes['Message'])
+      self.log.error('Failure to determine if files exists in File Catalog', fcRes['Message'])
       return fcRes
 
     if fcRes['Value']['Failed']:
@@ -473,12 +474,12 @@ class FileStatusTransformationAgent(AgentModule):
 
     seRes = self.existsOnSE(storageElements, checkLFNsOnStorage)
     if not seRes['OK']:
-      self.log.error('Failure to determine if files exist on SE, %s' % seRes['Message'])
+      self.log.error('Failure to determine if files exist on SE', seRes['Message'])
       return seRes
 
     for se in storageElements:
       if seRes['Value']['Failed'][se]:
-        self.log.error('Failed to determine if files exist on %s, %s' % (se, seRes['Value']['Failed'][se]))
+        self.log.error('Failed to determine if files exist on SE', '%s, %s' % (se, seRes['Value']['Failed'][se]))
         return S_ERROR()
 
     fcResult = fcRes['Value']['Successful']
@@ -500,7 +501,7 @@ class FileStatusTransformationAgent(AgentModule):
     for status in self.transformationFileStatuses:
       res = self.tClient.getTransformationFiles(condDict={'TransformationID': transID, 'Status': status})
       if not res['OK']:
-        self.log.error('Failure to get Transformation Files with Status %s for Transformation ID %d' %
+        self.log.error('Failure to get Transformation Files', 'Status: %s Transformation ID: %s' %
                        (status, transID))
         continue
 
