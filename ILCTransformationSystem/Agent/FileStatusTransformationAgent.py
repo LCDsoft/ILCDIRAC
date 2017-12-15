@@ -251,7 +251,7 @@ class FileStatusTransformationAgent(AgentModule):
 
     if lfnStatuses:
       if self.enabled:
-        res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=lfnStatuses)
+        res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=lfnStatuses, force=True)
         if not res['OK']:
           self.log.error('Failed to set statuses for LFNs', res['Message'])
           return res
@@ -372,14 +372,18 @@ class FileStatusTransformationAgent(AgentModule):
       requestID = retryStrategy[transFile['TaskID']]['RequestID']
       if self.enabled:
         res = self.reqClient.resetFailedRequest(requestID)
-        if not res['OK'] or res['Value'] == "Not reset":
-          self.log.error('Failed to reset request', res['Message'])
-          return res
+        if not res['OK']:
+          self.log.error('Failed to reset request', 'ReqID: %s Error: %s' % (requestID, res['Message']))
+          continue
+
+        if res['Value'] == "Not reset":
+          self.log.error('Failed to reset a non-recoverable request', 'ReqID: %s' % requestID)
+          continue
 
         res = self.tClient.setTaskStatus(transID, transFile['TaskID'], 'Waiting')
         if not res['OK']:
           self.log.error('Failure to set Waiting status for Task ID:', transFile['TaskID'])
-          return res
+          continue
 
       self.accounting[RESET_REQUEST].append({'LFN': transFile['LFN'],
                                              'Status': transFile['Status'],
