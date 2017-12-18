@@ -118,6 +118,7 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.tClient.getTransformationParameters = MagicMock()
     self.fstAgent.getDataTransformationType = MagicMock()
     self.fstAgent.processTransformation = MagicMock()
+    self.fstAgent.sendNotification = MagicMock()
 
     self.fstAgent.tClient.getTransformations.return_value = S_ERROR()
     res = self.fstAgent.getTransformations()
@@ -134,6 +135,7 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.tClient.getTransformationParameters.return_value = S_ERROR()
     self.fstAgent.execute()
     self.fstAgent.processTransformation.assert_not_called()
+    self.fstAgent.sendNotification.assert_called()
 
     self.fstAgent.tClient.getTransformationParameters.return_value = S_OK({'TargetSE': "['CERN-DST-EOS']",
                                                                            'SourceSE': "['CERN-SRM']"})
@@ -141,6 +143,7 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.getDataTransformationType.return_value = S_ERROR()
     self.fstAgent.execute()
     self.fstAgent.processTransformation.assert_not_called()
+    self.fstAgent.sendNotification.assert_called()
 
     self.fstAgent.getDataTransformationType.return_value = S_OK(FST.REPLICATION_TRANS)
     self.fstAgent.processTransformation.reset_mock()
@@ -153,29 +156,44 @@ class TestFSTAgent(unittest.TestCase):
     dataTransType = FST.REPLICATION_TRANS
     sourceSE = ['CERN-SRM']
     targetSE = ['DESY-SRM']
-
-    # no email should be send if accounting dict is empty
-    self.fstAgent.accounting = {}
-    self.fstAgent.nClient.sendMail = MagicMock()
-    self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
-    self.fstAgent.nClient.sendMail.assert_not_called()
-
-    self.fstAgent.accounting = {FST.SET_PROCESSED: [{'LFN': '/ilc/fake/lfn',
+    errList = ["some error occured", "some other error"]
+    accDict = {FST.SET_PROCESSED: [{'LFN': '/ilc/fake/lfn',
                                                      'Status': 'Problematic',
                                                      'AvailableOnSource': True,
                                                      'AvailableOnTarget': True}]}
-    # sendNotification returns error if sendMail returns error
-    self.fstAgent.nClient.sendMail.return_value = S_ERROR()
-    res = self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
-    self.assertFalse(res['OK'])
+    self.fstAgent.nClient.sendMail = MagicMock()
 
-    # testing successful delivery of email
-    self.fstAgent.nClient.sendMail.return_value = S_OK()
+    # email should not be sent if accounting dict and errors list is empty
+    self.fstAgent.accounting = {}
+    self.fstAgent.errors = []
+    self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
+    self.fstAgent.nClient.sendMail.assert_not_called()
+
+    # email should be sent if accounting dict is empty but errors list contains some error strings
+    self.fstAgent.errors = errList
     self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
     self.fstAgent.nClient.sendMail.assert_called()
 
-    # accounting dict should be cleared after the notification is sent
+    # email should be sent if errors list is empty but accounting dict contains some values
+    self.fstAgent.nClient.sendMail.reset_mock()
+    self.fstAgent.accounting = accDict
+    self.fstAgent.errors = []
+    self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
+    self.fstAgent.nClient.sendMail.assert_called()
+
+    # try sending email to all addresses even if we get error for sending email to some address
+    self.fstAgent.nClient.sendMail.reset_mock()
+    self.fstAgent.errors = errList
+    self.fstAgent.accounting = accDict
+    self.fstAgent.addressTo = ["name1@cern.ch", "name2@cern.ch"]
+    self.fstAgent.nClient.sendMail.return_value = S_ERROR()
+    res = self.fstAgent.sendNotification(self.fakeTransID, dataTransType, sourceSE, targetSE)
+    self.assertEquals(len(self.fstAgent.nClient.sendMail.mock_calls), len(self.fstAgent.addressTo))
+    self.assertTrue(res['OK'])
+
+    # accounting dict and errors list should be cleared after notification is sent
     self.assertEquals(self.fstAgent.accounting, {})
+    self.assertEquals(self.fstAgent.errors, [])
 
   def test_get_data_transformation_type(self):
     """ Test if getDataTransformationType function correctly returns the
@@ -386,6 +404,14 @@ class TestFSTAgent(unittest.TestCase):
     res = self.fstAgent.exists(storageElements, files)
     self.assertFalse(res['OK'])
 
+    self.fstAgent.existsOnSE.return_value = S_OK({'Successful': {},
+                                                  'Failed': {se1: {fileExists: "permission denied",
+                                                                   fileOneRepLostOnSE: "permission denied",
+                                                                   fileAllRepLostOnSEs: "permission denied"},
+                                                             se2: {}}})
+    res = self.fstAgent.exists(storageElements, files)
+    self.assertFalse(res['OK'])
+
     self.fstAgent.existsOnSE.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLostOnSE: False,
                                                                  fileAllRepLostOnSEs: False},
                                                   'Failed': {se1: {}, se2: {}}})
@@ -462,6 +488,10 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.retryFiles(self.fakeTransID, transFiles)
     self.fstAgent.tClient.setTaskStatus.assert_not_called()
 
+    self.fstAgent.reqClient.resetFailedRequest.return_value = S_OK("Not reset")
+    self.fstAgent.retryFiles(self.fakeTransID, transFiles)
+    self.fstAgent.tClient.setTaskStatus.assert_not_called()
+
     self.fstAgent.reqClient.resetFailedRequest.return_value = S_OK()
     self.fstAgent.tClient.setTaskStatus.return_value = S_OK()
     self.fstAgent.tClient.setTaskStatus.reset_mock()
@@ -500,6 +530,7 @@ class TestFSTAgent(unittest.TestCase):
     """ test transformation files are treated properly (set new status / reset request)
         for replication and moving transformations """
     self.fstAgent.setFileStatus = MagicMock()
+    self.fstAgent.sendNotification = MagicMock()
 
     fileNotAvailableOnSrc = {'TransformationID': self.fakeTransID, 'TaskID': 1, 'LFN': self.notAvailableOnSrc}
     fileNotAvailableOnDst = {'TransformationID': self.fakeTransID, 'TaskID': 2, 'LFN': self.notAvailableOnDst}
