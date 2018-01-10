@@ -158,9 +158,9 @@ class TestFSTAgent(unittest.TestCase):
     targetSE = ['DESY-SRM']
     errList = ["some error occured", "some other error"]
     accDict = {FST.SET_PROCESSED: [{'LFN': '/ilc/fake/lfn',
-                                                     'Status': 'Problematic',
-                                                     'AvailableOnSource': True,
-                                                     'AvailableOnTarget': True}]}
+                                    'Status': 'Problematic',
+                                    'AvailableOnSource': True,
+                                    'AvailableOnTarget': True}]}
     self.fstAgent.nClient.sendMail = MagicMock()
 
     # email should not be sent if accounting dict and errors list is empty
@@ -498,7 +498,7 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.reqClient.resetFailedRequest.reset_mock()
     self.fstAgent.setFileStatus.reset_mock()
     self.fstAgent.retryFiles(self.fakeTransID, transFiles)
-    self.fstAgent.reqClient.resetFailedRequest.assert_called_once_with(1)
+    self.fstAgent.reqClient.resetFailedRequest.assert_called_once_with(1, allR=True)
     self.fstAgent.tClient.setTaskStatus.assert_called_once_with(self.fakeTransID, 1, 'Waiting')
     self.fstAgent.setFileStatus.assert_called_once_with(self.fakeTransID, [transFiles[1]], 'Unused')
 

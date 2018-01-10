@@ -392,7 +392,7 @@ class FileStatusTransformationAgent(AgentModule):
 
       requestID = retryStrategy[transFile['TaskID']]['RequestID']
       if self.enabled:
-        res = self.reqClient.resetFailedRequest(requestID)
+        res = self.reqClient.resetFailedRequest(requestID, allR=True)
         if not res['OK']:
           self.logError('Failed to reset request, ReqID: %s Error: %s' % (requestID, res['Message']))
           continue
