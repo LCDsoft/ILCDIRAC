@@ -97,15 +97,22 @@ class FileStatusTransformationAgent(AgentModule):
 
     return S_OK()
 
-  def sendNotification(self, transID, transType, sourceSEs, targetSEs):
+  def sendNotification(self, transID, transType=None, sourceSEs=None, targetSEs=None):
     """ sends email notification about accounting information of a transformation """
-    emailBody = "Transformation ID: %s\n" % transID
-    emailBody += "Transformation Type: %s\n" % transType
-    emailBody += "Source SE: %s\n" % (" ".join(str(source) for source in sourceSEs))
-    emailBody += "Target SE: %s\n\n" % (" ".join(str(target) for target in targetSEs))
-    sendEmail = False
-    rows = []
+    if not(self.errors or self.accounting):
+      return S_OK()
 
+    emailBody = "Transformation ID: %s\n" % transID
+    if transType:
+      emailBody += "Transformation Type: %s\n" % transType
+
+    if sourceSEs:
+      emailBody += "Source SE: %s\n" % (" ".join(str(source) for source in sourceSEs))
+
+    if targetSEs:
+      emailBody += "Target SE: %s\n\n" % (" ".join(str(target) for target in targetSEs))
+
+    rows = []
     for action, transFiles in self.accounting.iteritems():
       emailBody += "Total number of files with action %s: %s\n" % (action, len(transFiles))
       for transFile in transFiles:
@@ -115,21 +122,18 @@ class FileStatusTransformationAgent(AgentModule):
     if rows:
       columns = ["LFN", "Source", "Target", "Old Status", "Action"]
       emailBody += printTable(columns, rows, printOut=False, numbering=False, columnSeparator=' | ')
-      sendEmail = True
 
     if self.errors:
       emailBody += "\n\nErrors:"
       emailBody += "\n".join(self.errors)
-      sendEmail = True
 
-    if sendEmail:
-      self.log.notice(emailBody)
-      subject = "%s: %s" % (self.emailSubject, transID)
-      for address in self.addressTo:
-        res = self.nClient.sendMail(address, subject, emailBody, self.addressFrom, localAttempt=False)
-        if not res['OK']:
-          self.log.error("Failure to send Email notification to %s" % address)
-          continue
+    self.log.notice(emailBody)
+    subject = "%s: %s" % (self.emailSubject, transID)
+    for address in self.addressTo:
+      res = self.nClient.sendMail(address, subject, emailBody, self.addressFrom, localAttempt=False)
+      if not res['OK']:
+        self.log.error("Failure to send Email notification to ", address)
+        continue
 
     self.errors = []
     self.accounting.clear()
@@ -157,17 +161,17 @@ class FileStatusTransformationAgent(AgentModule):
       transID = trans['TransformationID']
       if 'SourceSE' not in trans or not trans['SourceSE']:
         self.logError("SourceSE not set for transformation, skip processing, transID: %s" % transID)
-        self.sendNotification(transID, '', '', '')
+        self.sendNotification(transID)
         continue
 
       if 'TargetSE' not in trans or not trans['TargetSE']:
         self.logError("TargetSE not set for transformation, skip processing, transID: %s" % transID)
-        self.sendNotification(transID, '', trans['SourceSE'], '')
+        self.sendNotification(transID, sourceSEs=trans['SourceSE'])
         continue
 
       if 'DataTransType' not in trans:
         self.logError("Transformation Type not set for transformation, skip processing, transID: %s" % transID)
-        self.sendNotification(transID, '', trans['SourceSE'], trans['TargetSE'])
+        self.sendNotification(transID, sourceSEs=trans['SourceSE'], targetSEs=trans['TargetSE'])
         continue
 
       res = self.processTransformation(transID, trans['SourceSE'], trans['TargetSE'], trans['DataTransType'])
