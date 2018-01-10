@@ -135,7 +135,7 @@ class TestMaking( unittest.TestCase ):
                 new=Mock(return_value=cpMock ) ):
       c.loadParameters( parameter )
     self.assertEqual( c.prodIDs, [1, 1] )
-    self.assertEqual( c.cliReco, '--Config.Tracking=Tracked' )
+    self.assertEqual(c.cliRecoOption, '--Config.Tracking=Tracked')
 
 
     self.configDict['eventsInSplitFiles'] = "1000"
@@ -173,7 +173,8 @@ class TestMaking( unittest.TestCase ):
     self.assertIsInstance( ret, Marlin )
     self.assertEqual( ret.detectortype, 'myDetectorModel' )
     self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
-    self.assertEqual( self.chain.cliReco, '--Config.Tracking=Tracked --Config.Overlay=300GeV ' )
+    self.assertEqual(self.chain.cliRecoOption, '--Config.Tracking=Tracked')
+    self.assertEqual(ret.extraCLIArguments, '--Config.Tracking=Tracked  --Config.Overlay=300GeV ')
 
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
                 new=Mock(return_value=cpMock ) ):
@@ -184,7 +185,8 @@ class TestMaking( unittest.TestCase ):
     self.assertIsInstance( ret, Marlin )
     self.assertEqual( ret.detectortype, 'myDetectorModel' )
     self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
-    self.assertEqual( self.chain.cliReco, '--Config.Tracking=Tracked' )
+    self.assertEqual(self.chain.cliRecoOption, '--Config.Tracking=Tracked')
+    self.assertEqual(ret.extraCLIArguments, '--Config.Tracking=Tracked ')
 
 
 
@@ -277,8 +279,7 @@ class TestMaking( unittest.TestCase ):
         parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
       )
     self.assertEqual( retMeta, {} )
-
-    self.assertEqual( self.chain.cliReco, ' --Config.Overlay=1.4TeV ' )
+    self.assertEqual(self.chain.cliRecoOption, '')
 
   def test_createSimProduction( self ):
     with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod ):

@@ -231,6 +231,7 @@ MoveTypes = %(moveTypes)s
     self.overlayEvents = ''
     self._overlayEventType = None
 
+    self.cliRecoOption = ''
     self.cliReco = ''
 
     self._flags = self.Flags()
@@ -280,7 +281,7 @@ MoveTypes = %(moveTypes)s
         self.additionalName = config.get(PP, 'additionalName')
 
       if config.has_option(PP, 'cliReco'):
-        self.cliReco = config.get(PP, 'cliReco')
+        self.cliRecoOption = config.get(PP, 'cliReco')
 
 
       self.overlayEvents = self.checkOverlayParameter(config.get(PP, 'overlayEvents')) \
@@ -490,7 +491,9 @@ finalOutputSE = %(finalOutputSE)s
     if self._flags.over:
       self.addOverlayOptionsToMarlin( energy )
 
-    marlin.setExtraCLIArguments( self.cliReco )
+    self.cliReco = ' '.join([self.cliRecoOption, self.cliReco])
+    marlin.setExtraCLIArguments(self.cliReco)
+    self.cliReco = ''
 
     steeringFile = {
       350. : "clicReconstruction.xml",
