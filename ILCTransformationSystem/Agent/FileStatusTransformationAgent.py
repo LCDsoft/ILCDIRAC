@@ -379,6 +379,7 @@ class FileStatusTransformationAgent(AgentModule):
   def retryFiles(self, transID, transFiles):
     """ resubmits request or sets file status to unused based on the retry strategy of transformation file """
     setFilesUnused = []
+    setFilesAssigned = []
     res = self.retryStrategyForFiles(transID, transFiles)
     if not res['OK']:
       self.logError('Failure to determine retry strategy (unused / reset request) for files %s' % res['Message'])
@@ -401,6 +402,8 @@ class FileStatusTransformationAgent(AgentModule):
           self.logError('Failed to reset request, ReqID: %s is non-recoverable' % requestID)
           continue
 
+        setFilesAssigned.append(transFile)
+
         res = self.tClient.setTaskStatus(transID, transFile['TaskID'], 'Waiting')
         if not res['OK']:
           self.logError('Failure to set Waiting status for Task ID: %s %s' % (transFile['TaskID'], res['Message']))
@@ -413,6 +416,9 @@ class FileStatusTransformationAgent(AgentModule):
 
     if setFilesUnused:
       self.setFileStatus(transID, setFilesUnused, 'Unused')
+
+    if setFilesAssigned:
+      self.setFileStatus(transID, setFilesAssigned, 'Assigned')
 
     return S_OK()
 

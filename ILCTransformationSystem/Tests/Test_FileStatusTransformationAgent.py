@@ -500,7 +500,8 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.retryFiles(self.fakeTransID, transFiles)
     self.fstAgent.reqClient.resetFailedRequest.assert_called_once_with(1, allR=True)
     self.fstAgent.tClient.setTaskStatus.assert_called_once_with(self.fakeTransID, 1, 'Waiting')
-    self.fstAgent.setFileStatus.assert_called_once_with(self.fakeTransID, [transFiles[1]], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [transFiles[1]], 'Unused')
+    self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [transFiles[0]], 'Assigned')
 
     # set file statues to unused should not be called if all files have reset request strategy
     self.fstAgent.retryStrategyForFiles.return_value = S_OK({1: {'Strategy': FST.RESET_REQUEST,
@@ -512,6 +513,7 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.retryFiles(self.fakeTransID, transFiles)
     self.assertEquals(len(self.fstAgent.reqClient.resetFailedRequest.mock_calls), 2)
     self.fstAgent.setFileStatus.not_called()
+    self.fstAgent.setFileStatus.assert_called_once_with(self.fakeTransID, transFiles, 'Assigned')
 
   def _exists(self, se, lfns):
     """ returns lfns availability information """
