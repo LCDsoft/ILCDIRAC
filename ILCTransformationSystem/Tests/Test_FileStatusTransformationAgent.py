@@ -492,11 +492,11 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.retryFiles(self.fakeTransID, transFiles)
     self.fstAgent.tClient.setTaskStatus.assert_not_called()
 
-    self.fstAgent.reqClient.resetFailedRequest.return_value = S_OK()
-    self.fstAgent.tClient.setTaskStatus.return_value = S_OK()
     self.fstAgent.tClient.setTaskStatus.reset_mock()
     self.fstAgent.reqClient.resetFailedRequest.reset_mock()
     self.fstAgent.setFileStatus.reset_mock()
+    self.fstAgent.reqClient.resetFailedRequest.return_value = S_OK()
+    self.fstAgent.tClient.setTaskStatus.return_value = S_OK()
     self.fstAgent.retryFiles(self.fakeTransID, transFiles)
     self.fstAgent.reqClient.resetFailedRequest.assert_called_once_with(1, allR=True)
     self.fstAgent.tClient.setTaskStatus.assert_called_once_with(self.fakeTransID, 1, 'Waiting')

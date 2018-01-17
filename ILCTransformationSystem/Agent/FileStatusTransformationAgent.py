@@ -75,7 +75,7 @@ class FileStatusTransformationAgent(AgentModule):
     """ returns True/False if a function to check transformation files with a given status exists or not """
     checkFileStatusFuncName = "check_%s_files" % (status.lower())
     if not (hasattr(self, checkFileStatusFuncName) and callable(getattr(self, checkFileStatusFuncName))):
-      self.log.warn("Unable to process transformation files with status %s" % status)
+      self.log.warn("Unable to process transformation files with status ", status)
       return False
 
     return True
@@ -139,9 +139,9 @@ class FileStatusTransformationAgent(AgentModule):
     self.accounting.clear()
     return S_OK()
 
-  def logError(self, errStr):
-    self.log.error(errStr)
-    self.errors.append(errStr)
+  def logError(self, errStr, varMsg=''):
+    self.log.error(errStr, varMsg)
+    self.errors.append(errStr + varMsg)
 
   def execute(self):
     """ main execution loop of Agent """
@@ -160,17 +160,17 @@ class FileStatusTransformationAgent(AgentModule):
     for trans in transformations:
       transID = trans['TransformationID']
       if 'SourceSE' not in trans or not trans['SourceSE']:
-        self.logError("SourceSE not set for transformation, skip processing, transID: %s" % transID)
+        self.logError("SourceSE not set for transformation, skip processing, transID: ", "%s" % transID)
         self.sendNotification(transID)
         continue
 
       if 'TargetSE' not in trans or not trans['TargetSE']:
-        self.logError("TargetSE not set for transformation, skip processing, transID: %s" % transID)
+        self.logError("TargetSE not set for transformation, skip processing, transID: ", "%s" % transID)
         self.sendNotification(transID, sourceSEs=trans['SourceSE'])
         continue
 
       if 'DataTransType' not in trans:
-        self.logError("Transformation Type not set for transformation, skip processing, transID: %s" % transID)
+        self.logError("Transformation Type not set for transformation, skip processing, transID: ", "%s" % transID)
         self.sendNotification(transID, sourceSEs=trans['SourceSE'], targetSEs=trans['TargetSE'])
         continue
 
@@ -274,7 +274,7 @@ class FileStatusTransformationAgent(AgentModule):
       if self.enabled:
         res = self.tClient.setFileStatusForTransformation(transID, newLFNsStatus=lfnStatuses, force=True)
         if not res['OK']:
-          self.logError('Failed to set statuses for LFNs %s' % res['Message'])
+          self.logError('Failed to set statuses for LFNs ', "%s" % res['Message'])
           return res
 
       for transFile in transFiles:
@@ -382,7 +382,7 @@ class FileStatusTransformationAgent(AgentModule):
     setFilesAssigned = []
     res = self.retryStrategyForFiles(transID, transFiles)
     if not res['OK']:
-      self.logError('Failure to determine retry strategy (unused / reset request) for files %s' % res['Message'])
+      self.logError('Failure to determine retry strategy (unused / reset request) for files ', "%s" % res['Message'])
       return res
 
     retryStrategy = res['Value']
@@ -395,18 +395,18 @@ class FileStatusTransformationAgent(AgentModule):
       if self.enabled:
         res = self.reqClient.resetFailedRequest(requestID, allR=True)
         if not res['OK']:
-          self.logError('Failed to reset request, ReqID: %s Error: %s' % (requestID, res['Message']))
+          self.logError('Failed to reset request ', 'ReqID: %s Error: %s' % (requestID, res['Message']))
           continue
 
         if res['Value'] == "Not reset":
-          self.logError('Failed to reset request, ReqID: %s is non-recoverable' % requestID)
+          self.logError('Failed to reset request ', 'ReqID: %s is non-recoverable' % requestID)
           continue
 
         setFilesAssigned.append(transFile)
 
         res = self.tClient.setTaskStatus(transID, transFile['TaskID'], 'Waiting')
         if not res['OK']:
-          self.logError('Failure to set Waiting status for Task ID: %s %s' % (transFile['TaskID'], res['Message']))
+          self.logError('Failure to set Waiting status for Task ID: ', "%s %s" % (transFile['TaskID'], res['Message']))
           continue
 
       self.accounting[RESET_REQUEST].append({'LFN': transFile['LFN'],
@@ -490,11 +490,11 @@ class FileStatusTransformationAgent(AgentModule):
 
     fcRes = self.existsInFC(storageElements, lfns)
     if not fcRes['OK']:
-      self.logError('Failure to determine if files exists in File Catalog %s' % fcRes['Message'])
+      self.logError('Failure to determine if files exists in File Catalog ', "%s" % fcRes['Message'])
       return fcRes
 
     if fcRes['Value']['Failed']:
-      self.logError("Failed FileCatalog Response %s" % fcRes['Value']['Failed'])
+      self.logError("Failed FileCatalog Response ", "%s" % fcRes['Value']['Failed'])
 
     # check if files found in file catalog also exist on SE
     checkLFNsOnStorage = [lfn for lfn in fcRes['Value']['Successful'] if fcRes['Value']['Successful'][lfn]]
@@ -505,12 +505,12 @@ class FileStatusTransformationAgent(AgentModule):
 
     seRes = self.existsOnSE(storageElements, checkLFNsOnStorage)
     if not seRes['OK']:
-      self.logError('Failure to determine if files exist on SE %s' % seRes['Message'])
+      self.logError('Failure to determine if files exist on SE ', "%s" % seRes['Message'])
       return seRes
 
     for se in storageElements:
       if seRes['Value']['Failed'][se]:
-        self.logError('Failed to determine if files exist on SE %s, %s' % (se, seRes['Value']['Failed'][se]))
+        self.logError('Failed to determine if files exist on SE ', "%s %s" % (se, seRes['Value']['Failed'][se]))
         return S_ERROR()
 
     fcResult = fcRes['Value']['Successful']
