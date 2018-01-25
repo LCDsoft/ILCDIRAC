@@ -25,6 +25,7 @@ from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithUnit, energyToInt
 
 PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
+APPLICATION_LIST = ['Marlin', 'DDSim', 'Overlay']
 
 class Params(object):
   """Parameter Object"""
@@ -234,6 +235,8 @@ MoveTypes = %(moveTypes)s
     self.cliRecoOption = ''
     self.cliReco = ''
 
+    self.applicationOptions = {appName: [] for appName in APPLICATION_LIST}
+
     self._flags = self.Flags()
 
     self.loadParameters( params )
@@ -317,6 +320,16 @@ MoveTypes = %(moveTypes)s
           len(self.eventsInSplitFiles), \
           len(self.energies) ) )
 
+      # read options from application sections
+      config2 = ConfigParser.SafeConfigParser(dict_type=dict)
+      config2.optionxform = str  # do not transform options to lowercase
+      config2.read(parameter.prodConfigFilename)
+      for appName in APPLICATION_LIST:
+        try:
+          self.applicationOptions[appName] = config2.items(appName)
+        except ConfigParser.NoSectionError:
+          pass
+
     if parameter.dumpConfigFile:
       print self
       raise RuntimeError('')
@@ -333,8 +346,14 @@ MoveTypes = %(moveTypes)s
 
   def __str__( self ):
     pDict = vars(self)
+    appOptionString = ''
+    for appName in APPLICATION_LIST:
+      appOptionString += '[%s]\n#ApplicationAttributeName=Value\n\n' % appName
+
     pDict.update({'ProductionParameters':PRODUCTION_PARAMETERS})
+    pDict.update({'ApplicationOptions': appOptionString})
     return """
+%(ApplicationOptions)s
 [%(ProductionParameters)s]
 prodGroup = %(prodGroup)s
 detectorModel = %(detectorModel)s
@@ -456,6 +475,9 @@ finalOutputSE = %(finalOutputSE)s
     ddsim.setVersion( self.softwareVersion )
     ddsim.setSteeringFile( 'clic_steer.py' )
     ddsim.setDetectorModel( self.detectorModel )
+
+    self._setApplicationOptions("DDSim", ddsim)
+
     return ddsim
 
   def createOverlayApplication( self, energy ):
@@ -474,6 +496,8 @@ finalOutputSE = %(finalOutputSE)s
 
     if self.overlayEvents:
       overlay.setUseEnergyForFileLookup( False )
+
+    self._setApplicationOptions("Overlay", overlay)
 
     return overlay
 
@@ -504,6 +528,9 @@ finalOutputSE = %(finalOutputSE)s
     }.get( energy, 'clicReconstruction.xml' )
 
     marlin.setSteeringFile( steeringFile )
+
+    self._setApplicationOptions("Marlin", marlin)
+
     return marlin
 
 
@@ -686,6 +713,20 @@ finalOutputSE = %(finalOutputSE)s
       if key not in outputDict:
         outputDict[ key ] = value
     outputDict['NumberOfEvents'] = eventsPerJob
+
+  def _setApplicationOptions(self, appName, app):
+    """ set options for given application
+
+    :param str appName: name of the application, for print out
+    :param app: application instance
+    """
+
+    for option, value in self.applicationOptions[appName]:
+      gLogger.notice("%s: setting option %s to %s" % (appName, option, value))
+      setterFunc = 'set' + option
+      if not hasattr(app, setterFunc):
+        raise AttributeError("Cannot set %s for %s, check spelling!" % (option, appName))
+      getattr(app, setterFunc)(value)
 
 
   def createTransformations( self, prodID, process, energy, eventsPerJob, eventsPerBaseFile):

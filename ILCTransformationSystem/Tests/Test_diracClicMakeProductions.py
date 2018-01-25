@@ -320,6 +320,18 @@ class TestMaking( unittest.TestCase ):
     with self.assertRaisesRegexp( RuntimeError, 'ERROR creating Moving'):
       self.chain.createMovingTransformation( {'ProdID':666}, "Split" )
 
+  def test_setApplicationOptions(self):
+    application = Mock()
+    application.setSomeParameter = Mock()
+    self.chain.applicationOptions['AppName'] = [('SomeParameter', 'SomeValue')]
+    self.chain._setApplicationOptions('AppName', application)
+    application.setSomeParameter.assert_called_once_with('SomeValue')
+
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
+    application = Marlin()
+    self.chain.applicationOptions['AppName'] = [('SomeOtherParameter', 'SomeValue')]
+    with self.assertRaisesRegexp(AttributeError, 'Cannot set'):
+      self.chain._setApplicationOptions('AppName', application)
 
 
 class TestMakingFlags( unittest.TestCase ):
