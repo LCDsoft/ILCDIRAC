@@ -79,7 +79,7 @@ class JobResetAgent(AgentModule):
     self.errors.append(errStr + varMsg)
 
   def getJobs(self, status, jobType=None, minorStatus=None):
-
+    """ docs... """
     attrDict = dict(Status=status)
     if jobType:
       attrDict['JobType'] = jobType
@@ -96,21 +96,19 @@ class JobResetAgent(AgentModule):
     return S_OK(jobIDs)
 
 
-  def treatUserJobWithNoRequest(self, jobID):
+  def treatUserJobWithNoReq(self, jobID):
     self.log.notice("No request found for job: %s" % jobID)
-    res = self.jobMonClient.getJobsMinorStatus(jobID)
+    res = self.jobMonClient.getJobsMinorStatus([jobID])
     if not res['OK']:
-      self.logError("Failure to get Minor Status", "Job IDs: %s, Message: %s" % (checkMinorStatList,
-                                                                                 res['Message']))
-    return res
+      self.logError("Failure to get Minor Status", "Job ID: %s, Message: %s" % (jobID, res['Message']))
+      return res
 
     minorStatus = res['Value'][jobID]['MinorStatus']
 
-    res = self.jobMonClient.getJobsApplicationStatus(checkAppStatList)
+    res = self.jobMonClient.getJobsApplicationStatus([jobID])
     if not res['OK']:
-      self.logError("Failure to get Application Status", "Job IDs: %s, Message: %s" % (checkAppStatList,
-                                                                                       res['Message']))
-    return res
+      self.logError("Failure to get Application Status", "Job ID: %s, Message: %s" % (jobID, res['Message']))
+      return res
 
     appStatus = res['Value'][jobID]['ApplicationStatus']
 
@@ -122,7 +120,7 @@ class JobResetAgent(AgentModule):
     return S_OK()
 
 
-  def treatUserJobWithRequest(self, jobID, request):
+  def treatUserJobWithReq(self, jobID, request):
     if request.Status == "Done":
       self.log.notice("Request is Done: %s " % request)
       return self.markJob(jobID, "Done")
@@ -150,6 +148,9 @@ class JobResetAgent(AgentModule):
 
     return S_OK()
 
+  def treatFailedProdWithNoReq(self, jobID):
+    """ docs... """
+    return self.markJob(jobID, "Failed")
 
   def treatCompletedProdWithReq(self, jobID, request):
     if request.Status == "Done":
@@ -158,18 +159,22 @@ class JobResetAgent(AgentModule):
 
     for op in request:
       self.log.info("Operation for completed job: %s, %s, %s, %s" %
-                   (request.RequestID, op.Type, op.Status, op.Error))
+                    (request.RequestID, op.Type, op.Status, op.Error))
       if op.Type == 'ReplicateAndRegister' and op.Status == 'Failed':
         # Check if it failed because the file no longer exists
         for lfn in op:
-          if lfn.Error == "No such file":
+          if "No such file" in lfn.Error:
             return self.markJob(jobID, "Done")
-        return self.resetRequest(requestID)
+        return self.resetRequest(request.RequestID)
 
       elif op.Status == "Failed":
-        self.log.notice("Cannot handle Operation of Type: %s " % op.Type )
+        self.log.notice("Cannot handle Operation Type: %s" % op.Type )
 
     return S_OK()
+
+  def treatCompletedProdWithNoReq(self, jobID):
+    """ docs.. """
+    return self.markJob(jobID, "Done")
 
   def checkJobs(self, jobIDs, treatJobWithNoReq, treatJobWithReq):
     """ docs... """
@@ -182,7 +187,7 @@ class JobResetAgent(AgentModule):
     result = res['Value']
     for jobID in jobIDs:
       if ((jobID not in result['Successful'] and jobID not in result['Failed']) or
-         (jobID in result['Failed'] and result['Failed'][jobID]=='Request not found')):
+          (jobID in result['Failed'] and 'Request not found' in result['Failed'][jobID])):
         self.log.notice("No request found for job: %s" % jobID)
         treatJobWithNoReq(jobID)
 
@@ -191,19 +196,19 @@ class JobResetAgent(AgentModule):
         request = result['Successful'][jobID]
         treatJobWithReq(jobID, request)
 
-    return S_OK("All Done")
+    return S_OK()
 
-  def resetRequests(self, requestID):
-    """reset requests given the requestIDs list"""
+  def resetRequest(self, requestID):
+    """reset requests given the requestID"""
     if not self.enabled:
       return S_OK()
 
     res = self.reqClient.resetFailedRequest(requestID, allR=True)
     if not res["OK"] or res['Value']=="Not reset":
-      self.logError("Failed to reset request", "Request ID: %s, Message: %s"%(reqID, res['Message']))
+      self.logError("Failed to reset request", "Request ID: %s, Message: %s"%(requestID, res['Message']))
       return res
 
-    self.log.notice("Request %s is successfully reset" % reqID)
+    self.log.notice("Request %s is successfully reset" % requestID)
     return S_OK()
 
   def markJob(self, jobID, status, minorStatus="Requests Done", application="CompletedJobChecker"):
@@ -225,4 +230,40 @@ class JobResetAgent(AgentModule):
 
   def execute(self):
     """ main execution loop of Agent """
-    pass
+
+    # process completed prod jobs
+    res = self.getJobs(status="Completed", jobType=self.prodJobTypes)
+    if res["OK"]:
+      completedJobIDs = res["Value"]
+      if completedJobIDs:
+        self.checkJobs(jobIDs=completedJobIDs,
+                       treatJobWithNoReq=self.treatCompletedProdWithNoReq,
+                       treatJobWithReq=self.treatCompletedProdWithReq)
+      else:
+        self.log.notice("No production jobs found with Completed status")
+
+    # process failed prod jobs
+    res = self.getJobs(status="Failed", jobType=self.prodJobTypes, minorStatus="Pending Requests")
+    if res["OK"]:
+      failedJobIDs = res["Value"]
+      if failedJobIDs:
+        self.checkJobs(jobIDs=failedJobIDs,
+                       treatJobWithNoReq=self.treatFailedProdWithNoReq,
+                       treatJobWithReq=self.treatFailedProdWithReq)
+      else:
+        self.log.notice("No production jobs found with Failed status and pending requests")
+
+    # process completed user jobs
+    res = self.getJobs(status="Completed", jobType=self.userJobTypes)
+    if res["OK"]:
+      completedUserJobs = res["Value"]
+      if completedUserJobs:
+        self.checkJobs(jobIDs=completedUserJobs,
+                       treatJobWithNoReq=self.treatUserJobWithNoReq,
+                       treatJobWithReq=self.treatUserJobWithReq)
+      else:
+        self.log.notice("No user jobs found with Completed status")
+
+    #TODO: process STAGING jobs...!
+
+    return S_OK()
