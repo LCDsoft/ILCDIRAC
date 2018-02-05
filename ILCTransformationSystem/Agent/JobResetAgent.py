@@ -198,6 +198,67 @@ class JobResetAgent(AgentModule):
 
     return S_OK()
 
+  def checkStagingJobs(self, jobList):
+    """gets staging jobs, gets input data and then checks stager status for jobs"""
+
+    res = self.getInputDataForJobs(jobList)
+    inputData = res['Value']
+
+    if inputData:
+      self.log.notice("Input Data found: %s" % inputData)
+
+      res = self.checkStagerStatus(inputData.keys())
+      if res['OK']:
+        stagedFiles = res['Value']['Staged']
+
+        jobsToReschedule = set()
+        for lfn in stagedFiles:
+          jobsToReschedule.update(inputData[lfn])
+        self.log.notice("Jobs to be rescheduled: %s" % ",".join(jobsToReschedule) )
+
+        if self.enabled:
+          self.rescheduleJobs(jobsToReschedule)
+
+
+  def rescheduleJobs(self, jobsToReschedule):
+    """reset a list of jobs, reset the job to not eat up the reschedule limit"""
+    success = dict(Failed=[], Successful=[])
+    for job in jobsToReschedule:
+      res = self.jobManagerClient.resetJob(job)
+      if res['OK']:
+        success['Successful'].append(job)
+      else:
+        self.log.error("Failed to reset job %s: %s" % (job, res['Message']))
+        success['Failed'].append(job)
+
+    self.log.info("Reset jobs: %s" % success)
+    return S_OK(success)
+
+  def checkStagerStatus(self, lfns):
+    #TODO: add implementation
+    return S_OK()
+
+  @staticmethod
+  def cleanLFN(lfn):
+    """ remove prefix from lfn"""
+    if lfn.lower().startswith('lfn'):
+      lfn = lfn[4:]
+    return lfn
+
+  def getInputDataForJobs(self, jobList):
+    inputData = defaultdict(list)
+    for jobID in jobList:
+      res = self.jobMonClient.getInputData(jobID)
+      if not res['OK']:
+        self.logError("Failure to get input data for","JobID: %s, Message: %s"%(jobID, res["Message"]))
+        continue
+
+      for lfn in res['Value']:
+        lfn = self.cleanLFN(lfn)
+        inputData[lfn].append(jobID)
+
+    return S_OK(inputData)
+
   def resetRequest(self, requestID):
     """reset requests given the requestID"""
     if not self.enabled:
@@ -264,6 +325,13 @@ class JobResetAgent(AgentModule):
       else:
         self.log.notice("No user jobs found with Completed status")
 
-    #TODO: process STAGING jobs...!
+    # process STAGING jobs
+    res = self.getJobs(status="Staging")
+    if res["OK"]:
+      stagingJobs = res["Value"]
+      if stagingJobs:
+        self.checkStagingJobs(stagingJobs)
+      else:
+        self.log.notice("No staging jobs found")
 
     return S_OK()
