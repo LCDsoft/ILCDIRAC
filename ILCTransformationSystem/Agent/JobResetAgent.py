@@ -198,45 +198,21 @@ class JobResetAgent(AgentModule):
 
     return S_OK()
 
-  def checkStagingJobs(self, jobList):
-    """gets staging jobs, gets input data and then checks stager status for jobs"""
+  def getStagedFiles(self, lfns):
+    """ docs... """
+    if not lfns:
+      self.log.notice("No LFNs passed to check staging status")
+      return S_OK()
 
-    res = self.getInputDataForJobs(jobList)
-    inputData = res['Value']
+    voName = lfns[0].split('/')[1]
+    se = StorageElement("CERN-SRM", vo=voName)
+    res = se.getFileMetadata(lfns)
+    if not res["OK"]:
+      self.logError("Failure to getFileMetadata for LFNs", "%s"%lfns)
+      return res
 
-    if inputData:
-      self.log.notice("Input Data found: %s" % inputData)
-
-      res = self.checkStagerStatus(inputData.keys())
-      if res['OK']:
-        stagedFiles = res['Value']['Staged']
-
-        jobsToReschedule = set()
-        for lfn in stagedFiles:
-          jobsToReschedule.update(inputData[lfn])
-        self.log.notice("Jobs to be rescheduled: %s" % ",".join(jobsToReschedule) )
-
-        if self.enabled:
-          self.rescheduleJobs(jobsToReschedule)
-
-
-  def rescheduleJobs(self, jobsToReschedule):
-    """reset a list of jobs, reset the job to not eat up the reschedule limit"""
-    success = dict(Failed=[], Successful=[])
-    for job in jobsToReschedule:
-      res = self.jobManagerClient.resetJob(job)
-      if res['OK']:
-        success['Successful'].append(job)
-      else:
-        self.log.error("Failed to reset job %s: %s" % (job, res['Message']))
-        success['Failed'].append(job)
-
-    self.log.info("Reset jobs: %s" % success)
-    return S_OK(success)
-
-  def checkStagerStatus(self, lfns):
-    #TODO: add implementation
-    return S_OK()
+    stagedFiles = [lfn for lfn,val in res["Value"]["Successful"].iteritems() if val["Cached"]>0]
+    return S_OK(stagedFiles)
 
   @staticmethod
   def cleanLFN(lfn):
@@ -258,6 +234,50 @@ class JobResetAgent(AgentModule):
         inputData[lfn].append(jobID)
 
     return S_OK(inputData)
+
+
+  def rescheduleJobs(self, jobsToReschedule):
+    """reset a list of jobs, reset the job to not eat up the reschedule limit"""
+    result = dict(Failed=[], Successful=[])
+    for job in jobsToReschedule:
+      res = self.jobManagerClient.resetJob(job)
+      if res['OK']:
+        result['Successful'].append(job)
+      else:
+        self.logError("Failed to reset job", "%s: %s" % (job, res['Message']))
+        result['Failed'].append(job)
+
+    self.log.info("Reset jobs: %s" % result)
+    return S_OK(result)
+
+
+  def checkStagingJobs(self, jobList):
+    """gets staging jobs, gets input data and then checks stager status for jobs"""
+
+    res = self.getInputDataForJobs(jobList)
+    inputData = res['Value']
+
+    if not inputData:
+      self.log.notice("No input data found for job list %s" % jobList)
+      return S_OK()
+
+    self.log.notice("Input Data found: %s" % inputData)
+    res = self.getStagedFiles(inputData.keys())
+    if not res['OK']:
+      return res
+
+    stagedFiles = res['Value']
+
+    jobsToReschedule = set()
+    for lfn in stagedFiles:
+      jobsToReschedule.update(inputData[lfn])
+      self.log.notice("Jobs to be rescheduled: %s" % jobsToReschedule)
+
+      if self.enabled and jobsToReschedule:
+        res = self.rescheduleJobs(jobsToReschedule)
+
+    return S_OK()
+
 
   def resetRequest(self, requestID):
     """reset requests given the requestID"""
