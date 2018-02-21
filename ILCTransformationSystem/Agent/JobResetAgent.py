@@ -36,7 +36,7 @@ class JobResetAgent(AgentModule):
 
     self.userJobTypes = ['User']
     self.prodJobTypes = ['MCGeneration', 'MCSimulation', 'MCReconstruction', 'MCReconstruction_Overlay', 'Split',
-                         'MCSimulation_ILD', 'MCReconstruction_ILD', 'MCReconstruction_Overlay_ILD', 'Split_ILD',]
+                         'MCSimulation_ILD', 'MCReconstruction_ILD', 'MCReconstruction_Overlay_ILD', 'Split_ILD']
 
     self.addressTo = ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"]
     self.addressFrom = "ilcdirac-admin@cern.ch"
@@ -57,12 +57,11 @@ class JobResetAgent(AgentModule):
                                       useCertificates=False,
                                       timeout=10)
 
-
   def beginExecution(self):
     """ Reload the configurations before every cycle """
-    self.enabled = self.am_getOption('EnableFlag', False)
     self.shifterProxy = self.am_setOption('shifterProxy', 'DataManager')
 
+    self.enabled = self.am_getOption('EnableFlag', False)
     self.addressTo = self.am_getOption('MailTo', ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"])
     self.addressFrom = self.am_getOption('MailFrom', "ilcdirac-admin@cern.ch")
 
@@ -95,7 +94,6 @@ class JobResetAgent(AgentModule):
     jobIDs = map(int, res['Value'])
     return S_OK(jobIDs)
 
-
   def treatUserJobWithNoReq(self, jobID):
     self.log.notice("No request found for job: %s" % jobID)
     res = self.jobMonClient.getJobsMinorStatus([jobID])
@@ -119,7 +117,6 @@ class JobResetAgent(AgentModule):
 
     return S_OK()
 
-
   def treatUserJobWithReq(self, jobID, request):
     if request.Status == "Done":
       self.log.notice("Request is Done: %s " % request)
@@ -139,9 +136,9 @@ class JobResetAgent(AgentModule):
                       (request.RequestID, op.Type, op.Status, op.Error, lfns))
 
       if op.Type == "RemoveFile" and op.Status == 'Failed':
-        filesToRemove=[lfn.LFN for lfn in op]
-        #TODO: remove files using datamanager
-        self.log.notice("Removing files %s"%filesToRemove)
+        filesToRemove = [lfn.LFN for lfn in op]
+        # TODO: remove files using datamanager
+        self.log.notice("Removing files %s" % filesToRemove)
         self.resetRequest(request.RequestID)
       elif op.Status == "Failed":
         self.log.notice("Can't handle operation of type: %s" % op.Type)
@@ -154,7 +151,7 @@ class JobResetAgent(AgentModule):
 
   def treatCompletedProdWithReq(self, jobID, request):
     if request.Status == "Done":
-      self.log.notice("Request is Done: %s " % request )
+      self.log.notice("Request is Done: %s " % request)
       return self.markJob(jobID, "Done")
 
     for op in request:
@@ -168,7 +165,7 @@ class JobResetAgent(AgentModule):
         return self.resetRequest(request.RequestID)
 
       elif op.Status == "Failed":
-        self.log.notice("Cannot handle Operation Type: %s" % op.Type )
+        self.log.notice("Cannot handle Operation Type: %s" % op.Type)
 
     return S_OK()
 
@@ -208,10 +205,10 @@ class JobResetAgent(AgentModule):
     se = StorageElement("CERN-SRM", vo=voName)
     res = se.getFileMetadata(lfns)
     if not res["OK"]:
-      self.logError("Failure to getFileMetadata for LFNs", "%s"%lfns)
+      self.logError("Failure to getFileMetadata for LFNs", "%s" % lfns)
       return res
 
-    stagedFiles = [lfn for lfn,val in res["Value"]["Successful"].iteritems() if val["Cached"]>0]
+    stagedFiles = [lfn for lfn, val in res["Value"]["Successful"].iteritems() if val["Cached"] > 0]
     return S_OK(stagedFiles)
 
   @staticmethod
@@ -226,7 +223,7 @@ class JobResetAgent(AgentModule):
     for jobID in jobList:
       res = self.jobMonClient.getInputData(jobID)
       if not res['OK']:
-        self.logError("Failure to get input data for","JobID: %s, Message: %s"%(jobID, res["Message"]))
+        self.logError("Failure to get input data for", "JobID: %s, Message: %s" % (jobID, res["Message"]))
         continue
 
       for lfn in res['Value']:
@@ -234,7 +231,6 @@ class JobResetAgent(AgentModule):
         inputData[lfn].append(jobID)
 
     return S_OK(inputData)
-
 
   def rescheduleJobs(self, jobsToReschedule):
     """reset a list of jobs, reset the job to not eat up the reschedule limit"""
@@ -249,7 +245,6 @@ class JobResetAgent(AgentModule):
 
     self.log.info("Reset jobs: %s" % result)
     return S_OK(result)
-
 
   def checkStagingJobs(self, jobList):
     """gets staging jobs, gets input data and then checks stager status for jobs"""
@@ -278,15 +273,14 @@ class JobResetAgent(AgentModule):
 
     return S_OK()
 
-
   def resetRequest(self, requestID):
     """reset requests given the requestID"""
     if not self.enabled:
       return S_OK()
 
     res = self.reqClient.resetFailedRequest(requestID, allR=True)
-    if not res["OK"] or res['Value']=="Not reset":
-      self.logError("Failed to reset request", "Request ID: %s, Message: %s"%(requestID, res['Message']))
+    if not res["OK"] or res['Value'] == "Not reset":
+      self.logError("Failed to reset request", "Request ID: %s, Message: %s" % (requestID, res['Message']))
       return res
 
     self.log.notice("Request %s is successfully reset" % requestID)
@@ -302,12 +296,11 @@ class JobResetAgent(AgentModule):
 
     res = self.jobStateUpdateClient.setJobStatus(jobID, status, minorStatus, application)
     if not res["OK"]:
-      self.logError("Failed to set mark", "Job: %s as %s"%(jobID, status))
+      self.logError("Failed to set mark", "Job: %s as %s" % (jobID, status))
       return res
 
     self.log.notice("Job %s is successfully maked as %s" % (jobID, status))
     return S_OK()
-
 
   def execute(self):
     """ main execution loop of Agent """
