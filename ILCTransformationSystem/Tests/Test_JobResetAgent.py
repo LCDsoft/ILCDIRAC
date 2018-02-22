@@ -88,6 +88,43 @@ class TestJobResetAgent(unittest.TestCase):
     self.assertEquals(res["Value"], [1, 2, 3])
     self.jobResetAgent.jobDB.selectJobs.assert_called_once_with(attrDict, older=self.today - timedelta(days=1))
 
+  def test_treat_User_Job_With_No_Req(self):
+    """ test for treatUserJobWithNoReq function """
+    fakeJobID = 1
+    self.jobResetAgent.markJob = MagicMock()
+
+    # case if getJobsMinorStatus function returns an error
+    self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_ERROR()
+    res = self.jobResetAgent.treatUserJobWithNoReq(fakeJobID)
+    self.assertFalse(res["OK"])
+    self.jobResetAgent.jobMonClient.getJobsMinorStatus.called_once_with([fakeJobID])
+
+    # case if getJobsMinorStatus executes successfully but getJobsApplicationStatus returns an error
+    self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_OK({fakeJobID: {'MinorStatus':
+                                                                                        JRA.FINAL_MINOR_STATES[0],
+                                                                                        'JobID': fakeJobID}})
+    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_ERROR()
+    res = self.jobResetAgent.treatUserJobWithNoReq(fakeJobID)
+    self.assertFalse(res["OK"])
+
+    # mark job done if ApplicationStatus and MinorStatus are in Final States
+    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_OK({fakeJobID: {'ApplicationStatus':
+                                                                                              JRA.FINAL_APP_STATES[0],
+                                                                                              'JobID': fakeJobID}})
+    res = self.jobResetAgent.treatUserJobWithNoReq(fakeJobID)
+    self.assertTrue(res["OK"])
+    self.jobResetAgent.markJob.assert_called_once_with(fakeJobID, "Done")
+
+    # dont do anything if ApplicationStatus and MinorStatus are not in Final States
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_OK({fakeJobID: {'MinorStatus': 'other status',
+                                                                                        'JobID': fakeJobID}})
+    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_OK({fakeJobID: {'ApplicationStatus':
+                                                                                              'other status',
+                                                                                              'JobID': fakeJobID}})
+    res = self.jobResetAgent.treatUserJobWithNoReq(fakeJobID)
+    self.assertTrue(res["OK"])
+    self.jobResetAgent.markJob.assert_not_called()
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
