@@ -7,6 +7,7 @@ from mock import MagicMock, call
 
 import ILCDIRAC.ILCTransformationSystem.Agent.JobResetAgent as JRA
 import DIRAC.Resources.Storage.StorageElement as SeModule
+
 from ILCDIRAC.ILCTransformationSystem.Agent.JobResetAgent import JobResetAgent
 
 from DIRAC import S_OK, S_ERROR
@@ -125,6 +126,28 @@ class TestJobResetAgent(unittest.TestCase):
     res = self.jobResetAgent.treatUserJobWithNoReq(fakeJobID)
     self.assertTrue(res["OK"])
     self.jobResetAgent.markJob.assert_not_called()
+
+  def test_treat_User_Job_With_Req(self):
+    """ test for treatUserJobWithReq function """
+    request = MagicMock()
+    request.RequestID = 1
+    fakeJobID = 1
+    self.jobResetAgent.markJob = MagicMock()
+    self.jobResetAgent.resetRequest = MagicMock()
+
+    # if request status is 'Done' then job should also be marked 'Done'
+    request.Status = "Done"
+    print request
+    self.jobResetAgent.treatUserJobWithReq(fakeJobID, request)
+    self.jobResetAgent.markJob.assert_called_once_with(fakeJobID, "Done")
+    self.jobResetAgent.resetRequest.assert_not_called()
+
+    # if request status is not 'Done' then reset request
+    request.Status = "Not Done"
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.treatUserJobWithReq(fakeJobID, request)
+    self.jobResetAgent.markJob.assert_not_called()
+    self.jobResetAgent.resetRequest.assert_called_once_with(request.RequestID)
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
