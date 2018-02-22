@@ -2,6 +2,7 @@
 
 import unittest
 
+from datetime import datetime, timedelta
 from mock import MagicMock, call
 
 import ILCDIRAC.ILCTransformationSystem.Agent.JobResetAgent as JRA
@@ -21,11 +22,15 @@ class TestJobResetAgent(unittest.TestCase):
   def setUp(self):
     self.agent = JRA
     self.agent.AgentModule = MagicMock()
-    self.agent.JobDB = MagicMock()
+    self.agent.JobDB = MagicMock(spec=DIRAC.WorkloadManagementSystem.DB.JobDB)
     self.agent.JobMonitoringClient = MagicMock()
     self.agent.DataManager = MagicMock(spec=DIRAC.DataManagementSystem.Client.DataManager)
     self.agent.ReqClient = MagicMock(spec=DIRAC.RequestManagementSystem.Client.ReqClient)
     self.agent.NotificationClient = MagicMock(spec=DIRAC.FrameworkSystem.Client.NotificationClient)
+
+    self.today = datetime(2018, 12, 25, 0, 0, 0, 0)
+    self.agent.datetime = MagicMock()
+    self.agent.datetime.now.return_value=self.today
 
     self.jobResetAgent = JobResetAgent()
     self.jobResetAgent.log = gLogger
@@ -49,7 +54,7 @@ class TestJobResetAgent(unittest.TestCase):
                                                         'Split_ILD'])
 
   def test_begin_execution(self):
-    """ test for beginExecution function"""
+    """ test for beginExecution function """
 
     self.jobResetAgent.accounting["Junk"].append("Funk")
     self.jobResetAgent.am_setOption = MagicMock()
@@ -63,6 +68,26 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.am_getOption.assert_has_calls(getOptionCalls)
     # accounting dictionary should be cleared
     self.assertEquals(self.jobResetAgent.accounting, {})
+
+  def test_get_jobs(self):
+    """ test for getJobs function """
+    jobStatus = "Done"
+    jobType = "User"
+    minorStatus = "Requests Done"
+    attrDict = {"JobType": jobType,
+                "MinorStatus": minorStatus,
+                "Status": jobStatus}
+
+    self.jobResetAgent.jobDB.selectJobs.return_value = S_ERROR()
+    res = self.jobResetAgent.getJobs(jobStatus, jobType, minorStatus)
+    self.assertFalse(res["OK"])
+
+    self.jobResetAgent.jobDB.selectJobs.reset_mock()
+    self.jobResetAgent.jobDB.selectJobs.return_value = S_OK(["1", "2", "3"])
+    res = self.jobResetAgent.getJobs(jobStatus, jobType, minorStatus)
+    self.assertEquals(res["Value"], [1, 2, 3])
+    self.jobResetAgent.jobDB.selectJobs.assert_called_once_with(attrDict, older=self.today - timedelta(days=1))
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
