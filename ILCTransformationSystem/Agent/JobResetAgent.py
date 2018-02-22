@@ -34,7 +34,7 @@ class JobResetAgent(AgentModule):
   def __init__(self, *args, **kwargs):
     AgentModule.__init__(self, *args, **kwargs)
     self.name = 'JobResetAgent'
-    self.enabled = False
+    self.enabled = True
     self.shifterProxy = 'DataManager'
 
     self.userJobTypes = ['User']
@@ -66,7 +66,7 @@ class JobResetAgent(AgentModule):
     """ Reload the configurations before every cycle """
     self.shifterProxy = self.am_setOption('shifterProxy', 'DataManager')
 
-    self.enabled = self.am_getOption('EnableFlag', False)
+    self.enabled = self.am_getOption('EnableFlag', True)
     self.addressTo = self.am_getOption('MailTo', ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"])
     self.addressFrom = self.am_getOption('MailFrom', "ilcdirac-admin@cern.ch")
 
