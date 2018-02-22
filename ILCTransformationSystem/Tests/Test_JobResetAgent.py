@@ -2,7 +2,7 @@
 
 import unittest
 
-from mock import MagicMock
+from mock import MagicMock, call
 
 import ILCDIRAC.ILCTransformationSystem.Agent.JobResetAgent as JRA
 import DIRAC.Resources.Storage.StorageElement as SeModule
@@ -47,6 +47,22 @@ class TestJobResetAgent(unittest.TestCase):
                                                         'MCReconstruction_Overlay', 'Split', 'MCSimulation_ILD',
                                                         'MCReconstruction_ILD', 'MCReconstruction_Overlay_ILD',
                                                         'Split_ILD'])
+
+  def test_begin_execution(self):
+    """ test for beginExecution function"""
+
+    self.jobResetAgent.accounting["Junk"].append("Funk")
+    self.jobResetAgent.am_setOption = MagicMock()
+    self.jobResetAgent.am_getOption = MagicMock()
+    getOptionCalls = [call('EnableFlag', True),
+                      call('MailTo', self.jobResetAgent.addressTo),
+                      call('MailFrom', self.jobResetAgent.addressFrom)]
+
+    self.jobResetAgent.beginExecution()
+    self.jobResetAgent.am_setOption.assert_any_call('shifterProxy', 'DataManager')
+    self.jobResetAgent.am_getOption.assert_has_calls(getOptionCalls)
+    # accounting dictionary should be cleared
+    self.assertEquals(self.jobResetAgent.accounting, {})
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)

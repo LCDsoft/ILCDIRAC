@@ -67,8 +67,8 @@ class JobResetAgent(AgentModule):
     self.shifterProxy = self.am_setOption('shifterProxy', 'DataManager')
 
     self.enabled = self.am_getOption('EnableFlag', True)
-    self.addressTo = self.am_getOption('MailTo', ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"])
-    self.addressFrom = self.am_getOption('MailFrom', "ilcdirac-admin@cern.ch")
+    self.addressTo = self.am_getOption('MailTo', self.addressTo)
+    self.addressFrom = self.am_getOption('MailFrom', self.addressFrom)
 
     self.accounting.clear()
 
