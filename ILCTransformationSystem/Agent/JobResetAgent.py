@@ -3,6 +3,7 @@ documentation
 """
 
 from collections import defaultdict
+from datetime import datetime, timedelta
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
@@ -13,6 +14,8 @@ from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
 from DIRAC.Resources.Storage.StorageElement import StorageElement
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
+from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
+from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 
 __RCSID__ = "$Id$"
 
@@ -48,6 +51,8 @@ class JobResetAgent(AgentModule):
     self.nClient = NotificationClient()
     self.reqClient = ReqClient()
     self.jobMonClient = JobMonitoringClient()
+    self.dataManager = DataManager()
+    self.jobDB = JobDB()
 
     self.jobStateUpdateClient = RPCClient('WorkloadManagement/JobStateUpdate',
                                           useCertificates=False,
@@ -86,7 +91,8 @@ class JobResetAgent(AgentModule):
     if minorStatus:
       attrDict['MinorStatus'] = minorStatus
 
-    res = self.jobMonClient.getJobs(attrDict)
+    time = datetime.now() - timedelta(days=1)
+    res = self.jobDB.selectJobs(attrDict, older=time)
     if not res['OK']:
       self.logError("Failure to get Jobs", res['Message'])
       return res
@@ -137,8 +143,12 @@ class JobResetAgent(AgentModule):
 
       if op.Type == "RemoveFile" and op.Status == 'Failed':
         filesToRemove = [lfn.LFN for lfn in op]
-        # TODO: remove files using datamanager
         self.log.notice("Removing files %s" % filesToRemove)
+        if self.enabled:
+          res = self.dataManager.removeFile(filesToRemove, force=True)
+          if not res["OK"]:
+            self.logError("Failure to remove Files", ":%s Message: %s" % (filesToRemove, res["Message"]))
+
         self.resetRequest(request.RequestID)
       elif op.Status == "Failed":
         self.log.notice("Can't handle operation of type: %s" % op.Type)
