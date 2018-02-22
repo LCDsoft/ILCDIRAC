@@ -117,10 +117,9 @@ class JobResetAgent(AgentModule):
     appStatus = res['Value'][jobID]['ApplicationStatus']
 
     if minorStatus in FINAL_MINOR_STATES and appStatus in FINAL_APP_STATES:
-      self.markJob(jobID, "Done")
-    else:
-      self.log.warn("Something not as expected for Job Status, please check: %s" % jobID)
+      return self.markJob(jobID, "Done")
 
+    self.log.warn("Something not as expected for Job Status, please check: %s" % jobID)
     return S_OK()
 
   def treatUserJobWithReq(self, jobID, request):
