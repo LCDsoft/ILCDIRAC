@@ -41,6 +41,9 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.enabled = True
     self.fakeJobID = 1
 
+    self.jobResetAgent.jobManagerClient = MagicMock()
+    self.jobResetAgent.jobStateUpdateClient = MagicMock()
+
     self.jobResetAgent.markJob = MagicMock()
     self.jobResetAgent.resetRequest = MagicMock()
 
@@ -116,27 +119,29 @@ class TestJobResetAgent(unittest.TestCase):
 
     # case if getJobsMinorStatus executes successfully but getJobsApplicationStatus returns an error
     self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_OK({self.fakeJobID: {'MinorStatus':
-                                                                                        JRA.FINAL_MINOR_STATES[0],
-                                                                                        'JobID': self.fakeJobID}})
+                                                                                             JRA.FINAL_MINOR_STATES[0],
+                                                                                             'JobID': self.fakeJobID}})
     self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_ERROR()
     res = self.jobResetAgent.treatUserJobWithNoReq(self.fakeJobID)
     self.assertFalse(res["OK"])
 
     # mark job done if ApplicationStatus and MinorStatus are in Final States
-    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_OK({self.fakeJobID: {'ApplicationStatus':
-                                                                                              JRA.FINAL_APP_STATES[0],
-                                                                                              'JobID': self.fakeJobID}})
+    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_OK({self.fakeJobID:
+                                                                                  {'ApplicationStatus':
+                                                                                   JRA.FINAL_APP_STATES[0],
+                                                                                   'JobID': self.fakeJobID}})
     res = self.jobResetAgent.treatUserJobWithNoReq(self.fakeJobID)
     self.assertTrue(res["OK"])
     self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Done")
 
     # dont do anything if ApplicationStatus and MinorStatus are not in Final States
     self.jobResetAgent.markJob.reset_mock()
-    self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_OK({self.fakeJobID: {'MinorStatus': 'other status',
-                                                                                        'JobID': self.fakeJobID}})
-    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_OK({self.fakeJobID: {'ApplicationStatus':
-                                                                                              'other status',
-                                                                                              'JobID': self.fakeJobID}})
+    self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_OK({self.fakeJobID:
+                                                                            {'MinorStatus': 'other status',
+                                                                             'JobID': self.fakeJobID}})
+    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_OK({self.fakeJobID:
+                                                                                  {'ApplicationStatus': 'other status',
+                                                                                   'JobID': self.fakeJobID}})
     res = self.jobResetAgent.treatUserJobWithNoReq(self.fakeJobID)
     self.assertTrue(res["OK"])
     self.jobResetAgent.markJob.assert_not_called()
@@ -302,6 +307,18 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.jobMonClient.getInputData.return_value = S_OK([lfn1, lfn2])
     res = self.jobResetAgent.getInputDataForJobs(jobIDs)
     self.assertEquals(res["Value"], {lfn1:jobIDs, lfn2:jobIDs})
+
+  def test_reschedule_jobs(self):
+    """ test for rescheduleJobs function """
+    jobShouldFailToReset = 1
+    jobShouldSuccessfullyReset = 2
+    jobsToReschedule = [jobShouldFailToReset, jobShouldSuccessfullyReset]
+
+    self.jobResetAgent.jobManagerClient.resetJob.side_effect = [S_ERROR(), S_OK()]
+    res = self.jobResetAgent.rescheduleJobs(jobsToReschedule)
+    self.assertTrue(res["OK"])
+    self.assertEquals(res["Value"]["Successful"], [jobShouldSuccessfullyReset])
+    self.assertEquals(res["Value"]["Failed"], [jobShouldFailToReset])
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
