@@ -7,7 +7,10 @@ from DIRAC.TransformationSystem.Client.TransformationClient import Transformatio
 
 from DIRAC import gLogger, S_OK, S_ERROR
 
-def createMovingTransformation( targetSE, sourceSE, prodID, datatype, extraname='', forceMoving=False):
+
+def createMovingTransformation(targetSE, sourceSE, prodID, datatype, extraname='', forceMoving=False,
+                               groupSize=1,
+                              ):
   """Creates the replication transformation based on the given parameters
 
   
@@ -37,6 +40,7 @@ def createMovingTransformation( targetSE, sourceSE, prodID, datatype, extraname=
   trans.setLongDescription( description )
   trans.setType( 'Replication' )
   trans.setGroup( 'Moving' )
+  trans.setGroupSize(groupSize)
   if datatype in ( 'GEN', 'SIM' ) and not forceMoving:
     trans.setPlugin( 'BroadcastProcessed' )
   else:

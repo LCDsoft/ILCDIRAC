@@ -18,6 +18,7 @@ class Params(object):
     self.extraname = ''
     self.forcemoving = False
     self.allFor = []
+    self.groupSize = 1
 
   def setProdIDs(self,prodID):
     if isinstance( prodID, list ):
@@ -57,6 +58,10 @@ class Params(object):
     self.forcemoving = True
     return S_OK()
 
+  def setGroupSize(self, size):
+    self.groupSize = size
+    return S_OK()
+
   def registerSwitches(self, script):
     """ register command line arguments
 
@@ -66,11 +71,14 @@ class Params(object):
     script.registerSwitch("N:", "Extraname=", "String to append to transformation name", self.setExtraname)
     script.registerSwitch("A:", "AllFor=", "Create usual set of moving transformations for prodID/GEN, prodID+1/SIM, prodID+2/REC", self.setAllFor)
     script.registerSwitch("F", "Forcemoving", "Move GEN or SIM files even if they do not have descendents", self.setForcemoving)
+    script.registerSwitch("S:", "GroupSize=", "Number of Files per transformation task", self.setGroupSize)
 
     useMessage = []
-    useMessage.append("%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName [-F]"% script.scriptName)
+    useMessage.append("%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName [-F] [-S 1]"
+                      % script.scriptName)
     useMessage.extend([ '', 'or', ''])
-    useMessage.append('%s --AllFor="<prodID1>, <prodID2>, ..." <TargetSEs> <SourceSEs> -NExtraName [-F]' %script.scriptName )
+    useMessage.append('%s --AllFor="<prodID1>, <prodID2>, ..." <TargetSEs> <SourceSEs> -NExtraName [-F] [-S 1]'
+                      % script.scriptName)
     script.setUsageMessage( '\n'.join( useMessage ) )
 
   def checkSettings(self, script):

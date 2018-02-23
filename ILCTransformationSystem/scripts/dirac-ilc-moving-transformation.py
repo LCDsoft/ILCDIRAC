@@ -38,12 +38,14 @@ def _createTrafo():
       gLogger.error( "Failed to check datatype", retData['Message'] )
       return 1
 
-    resCreate = createMovingTransformation( clip.targetSE,
-                                            clip.sourceSE,
-                                            prodID,
-                                            datatype,
-                                            clip.extraname,
-                                            clip.forcemoving )
+    resCreate = createMovingTransformation(clip.targetSE,
+                                           clip.sourceSE,
+                                           prodID,
+                                           datatype,
+                                           clip.extraname,
+                                           clip.forcemoving,
+                                           clip.groupSize,
+                                          )
     if not resCreate['OK']:
       return 1
 

@@ -28,6 +28,7 @@ class _Params(object):
     self.datatype = None
     self.errorMessages = []
     self.extraname = ''
+    self.groupSize = 1
 
   def setProdID(self,prodID):
     self.prodID = prodID
@@ -52,9 +53,14 @@ class _Params(object):
   def setExtraname(self, extraname):
     self.extraname = extraname
     return S_OK()
+
+  def setGroupSize(self, size):
+    self.groupSize = size
+    return S_OK()
     
   def registerSwitches(self):
     Script.registerSwitch("N:", "Extraname=", "String to append to transformation name", self.setExtraname)
+    Script.registerSwitch("S:", "GroupSize=", "Number of Files per transformation task", self.setGroupSize)
     Script.setUsageMessage("""%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName""" % Script.scriptName)
 
   def checkSettings(self):
@@ -95,7 +101,8 @@ class _Params(object):
       return False
     return True
 
-def _createReplication( targetSE, sourceSE, prodID, datatype, extraname=''):
+
+def _createReplication(targetSE, sourceSE, prodID, datatype, extraname='', groupSize=1):
   """Creates the replication transformation based on the given parameters"""
 
   from DIRAC.TransformationSystem.Client.Transformation import Transformation
@@ -128,6 +135,7 @@ def _createReplication( targetSE, sourceSE, prodID, datatype, extraname=''):
   gLogger.verbose(res)
   trans.setStatus( 'Active' )
   trans.setAgentType( 'Automatic' )
+  trans.setGroupSize(groupSize)
   currtrans = trans.getTransformationID()['Value']
   client = TransformationClient()
   res = client.createTransformationInputDataQuery( currtrans, metadata )
@@ -148,7 +156,8 @@ def _createTrafo():
   if not clip.checkSettings()['OK']:
     gLogger.error("ERROR: Missing settings")
     dexit(1)
-  resCreate = _createReplication( clip.targetSE, clip.sourceSE, clip.prodID, clip.datatype, clip.extraname )
+  resCreate = _createReplication(clip.targetSE, clip.sourceSE, clip.prodID, clip.datatype, clip.extraname,
+                                 clip.groupSize)
   if not resCreate['OK']:
     dexit(1)
   dexit(0)
