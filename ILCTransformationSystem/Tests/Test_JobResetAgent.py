@@ -289,6 +289,19 @@ class TestJobResetAgent(unittest.TestCase):
     res = self.jobResetAgent.getStagedFiles(lfns)
     self.assertEquals(res["Value"], [stagedFile])
 
+  def test_get_input_data_for_jobs(self):
+    """ test for getInputDataForJobs function """
+    jobIDs = [1, 2]
+    lfn1 = "/ilc/fake/lfn1"
+    lfn2 = "/ilc/fake/lfn2"
+    self.jobResetAgent.jobMonClient.getInputData.return_value = S_ERROR()
+
+    res = self.jobResetAgent.getInputDataForJobs(jobIDs)
+    self.assertEquals(res["Value"], {})
+
+    self.jobResetAgent.jobMonClient.getInputData.return_value = S_OK([lfn1, lfn2])
+    res = self.jobResetAgent.getInputDataForJobs(jobIDs)
+    self.assertEquals(res["Value"], {lfn1:jobIDs, lfn2:jobIDs})
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
