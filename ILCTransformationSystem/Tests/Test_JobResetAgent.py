@@ -253,11 +253,13 @@ class TestJobResetAgent(unittest.TestCase):
     dummy_treatJobWithNoReq = MagicMock()
     dummy_treatJobWithReq = MagicMock()
 
+    # if the readRequestsForJobs func returns error than checkJobs should exit and return an error
     self.jobResetAgent.reqClient.readRequestsForJobs.return_value = S_ERROR()
     res = self.jobResetAgent.checkJobs(jobIDs, treatJobWithNoReq=dummy_treatJobWithNoReq,
                                        treatJobWithReq=dummy_treatJobWithReq)
     self.assertFalse(res["OK"])
 
+    # test if correct treatment functions are called
     self.jobResetAgent.reqClient.readRequestsForJobs.return_value = S_OK({'Successful': {},
                                                                           'Failed': {jobIDs[0]: 'Request not found'}})
     self.jobResetAgent.checkJobs(jobIDs, treatJobWithNoReq=dummy_treatJobWithNoReq,
