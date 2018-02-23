@@ -301,19 +301,19 @@ class TestMaking( unittest.TestCase ):
     self.chain._flags._moveSim=True
     self.chain._flags._moves=True
     self.chain._flags._dryRun=False
-    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation.createDataTransformation") as moveMock:
       self.chain.createMovingTransformation( {'ProdID':666}, 'MCReconstruction' )
-      moveMock.assert_called_once_with( "Target", "Source", 666, "DST" )
+      moveMock.assert_called_once_with('Moving', "Target", "Source", 666, "DST")
 
-    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation.createDataTransformation") as moveMock:
       self.chain.createMovingTransformation( {'ProdID':666}, 'MCSimulation' )
-      moveMock.assert_called_once_with( "Target", "Source", 666, "SIM" )
+      moveMock.assert_called_once_with('Moving', "Target", "Source", 666, "SIM")
 
 
     self.chain._flags._rec=True
     self.chain._flags._moves=False
     self.chain._flags._dryRun=False
-    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation.createDataTransformation") as moveMock:
       self.chain.createMovingTransformation( {'ProdID':666}, 'MCReconstruction' )
       moveMock.assert_not_called()
 

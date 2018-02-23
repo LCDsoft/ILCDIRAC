@@ -695,11 +695,11 @@ finalOutputSE = %(finalOutputSE)s
       gLogger.notice( "*"*80 + "\nNot creating moving transformation for prodID: %s, %s " % (meta['ProdID'], prodType ) )
       return
 
-    from ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation import createMovingTransformation
+    from ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation import createDataTransformation
     for dataType in dataTypes:
       if getattr( self._flags, "move%s" % dataType.capitalize() ):
         gLogger.notice( "*"*80 + "\nCreating moving transformation for prodID: %s, %s, %s " % (meta['ProdID'], prodType, dataType ) )
-        createMovingTransformation( targetSE, sourceSE, prodID, dataType )
+        createDataTransformation('Moving', targetSE, sourceSE, prodID, dataType)
 
 
   def _updateMeta( self, outputDict, inputDict, eventsPerJob ):

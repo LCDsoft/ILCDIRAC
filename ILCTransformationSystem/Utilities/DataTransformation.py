@@ -2,6 +2,8 @@
 Utilities to create Transformations to Move Files
 """
 
+import os
+
 from DIRAC.TransformationSystem.Client.Transformation import Transformation
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
@@ -11,6 +13,11 @@ from DIRAC import gLogger, S_OK, S_ERROR
 
 def checkDatatype(prodID, datatype):
   """ check if the datatype makes sense for given production """
+  # skip data type check when creating replications in development for prod productions this check doesn't work
+  if os.environ.get('SKIP_CHECK', False):
+    gLogger.warn("Skipping Datatype check!")
+    return S_OK()
+
   tClient = TransformationClient()
   cond = dict(TransformationID=prodID)
   trafo = tClient.getTransformations(cond)
