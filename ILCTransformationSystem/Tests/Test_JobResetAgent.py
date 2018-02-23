@@ -242,6 +242,35 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.treatCompletedProdWithNoReq(self.fakeJobID)
     self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Done")
 
+  def test_check_jobs(self):
+    """ test for checkJobs function """
+    jobIDs = [1, 2]
+    dummy_treatJobWithNoReq = MagicMock()
+    dummy_treatJobWithReq = MagicMock()
+
+    self.jobResetAgent.reqClient.readRequestsForJobs.return_value = S_ERROR()
+    res = self.jobResetAgent.checkJobs(jobIDs, treatJobWithNoReq=dummy_treatJobWithNoReq,
+                                       treatJobWithReq=dummy_treatJobWithReq)
+    self.assertFalse(res["OK"])
+
+    self.jobResetAgent.reqClient.readRequestsForJobs.return_value = S_OK({'Successful': {},
+                                                                          'Failed': {jobIDs[0]: 'Request not found'}})
+    self.jobResetAgent.checkJobs(jobIDs, treatJobWithNoReq=dummy_treatJobWithNoReq,
+                                 treatJobWithReq=dummy_treatJobWithReq)
+    dummy_treatJobWithNoReq.assert_has_calls([call(jobIDs[0]), call(jobIDs[1])])
+    dummy_treatJobWithReq.assert_not_called()
+
+    dummy_treatJobWithNoReq.reset_mock()
+    req1 = Request({"RequestID": 1})
+    req2 = Request({"RequestID": 2})
+    self.jobResetAgent.reqClient.readRequestsForJobs.return_value = S_OK({'Successful': {jobIDs[0]: req1,
+                                                                                         jobIDs[1]: req2},
+                                                                          'Failed': {}})
+    self.jobResetAgent.checkJobs(jobIDs, treatJobWithNoReq=dummy_treatJobWithNoReq,
+                                 treatJobWithReq=dummy_treatJobWithReq)
+    dummy_treatJobWithNoReq.assert_not_called()
+    dummy_treatJobWithReq.assert_has_calls([call(jobIDs[0], req1), call(jobIDs[1], req2)])
+
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
   TESTRESULT = unittest.TextTestRunner(verbosity=3).run(SUITE)
