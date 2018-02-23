@@ -271,6 +271,25 @@ class TestJobResetAgent(unittest.TestCase):
     dummy_treatJobWithNoReq.assert_not_called()
     dummy_treatJobWithReq.assert_has_calls([call(jobIDs[0], req1), call(jobIDs[1], req2)])
 
+  def test_get_staged_files(self):
+    """ test for getStagedFiles function """
+    stagedFile = "/ilc/fake/lfn1/staged"
+    nonStagedFile = "/ilc/fake/lfn2/nonStaged"
+    lfns = [stagedFile, nonStagedFile]
+
+    res = self.jobResetAgent.getStagedFiles([])
+    self.assertTrue(res["OK"])
+
+    SeModule.StorageElementItem.getFileMetadata = MagicMock(return_value=S_ERROR())
+    res = self.jobResetAgent.getStagedFiles(lfns)
+    self.assertFalse(res["OK"])
+
+    SeModule.StorageElementItem.getFileMetadata.return_value = S_OK({'Successful': {stagedFile: {'Cached': 1},
+                                                                                    nonStagedFile: {'Cached': 0}}})
+    res = self.jobResetAgent.getStagedFiles(lfns)
+    self.assertEquals(res["Value"], [stagedFile])
+
+
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
   TESTRESULT = unittest.TextTestRunner(verbosity=3).run(SUITE)
