@@ -44,6 +44,14 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.markJob = MagicMock()
     self.jobResetAgent.resetRequest = MagicMock()
 
+    self.doneRemoveRequest = self.createRequest(requestID=1, opType="RemoveFile",
+                                                opStatus="Done", fileStatus="Done")
+    self.doneReplicateRequest = self.createRequest(requestID=2, opType="ReplicateAndRegister",
+                                                   opStatus="Done", fileStatus="Done")
+    self.failedReplicateRequest = self.createRequest(requestID=3, opType="ReplicateAndRegister",
+                                                     opStatus="Failed", fileStatus="Failed")
+    self.failedRemoveRequest = self.createRequest(requestID=4, opType="RemoveFile",
+                                                  opStatus="Failed", fileStatus="Failed")
   def tearDown(self):
     pass
 
@@ -154,10 +162,10 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.resetRequest.assert_called_once_with(failedRequestID)
 
   @staticmethod
-  def createRequest(requestID, opType, opStatus, fileStatus):
+  def createRequest(requestID, opType, opStatus, fileStatus, lfnError=" "):
     req = Request({"RequestID": requestID})
     op = Operation({"Type": opType, "Status": opStatus})
-    op.addFile(File({"LFN": "/ilc/fake/lfn", "Status": fileStatus}))
+    op.addFile(File({"LFN": "/ilc/fake/lfn", "Status": fileStatus, "Error": lfnError}))
     req.addOperation(op)
     return req
 
@@ -166,35 +174,27 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.markJob.reset_mock()
     self.jobResetAgent.resetRequest.reset_mock()
     self.jobResetAgent.dataManager.removeFile.reset_mock()
-    doneRemoveRequest = self.createRequest(requestID=1, opType="RemoveFile", opStatus="Done", fileStatus="Done")
-    doneReplicateRequest = self.createRequest(requestID=2, opType="ReplicateAndRegister", opStatus="Done",
-                                              fileStatus="Done")
-    failedReplicateRequest = self.createRequest(requestID=3, opType="ReplicateAndRegister", opStatus="Failed",
-                                                fileStatus="Failed")
-    failedRemoveRequestID = 4
-    failedRemoveRequest = self.createRequest(requestID=failedRemoveRequestID, opType="RemoveFile",
-                                             opStatus="Failed", fileStatus="Failed")
 
     # if request is done then job should be marked failed
-    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, doneRemoveRequest)
+    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, self.doneRemoveRequest)
     self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Failed")
 
     self.jobResetAgent.markJob.reset_mock()
-    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, doneReplicateRequest)
+    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, self.doneReplicateRequest)
     self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Failed")
 
     # failed requests with removeFile operation should be reset
     self.jobResetAgent.markJob.reset_mock()
-    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, failedRemoveRequest)
-    fileLfn = failedRemoveRequest[0][0].LFN
+    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, self.failedRemoveRequest)
+    fileLfn = self.failedRemoveRequest[0][0].LFN
     self.jobResetAgent.dataManager.removeFile.assert_called_once_with([fileLfn], force=True)
-    self.jobResetAgent.resetRequest.assert_called_once_with(failedRemoveRequestID)
+    self.jobResetAgent.resetRequest.assert_called_once_with(getattr(self.failedRemoveRequest, "RequestID"))
     self.jobResetAgent.markJob.asset_not_called()
 
     # failed requests with operations other than removeFile should not be reset
     self.jobResetAgent.resetRequest.reset_mock()
     self.jobResetAgent.dataManager.reset_mock()
-    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, failedReplicateRequest)
+    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, self.failedReplicateRequest)
     self.jobResetAgent.dataManager.assert_not_called()
     self.jobResetAgent.resetRequest.assert_not_called()
     self.jobResetAgent.markJob.asset_not_called()
@@ -205,6 +205,36 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.treatFailedProdWithNoReq(self.fakeJobID)
     self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Failed")
 
+  def test_treat_Completed_Prod_With_Req(self):
+    """ test for treatCompletedProdWithReq function """
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.resetRequest.reset_mock()
+
+    # if request is done then job should be marked Done
+    self.jobResetAgent.treatCompletedProdWithReq(self.fakeJobID, self.doneRemoveRequest)
+    self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Done")
+
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.treatCompletedProdWithReq(self.fakeJobID, self.doneReplicateRequest)
+    self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Done")
+
+    # job with failed ReplicateAndRegister operation should be marked done if file does not exist
+    self.jobResetAgent.markJob.reset_mock()
+    request = self.createRequest(requestID=1, opType="RemoveFile", opStatus="Done",
+                                 fileStatus="Done", lfnError="No such file")
+    self.jobResetAgent.treatCompletedProdWithReq(self.fakeJobID, request)
+    self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Done")
+
+    # failed requests with ReplicateAndRegister operation should be reset
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.treatCompletedProdWithReq(self.fakeJobID, self.failedReplicateRequest)
+    self.jobResetAgent.resetRequest.assert_called_once_with(getattr(self.failedReplicateRequest, "RequestID"))
+
+    # failed Remove file request should not be reset
+    self.jobResetAgent.resetRequest.reset_mock()
+    self.jobResetAgent.treatCompletedProdWithReq(self.fakeJobID, self.failedRemoveRequest)
+    self.jobResetAgent.markJob.assert_not_called()
+    self.jobResetAgent.resetRequest.assert_not_called()
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
