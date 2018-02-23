@@ -148,7 +148,7 @@ class JobResetAgent(AgentModule):
           if not res["OK"]:
             self.logError("Failure to remove Files", ":%s Message: %s" % (filesToRemove, res["Message"]))
 
-        self.resetRequest(request.RequestID)
+          return self.resetRequest(request.RequestID)
       elif op.Status == "Failed":
         self.log.notice("Can't handle operation of type: %s" % op.Type)
 

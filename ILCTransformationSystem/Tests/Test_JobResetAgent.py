@@ -10,6 +10,10 @@ import DIRAC.Resources.Storage.StorageElement as SeModule
 
 from ILCDIRAC.ILCTransformationSystem.Agent.JobResetAgent import JobResetAgent
 
+from DIRAC.RequestManagementSystem.Client.File import File
+from DIRAC.RequestManagementSystem.Client.Request import Request
+from DIRAC.RequestManagementSystem.Client.Operation import Operation
+
 from DIRAC import S_OK, S_ERROR
 from DIRAC import gLogger
 import DIRAC
@@ -36,6 +40,10 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent = JobResetAgent()
     self.jobResetAgent.log = gLogger
     self.jobResetAgent.enabled = True
+    self.fakeJobID = 1
+
+    self.jobResetAgent.markJob = MagicMock()
+    self.jobResetAgent.resetRequest = MagicMock()
 
   def tearDown(self):
     pass
@@ -91,62 +99,80 @@ class TestJobResetAgent(unittest.TestCase):
 
   def test_treat_User_Job_With_No_Req(self):
     """ test for treatUserJobWithNoReq function """
-    fakeJobID = 1
-    self.jobResetAgent.markJob = MagicMock()
+    self.jobResetAgent.markJob.reset_mock()
 
     # case if getJobsMinorStatus function returns an error
     self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_ERROR()
-    res = self.jobResetAgent.treatUserJobWithNoReq(fakeJobID)
+    res = self.jobResetAgent.treatUserJobWithNoReq(self.fakeJobID)
     self.assertFalse(res["OK"])
-    self.jobResetAgent.jobMonClient.getJobsMinorStatus.called_once_with([fakeJobID])
+    self.jobResetAgent.jobMonClient.getJobsMinorStatus.called_once_with([self.fakeJobID])
 
     # case if getJobsMinorStatus executes successfully but getJobsApplicationStatus returns an error
-    self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_OK({fakeJobID: {'MinorStatus':
+    self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_OK({self.fakeJobID: {'MinorStatus':
                                                                                         JRA.FINAL_MINOR_STATES[0],
-                                                                                        'JobID': fakeJobID}})
+                                                                                        'JobID': self.fakeJobID}})
     self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_ERROR()
-    res = self.jobResetAgent.treatUserJobWithNoReq(fakeJobID)
+    res = self.jobResetAgent.treatUserJobWithNoReq(self.fakeJobID)
     self.assertFalse(res["OK"])
 
     # mark job done if ApplicationStatus and MinorStatus are in Final States
-    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_OK({fakeJobID: {'ApplicationStatus':
+    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_OK({self.fakeJobID: {'ApplicationStatus':
                                                                                               JRA.FINAL_APP_STATES[0],
-                                                                                              'JobID': fakeJobID}})
-    res = self.jobResetAgent.treatUserJobWithNoReq(fakeJobID)
+                                                                                              'JobID': self.fakeJobID}})
+    res = self.jobResetAgent.treatUserJobWithNoReq(self.fakeJobID)
     self.assertTrue(res["OK"])
-    self.jobResetAgent.markJob.assert_called_once_with(fakeJobID, "Done")
+    self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Done")
 
     # dont do anything if ApplicationStatus and MinorStatus are not in Final States
     self.jobResetAgent.markJob.reset_mock()
-    self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_OK({fakeJobID: {'MinorStatus': 'other status',
-                                                                                        'JobID': fakeJobID}})
-    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_OK({fakeJobID: {'ApplicationStatus':
+    self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_OK({self.fakeJobID: {'MinorStatus': 'other status',
+                                                                                        'JobID': self.fakeJobID}})
+    self.jobResetAgent.jobMonClient.getJobsApplicationStatus.return_value = S_OK({self.fakeJobID: {'ApplicationStatus':
                                                                                               'other status',
-                                                                                              'JobID': fakeJobID}})
-    res = self.jobResetAgent.treatUserJobWithNoReq(fakeJobID)
+                                                                                              'JobID': self.fakeJobID}})
+    res = self.jobResetAgent.treatUserJobWithNoReq(self.fakeJobID)
     self.assertTrue(res["OK"])
     self.jobResetAgent.markJob.assert_not_called()
 
   def test_treat_User_Job_With_Req(self):
     """ test for treatUserJobWithReq function """
-    request = MagicMock()
-    request.RequestID = 1
-    fakeJobID = 1
-    self.jobResetAgent.markJob = MagicMock()
-    self.jobResetAgent.resetRequest = MagicMock()
+    doneRequest = self.createRequest(requestID=1, opType="RemoveFile", opStatus="Done", fileStatus="Done")
+    failedRequestID = 2
+    failedRequest = self.createRequest(requestID=failedRequestID, opType="RemoveFile", opStatus="Failed",
+                                       fileStatus="Failed")
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.resetRequest.reset_mock()
 
     # if request status is 'Done' then job should also be marked 'Done'
-    request.Status = "Done"
-    self.jobResetAgent.treatUserJobWithReq(fakeJobID, request)
-    self.jobResetAgent.markJob.assert_called_once_with(fakeJobID, "Done")
+    self.jobResetAgent.treatUserJobWithReq(self.fakeJobID, doneRequest)
+    self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Done")
     self.jobResetAgent.resetRequest.assert_not_called()
 
     # if request status is not 'Done' then reset request
-    request.Status = "Not Done"
     self.jobResetAgent.markJob.reset_mock()
-    self.jobResetAgent.treatUserJobWithReq(fakeJobID, request)
+    self.jobResetAgent.treatUserJobWithReq(self.fakeJobID, failedRequest)
     self.jobResetAgent.markJob.assert_not_called()
-    self.jobResetAgent.resetRequest.assert_called_once_with(request.RequestID)
+    self.jobResetAgent.resetRequest.assert_called_once_with(failedRequestID)
+
+  @staticmethod
+  def createRequest(requestID, opType, opStatus, fileStatus):
+    req = Request({"RequestID": requestID})
+    op = Operation({"Type": opType, "Status": opStatus})
+    op.addFile(File({"LFN": "/ilc/fake/lfn", "Status": fileStatus}))
+    req.addOperation(op)
+    return req
+
+  def test_treat_Failed_Prod_With_Req(self):
+    """ test for treatFailedProdWithReq function """
+    doneRemoveRequest = self.createRequest(requestID=1, opType="RemoveFile", opStatus="Done", fileStatus="Done")
+    doneReplicateRequest = self.createRequest(requestID=1, opType="ReplicateAndRegister", opStatus="Done",
+                                              fileStatus="Done")
+    failedRemoveRequest = self.createRequest(requestID=2, opType="RemoveFile", opStatus="Failed", fileStatus="Failed")
+
+    # if request is done then job should be marked failed
+    res = self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, doneRemoveRequest)
+    self.assertTrue(res["OK"])
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
