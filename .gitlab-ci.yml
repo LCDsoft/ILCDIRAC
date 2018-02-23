@@ -174,7 +174,7 @@ checkFormat:
     - cd installation/ILCDIRAC
     - source ../bashrc
     - git remote add CLICDP https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC.git
-    - git fetch CLICDP ${ILCDIRAC_BRANCH}:${ILCDIRAC_BRANCH}
+    - git fetch --no-tags CLICDP ${ILCDIRAC_BRANCH}:${ILCDIRAC_BRANCH}
     - git diff -U0 $(git merge-base HEAD CLICDP/$ILCDIRAC_BRANCH) | flake8 --diff
     - echo "Formatting correct"
 
