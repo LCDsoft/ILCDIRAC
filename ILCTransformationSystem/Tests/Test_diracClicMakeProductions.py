@@ -53,6 +53,8 @@ class TestMaking( unittest.TestCase ):
       'MoveTypes': '',
       'overlayEvents': '',
       'cliReco': '--Config.Tracking=Tracked',
+      'whizard2Version': 'myWhizardVersion',
+      'whizard2SinFile': 'myWhizardSinFile',
     }
 
     self.pMockMod = Mock()
@@ -124,6 +126,9 @@ class TestMaking( unittest.TestCase ):
     self.assertEqual( c.eventsPerJobs, [1000, 2000] )
     self.assertEqual( c.eventsInSplitFiles, [5000, 6000] )
 
+    self.assertEqual(c.whizard2Version, "myWhizardVersion")
+    self.assertEqual(c.whizard2SinFile, ["myWhizardSinFile"])
+
     self.configDict['prodIDs'] = "123, 456, 789"
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
                 new=Mock(return_value=cpMock ) ), \
@@ -188,9 +193,33 @@ class TestMaking( unittest.TestCase ):
     self.assertEqual(self.chain.cliRecoOption, '--Config.Tracking=Tracked')
     self.assertEqual(ret.extraCLIArguments, '--Config.Tracking=Tracked ')
 
+  def test_createWhizard2Application(self):
 
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard2
 
-  def test_createDDSimApplication( self ):
+    cpMock = Mock()
+    cpMock.read = Mock()
+    cpMock.get = self.mockConfig
+
+    parameter = Mock()
+    parameter.whizard2SinFile = 'filename'
+    parameter.dumpConfigFile = False
+    with patch("ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+               new=Mock(return_value=cpMock)), \
+         patch("DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations",
+               new=Mock(return_value=self.opsMock)):
+      self.chain.loadParameters(parameter)
+
+    ret = self.chain.createWhizard2Application({'ProdID': '123',
+                                                'EvtType': 'process',
+                                                'Energy': '555',
+                                                'Machine': 'clic'},
+                                               100,
+                                               'sinFile')
+    self.assertIsInstance(ret, Whizard2)
+    self.assertEqual(ret.version, 'myWhizardVersion')
+
+  def test_createDDSimApplication(self):
 
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
 
@@ -290,6 +319,15 @@ class TestMaking( unittest.TestCase ):
       )
     self.assertEqual( retMeta, {} )
 
+  def test_createGenProduction(self):
+    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod):
+      retMeta = self.chain.createGenerationProduction(meta={'ProdID': 23, 'Energy': 350, 'EvtType': 'ttBond'},
+                                                      prodName="prodJamesProd",
+                                                      parameterDict=self.chain.getParameterDictionary('MI6')[0],
+                                                      eventsPerJob=10,
+                                                      sinFile='myWhizardSinFile'
+                                                     )
+    self.assertEqual(retMeta, {})
 
   def test_createMovingTransformation( self ):
     self.chain.outputSE = "Source"

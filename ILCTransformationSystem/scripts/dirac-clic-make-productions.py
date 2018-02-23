@@ -25,7 +25,7 @@ from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithUnit, energyToInt
 
 PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
-APPLICATION_LIST = ['Marlin', 'DDSim', 'Overlay']
+APPLICATION_LIST = ['Marlin', 'DDSim', 'Overlay', 'Whizard2']
 
 class Params(object):
   """Parameter Object"""
@@ -75,6 +75,8 @@ class CLICDetProdChain( object ):
   :param str additionalName: additionalName to add to the transformation name in case a
         transformation with that name already exists
   :param str cliReco: additional CLI options for reconstruction, optional
+  :param str whizard2Version: specify which version of Whizard 2 to use, optional
+  :param str whizard2SinFile: path to sindarin file to be used with Whizard2
 
   """
 
@@ -235,6 +237,9 @@ MoveTypes = %(moveTypes)s
     self.cliRecoOption = ''
     self.cliReco = ''
 
+    self.whizard2Version = self._ops.getValue('Production/CLIC/DefaultWhizard2Version')
+    self.whizard2SinFile = ''
+
     self.applicationOptions = {appName: [] for appName in APPLICATION_LIST}
 
     self._flags = self.Flags()
@@ -269,6 +274,9 @@ MoveTypes = %(moveTypes)s
       self.detectorModel = config.get(PP, 'detectorModel')
       self.softwareVersion = config.get(PP, 'softwareVersion')
       self.clicConfig = config.get(PP, 'clicConfig')
+
+      self.whizard2Version = config.get(PP, 'whizard2Version')
+      self.whizard2SinFile = config.get(PP, 'whizard2SinFile').replace(' ', '').split(',')
 
       self.processes = config.get(PP, 'processes').split(',')
       self.energies = config.get(PP, 'energies').split(',')
@@ -358,6 +366,8 @@ MoveTypes = %(moveTypes)s
 prodGroup = %(prodGroup)s
 detectorModel = %(detectorModel)s
 softwareVersion = %(softwareVersion)s
+whizard2Version = %(whizard2Version)s
+whizard2SinFile = %(whizard2SinFile)s
 clicConfig = %(clicConfig)s
 eventsPerJobs = %(eventsPerJobs)s
 
@@ -467,6 +477,20 @@ finalOutputSE = %(finalOutputSE)s
     energyString = self.overlayEvents if self.overlayEvents else energyWithUnit( energy )
     self.cliReco += ' --Config.Overlay=%s ' % energyString
 
+  def createWhizard2Application(self, meta, eventsPerJob, sinFile):
+    """ create Whizard2 Application """
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard2
+
+    whiz = Whizard2()
+    whiz.setVersion(self.whizard2Version)
+    whiz.setSinFile(sinFile)
+    whiz.setEvtType(meta['EvtType'])
+    whiz.setNumberOfEvents(eventsPerJob)
+
+    self._setApplicationOptions("Whizard2", whiz)
+
+    return whiz
+
   def createDDSimApplication( self ):
     """ create DDSim Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
@@ -533,6 +557,42 @@ finalOutputSE = %(finalOutputSE)s
 
     return marlin
 
+  def createGenerationProduction(self, meta, prodName, parameterDict, eventsPerJob, sinFile):
+    """ create generation production """
+    gLogger.notice("*" * 80 + "\nCreating generation production: %s " % prodName)
+    from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
+    genProd = ProductionJob()
+    genProd.dryrun = self._flags.dryRun
+    genProd.setLogLevel(self.productionLogLevel)
+    genProd.setProdType('MCGeneration')
+    genProd.setOutputSE(self.outputSE)
+    genProd.setWorkflowName(self._productionName(meta, parameterDict, 'gen'))
+    genProd.setProdGroup(self.prodGroup)
+    # Add the application
+    res = genProd.append(self.createWhizard2Application(meta, eventsPerJob, sinFile))
+    if not res['OK']:
+      raise RuntimeError("Error creating generation production: %s" % res['Message'])
+    genProd.addFinalization(True, True, True, True)
+    if not prodName:
+      raise RuntimeError("Error creating generation production: prodName empty")
+    genProd.setDescription(prodName)
+    res = genProd.createProduction()
+    if not res['OK']:
+      raise RuntimeError("Error creating generation production: %s" % res['Message'])
+
+    genProd.addMetadataToFinalFiles({'BeamParticle1': parameterDict['pname1'],
+                                     'BeamParticle2': parameterDict['pname2'],
+                                     'EPA_B1': parameterDict['epa_b1'],
+                                     'EPA_B2': parameterDict['epa_b2'],
+                                    }
+                                   )
+
+    res = genProd.finalizeProd()
+    if not res['OK']:
+      raise RuntimeError("Error finalizing generation production: %s" % res['Message'])
+
+    generationMeta = genProd.getMetadata()
+    return generationMeta
 
   def createSimulationProduction( self, meta, prodName, parameterDict ):
     """ create simulation production """
@@ -728,15 +788,17 @@ finalOutputSE = %(finalOutputSE)s
         raise AttributeError("Cannot set %s for %s, check spelling!" % (option, appName))
       getattr(app, setterFunc)(value)
 
-
-  def createTransformations( self, prodID, process, energy, eventsPerJob, eventsPerBaseFile):
+  def createTransformations(self, metaInput, sinFile, eventsPerJob, eventsPerBaseFile):
     """ create all the transformations we want to create """
 
-    metaInput = self.meta( prodID, process, energy )
-    prodName = process
+    prodName = metaInput['EvtType']
 
     for parameterDict in self.getParameterDictionary( prodName ):
-      splitMeta, simMeta, recMeta = None, None, None
+      splitMeta, genMeta, simMeta, recMeta = None, None, None, None
+
+      if self._flags.gen:
+        genMeta = self.createGenerationProduction(metaInput, prodName, parameterDict, eventsPerJob, sinFile)
+        self._updateMeta(metaInput, genMeta, eventsPerJob)
 
       if self._flags.spl:
         splitMeta = self.createSplitProduction( metaInput, prodName, parameterDict, eventsPerJob,
@@ -749,6 +811,9 @@ finalOutputSE = %(finalOutputSE)s
 
       if self._flags.rec or self._flags.over:
         recMeta = self.createReconstructionProduction( metaInput, prodName, parameterDict )
+
+      if genMeta:
+        self.createMovingTransformation(genMeta, 'MCGeneration')
 
       if splitMeta:
         self.createMovingTransformation( splitMeta, 'MCGeneration' )
@@ -769,8 +834,10 @@ finalOutputSE = %(finalOutputSE)s
       prodID = self.prodIDs[index]
       eventsPerJob = self.eventsPerJobs[index]
       eventsPerBaseFile = self.eventsInSplitFiles[index]
+      sinFile = self.whizard2SinFile[index]
 
-      self.createTransformations( prodID, process, energy, eventsPerJob, eventsPerBaseFile )
+      metaInput = self.meta(prodID, process, energy)
+      self.createTransformations(metaInput, sinFile, eventsPerJob, eventsPerBaseFile)
 
 
 
