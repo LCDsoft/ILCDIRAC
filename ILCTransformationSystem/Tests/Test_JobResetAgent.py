@@ -23,11 +23,11 @@ class TestJobResetAgent(unittest.TestCase):
   def setUp(self):
     self.agent = JRA
     self.agent.AgentModule = MagicMock()
-    self.agent.JobDB = MagicMock(spec=DIRAC.WorkloadManagementSystem.DB.JobDB)
+    self.agent.JobDB = MagicMock(spec=DIRAC.WorkloadManagementSystem.DB.JobDB.JobDB)
     self.agent.JobMonitoringClient = MagicMock()
-    self.agent.DataManager = MagicMock(spec=DIRAC.DataManagementSystem.Client.DataManager)
-    self.agent.ReqClient = MagicMock(spec=DIRAC.RequestManagementSystem.Client.ReqClient)
-    self.agent.NotificationClient = MagicMock(spec=DIRAC.FrameworkSystem.Client.NotificationClient)
+    self.agent.DataManager = MagicMock(spec=DIRAC.DataManagementSystem.Client.DataManager.DataManager)
+    self.agent.ReqClient = MagicMock(spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient)
+    self.agent.NotificationClient = MagicMock(spec=DIRAC.FrameworkSystem.Client.NotificationClient.NotificationClient)
 
     self.today = datetime(2018, 12, 25, 0, 0, 0, 0)
     self.agent.datetime = MagicMock()
@@ -137,7 +137,6 @@ class TestJobResetAgent(unittest.TestCase):
 
     # if request status is 'Done' then job should also be marked 'Done'
     request.Status = "Done"
-    print request
     self.jobResetAgent.treatUserJobWithReq(fakeJobID, request)
     self.jobResetAgent.markJob.assert_called_once_with(fakeJobID, "Done")
     self.jobResetAgent.resetRequest.assert_not_called()
