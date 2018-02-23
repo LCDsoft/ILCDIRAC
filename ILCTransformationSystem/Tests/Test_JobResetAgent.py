@@ -236,6 +236,12 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.markJob.assert_not_called()
     self.jobResetAgent.resetRequest.assert_not_called()
 
+  def test_treat_Completed_Prod_With_No_Req(self):
+    """ test for treatCompletedProdWithNoReq function """
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.treatCompletedProdWithNoReq(self.fakeJobID)
+    self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Done")
+
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
   TESTRESULT = unittest.TextTestRunner(verbosity=3).run(SUITE)
