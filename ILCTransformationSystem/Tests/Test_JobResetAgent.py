@@ -199,6 +199,12 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.resetRequest.assert_not_called()
     self.jobResetAgent.markJob.asset_not_called()
 
+  def test_treat_Failed_Prod_With_No_Req(self):
+    """ test for treatFailedProdWithNoReq function """
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.treatFailedProdWithNoReq(self.fakeJobID)
+    self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Failed")
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
