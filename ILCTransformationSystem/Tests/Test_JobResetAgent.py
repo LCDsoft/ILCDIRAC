@@ -6,10 +6,9 @@ from datetime import datetime, timedelta
 from mock import MagicMock, call
 
 import ILCDIRAC.ILCTransformationSystem.Agent.JobResetAgent as JRA
-import DIRAC.Resources.Storage.StorageElement as SeModule
-
 from ILCDIRAC.ILCTransformationSystem.Agent.JobResetAgent import JobResetAgent
 
+import DIRAC.Resources.Storage.StorageElement as SeModule
 from DIRAC.RequestManagementSystem.Client.File import File
 from DIRAC.RequestManagementSystem.Client.Request import Request
 from DIRAC.RequestManagementSystem.Client.Operation import Operation
@@ -164,14 +163,41 @@ class TestJobResetAgent(unittest.TestCase):
 
   def test_treat_Failed_Prod_With_Req(self):
     """ test for treatFailedProdWithReq function """
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.resetRequest.reset_mock()
+    self.jobResetAgent.dataManager.removeFile.reset_mock()
     doneRemoveRequest = self.createRequest(requestID=1, opType="RemoveFile", opStatus="Done", fileStatus="Done")
-    doneReplicateRequest = self.createRequest(requestID=1, opType="ReplicateAndRegister", opStatus="Done",
+    doneReplicateRequest = self.createRequest(requestID=2, opType="ReplicateAndRegister", opStatus="Done",
                                               fileStatus="Done")
-    failedRemoveRequest = self.createRequest(requestID=2, opType="RemoveFile", opStatus="Failed", fileStatus="Failed")
+    failedReplicateRequest = self.createRequest(requestID=3, opType="ReplicateAndRegister", opStatus="Failed",
+                                                fileStatus="Failed")
+    failedRemoveRequestID = 4
+    failedRemoveRequest = self.createRequest(requestID=failedRemoveRequestID, opType="RemoveFile",
+                                             opStatus="Failed", fileStatus="Failed")
 
     # if request is done then job should be marked failed
-    res = self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, doneRemoveRequest)
-    self.assertTrue(res["OK"])
+    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, doneRemoveRequest)
+    self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Failed")
+
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, doneReplicateRequest)
+    self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Failed")
+
+    # failed requests with removeFile operation should be reset
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, failedRemoveRequest)
+    fileLfn = failedRemoveRequest[0][0].LFN
+    self.jobResetAgent.dataManager.removeFile.assert_called_once_with([fileLfn], force=True)
+    self.jobResetAgent.resetRequest.assert_called_once_with(failedRemoveRequestID)
+    self.jobResetAgent.markJob.asset_not_called()
+
+    # failed requests with operations other than removeFile should not be reset
+    self.jobResetAgent.resetRequest.reset_mock()
+    self.jobResetAgent.dataManager.reset_mock()
+    self.jobResetAgent.treatFailedProdWithReq(self.fakeJobID, failedReplicateRequest)
+    self.jobResetAgent.dataManager.assert_not_called()
+    self.jobResetAgent.resetRequest.assert_not_called()
+    self.jobResetAgent.markJob.asset_not_called()
 
 
 if __name__ == "__main__":
