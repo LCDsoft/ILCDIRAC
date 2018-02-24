@@ -34,7 +34,7 @@ class TestJobResetAgent(unittest.TestCase):
 
     self.today = datetime(2018, 12, 25, 0, 0, 0, 0)
     self.agent.datetime = MagicMock()
-    self.agent.datetime.now.return_value=self.today
+    self.agent.datetime.now.return_value = self.today
 
     self.jobResetAgent = JobResetAgent()
     self.jobResetAgent.log = gLogger
@@ -52,6 +52,7 @@ class TestJobResetAgent(unittest.TestCase):
                                                      opStatus="Failed", fileStatus="Failed")
     self.failedRemoveRequest = self.createRequest(requestID=4, opType="RemoveFile",
                                                   opStatus="Failed", fileStatus="Failed")
+
   def tearDown(self):
     pass
 
@@ -305,7 +306,7 @@ class TestJobResetAgent(unittest.TestCase):
 
     self.jobResetAgent.jobMonClient.getInputData.return_value = S_OK([lfn1, lfn2])
     res = self.jobResetAgent.getInputDataForJobs(jobIDs)
-    self.assertEquals(res["Value"], {lfn1:jobIDs, lfn2:jobIDs})
+    self.assertEquals(res["Value"], {lfn1: jobIDs, lfn2: jobIDs})
 
   def test_reschedule_jobs(self):
     """ test for rescheduleJobs function """
@@ -390,6 +391,27 @@ class TestJobResetAgent(unittest.TestCase):
     self.assertTrue(res["OK"])
     self.jobResetAgent.jobStateUpdateClient.setJobStatus.assert_called_once_with(self.fakeJobID, fakeJobStatus,
                                                                                  fakeMinorStatus, fakeApp)
+
+  def test_execute(self):
+    """ test for execute function """
+    jobIDs = [1, 2]
+    self.jobResetAgent.getJobs = MagicMock()
+    self.jobResetAgent.checkJobs = MagicMock()
+    self.jobResetAgent.checkStagingJobs = MagicMock()
+
+    self.jobResetAgent.getJobs.return_value = S_OK(jobIDs)
+    self.jobResetAgent.execute()
+    # check if checkJobs function is called with correct arguments
+    completedProdJobCall = call(jobIDs=jobIDs, treatJobWithNoReq=self.jobResetAgent.treatCompletedProdWithNoReq,
+                                treatJobWithReq=self.jobResetAgent.treatCompletedProdWithReq)
+    failedProdJobCall = call(jobIDs=jobIDs, treatJobWithNoReq=self.jobResetAgent.treatFailedProdWithNoReq,
+                             treatJobWithReq=self.jobResetAgent.treatFailedProdWithReq)
+    completedUserJob = call(jobIDs=jobIDs, treatJobWithNoReq=self.jobResetAgent.treatUserJobWithNoReq,
+                            treatJobWithReq=self.jobResetAgent.treatUserJobWithReq)
+    calls = [completedProdJobCall, failedProdJobCall, completedUserJob]
+    self.jobResetAgent.checkJobs.assert_has_calls(calls)
+    self.jobResetAgent.checkStagingJobs.assert_called_once_with(jobIDs)
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)

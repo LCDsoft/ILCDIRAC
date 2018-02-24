@@ -192,8 +192,8 @@ class JobResetAgent(AgentModule):
 
     result = res['Value']
     for jobID in jobIDs:
-      if ((jobID not in result['Successful'] and jobID not in result['Failed']) or
-          (jobID in result['Failed'] and 'Request not found' in result['Failed'][jobID])):
+      if ((jobID not in result['Successful'] and jobID not in result['Failed']) or (jobID in result['Failed'] \
+          and 'Request not found' in result['Failed'][jobID])):
         self.log.notice("No request found for job: %s" % jobID)
         treatJobWithNoReq(jobID)
 
