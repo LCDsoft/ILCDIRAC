@@ -44,8 +44,6 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.jobManagerClient = MagicMock()
     self.jobResetAgent.jobStateUpdateClient = MagicMock()
 
-    self.jobResetAgent.markJob = MagicMock()
-
     self.doneRemoveRequest = self.createRequest(requestID=1, opType="RemoveFile",
                                                 opStatus="Done", fileStatus="Done")
     self.doneReplicateRequest = self.createRequest(requestID=2, opType="ReplicateAndRegister",
@@ -352,7 +350,6 @@ class TestJobResetAgent(unittest.TestCase):
     """ test for resetRequest function """
     fakeReqID = 1
     self.jobResetAgent.logError = MagicMock()
-    self.jobResetAgent.reqClient.resetFailedRequest = MagicMock()
     self.jobResetAgent.reqClient.resetFailedRequest.return_value = S_ERROR()
     res = self.jobResetAgent.resetRequest(fakeReqID)
     self.jobResetAgent.logError.assert_called()
@@ -369,6 +366,30 @@ class TestJobResetAgent(unittest.TestCase):
     res = self.jobResetAgent.resetRequest(fakeReqID)
     self.assertTrue(res["OK"])
     self.jobResetAgent.logError.assert_not_called()
+
+  def test_mark_job(self):
+    """ test for markJob function """
+    fakeMinorStatus = "fakeMinorStatus"
+    fakeApp = "fakeApp"
+    fakeJobStatus = "Done"
+    defaultMinorStatus = "Requests Done"
+    defaultApplication = "CompletedJobChecker"
+
+    # default minorStatus should be "Requests Done" and application should be "CompletedJobChecker"
+    self.jobResetAgent.jobStateUpdateClient.setJobStatus = MagicMock(return_value=S_ERROR())
+    res = self.jobResetAgent.markJob(self.fakeJobID, fakeJobStatus)
+    self.assertFalse(res["OK"])
+    self.jobResetAgent.jobStateUpdateClient.setJobStatus.assert_called_once_with(self.fakeJobID,
+                                                                                 fakeJobStatus,
+                                                                                 defaultMinorStatus,
+                                                                                 defaultApplication)
+
+    self.jobResetAgent.jobStateUpdateClient.setJobStatus.reset_mock()
+    self.jobResetAgent.jobStateUpdateClient.setJobStatus.return_value = S_OK()
+    res = self.jobResetAgent.markJob(self.fakeJobID, fakeJobStatus, minorStatus=fakeMinorStatus, application=fakeApp)
+    self.assertTrue(res["OK"])
+    self.jobResetAgent.jobStateUpdateClient.setJobStatus.assert_called_once_with(self.fakeJobID, fakeJobStatus,
+                                                                                 fakeMinorStatus, fakeApp)
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
