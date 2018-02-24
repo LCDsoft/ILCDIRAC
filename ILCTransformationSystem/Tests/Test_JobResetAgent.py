@@ -322,6 +322,33 @@ class TestJobResetAgent(unittest.TestCase):
     self.assertEquals(res["Value"]["Successful"], [jobShouldSuccessfullyReset])
     self.assertEquals(res["Value"]["Failed"], [jobShouldFailToReset])
 
+  def test_check_staging_jobs(self):
+    """ test for checkStagingJobs function """
+    jobShouldBeRescheduled = 1
+    jobShouldNotBeResecheduled = 2
+    stagedFile = "/ilc/file/staged"
+    notStagedFile = "/ilc/file/notStaged"
+    jobIDs = [jobShouldBeRescheduled, jobShouldNotBeResecheduled]
+
+    self.jobResetAgent.getInputDataForJobs = MagicMock()
+    self.jobResetAgent.getStagedFiles = MagicMock()
+    self.jobResetAgent.rescheduleJobs = MagicMock()
+
+    self.jobResetAgent.getInputDataForJobs.return_value = S_OK({})
+    res = self.jobResetAgent.checkStagingJobs(jobIDs)
+    self.assertTrue(res["OK"])
+    self.jobResetAgent.getInputDataForJobs.assert_called_once_with(jobIDs)
+    self.jobResetAgent.getStagedFiles.assert_not_called()
+
+    jobsToReschedule = set()
+    jobsToReschedule.add(jobShouldBeRescheduled)
+    self.jobResetAgent.getInputDataForJobs.reset_mock()
+    self.jobResetAgent.getInputDataForJobs.return_value = S_OK({stagedFile: jobShouldBeRescheduled,
+                                                                notStagedFile: jobShouldNotBeResecheduled})
+    self.jobResetAgent.getStagedFiles.return_value = S_OK([stagedFile])
+    self.jobResetAgent.checkStagingJobs(jobIDs)
+    self.jobResetAgent.rescheduleJobs.assert_called_once_with(jobsToReschedule)
+
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
   TESTRESULT = unittest.TextTestRunner(verbosity=3).run(SUITE)

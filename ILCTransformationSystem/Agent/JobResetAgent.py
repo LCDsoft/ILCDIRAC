@@ -274,7 +274,7 @@ class JobResetAgent(AgentModule):
 
     jobsToReschedule = set()
     for lfn in stagedFiles:
-      jobsToReschedule.update(inputData[lfn])
+      jobsToReschedule.add(inputData[lfn])
       self.log.notice("Jobs to be rescheduled: %s" % jobsToReschedule)
 
       if self.enabled and jobsToReschedule:
