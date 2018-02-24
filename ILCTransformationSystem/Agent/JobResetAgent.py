@@ -288,9 +288,13 @@ class JobResetAgent(AgentModule):
       return S_OK()
 
     res = self.reqClient.resetFailedRequest(requestID, allR=True)
-    if not res["OK"] or res['Value'] == "Not reset":
+    if not res["OK"]:
       self.logError("Failed to reset request", "Request ID: %s, Message: %s" % (requestID, res['Message']))
       return res
+
+    if res["Value"] == "Not reset":
+      self.logError("Failed to reset request", "Request ID: %s" % (requestID))
+      return S_ERROR()
 
     self.log.notice("Request %s is successfully reset" % requestID)
     return S_OK()

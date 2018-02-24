@@ -45,7 +45,6 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.jobStateUpdateClient = MagicMock()
 
     self.jobResetAgent.markJob = MagicMock()
-    self.jobResetAgent.resetRequest = MagicMock()
 
     self.doneRemoveRequest = self.createRequest(requestID=1, opType="RemoveFile",
                                                 opStatus="Done", fileStatus="Done")
@@ -109,7 +108,7 @@ class TestJobResetAgent(unittest.TestCase):
 
   def test_treat_User_Job_With_No_Req(self):
     """ test for treatUserJobWithNoReq function """
-    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.markJob = MagicMock()
 
     # case if getJobsMinorStatus function returns an error
     self.jobResetAgent.jobMonClient.getJobsMinorStatus.return_value = S_ERROR()
@@ -152,8 +151,8 @@ class TestJobResetAgent(unittest.TestCase):
     failedRequestID = 2
     failedRequest = self.createRequest(requestID=failedRequestID, opType="RemoveFile", opStatus="Failed",
                                        fileStatus="Failed")
-    self.jobResetAgent.markJob.reset_mock()
-    self.jobResetAgent.resetRequest.reset_mock()
+    self.jobResetAgent.resetRequest = MagicMock()
+    self.jobResetAgent.markJob = MagicMock()
 
     # if request status is 'Done' then job should also be marked 'Done'
     self.jobResetAgent.treatUserJobWithReq(self.fakeJobID, doneRequest)
@@ -176,8 +175,8 @@ class TestJobResetAgent(unittest.TestCase):
 
   def test_treat_Failed_Prod_With_Req(self):
     """ test for treatFailedProdWithReq function """
-    self.jobResetAgent.markJob.reset_mock()
-    self.jobResetAgent.resetRequest.reset_mock()
+    self.jobResetAgent.markJob = MagicMock()
+    self.jobResetAgent.resetRequest = MagicMock()
     self.jobResetAgent.dataManager.removeFile.reset_mock()
 
     # if request is done then job should be marked failed
@@ -206,14 +205,14 @@ class TestJobResetAgent(unittest.TestCase):
 
   def test_treat_Failed_Prod_With_No_Req(self):
     """ test for treatFailedProdWithNoReq function """
-    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.markJob = MagicMock()
     self.jobResetAgent.treatFailedProdWithNoReq(self.fakeJobID)
     self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Failed")
 
   def test_treat_Completed_Prod_With_Req(self):
     """ test for treatCompletedProdWithReq function """
-    self.jobResetAgent.markJob.reset_mock()
-    self.jobResetAgent.resetRequest.reset_mock()
+    self.jobResetAgent.markJob = MagicMock()
+    self.jobResetAgent.resetRequest = MagicMock()
 
     # if request is done then job should be marked Done
     self.jobResetAgent.treatCompletedProdWithReq(self.fakeJobID, self.doneRemoveRequest)
@@ -243,7 +242,7 @@ class TestJobResetAgent(unittest.TestCase):
 
   def test_treat_Completed_Prod_With_No_Req(self):
     """ test for treatCompletedProdWithNoReq function """
-    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.markJob = MagicMock()
     self.jobResetAgent.treatCompletedProdWithNoReq(self.fakeJobID)
     self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Done")
 
@@ -348,6 +347,28 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.getStagedFiles.return_value = S_OK([stagedFile])
     self.jobResetAgent.checkStagingJobs(jobIDs)
     self.jobResetAgent.rescheduleJobs.assert_called_once_with(jobsToReschedule)
+
+  def test_reset_request(self):
+    """ test for resetRequest function """
+    fakeReqID = 1
+    self.jobResetAgent.logError = MagicMock()
+    self.jobResetAgent.reqClient.resetFailedRequest = MagicMock()
+    self.jobResetAgent.reqClient.resetFailedRequest.return_value = S_ERROR()
+    res = self.jobResetAgent.resetRequest(fakeReqID)
+    self.jobResetAgent.logError.assert_called()
+    self.assertFalse(res["OK"])
+
+    self.jobResetAgent.logError.reset_mock()
+    self.jobResetAgent.reqClient.resetFailedRequest.return_value = S_OK("Not reset")
+    res = self.jobResetAgent.resetRequest(fakeReqID)
+    self.assertFalse(res["OK"])
+    self.jobResetAgent.logError.assert_called()
+
+    self.jobResetAgent.logError.reset_mock()
+    self.jobResetAgent.reqClient.resetFailedRequest.return_value = S_OK()
+    res = self.jobResetAgent.resetRequest(fakeReqID)
+    self.assertTrue(res["OK"])
+    self.jobResetAgent.logError.assert_not_called()
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)
