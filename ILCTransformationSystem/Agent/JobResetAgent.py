@@ -117,7 +117,12 @@ class JobResetAgent(AgentModule):
     appStatus = res['Value'][jobID]['ApplicationStatus']
 
     if minorStatus in FINAL_MINOR_STATES and appStatus in FINAL_APP_STATES:
-      return self.markJob(jobID, "Done")
+      res = self.markJob(jobID, "Done")
+      if res["OK"]:
+        self.accounting["User"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Job Marked Done "
+                                        "because Minor Status: '%s' and Application Status: '%s' are in Final States" %
+                                        (minorStatus, appStatus))})
+      return res
 
     self.log.warn("Something not as expected for Job Status, please check: %s" % jobID)
     return S_OK()
@@ -125,15 +130,27 @@ class JobResetAgent(AgentModule):
   def treatUserJobWithReq(self, jobID, request):
     if request.Status == "Done":
       self.log.notice("Request is Done: %s " % request)
-      return self.markJob(jobID, "Done")
+      res = self.markJob(jobID, "Done")
+      if res["OK"]:
+        self.accounting["User"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Job Marked Done "
+                                        "because associated Request with ID: %s is Done" % request.RequestID)})
+      return res
 
     self.log.notice("Request not Done: %s " % request)
-    return self.resetRequest(request.RequestID)
+    res = self.resetRequest(request.RequestID)
+    if res["OK"]:
+      self.accounting["User"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Resetting request "
+                                      "with ID: %s and Status: %s" % (request.RequestID, request.Status))})
+    return res
 
   def treatFailedProdWithReq(self, jobID, request):
     if request.Status == 'Done':
       self.log.notice('Request is Done: %s ' % request)
-      return self.markJob(jobID, "Failed")
+      res = self.markJob(jobID, "Failed")
+      if res["OK"]:
+        self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Failed", "Treatment": ("Job Marked Failed "
+                                              "because associated Request with ID: %s is Done" % request.RequestID)})
+      return res
 
     for op in request:
       lfns = "\n\t".join(lfn.LFN for lfn in op)
@@ -148,7 +165,12 @@ class JobResetAgent(AgentModule):
           if not res["OK"]:
             self.logError("Failure to remove Files", ":%s Message: %s" % (filesToRemove, res["Message"]))
 
-          return self.resetRequest(request.RequestID)
+          res = self.resetRequest(request.RequestID)
+          if res["OK"]:
+            self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Failed", "Treatment": ("Resetting "
+                                                  "request with ID: %s and Status: %s" % (request.RequestID,
+                                                  request.Status))})
+          return res
       elif op.Status == "Failed":
         self.log.notice("Can't handle operation of type: %s" % op.Type)
 
@@ -156,12 +178,21 @@ class JobResetAgent(AgentModule):
 
   def treatFailedProdWithNoReq(self, jobID):
     """ docs... """
-    return self.markJob(jobID, "Failed")
+    res = self.markJob(jobID, "Failed")
+    if res["OK"]:
+      self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Failed", "Treatment": ("Job Marked Failed"
+                                            "because no associated request is found")})
+    return res
 
   def treatCompletedProdWithReq(self, jobID, request):
     if request.Status == "Done":
       self.log.notice("Request is Done: %s " % request)
-      return self.markJob(jobID, "Done")
+      res = self.markJob(jobID, "Done")
+      if res["OK"]:
+        self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Job Marked "
+                                              "Done because associated Request with ID: %s is Done" %
+                                              request.RequestID)})
+      return res
 
     for op in request:
       self.log.info("Operation for completed job: %s, %s, %s, %s" %
@@ -170,8 +201,18 @@ class JobResetAgent(AgentModule):
         # Check if it failed because the file no longer exists
         for lfn in op:
           if "No such file" in lfn.Error:
-            return self.markJob(jobID, "Done")
-        return self.resetRequest(request.RequestID)
+            res = self.markJob(jobID, "Done")
+            if res["OK"]:
+              self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Job "
+                                                    "Marked Done because no file is found for ReplicateAndRegister "
+                                                    "operation")})
+            return res
+        res = self.resetRequest(request.RequestID)
+        if res["OK"]:
+          self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Resetting "
+                                                "request with ID: %s and Status: %s" % (request.RequestID,
+                                                 request.Status))})
+        return res
 
       elif op.Status == "Failed":
         self.log.notice("Cannot handle Operation Type: %s" % op.Type)
@@ -180,7 +221,11 @@ class JobResetAgent(AgentModule):
 
   def treatCompletedProdWithNoReq(self, jobID):
     """ docs.. """
-    return self.markJob(jobID, "Done")
+    res = self.markJob(jobID, "Done")
+    if res["OK"]:
+      self.accounting["Completed"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Job Marked "
+                                           "Done because no associated request is found")})
+    return res
 
   def checkJobs(self, jobIDs, treatJobWithNoReq, treatJobWithReq):
     """ docs... """
@@ -279,6 +324,10 @@ class JobResetAgent(AgentModule):
 
       if self.enabled and jobsToReschedule:
         res = self.rescheduleJobs(jobsToReschedule)
+        if res["OK"]:
+          for jobID in res["Value"]["Successful"]:
+            self.accounting["Staging"].append({"JobID": jobID, "JobStatus": "Staging", "Treatment": (
+                                               "Job Rescheduled because associated files are already Staged")})
 
     return S_OK()
 
