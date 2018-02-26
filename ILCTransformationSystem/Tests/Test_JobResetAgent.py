@@ -78,7 +78,9 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.am_getOption = MagicMock()
     getOptionCalls = [call('EnableFlag', True),
                       call('MailTo', self.jobResetAgent.addressTo),
-                      call('MailFrom', self.jobResetAgent.addressFrom)]
+                      call('MailFrom', self.jobResetAgent.addressFrom),
+                      call('UserJobs', self.jobResetAgent.userJobTypes),
+                      call('ProdJobs', self.jobResetAgent.prodJobTypes)]
 
     self.jobResetAgent.beginExecution()
     self.jobResetAgent.am_setOption.assert_any_call('shifterProxy', 'DataManager')

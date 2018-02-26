@@ -84,7 +84,8 @@ class JobResetAgent(AgentModule):
     self.enabled = self.am_getOption('EnableFlag', True)
     self.addressTo = self.am_getOption('MailTo', self.addressTo)
     self.addressFrom = self.am_getOption('MailFrom', self.addressFrom)
-
+    self.userJobTypes = self.am_getOption('UserJobs', self.userJobTypes)
+    self.prodJobTypes = self.am_getOption('ProdJobs', self.prodJobTypes)
     self.accounting.clear()
 
     return S_OK()
