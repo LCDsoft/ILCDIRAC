@@ -412,6 +412,41 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.checkJobs.assert_has_calls(calls)
     self.jobResetAgent.checkStagingJobs.assert_called_once_with(jobIDs)
 
+  def test_send_notification(self):
+    """ test for sendNotification function """
+    self.jobResetAgent.errors = []
+    self.jobResetAgent.accounting = {}
+
+    # send mail should not be called if there are no errors and accounting information
+    self.jobResetAgent.sendNotification()
+    self.jobResetAgent.nClient.sendMail.assert_not_called()
+
+    # send mail should be called if there are errors but no accounting information
+    self.jobResetAgent.errors = ["some error"]
+    self.jobResetAgent.sendNotification()
+    self.jobResetAgent.nClient.sendMail.assert_called()
+
+    # send email should be called if there is accounting information but no errors
+    self.jobResetAgent.nClient.sendMail.reset_mock()
+    self.jobResetAgent.errors = []
+    self.jobResetAgent.accounting = {"User": [{"JobID": 123, "JobStatus": "Failed", "Treatment": "reset request"}],
+                                     "Prod": [{"JobID": 124, "JobStatus": "Failed", "Treatment": "reset request"}]}
+    self.jobResetAgent.sendNotification()
+    self.jobResetAgent.nClient.sendMail.assert_called()
+
+    # try sending email to all addresses even if we get error for sending email to some address
+    self.jobResetAgent.nClient.sendMail.reset_mock()
+    self.jobResetAgent.errors = ["some error"]
+    self.jobResetAgent.addressTo = ["name1@cern.ch", "name2@cern.ch"]
+    self.jobResetAgent.nClient.sendMail.return_value = S_ERROR()
+    self.jobResetAgent.sendNotification()
+    self.assertEquals(len(self.jobResetAgent.nClient.sendMail.mock_calls),
+                      len(self.jobResetAgent.addressTo))
+
+    # accounting dict and errors list should be cleared after notification is sent
+    self.assertEquals(self.jobResetAgent.accounting, {})
+    self.assertEquals(self.jobResetAgent.errors, [])
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestJobResetAgent)

@@ -75,8 +75,36 @@ class JobResetAgent(AgentModule):
     return S_OK()
 
   def sendNotification(self):
-    """ sends email notification about jobs reset"""
-    pass
+    """ sends email notification about job treatments """
+    if not(self.errors or self.accounting):
+      return S_OK()
+
+    emailBody = ""
+    rows = []
+    for jobType, val in self.accounting.iteritems():
+      emailBody += "\nTotal number of %s Jobs treated: %s\n\n" % (jobType, len(val))
+      for job in val:
+        rows.append([[str(job['JobID'])], [job['JobStatus']], [job['Treatment']]])
+
+      if rows:
+        columns = ["Job ID", "Job Status", "Treatment"]
+        emailBody += printTable(columns, rows, printOut=False, numbering=False, columnSeparator=' | ')
+        rows = []
+
+    if self.errors:
+      emailBody += "\n\nErrors:"
+      emailBody += "\n".join(self.errors)
+
+    self.log.notice(emailBody)
+    for address in self.addressTo:
+      res = self.nClient.sendMail(address, self.emailSubject, emailBody, self.addressFrom, localAttempt=False)
+      if not res['OK']:
+        self.log.error("Failure to send Email notification to ", address)
+        continue
+
+    self.errors = []
+    self.accounting.clear()
+    return S_OK()
 
   def logError(self, errStr, varMsg=''):
     self.log.error(errStr, varMsg)
@@ -148,8 +176,9 @@ class JobResetAgent(AgentModule):
       self.log.notice('Request is Done: %s ' % request)
       res = self.markJob(jobID, "Failed")
       if res["OK"]:
-        self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Failed", "Treatment": ("Job Marked Failed "
-                                              "because associated Request with ID: %s is Done" % request.RequestID)})
+        self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Failed with 'Pending Requests'",
+                                              "Treatment": ("Job Marked Failed because associated Request "
+                                              "with ID: %s is Done" % request.RequestID)})
       return res
 
     for op in request:
@@ -167,9 +196,9 @@ class JobResetAgent(AgentModule):
 
           res = self.resetRequest(request.RequestID)
           if res["OK"]:
-            self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Failed", "Treatment": ("Resetting "
-                                                  "request with ID: %s and Status: %s" % (request.RequestID,
-                                                  request.Status))})
+            self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Failed with 'Pending Requests'",
+                                                  "Treatment": ("Resetting request with ID: %s and Status: %s"
+                                                  % (request.RequestID, request.Status))})
           return res
       elif op.Status == "Failed":
         self.log.notice("Can't handle operation of type: %s" % op.Type)
@@ -180,8 +209,10 @@ class JobResetAgent(AgentModule):
     """ docs... """
     res = self.markJob(jobID, "Failed")
     if res["OK"]:
-      self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Failed", "Treatment": ("Job Marked Failed"
-                                            "because no associated request is found")})
+      self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Failed with 'Pending Requests'",
+                                            "Treatment": ("Job Marked Failed with minor status 'Requests Done' "
+                                            "and application status 'CompletedJobChecker' because no associated "
+                                            "request is found")})
     return res
 
   def treatCompletedProdWithReq(self, jobID, request):
@@ -408,5 +439,8 @@ class JobResetAgent(AgentModule):
         self.checkStagingJobs(stagingJobs)
       else:
         self.log.notice("No staging jobs found")
+
+    # send email notification
+    self.sendNotification()
 
     return S_OK()
