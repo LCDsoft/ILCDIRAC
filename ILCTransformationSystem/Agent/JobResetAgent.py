@@ -1,5 +1,20 @@
 """
-documentation
+Job Reset Agent takes care of the following cases
+
+* Finds jobs stuck in staging status and reschedules them if associated files are already staged
+* Finds production jobs in completed status:
+  * Marks a Job Done if request status is Done
+  * Marks a Job Done if no request is found
+  * Marks a Job Done if ReplicateAndRegister operation has an error "No such file"
+  * Resets Failed requests with ReplicateAndRegister operations if error is other than "No such file"
+* Finds production jobs in failed status with minor status "Pending Requests"
+  * Marks a Job Failed with minor status "Requests Done" if request status is Done
+  * Marks a Job Failed with minor status "Requests Done" if no request is found
+  * Resets Failed RemoveFile requests
+* Finds user jobs in completed status:
+  * Marks a Job Done if there is no request and minorStatus and appStatus are in final states
+  * Marks a Job Done if request status is Done
+  * Resets requests if the request status is other than Done
 """
 
 from collections import defaultdict
@@ -76,6 +91,7 @@ class JobResetAgent(AgentModule):
 
   def sendNotification(self):
     """ sends email notification about job treatments """
+
     if not(self.errors or self.accounting):
       return S_OK()
 
@@ -111,7 +127,9 @@ class JobResetAgent(AgentModule):
     self.errors.append(errStr + varMsg)
 
   def getJobs(self, status, jobType=None, minorStatus=None):
-    """ docs... """
+    """ returns jobs with a given status, job type, minor status and
+        lastUpdateTime older than 1 day """
+
     attrDict = dict(Status=status)
     if jobType:
       attrDict['JobType'] = jobType
@@ -129,6 +147,8 @@ class JobResetAgent(AgentModule):
     return S_OK(jobIDs)
 
   def treatUserJobWithNoReq(self, jobID):
+    """ treatment for user jobs in completed status which don't have a request in RMS """
+
     self.log.notice("No request found for job: %s" % jobID)
     res = self.jobMonClient.getJobsMinorStatus([jobID])
     if not res['OK']:
@@ -156,6 +176,8 @@ class JobResetAgent(AgentModule):
     return S_OK()
 
   def treatUserJobWithReq(self, jobID, request):
+    """ treatment for user jobs in completed status which have a request in RMS """
+
     if request.Status == "Done":
       self.log.notice("Request is Done: %s " % request)
       res = self.markJob(jobID, "Done")
@@ -172,6 +194,7 @@ class JobResetAgent(AgentModule):
     return res
 
   def treatFailedProdWithReq(self, jobID, request):
+    """ treatment for production jobs in failed status which have a request in RMS """
     if request.Status == 'Done':
       self.log.notice('Request is Done: %s ' % request)
       res = self.markJob(jobID, "Failed")
@@ -206,7 +229,8 @@ class JobResetAgent(AgentModule):
     return S_OK()
 
   def treatFailedProdWithNoReq(self, jobID):
-    """ docs... """
+    """ treatment for production jobs in failed status which don't have a request in RMS """
+
     res = self.markJob(jobID, "Failed")
     if res["OK"]:
       self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Failed with 'Pending Requests'",
@@ -216,6 +240,8 @@ class JobResetAgent(AgentModule):
     return res
 
   def treatCompletedProdWithReq(self, jobID, request):
+    """ treatment for production jobs in completed status which have a request in RMS """
+
     if request.Status == "Done":
       self.log.notice("Request is Done: %s " % request)
       res = self.markJob(jobID, "Done")
@@ -251,7 +277,7 @@ class JobResetAgent(AgentModule):
     return S_OK()
 
   def treatCompletedProdWithNoReq(self, jobID):
-    """ docs.. """
+    """ marks the job done  """
     res = self.markJob(jobID, "Done")
     if res["OK"]:
       self.accounting["Completed"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Job Marked "
@@ -259,7 +285,7 @@ class JobResetAgent(AgentModule):
     return res
 
   def checkJobs(self, jobIDs, treatJobWithNoReq, treatJobWithReq):
-    """ docs... """
+    """ executes treatment functions for jobs with and without requests """
 
     res = self.reqClient.readRequestsForJobs(jobIDs)
     if not res['OK']:
@@ -281,7 +307,7 @@ class JobResetAgent(AgentModule):
     return S_OK()
 
   def getStagedFiles(self, lfns):
-    """ docs... """
+    """ returns a list of staged files """
     if not lfns:
       self.log.notice("No LFNs passed to check staging status")
       return S_OK()
@@ -298,12 +324,13 @@ class JobResetAgent(AgentModule):
 
   @staticmethod
   def cleanLFN(lfn):
-    """ remove prefix from lfn"""
+    """ remove prefix from lfn """
     if lfn.lower().startswith('lfn'):
       lfn = lfn[4:]
     return lfn
 
   def getInputDataForJobs(self, jobList):
+    """ returns the input data for a given list of jobIDs """
     inputData = defaultdict(list)
     for jobID in jobList:
       res = self.jobMonClient.getInputData(jobID)
@@ -318,7 +345,7 @@ class JobResetAgent(AgentModule):
     return S_OK(inputData)
 
   def rescheduleJobs(self, jobsToReschedule):
-    """reset a list of jobs, reset the job to not eat up the reschedule limit"""
+    """ resets a list of jobs """
     result = dict(Failed=[], Successful=[])
     for job in jobsToReschedule:
       res = self.jobManagerClient.resetJob(job)
@@ -332,7 +359,8 @@ class JobResetAgent(AgentModule):
     return S_OK(result)
 
   def checkStagingJobs(self, jobList):
-    """gets staging jobs, gets input data and then checks stager status for jobs"""
+    """ gets input data and stager status, then reschedules jobs whose
+        associated files are already staged """
 
     res = self.getInputDataForJobs(jobList)
     inputData = res['Value']
@@ -363,7 +391,7 @@ class JobResetAgent(AgentModule):
     return S_OK()
 
   def resetRequest(self, requestID):
-    """reset requests given the requestID"""
+    """ resets failed requests for a given requestID """
     if not self.enabled:
       return S_OK()
 
@@ -380,7 +408,7 @@ class JobResetAgent(AgentModule):
     return S_OK()
 
   def markJob(self, jobID, status, minorStatus="Requests Done", application="CompletedJobChecker"):
-    """ docs here..."""
+    """ marks a job with given status, minorStatus and application """
 
     self.log.notice("Marking job %s as %s" % (jobID, status))
 
@@ -389,7 +417,7 @@ class JobResetAgent(AgentModule):
 
     res = self.jobStateUpdateClient.setJobStatus(jobID, status, minorStatus, application)
     if not res["OK"]:
-      self.logError("Failed to set mark", "Job: %s as %s" % (jobID, status))
+      self.logError("Failed to mark ", "Job: %s as %s" % (jobID, status))
       return res
 
     self.log.notice("Job %s is successfully maked as %s" % (jobID, status))
