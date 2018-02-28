@@ -26,16 +26,17 @@ __RCSID__ = "$Id$"
 # # imports
 import datetime
 import os
-import signal
 
 # # from DIRAC
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gConfig
 from DIRAC.Core.Base.AgentModule import AgentModule
-from DIRAC.Core.Utilities.Subprocess import systemCall
+from DIRAC.FrameworkSystem.Client.SystemAdministratorClient import SystemAdministratorClient
+from DIRAC.ConfigurationSystem.Client.Helpers.Path import cfgPath
 
 AGENT_NAME = "RequestManagement/RestartReqExeAgent"
 
 #Define units
+HOUR = 3600
 MINUTES = 60
 SECONDS = 1
 
@@ -45,84 +46,83 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
   .. class:: RestartReqExeAgent
 
   """
+  def initialize(self):
 
-  def initialize( self ):
-    """ initialization """
+    self.setup = self.am_getOption("Setup", "Production")
+    self.enabled = self.am_getOption("Enabled")
+    self.diracLocation = os.environ.get("DIRAC", "/opt/dirac/pro")
 
-    self.maxLogAge = int(self.am_getOption( "MaxLogAge", 60 ))*MINUTES
-    self.agentNames = self.am_getOption( "AgentNames", ['RequestExecutingAgent'] )
-    self.enabled = self.am_getOption( "Enabled" )
+    self.sysAdminClient = SystemAdministratorClient("localhost")
+
+    res = self.getAllRunningAgents()
+    if not res["OK"]:
+      return S_ERROR("Failure to get running agents")
+    self.agents = res["Value"]
+
     return S_OK()
+
+  def getAllRunningAgents(self):
+    res = self.sysAdminClient.getOverallStatus()
+    if not res["OK"]:
+      self.log.error("Failure to get agents from system administrator client", res["Message"])
+      return res
+
+    val = res['Value']['Agents']
+    runningAgents = {}
+    for system, agents in  val.iteritems():
+      for agentName, agentInfo in agents.iteritems():
+        if agentInfo['Setup'] and agentInfo['Installed'] and agentInfo['RunitStatus'] == 'Run':
+          confPath = cfgPath('/Systems/'+system+'/'+self.setup+'/Agents/'+agentName+'/PollingTime')
+          runningAgents["PollingTime"] = gConfig.getValue(confPath, HOUR)
+          runningAgents["LogFileLocation"] = os.path.join(self.diracLocation, 'runit', system, agentName,
+                                                          'log', 'current')
+          runningAgents["System"] = system
+
+    return S_OK(runningAgents)
 
   def execute( self ):
     """ execution in one cycle """
     ok = True
-    for agentName in self.agentNames:
-      res = self._checkAgent( agentName )
+    for agentName, val in self.agents.iteritems():
+      res = self._checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["System"])
       if not res['OK']:
-        self.log.error( "Failure when checking agent", "%s, %s" %( agentName, res['Message'] ) )
+        self.log.error("Failure when checking agent", "%s, %s" % (agentName, res['Message']))
         ok = False
 
     if not ok:
-      return S_ERROR( "Error during this cycle, check log" )
+      return S_ERROR("Error during this cycle, check log")
+
     return S_OK()
 
-  def _checkAgent( self, agentName ):
-    """Check if the given agent is still running
-    we are assuming this is an agent in the RequestManagementSystem
-    """
-    diracLocation = os.environ.get( "DIRAC", "/opt/dirac/pro" )
-    currentLogLocation = os.path.join( diracLocation, 'runit', 'RequestManagement', agentName, 'log', 'current' )
-    self.log.verbose( "Current Log File location: %s " % currentLogLocation )
+  def _checkAgent(self, agentName, pollingTime, currentLogLocation, system):
+    """ docs... """
+
+    self.log.info("Checking Agent: %s" % agentName)
+    self.log.info("Polling Time: %s" % pollingTime)
+    self.log.info("Current Log File location: %s" % currentLogLocation)
 
     ## get the age of the current log file
     lastAccessTime = 0
     try:
-      lastAccessTime = os.path.getmtime( currentLogLocation )
-      lastAccessTime = datetime.datetime.fromtimestamp( lastAccessTime )
+      lastAccessTime = os.path.getmtime(currentLogLocation)
+      lastAccessTime = datetime.datetime.fromtimestamp(lastAccessTime)
     except OSError as e:
-      self.log.error( "Failed to access current log file", str(e) )
-      return S_ERROR( "Failed to access current log file" )
+      self.log.error("Failed to access current log file", str(e))
+      return S_ERROR("Failed to access current log file")
 
     now = datetime.datetime.now()
     age = now - lastAccessTime
 
-    self.log.info( "Current log file for %s is %d minutes old" % ( agentName, ( age.seconds / MINUTES ) ) )
+    self.log.info("Current log file for %s is %d minutes old" % (agentName, (age.seconds/MINUTES)))
 
-    if age.seconds > self.maxLogAge:
-      self.log.info( "Current log file is too old!" )
-      res = self.__getPIDs( agentName )
-      if not res['OK']:
+    maxLogAge = max(pollingTime+HOUR, 2*HOUR)
+    if age.seconds > maxLogAge:
+      self.log.info("Current log file is too old! Restarting Agent %s" % agentName)
+      res = self.sysAdminClient.restartComponent(system, agentName)
+      if not res["OK"]:
+        self.log.error("Failure to restart Agent", "%s %s" % (agentName, res["Message"]))
         return res
-      pids = res['Value']
 
-      self.log.info( "Found PIDs for %s: %s" % ( agentName, pids ) )
-      ## kill the agent
-      if self.enabled:
-        for pid in pids:
-          os.kill( pid, signal.SIGKILL )
-          self.log.info( "Killed the %s Agent with PID %s" % (agentName, pid) )
-      else:
-        self.log.info( "Would have killed the %s Agent" % agentName )
-
+      self.log.info("Agent %s has been successfully restarted" % agentName)
 
     return S_OK()
-
-
-  def __getPIDs( self, agentName ):
-    """return PID for agentName"""
-
-    ## Whitespaces around third argument are mandatory to only match the given agentName
-    pidRes = systemCall( 10, [ 'pgrep', '-f', ' RequestManagement/%s ' % agentName ] )
-    if not pidRes['OK']:
-      return pidRes
-    pid = pidRes['Value'][1].strip()
-    pid = pid.split("\n")
-    pids = []
-    for pi in pid:
-      try:
-        pids.append( int( pi ) )
-      except ValueError as e:
-        self.log.error( "Could not create int from PID: ", "PID %s: %s" % (pi, e) )
-
-    return S_OK( pids )
