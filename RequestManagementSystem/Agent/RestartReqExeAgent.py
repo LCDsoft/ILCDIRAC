@@ -73,10 +73,10 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
       for agentName, agentInfo in agents.iteritems():
         if agentInfo['Setup'] and agentInfo['Installed'] and agentInfo['RunitStatus'] == 'Run':
           confPath = cfgPath('/Systems/'+system+'/'+self.setup+'/Agents/'+agentName+'/PollingTime')
-          runningAgents["PollingTime"] = gConfig.getValue(confPath, HOUR)
-          runningAgents["LogFileLocation"] = os.path.join(self.diracLocation, 'runit', system, agentName,
-                                                          'log', 'current')
-          runningAgents["System"] = system
+          runningAgents[agentName]["PollingTime"] = gConfig.getValue(confPath, HOUR)
+          runningAgents[agentName]["LogFileLocation"] = os.path.join(self.diracLocation, 'runit', system, agentName,
+                                                                     'log', 'current')
+          runningAgents[agentName]["System"] = system
 
     return S_OK(runningAgents)
 
