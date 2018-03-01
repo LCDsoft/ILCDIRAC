@@ -26,6 +26,7 @@ __RCSID__ = "$Id$"
 # # imports
 import datetime
 import os
+import psutil
 
 # # from DIRAC
 from DIRAC import S_OK, S_ERROR, gConfig
@@ -76,15 +77,18 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
           runningAgents[agentName]["PollingTime"] = gConfig.getValue(confPath, HOUR)
           runningAgents[agentName]["LogFileLocation"] = os.path.join(self.diracLocation, 'runit', system, agentName,
                                                                      'log', 'current')
-          runningAgents[agentName]["System"] = system
+          runningAgents[agentName]["PID"] = agentInfo["PID"]
 
     return S_OK(runningAgents)
+
+  def on_terminate(self, agentName, process):
+    self.log.info("%s's process with ID: %s has been terminated successfully" % (agentName, process.pid))
 
   def execute( self ):
     """ execution in one cycle """
     ok = True
     for agentName, val in self.agents.iteritems():
-      res = self._checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["System"])
+      res = self._checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["PID"])
       if not res['OK']:
         self.log.error("Failure when checking agent", "%s, %s" % (agentName, res['Message']))
         ok = False
@@ -94,7 +98,7 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
 
     return S_OK()
 
-  def _checkAgent(self, agentName, pollingTime, currentLogLocation, system):
+  def _checkAgent(self, agentName, pollingTime, currentLogLocation, pid):
     """ docs... """
 
     self.log.info("Checking Agent: %s" % agentName)
@@ -123,11 +127,20 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
         self.log.info("Restarting agents is disabled, please restart %s manually" % agentName)
         return S_OK()
 
-      res = self.sysAdminClient.restartComponent(system, agentName)
-      if not res["OK"]:
-        self.log.error("Failure to restart Agent", "%s %s" % (agentName, res["Message"]))
-        return res
+      try:
+        agentProc = psutil.Process(int(pid))
+        processesToTerminate = agentProc.children(recursive=True)
+        processesToTerminate.append(agentProc)
 
-      self.log.info("Agent %s has been successfully restarted" % agentName)
+        for proc in processesToTerminate:
+          proc.terminate()
+
+        gone, alive = psutil.wait_procs(processesToTerminate, timeout=5, callback=self.on_terminate)
+        for proc in alive:
+          self.log.info("Forcefully killing process %s" % proc.pid)
+          proc.kill()
+
+      except psutil.Error as err:
+        self.log.error("Exception occurred in kill processes for", "%s: %s" % (agentName, err))
 
     return S_OK()
