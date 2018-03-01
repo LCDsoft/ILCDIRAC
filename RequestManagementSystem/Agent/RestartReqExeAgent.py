@@ -49,7 +49,7 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
   def initialize(self):
 
     self.setup = self.am_getOption("Setup", "Production")
-    self.enabled = self.am_getOption("Enabled")
+    self.enabled = self.am_getOption("Enabled", False)
     self.diracLocation = os.environ.get("DIRAC", "/opt/dirac/pro")
 
     self.sysAdminClient = SystemAdministratorClient("localhost")
@@ -117,7 +117,12 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
 
     maxLogAge = max(pollingTime+HOUR, 2*HOUR)
     if age.seconds > maxLogAge:
-      self.log.info("Current log file is too old! Restarting Agent %s" % agentName)
+      self.log.info("Current log file is too old for Agent %s" % agentName)
+
+      if not self.enabled:
+        self.log.info("Restarting agents is disabled, please restart %s manually" % agentName)
+        return S_OK()
+
       res = self.sysAdminClient.restartComponent(system, agentName)
       if not res["OK"]:
         self.log.error("Failure to restart Agent", "%s %s" % (agentName, res["Message"]))
