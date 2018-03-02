@@ -48,7 +48,7 @@ class TestRestartReqExeAgent(unittest.TestCase):
 
     self.restartAgent.getAllRunningAgents = MagicMock(return_value=S_OK())
     self.restartAgent.beginExecution()
-    self.restartAgent.am_getOption.assert_has_calls(getOptionCalls)
+    self.restartAgent.am_getOption.assert_has_calls(getOptionCalls, any_order=True)
     self.restartAgent.getAllRunningAgents.assert_called()
 
     # accounting dictionary should be cleared
@@ -119,6 +119,32 @@ class TestRestartReqExeAgent(unittest.TestCase):
       self.assertTrue('LogFileLocation' in res["Value"][agent])
       self.assertTrue('PID' in res["Value"][agent])
 
+  def test_execute(self):
+    """ test for execute function """
+    agentOne = 'FTS3Agent'
+    agentTwo = 'FTSAgent'
+    agentOnePollingTime = 100
+    agentTwoPollingTime = 200
+    agentOneLogLoc = '/fake/loc1'
+    agentTwoLogLoc = '/fake/loc2'
+    agentOnePID = '12345'
+    agentTwoPID = '54321'
+
+    self.restartAgent.agents = {agentOne: {'PollingTime': agentOnePollingTime,
+                                           'LogFileLocation': agentOneLogLoc,
+                                           'PID': agentOnePID},
+                                agentTwo: {'PollingTime': agentTwoPollingTime,
+                                           'LogFileLocation': agentTwoLogLoc,
+                                           'PID': agentTwoPID}}
+
+    self.restartAgent._checkAgent = MagicMock(side_effect=[S_OK(), S_ERROR()])
+
+    res = self.restartAgent.execute()
+    self.assertFalse(res["OK"])
+    calls = [call(agentOne, agentOnePollingTime, agentOneLogLoc, agentOnePID),
+             call(agentTwo, agentTwoPollingTime, agentTwoLogLoc, agentTwoPID)]
+
+    self.restartAgent._checkAgent.assert_has_calls(calls, any_order=True)
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestRestartReqExeAgent)
