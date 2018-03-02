@@ -21,19 +21,22 @@ the agent so that it is restarted automatically.
 
 
 """
-__RCSID__ = "$Id$"
 
-# # imports
+# imports
 import datetime
 import os
 import psutil
 
-# # from DIRAC
+from collections import defaultdict
+
+# from DIRAC
 from DIRAC import S_OK, S_ERROR, gConfig
 from DIRAC.Core.Base.AgentModule import AgentModule
 from DIRAC.FrameworkSystem.Client.SystemAdministratorClient import SystemAdministratorClient
 from DIRAC.ConfigurationSystem.Client.Helpers.Path import cfgPath
+from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 
+__RCSID__ = "$Id$"
 AGENT_NAME = "RequestManagement/RestartReqExeAgent"
 
 #Define units
@@ -42,18 +45,27 @@ MINUTES = 60
 SECONDS = 1
 
 ########################################################################
-class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
-  """
-  .. class:: RestartReqExeAgent
+class RestartReqExeAgent(AgentModule):
+  """ RestartReqExeAgent class """
 
-  """
-  def initialize(self):
+  def __init__(self, *args, **kwargs):
+    AgentModule.__init__(self, *args, **kwargs)
+    self.name = 'RestartReqExeAgent'
 
-    self.setup = self.am_getOption("Setup", "Production")
-    self.enabled = self.am_getOption("Enabled", False)
-    self.diracLocation = os.environ.get("DIRAC", "/opt/dirac/pro")
+    self.setup = "Production"
+    self.enabled = False
+    self.diracLocation = "/opt/dirac/pro"
 
     self.sysAdminClient = SystemAdministratorClient("localhost")
+    self.nClient = NotificationClient()
+    self.agents = list()
+
+
+  def beginExecution(self):
+    """ Reload the configurations before every cycle """
+    self.setup = self.am_getOption("Setup", self.setup)
+    self.enabled = self.am_getOption("Enabled", self.enabled)
+    self.diracLocation = os.environ.get("DIRAC", self.diracLocation)
 
     res = self.getAllRunningAgents()
     if not res["OK"]:
@@ -61,6 +73,7 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
     self.agents = res["Value"]
 
     return S_OK()
+
 
   def getAllRunningAgents(self):
     res = self.sysAdminClient.getOverallStatus()
@@ -141,6 +154,6 @@ class RestartReqExeAgent( AgentModule ): #pylint: disable=R0904
           proc.kill()
 
       except psutil.Error as err:
-        self.log.error("Exception occurred in kill processes for", "%s: %s" % (agentName, err))
+        self.log.error("Exception occurred in terminating processes for", "%s: %s" % (agentName, err))
 
     return S_OK()
