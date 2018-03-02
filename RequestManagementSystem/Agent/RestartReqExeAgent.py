@@ -139,6 +139,21 @@ class RestartReqExeAgent(AgentModule):
 
     return S_OK()
 
+  @staticmethod
+  def getLastAccessTime(logFileLocation):
+    """ return the age of log file """
+
+    lastAccessTime = 0
+    try:
+      lastAccessTime = os.path.getmtime(logFileLocation)
+      lastAccessTime = datetime.datetime.fromtimestamp(lastAccessTime)
+    except OSError as e:
+      return S_ERROR(str(e))
+
+    now = datetime.datetime.now()
+    age = now - lastAccessTime
+    return S_OK(age)
+
   def _checkAgent(self, agentName, pollingTime, currentLogLocation, pid):
     """ checks the age of agent's log file, if it is too old then restarts the agent """
 
@@ -146,18 +161,12 @@ class RestartReqExeAgent(AgentModule):
     self.log.info("Polling Time: %s" % pollingTime)
     self.log.info("Current Log File location: %s" % currentLogLocation)
 
-    ## get the age of the current log file
-    lastAccessTime = 0
-    try:
-      lastAccessTime = os.path.getmtime(currentLogLocation)
-      lastAccessTime = datetime.datetime.fromtimestamp(lastAccessTime)
-    except OSError as e:
-      self.logError("Failed to access current log file for", "%s Error: %s" % (agentName, str(e)))
-      return S_ERROR("Failed to access current log file")
+    res = self.getLastAccessTime(currentLogLocation)
+    if not res["OK"]:
+      self.logError("Failed to access current log file for", "%s Message: %s" % (agentName, res["Message"]))
+      return res
 
-    now = datetime.datetime.now()
-    age = now - lastAccessTime
-
+    age = res["Value"]
     self.log.info("Current log file for %s is %d minutes old" % (agentName, (age.seconds/MINUTES)))
 
     maxLogAge = max(pollingTime+HOUR, 2*HOUR)
