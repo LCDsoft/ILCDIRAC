@@ -54,6 +54,7 @@ class TestRestartReqExeAgent(unittest.TestCase):
     # accounting dictionary should be cleared
     self.assertEquals(self.restartAgent.accounting, {})
 
+
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestRestartReqExeAgent)
   TESTRESULT = unittest.TextTestRunner(verbosity=3).run(SUITE)

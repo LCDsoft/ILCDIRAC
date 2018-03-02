@@ -29,6 +29,7 @@ HOUR = 3600
 MINUTES = 60
 SECONDS = 1
 
+
 class RestartReqExeAgent(AgentModule):
   """ RestartReqExeAgent class """
 
@@ -110,10 +111,10 @@ class RestartReqExeAgent(AgentModule):
 
     val = res['Value']['Agents']
     runningAgents = {}
-    for system, agents in  val.iteritems():
+    for system, agents in val.iteritems():
       for agentName, agentInfo in agents.iteritems():
         if agentInfo['Setup'] and agentInfo['Installed'] and agentInfo['RunitStatus'] == 'Run':
-          confPath = cfgPath('/Systems/'+system+'/'+self.setup+'/Agents/'+agentName+'/PollingTime')
+          confPath = cfgPath('/Systems/' + system + '/' + self.setup + '/Agents/' + agentName + '/PollingTime')
           runningAgents[agentName]["PollingTime"] = gConfig.getValue(confPath, HOUR)
           runningAgents[agentName]["LogFileLocation"] = os.path.join(self.diracLocation, 'runit', system, agentName,
                                                                      'log', 'current')
@@ -167,12 +168,12 @@ class RestartReqExeAgent(AgentModule):
       return res
 
     age = res["Value"]
-    self.log.info("Current log file for %s is %d minutes old" % (agentName, (age.seconds/MINUTES)))
+    self.log.info("Current log file for %s is %d minutes old" % (agentName, (age.seconds / MINUTES)))
 
-    maxLogAge = max(pollingTime+HOUR, 2*HOUR)
+    maxLogAge = max(pollingTime + HOUR, 2 * HOUR)
     if age.seconds > maxLogAge:
       self.log.info("Current log file is too old for Agent %s" % agentName)
-      self.accounting[agentName]["LogAge"] = age.seconds/MINUTES
+      self.accounting[agentName]["LogAge"] = age.seconds / MINUTES
 
       if not self.enabled:
         self.log.info("Restarting agents is disabled, please restart %s manually" % agentName)
