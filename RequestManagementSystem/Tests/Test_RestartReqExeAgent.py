@@ -88,6 +88,37 @@ class TestRestartReqExeAgent(unittest.TestCase):
     self.assertEquals(self.restartAgent.accounting, {})
     self.assertEquals(self.restartAgent.errors, [])
 
+  def test_get_all_running_agents(self):
+    """ test for getAllRunningAgents function """
+    self.restartAgent.sysAdminClient.getOverallStatus = MagicMock()
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_ERROR()
+
+    res = self.restartAgent.getAllRunningAgents()
+    self.assertFalse(res["OK"])
+
+    agents = {'Agents': {'DataManagement': {'FTS3Agent': {'MEM': '0.3', 'Setup': True, 'PID': '18128',
+                                            'RunitStatus': 'Run', 'Module': 'CleanFTSDBAgent',
+                                            'Installed': True, 'VSZ': '375576', 'Timeup': '29841',
+                                            'CPU': '0.0', 'RSS': '55452'}},
+                         'Framework': {'ErrorMessageMonitor': {'MEM': '0.3', 'Setup': True, 'PID': '2303',
+                                                               'RunitStatus': 'Run', 'Module': 'ErrorMessageMonitor',
+                                                               'Installed': True, 'VSZ': '380392', 'Timeup': '3380292',
+                                                               'CPU': '0.0', 'RSS': '56172'}}}}
+    agents['Agents']['DataManagement']['FTSAgent'] = {'Setup': False, 'PID': 0, 'RunitStatus': 'Unknown',
+                                                      'Module': 'FTSAgent', 'Installed': False, 'Timeup': 0}
+
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(agents)
+    res = self.restartAgent.getAllRunningAgents()
+
+    # only insalled agents with RunitStatus RUN should be returned
+    self.assertTrue('FTSAgent' not in res["Value"])
+    self.assertTrue('FTS3Agent' in res["Value"])
+    self.assertTrue('ErrorMessageMonitor' in res["Value"])
+    for agent in res["Value"]:
+      self.assertTrue('PollingTime' in res["Value"][agent])
+      self.assertTrue('LogFileLocation' in res["Value"][agent])
+      self.assertTrue('PID' in res["Value"][agent])
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestRestartReqExeAgent)

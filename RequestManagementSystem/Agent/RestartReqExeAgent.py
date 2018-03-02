@@ -110,7 +110,7 @@ class RestartReqExeAgent(AgentModule):
       return res
 
     val = res['Value']['Agents']
-    runningAgents = {}
+    runningAgents = defaultdict(dict)
     for system, agents in val.iteritems():
       for agentName, agentInfo in agents.iteritems():
         if agentInfo['Setup'] and agentInfo['Installed'] and agentInfo['RunitStatus'] == 'Run':
