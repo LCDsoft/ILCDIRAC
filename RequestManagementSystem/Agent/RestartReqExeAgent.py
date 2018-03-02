@@ -23,15 +23,16 @@ the agent so that it is restarted automatically.
 """
 
 # imports
+from collections import defaultdict
+
 import datetime
 import os
 import psutil
 
-from collections import defaultdict
-
 # from DIRAC
 from DIRAC import S_OK, S_ERROR, gConfig
 from DIRAC.Core.Base.AgentModule import AgentModule
+from DIRAC.Core.Utilities.PrettyPrint import printTable
 from DIRAC.FrameworkSystem.Client.SystemAdministratorClient import SystemAdministratorClient
 from DIRAC.ConfigurationSystem.Client.Helpers.Path import cfgPath
 from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
@@ -59,7 +60,7 @@ class RestartReqExeAgent(AgentModule):
     self.nClient = NotificationClient()
     self.agents = list()
     self.errors = list()
-    self.accounting = defaultdict(list)
+    self.accounting = defaultdict(dict)
 
     self.addressTo = ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"]
     self.addressFrom = "ilcdirac-admin@cern.ch"
@@ -90,6 +91,31 @@ class RestartReqExeAgent(AgentModule):
     if not(self.errors or self.accounting):
       return S_OK()
 
+    emailBody = ""
+    rows = []
+    for agentName, val in self.accounting.iteritems():
+      rows.append([[agentName], [str(val["LogAge"])], [val["Treatment"]]])
+
+    if rows:
+      columns = ["Agent", "Log File Age (Minutes)", "Treatment"]
+      emailBody += printTable(columns, rows, printOut=False, numbering=False, columnSeparator=' | ')
+
+    if self.errors:
+      emailBody += "\n\nErrors:"
+      emailBody += "\n".join(self.errors)
+
+    self.log.notice(emailBody)
+    for address in self.addressTo:
+      res = self.nClient.sendMail(address, self.emailSubject, emailBody, self.addressFrom, localAttempt=False)
+      if not res['OK']:
+        self.log.error("Failure to send Email notification to ", address)
+        continue
+
+    self.errors = []
+    self.accounting.clear()
+
+    return S_OK()
+
   def getAllRunningAgents(self):
     res = self.sysAdminClient.getOverallStatus()
     if not res["OK"]:
@@ -112,7 +138,7 @@ class RestartReqExeAgent(AgentModule):
   def on_terminate(self, agentName, process):
     self.log.info("%s's process with ID: %s has been terminated successfully" % (agentName, process.pid))
 
-  def execute( self ):
+  def execute(self):
     """ execution in one cycle """
     ok = True
     for agentName, val in self.agents.iteritems():
@@ -150,9 +176,11 @@ class RestartReqExeAgent(AgentModule):
     maxLogAge = max(pollingTime+HOUR, 2*HOUR)
     if age.seconds > maxLogAge:
       self.log.info("Current log file is too old for Agent %s" % agentName)
+      self.accounting[agentName]["LogAge"] = age.seconds/MINUTES
 
       if not self.enabled:
         self.log.info("Restarting agents is disabled, please restart %s manually" % agentName)
+        self.accounting[agentName]["Treatment"] = "Please restart it manually"
         return S_OK()
 
       try:
@@ -167,6 +195,8 @@ class RestartReqExeAgent(AgentModule):
         for proc in alive:
           self.log.info("Forcefully killing process %s" % proc.pid)
           proc.kill()
+
+        self.accounting[agentName]["Treatment"] = "Successfully Restarted"
 
       except psutil.Error as err:
         self.logError("Exception occurred in terminating processes for", "%s: %s" % (agentName, err))
