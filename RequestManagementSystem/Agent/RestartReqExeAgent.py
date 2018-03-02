@@ -51,7 +51,6 @@ class RestartReqExeAgent(AgentModule):
   def __init__(self, *args, **kwargs):
     AgentModule.__init__(self, *args, **kwargs)
     self.name = 'RestartReqExeAgent'
-
     self.setup = "Production"
     self.enabled = False
     self.diracLocation = "/opt/dirac/pro"
@@ -64,7 +63,7 @@ class RestartReqExeAgent(AgentModule):
   def beginExecution(self):
     """ Reload the configurations before every cycle """
     self.setup = self.am_getOption("Setup", self.setup)
-    self.enabled = self.am_getOption("Enabled", self.enabled)
+    self.enabled = self.am_getOption("EnableFlag", self.enabled)
     self.diracLocation = os.environ.get("DIRAC", self.diracLocation)
 
     res = self.getAllRunningAgents()
