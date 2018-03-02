@@ -58,26 +58,42 @@ class RestartReqExeAgent(AgentModule):
     self.sysAdminClient = SystemAdministratorClient("localhost")
     self.nClient = NotificationClient()
     self.agents = list()
+    self.errors = list()
+    self.accounting = defaultdict(list)
 
+    self.addressTo = ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"]
+    self.addressFrom = "ilcdirac-admin@cern.ch"
+    self.emailSubject = "RestartReqExeAgent"
+
+  def logError(self, errStr, varMsg=''):
+    self.log.error(errStr, varMsg)
+    self.errors.append(errStr + varMsg)
 
   def beginExecution(self):
     """ Reload the configurations before every cycle """
     self.setup = self.am_getOption("Setup", self.setup)
     self.enabled = self.am_getOption("EnableFlag", self.enabled)
     self.diracLocation = os.environ.get("DIRAC", self.diracLocation)
+    self.addressTo = self.am_getOption('MailTo', self.addressTo)
+    self.addressFrom = self.am_getOption('MailFrom', self.addressFrom)
 
     res = self.getAllRunningAgents()
     if not res["OK"]:
       return S_ERROR("Failure to get running agents")
     self.agents = res["Value"]
 
+    self.accounting.clear()
     return S_OK()
 
+  def sendNotification(self):
+    """ ends email notification about stuck agents """
+    if not(self.errors or self.accounting):
+      return S_OK()
 
   def getAllRunningAgents(self):
     res = self.sysAdminClient.getOverallStatus()
     if not res["OK"]:
-      self.log.error("Failure to get agents from system administrator client", res["Message"])
+      self.logError("Failure to get agents from system administrator client", res["Message"])
       return res
 
     val = res['Value']['Agents']
@@ -102,7 +118,7 @@ class RestartReqExeAgent(AgentModule):
     for agentName, val in self.agents.iteritems():
       res = self._checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["PID"])
       if not res['OK']:
-        self.log.error("Failure when checking agent", "%s, %s" % (agentName, res['Message']))
+        self.logError("Failure when checking agent", "%s, %s" % (agentName, res['Message']))
         ok = False
 
     if not ok:
@@ -123,7 +139,7 @@ class RestartReqExeAgent(AgentModule):
       lastAccessTime = os.path.getmtime(currentLogLocation)
       lastAccessTime = datetime.datetime.fromtimestamp(lastAccessTime)
     except OSError as e:
-      self.log.error("Failed to access current log file", str(e))
+      self.logError("Failed to access current log file for", "%s Error: %s" % (agentName, str(e)))
       return S_ERROR("Failed to access current log file")
 
     now = datetime.datetime.now()
@@ -153,6 +169,6 @@ class RestartReqExeAgent(AgentModule):
           proc.kill()
 
       except psutil.Error as err:
-        self.log.error("Exception occurred in terminating processes for", "%s: %s" % (agentName, err))
+        self.logError("Exception occurred in terminating processes for", "%s: %s" % (agentName, err))
 
     return S_OK()
