@@ -155,6 +155,27 @@ class RestartReqExeAgent(AgentModule):
     age = now - lastAccessTime
     return S_OK(age)
 
+  def restartAgent(self, pid):
+    """ kills an agent which is then restarted automatically """
+    try:
+      agentProc = psutil.Process(int(pid))
+      processesToTerminate = agentProc.children(recursive=True)
+      processesToTerminate.append(agentProc)
+
+      for proc in processesToTerminate:
+        proc.terminate()
+
+      gone, alive = psutil.wait_procs(processesToTerminate, timeout=5, callback=self.on_terminate)
+      for proc in alive:
+        self.log.info("Forcefully killing process %s" % proc.pid)
+        proc.kill()
+
+      return S_OK()
+
+    except psutil.Error as err:
+      self.logError("Exception occurred in terminating processes", "%s" % err)
+      return S_ERROR()
+
   def _checkAgent(self, agentName, pollingTime, currentLogLocation, pid):
     """ checks the age of agent's log file, if it is too old then restarts the agent """
 
@@ -180,22 +201,11 @@ class RestartReqExeAgent(AgentModule):
         self.accounting[agentName]["Treatment"] = "Please restart it manually"
         return S_OK()
 
-      try:
-        agentProc = psutil.Process(int(pid))
-        processesToTerminate = agentProc.children(recursive=True)
-        processesToTerminate.append(agentProc)
+      res = self.restartAgent(int(pid))
+      if not res["OK"]:
+        return res
 
-        for proc in processesToTerminate:
-          proc.terminate()
-
-        gone, alive = psutil.wait_procs(processesToTerminate, timeout=5, callback=self.on_terminate)
-        for proc in alive:
-          self.log.info("Forcefully killing process %s" % proc.pid)
-          proc.kill()
-
-        self.accounting[agentName]["Treatment"] = "Successfully Restarted"
-
-      except psutil.Error as err:
-        self.logError("Exception occurred in terminating processes for", "%s: %s" % (agentName, err))
+      self.accounting[agentName]["Treatment"] = "Successfully Restarted"
+      self.log.info("Agent %s has been successfully restarted" % agentName)
 
     return S_OK()
