@@ -54,6 +54,40 @@ class TestRestartReqExeAgent(unittest.TestCase):
     # accounting dictionary should be cleared
     self.assertEquals(self.restartAgent.accounting, {})
 
+  def test_send_notification(self):
+    """ test for sendNotification function """
+    self.restartAgent.errors = []
+    self.restartAgent.accounting = {}
+
+    # send mail should not be called if there are no errors and accounting information
+    self.restartAgent.sendNotification()
+    self.restartAgent.nClient.sendMail.assert_not_called()
+
+    # send mail should be called if there are errors but no accounting information
+    self.restartAgent.errors = ["some error"]
+    self.restartAgent.sendNotification()
+    self.restartAgent.nClient.sendMail.assert_called()
+
+    # send email should be called if there is accounting information but no errors
+    self.restartAgent.nClient.sendMail.reset_mock()
+    self.restartAgent.errors = []
+    self.restartAgent.accounting = {"Agent1": {"LogAge": 123, "Treatment": "Agent Restarted"}}
+    self.restartAgent.sendNotification()
+    self.restartAgent.nClient.sendMail.assert_called()
+
+    # try sending email to all addresses even if we get error for sending email to some address
+    self.restartAgent.nClient.sendMail.reset_mock()
+    self.restartAgent.errors = ["some error"]
+    self.restartAgent.addressTo = ["name1@cern.ch", "name2@cern.ch"]
+    self.restartAgent.nClient.sendMail.return_value = S_ERROR()
+    self.restartAgent.sendNotification()
+    self.assertEquals(len(self.restartAgent.nClient.sendMail.mock_calls),
+                      len(self.restartAgent.addressTo))
+
+    # accounting dict and errors list should be cleared after notification is sent
+    self.assertEquals(self.restartAgent.accounting, {})
+    self.assertEquals(self.restartAgent.errors, [])
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestRestartReqExeAgent)
