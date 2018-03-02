@@ -1,25 +1,9 @@
-"""Restart the an agent in case it gets stuck
+"""
+Restarts an agent in case it gets stuck
 
-This agent was intially designed to supervise the RequestExecutingAgent and
-retart it in case it gets stuck.  At the moment the RequestExecutingAgent is the
-only agent to really get stuck on a normal basis.  Can be extend to restart any
-given agent of so desired.
-
+This agent is designed to supervise the Agents and retarts them in case if they get stuck.
 The agent checks the age of the log file and if it is deemed too old will kill
 the agent so that it is restarted automatically.
-
-+----------------------------------------+-----------------------------------------+---------------------------------------+
-|  **Option**                            |    **Description**                      |  **Example**                          |
-+----------------------------------------+-----------------------------------------+---------------------------------------+
-|  MaxLogAge                             | maximum Age of the log file in minues   | MaxLogAge = 60                        |
-|                                        |                                         |                                       |
-+----------------------------------------+-----------------------------------------+---------------------------------------+
-|  AgentNames                            | name of the agent to monitor            | AgentNames=RequestExecutingAgent      |
-|                                        |                                         |                                       |
-|                                        |                                         |                                       |
-+----------------------------------------+-----------------------------------------+---------------------------------------+
-
-
 """
 
 # imports
@@ -45,7 +29,6 @@ HOUR = 3600
 MINUTES = 60
 SECONDS = 1
 
-########################################################################
 class RestartReqExeAgent(AgentModule):
   """ RestartReqExeAgent class """
 
@@ -87,7 +70,7 @@ class RestartReqExeAgent(AgentModule):
     return S_OK()
 
   def sendNotification(self):
-    """ ends email notification about stuck agents """
+    """ sends email notification about stuck agents """
     if not(self.errors or self.accounting):
       return S_OK()
 
@@ -117,6 +100,9 @@ class RestartReqExeAgent(AgentModule):
     return S_OK()
 
   def getAllRunningAgents(self):
+    """ returns a dict of running agents. Key is agent's name, value contains Polling Time, PID
+        and log file location """
+
     res = self.sysAdminClient.getOverallStatus()
     if not res["OK"]:
       self.logError("Failure to get agents from system administrator client", res["Message"])
@@ -136,6 +122,7 @@ class RestartReqExeAgent(AgentModule):
     return S_OK(runningAgents)
 
   def on_terminate(self, agentName, process):
+    """ callback executes when a process terminates gracefully """
     self.log.info("%s's process with ID: %s has been terminated successfully" % (agentName, process.pid))
 
   def execute(self):
@@ -153,7 +140,7 @@ class RestartReqExeAgent(AgentModule):
     return S_OK()
 
   def _checkAgent(self, agentName, pollingTime, currentLogLocation, pid):
-    """ docs... """
+    """ checks the age of agent's log file, if it is too old then restarts the agent """
 
     self.log.info("Checking Agent: %s" % agentName)
     self.log.info("Polling Time: %s" % pollingTime)
