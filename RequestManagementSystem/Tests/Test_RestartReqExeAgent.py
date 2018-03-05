@@ -1,6 +1,7 @@
 """ Test RestartReqExeAgent """
 
 import unittest
+from datetime import timedelta
 
 import ILCDIRAC.RequestManagementSystem.Agent.RestartReqExeAgent as RREA
 from ILCDIRAC.RequestManagementSystem.Agent.RestartReqExeAgent import RestartReqExeAgent
@@ -145,6 +146,35 @@ class TestRestartReqExeAgent(unittest.TestCase):
              call(agentTwo, agentTwoPollingTime, agentTwoLogLoc, agentTwoPID)]
 
     self.restartAgent._checkAgent.assert_has_calls(calls, any_order=True)
+
+  def test_check_agent(self):
+    """ test for _checkAgent function """
+    self.restartAgent.getLastAccessTime = MagicMock()
+    self.restartAgent.restartAgent = MagicMock(return_value=S_OK())
+
+    agentName = 'agentX'
+    pollingTime = RREA.HOUR
+    currentLogLocation = '/fake/log/file'
+    pid = '12345'
+
+    self.restartAgent.getLastAccessTime.return_value = S_ERROR()
+    res = self.restartAgent._checkAgent(agentName, pollingTime, currentLogLocation, pid)
+    self.assertFalse(res["OK"])
+
+    # agents with log file age less than max(pollingTime+Hour, 2 Hour) should not be restarted
+    logAge = timedelta(hours=1)
+    self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
+    res = self.restartAgent._checkAgent(agentName, pollingTime, currentLogLocation, pid)
+    self.assertTrue(res["OK"])
+    self.restartAgent.restartAgent.assert_not_called()
+
+    # agents with log file age of more than max(pollingTime+Hour, 2 Hour) should be restarted
+    logAge = timedelta(hours=3)
+    self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
+    res = self.restartAgent._checkAgent(agentName, pollingTime, currentLogLocation, pid)
+    self.assertTrue(res["OK"])
+    self.restartAgent.restartAgent.assert_called_once_with(int(pid))
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestRestartReqExeAgent)
