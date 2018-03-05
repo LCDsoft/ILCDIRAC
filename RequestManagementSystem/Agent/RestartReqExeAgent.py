@@ -8,8 +8,8 @@ the agent so that it is restarted automatically.
 
 # imports
 from collections import defaultdict
+from datetime import datetime
 
-import datetime
 import os
 import psutil
 
@@ -150,11 +150,11 @@ class RestartReqExeAgent(AgentModule):
     lastAccessTime = 0
     try:
       lastAccessTime = os.path.getmtime(logFileLocation)
-      lastAccessTime = datetime.datetime.fromtimestamp(lastAccessTime)
+      lastAccessTime = datetime.fromtimestamp(lastAccessTime)
     except OSError as e:
       return S_ERROR(str(e))
 
-    now = datetime.datetime.now()
+    now = datetime.now()
     age = now - lastAccessTime
     return S_OK(age)
 

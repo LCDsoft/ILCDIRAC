@@ -1,7 +1,7 @@
 """ Test RestartReqExeAgent """
 
 import unittest
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import ILCDIRAC.RequestManagementSystem.Agent.RestartReqExeAgent as RREA
 from ILCDIRAC.RequestManagementSystem.Agent.RestartReqExeAgent import RestartReqExeAgent
@@ -179,6 +179,22 @@ class TestRestartReqExeAgent(unittest.TestCase):
     res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
     self.assertTrue(res["OK"])
     self.restartAgent.restartAgent.assert_called_once_with(int(pid))
+
+  def test_get_last_access_time(self):
+    """ test for getLastAccessTime function """
+    self.agent.os.path.getmtime = MagicMock()
+    self.agent.datetime = MagicMock()
+    self.agent.datetime.now = MagicMock()
+    self.agent.datetime.fromtimestamp = MagicMock()
+
+    now = datetime.now()
+    self.agent.datetime.now.return_value = now
+    self.agent.datetime.fromtimestamp.return_value = now - timedelta(hours=1)
+
+    res = self.restartAgent.getLastAccessTime('/fake/file')
+    self.assertTrue(res["OK"])
+    self.assertIsInstance(res["Value"], timedelta)
+    self.assertEquals(res["Value"].seconds, 3600)
 
 
 if __name__ == "__main__":
