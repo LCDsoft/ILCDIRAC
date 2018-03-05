@@ -51,6 +51,7 @@ class RestartReqExeAgent(AgentModule):
     self.emailSubject = "RestartReqExeAgent"
 
   def logError(self, errStr, varMsg=''):
+    """ appends errors in a list, which is sent in email notification """
     self.log.error(errStr, varMsg)
     self.errors.append(errStr + varMsg)
 
@@ -130,10 +131,12 @@ class RestartReqExeAgent(AgentModule):
     """ execution in one cycle """
     ok = True
     for agentName, val in self.agents.iteritems():
-      res = self._checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["PID"])
+      res = self.checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["PID"])
       if not res['OK']:
         self.logError("Failure when checking agent", "%s, %s" % (agentName, res['Message']))
         ok = False
+
+    self.sendNotification()
 
     if not ok:
       return S_ERROR("Error during this cycle, check log")
@@ -176,7 +179,7 @@ class RestartReqExeAgent(AgentModule):
       self.logError("Exception occurred in terminating processes", "%s" % err)
       return S_ERROR()
 
-  def _checkAgent(self, agentName, pollingTime, currentLogLocation, pid):
+  def checkAgent(self, agentName, pollingTime, currentLogLocation, pid):
     """ checks the age of agent's log file, if it is too old then restarts the agent """
 
     self.log.info("Checking Agent: %s" % agentName)
