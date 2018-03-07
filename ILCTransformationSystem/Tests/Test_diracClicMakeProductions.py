@@ -55,6 +55,7 @@ class TestMaking( unittest.TestCase ):
       'cliReco': '--Config.Tracking=Tracked',
       'whizard2Version': 'myWhizardVersion',
       'whizard2SinFile': 'myWhizardSinFile',
+      'numberOfTasks': '1',
     }
 
     self.pMockMod = Mock()
@@ -325,6 +326,7 @@ class TestMaking( unittest.TestCase ):
                                                       prodName="prodJamesProd",
                                                       parameterDict=self.chain.getParameterDictionary('MI6')[0],
                                                       eventsPerJob=10,
+                                                      nbTasks='10',
                                                       sinFile='myWhizardSinFile'
                                                      )
     self.assertEqual(retMeta, {})

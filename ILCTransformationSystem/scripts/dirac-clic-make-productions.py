@@ -69,6 +69,7 @@ class CLICDetProdChain( object ):
   :param str clicConfig: Steering file version to use for simulation/reconstruction
   :param float energy: energy to use for generation or meta data search
   :param in eventsPerJob: number of events per job
+  :param in numberOfTasks: number of production jobs/task to create (default is 1)
   :param str productionLogLevel: log level to use in production jobs
   :param str outputSE: output SE for production jobs
   :param str finalOutputSE: final destination for files when moving transformations are enabled
@@ -221,6 +222,7 @@ MoveTypes = %(moveTypes)s
     self.outputSE = 'CERN-DST-EOS'
 
     self.eventsPerJobs = ''
+    self.numberOfTasks = ''
     self.energies = ''
     self.processes = ''
     self.prodIDs = ''
@@ -281,6 +283,7 @@ MoveTypes = %(moveTypes)s
       self.processes = config.get(PP, 'processes').split(',')
       self.energies = config.get(PP, 'energies').split(',')
       self.eventsPerJobs = config.get(PP, 'eventsPerJobs').split(',')
+      self.numberOfTasks = config.get(PP, 'numberOfTasks').replace(' ', '').split(',')
 
       self.productionLogLevel = config.get(PP, 'productionloglevel')
       self.outputSE = config.get(PP, 'outputSE')
@@ -370,6 +373,8 @@ whizard2Version = %(whizard2Version)s
 whizard2SinFile = %(whizard2SinFile)s
 clicConfig = %(clicConfig)s
 eventsPerJobs = %(eventsPerJobs)s
+## Number of jobs/task to generate (default = 1)
+# numberOfTaks =
 
 energies = %(energies)s
 processes = %(processes)s
@@ -557,7 +562,7 @@ finalOutputSE = %(finalOutputSE)s
 
     return marlin
 
-  def createGenerationProduction(self, meta, prodName, parameterDict, eventsPerJob, sinFile):
+  def createGenerationProduction(self, meta, prodName, parameterDict, eventsPerJob, nbTasks, sinFile):
     """ create generation production """
     gLogger.notice("*" * 80 + "\nCreating generation production: %s " % prodName)
     from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
@@ -591,6 +596,7 @@ finalOutputSE = %(finalOutputSE)s
     if not res['OK']:
       raise RuntimeError("Error finalizing generation production: %s" % res['Message'])
 
+    genProd.setNbOfTasks(int(nbTasks))
     generationMeta = genProd.getMetadata()
     return generationMeta
 
@@ -788,7 +794,7 @@ finalOutputSE = %(finalOutputSE)s
         raise AttributeError("Cannot set %s for %s, check spelling!" % (option, appName))
       getattr(app, setterFunc)(value)
 
-  def createTransformations(self, metaInput, sinFile, eventsPerJob, eventsPerBaseFile):
+  def createTransformations(self, metaInput, sinFile, eventsPerJob, nbTasks, eventsPerBaseFile):
     """ create all the transformations we want to create """
 
     prodName = metaInput['EvtType']
@@ -797,7 +803,8 @@ finalOutputSE = %(finalOutputSE)s
       splitMeta, genMeta, simMeta, recMeta = None, None, None, None
 
       if self._flags.gen:
-        genMeta = self.createGenerationProduction(metaInput, prodName, parameterDict, eventsPerJob, sinFile)
+        genMeta = self.createGenerationProduction(metaInput, prodName, parameterDict, eventsPerJob,
+                                                  nbTasks, sinFile)  # pylint: disable=E1121
         self._updateMeta(metaInput, genMeta, eventsPerJob)
 
       if self._flags.spl:
@@ -828,6 +835,9 @@ finalOutputSE = %(finalOutputSE)s
   def createAllTransformations( self ):
     """ loop over the list of processes, energies and possibly prodIDs to create all the productions """
 
+    if len(self.numberOfTasks) != len(self.energies):
+      self.numberOfTasks = [1] * len(self.energies)
+
     for index, energy in enumerate( self.energies ):
 
       process = self.processes[index]
@@ -835,9 +845,10 @@ finalOutputSE = %(finalOutputSE)s
       eventsPerJob = self.eventsPerJobs[index]
       eventsPerBaseFile = self.eventsInSplitFiles[index]
       sinFile = self.whizard2SinFile[index]
+      nbTasks = self.numberOfTasks[index]
 
       metaInput = self.meta(prodID, process, energy)
-      self.createTransformations(metaInput, sinFile, eventsPerJob, eventsPerBaseFile)
+      self.createTransformations(metaInput, sinFile, eventsPerJob, nbTasks, eventsPerBaseFile)  # pylint: disable=E1121
 
 
 

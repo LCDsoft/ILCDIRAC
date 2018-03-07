@@ -141,6 +141,7 @@ class Whizard2( LCApplication ):
         return S_ERROR('Multiple instances of "sqrts=..GeV" detected, only one can be processed')
       self.prodparameters['Energy'] = sqrtMatches[0].replace("sqrts=", "").replace("GeV", "")
       self.energy = self.prodparameters['Energy']
+
       modelMatches = [ x for x in parsedString if x.startswith('model=') ]
       if not modelMatches:
         return S_ERROR('No model set in sin file, please set "model=..."')
