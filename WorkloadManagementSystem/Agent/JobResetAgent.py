@@ -34,7 +34,7 @@ from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 
 __RCSID__ = "$Id$"
 
-AGENT_NAME = 'ILCTransformation/JobResetAgent'
+AGENT_NAME = 'WorkloadManagement/JobResetAgent'
 
 FINAL_APP_STATES = ["Job Finished Successfully",
                     "Unknown"]

@@ -22,7 +22,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Path import cfgPath
 from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 
 __RCSID__ = "$Id$"
-AGENT_NAME = "RequestManagement/RestartReqExeAgent"
+AGENT_NAME = "Framework/MonitorAgents"
 
 #Define units
 HOUR = 3600
@@ -30,12 +30,12 @@ MINUTES = 60
 SECONDS = 1
 
 
-class RestartReqExeAgent(AgentModule):
-  """ RestartReqExeAgent class """
+class MonitorAgents(AgentModule):
+  """ MonitorAgents class """
 
   def __init__(self, *args, **kwargs):
     AgentModule.__init__(self, *args, **kwargs)
-    self.name = 'RestartReqExeAgent'
+    self.name = 'MonitorAgents'
     self.setup = "Production"
     self.enabled = False
     self.diracLocation = "/opt/dirac/pro"
@@ -48,7 +48,7 @@ class RestartReqExeAgent(AgentModule):
 
     self.addressTo = ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"]
     self.addressFrom = "ilcdirac-admin@cern.ch"
-    self.emailSubject = "RestartReqExeAgent"
+    self.emailSubject = "MonitorAgents"
 
   def logError(self, errStr, varMsg=''):
     """ appends errors in a list, which is sent in email notification """

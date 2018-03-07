@@ -5,8 +5,8 @@ import unittest
 from datetime import datetime, timedelta
 from mock import MagicMock, call
 
-import ILCDIRAC.ILCTransformationSystem.Agent.JobResetAgent as JRA
-from ILCDIRAC.ILCTransformationSystem.Agent.JobResetAgent import JobResetAgent
+import ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent as JRA
+from ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent import JobResetAgent
 
 import DIRAC.Resources.Storage.StorageElement as SeModule
 from DIRAC.RequestManagementSystem.Client.File import File

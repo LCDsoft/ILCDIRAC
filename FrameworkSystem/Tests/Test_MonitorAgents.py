@@ -1,10 +1,10 @@
-""" Test RestartReqExeAgent """
+""" Test MonitorAgents """
 
 import unittest
 from datetime import datetime, timedelta
 
-import ILCDIRAC.RequestManagementSystem.Agent.RestartReqExeAgent as RREA
-from ILCDIRAC.RequestManagementSystem.Agent.RestartReqExeAgent import RestartReqExeAgent
+import ILCDIRAC.FrameworkSystem.Agent.MonitorAgents as MAA
+from ILCDIRAC.FrameworkSystem.Agent.MonitorAgents import MonitorAgents
 
 from mock import MagicMock, call
 
@@ -15,15 +15,15 @@ import DIRAC
 __RCSID__ = "$Id$"
 
 
-class TestRestartReqExeAgent(unittest.TestCase):
-  """ TestRestartReqExeAgent class """
+class TestMonitorAgents(unittest.TestCase):
+  """ TestMonitorAgents class """
 
   def setUp(self):
-    self.agent = RREA
+    self.agent = MAA
     self.agent.AgentModule = MagicMock()
     self.agent.NotificationClient = MagicMock(spec=DIRAC.FrameworkSystem.Client.NotificationClient.NotificationClient)
 
-    self.restartAgent = RestartReqExeAgent()
+    self.restartAgent = MonitorAgents()
     self.restartAgent.log = gLogger
     self.restartAgent.sysAdminClient = MagicMock()
     self.restartAgent.enabled = True
@@ -32,7 +32,7 @@ class TestRestartReqExeAgent(unittest.TestCase):
     pass
 
   def test_init(self):
-    self.assertIsInstance(self.restartAgent, RestartReqExeAgent)
+    self.assertIsInstance(self.restartAgent, MonitorAgents)
     self.assertIsInstance(self.restartAgent.nClient, MagicMock)
     self.assertIsInstance(self.restartAgent.sysAdminClient, MagicMock)
     self.assertTrue(self.restartAgent.enabled)
@@ -158,7 +158,7 @@ class TestRestartReqExeAgent(unittest.TestCase):
     self.restartAgent.restartAgent = MagicMock(return_value=S_OK())
 
     agentName = 'agentX'
-    pollingTime = RREA.HOUR
+    pollingTime = MAA.HOUR
     currentLogLocation = '/fake/log/file'
     pid = '12345'
 
@@ -198,5 +198,5 @@ class TestRestartReqExeAgent(unittest.TestCase):
 
 
 if __name__ == "__main__":
-  SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestRestartReqExeAgent)
+  SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestMonitorAgents)
   TESTRESULT = unittest.TextTestRunner(verbosity=3).run(SUITE)
