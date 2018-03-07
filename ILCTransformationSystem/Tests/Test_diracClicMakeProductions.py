@@ -54,8 +54,8 @@ class TestMaking( unittest.TestCase ):
       'overlayEvents': '',
       'cliReco': '--Config.Tracking=Tracked',
       'whizard2Version': 'myWhizardVersion',
-      'whizard2SinFile': 'myWhizardSinFile',
-      'numberOfTasks': '1',
+      'whizard2SinFile': 'myWhizardSinFile1, myWhizardSinFile2',
+      'numberOfTasks': '1, 2',
     }
 
     self.pMockMod = Mock()
@@ -128,7 +128,7 @@ class TestMaking( unittest.TestCase ):
     self.assertEqual( c.eventsInSplitFiles, [5000, 6000] )
 
     self.assertEqual(c.whizard2Version, "myWhizardVersion")
-    self.assertEqual(c.whizard2SinFile, ["myWhizardSinFile"])
+    self.assertEqual(c.whizard2SinFile, ['myWhizardSinFile1', 'myWhizardSinFile2'])
 
     self.configDict['prodIDs'] = "123, 456, 789"
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",

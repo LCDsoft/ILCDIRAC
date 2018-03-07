@@ -277,13 +277,20 @@ MoveTypes = %(moveTypes)s
       self.softwareVersion = config.get(PP, 'softwareVersion')
       self.clicConfig = config.get(PP, 'clicConfig')
 
-      self.whizard2Version = config.get(PP, 'whizard2Version')
-      self.whizard2SinFile = config.get(PP, 'whizard2SinFile').replace(' ', '').split(',')
+      # Check if Whizard version is set, otherwise use default from CS
+      if config.has_option(PP, 'whizard2Version'):
+        self.whizard2Version = config.get(PP, 'whizard2Version')
+
+      if config.has_option(PP, 'whizard2SinFile'):
+        self.whizard2SinFile = config.get(PP, 'whizard2SinFile').replace(' ', '').split(',')
 
       self.processes = config.get(PP, 'processes').split(',')
       self.energies = config.get(PP, 'energies').split(',')
       self.eventsPerJobs = config.get(PP, 'eventsPerJobs').split(',')
-      self.numberOfTasks = config.get(PP, 'numberOfTasks').replace(' ', '').split(',')
+      if config.has_option(PP, 'numberOfTasks'):
+        self.numberOfTasks = config.get(PP, 'numberOfTasks').split(',')
+      else:
+        self.numberOfTasks = []
 
       self.productionLogLevel = config.get(PP, 'productionloglevel')
       self.outputSE = config.get(PP, 'outputSE')
@@ -318,10 +325,18 @@ MoveTypes = %(moveTypes)s
       self.prodIDs = [ int( pID.strip() ) for pID in self.prodIDs if pID.strip() ]
       self.prodIDs = self.prodIDs if self.prodIDs else [ 1 for _ in self.energies ]
 
+      self.numberOfTasks = [int(nbtask.strip()) for nbtask in self.numberOfTasks if nbtask.strip()]
+      self.numberOfTasks = self.numberOfTasks if self.numberOfTasks else [1 for _ in self.energies]
+
       if len(self.processes) != len(self.energies) or \
          len(self.energies) != len(self.eventsPerJobs) or \
          len( self.prodIDs) != len(self.eventsPerJobs):
         raise AttributeError( "Lengths of Processes, Energies, and EventsPerJobs do not match" )
+
+      if self._flags.gen:
+        if len(self.numberOfTasks) != len(self.energies) or \
+           len(self.whizard2SinFile) != len(self.energies):
+          raise AttributeError("Lengths of numberOfTasks, whizard2SinFile, and Energies do not match")
 
       self.eventsInSplitFiles = [ int( epb.strip() ) for epb in self.eventsInSplitFiles if epb.strip() ]
       self.eventsInSplitFiles = self.eventsInSplitFiles if self.eventsInSplitFiles else [ -1 for _ in self.energies ]
@@ -374,7 +389,7 @@ whizard2SinFile = %(whizard2SinFile)s
 clicConfig = %(clicConfig)s
 eventsPerJobs = %(eventsPerJobs)s
 ## Number of jobs/task to generate (default = 1)
-# numberOfTaks =
+# numberOfTasks =
 
 energies = %(energies)s
 processes = %(processes)s
@@ -596,7 +611,7 @@ finalOutputSE = %(finalOutputSE)s
     if not res['OK']:
       raise RuntimeError("Error finalizing generation production: %s" % res['Message'])
 
-    genProd.setNbOfTasks(int(nbTasks))
+    genProd.setNbOfTasks(nbTasks)
     generationMeta = genProd.getMetadata()
     return generationMeta
 
@@ -834,9 +849,6 @@ finalOutputSE = %(finalOutputSE)s
 
   def createAllTransformations( self ):
     """ loop over the list of processes, energies and possibly prodIDs to create all the productions """
-
-    if len(self.numberOfTasks) != len(self.energies):
-      self.numberOfTasks = [1] * len(self.energies)
 
     for index, energy in enumerate( self.energies ):
 
