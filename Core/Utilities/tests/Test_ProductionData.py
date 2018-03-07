@@ -6,7 +6,7 @@ import unittest
 
 from mock import patch, MagicMock as Mock
 from DIRAC import S_OK, S_ERROR
-from ILCDIRAC.Core.Utilities.ProductionData import constructUserLFNs
+from ILCDIRAC.Core.Utilities.ProductionData import constructUserLFNs, getExperimentFromPath
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceedsWith, assertDiracSucceedsWith_equals
 
 __RCSID__ = "$Id$"
@@ -85,3 +85,16 @@ class TestProductionData( unittest.TestCase ):
       result = constructUserLFNs( 1234567, 'mytestVO', 'mytestowner', [], '' )
       log_mock.assert_called_once_with( 'No output LFN(s) constructed' )
       assertDiracSucceedsWith_equals( result, [], self )
+
+  def test_getExperimentFromBasePath(self):
+    optDict = S_OK({'exp1': '/ilc/prod/exp1', 'exp2': '/ilc/prod/exp2/path1, /ilc/prod/exp2/path2'})
+    with patch('%s.Operations.getOptionsDict' % MODULE_NAME, new=Mock(return_value=optDict)):
+      experiment = getExperimentFromPath(Mock(), '/ilc/prod/exp2/path1/log/file', 'default')
+      self.assertEqual(experiment, 'exp2')
+      experiment = getExperimentFromPath(Mock(), '/ilc/prod/exp/log/file', 'default')
+      self.assertEqual(experiment, 'default')
+
+    optDict = S_ERROR("not found")
+    with patch('%s.Operations.getOptionsDict' % MODULE_NAME, new=Mock(return_value=optDict)):
+      experiment = getExperimentFromPath(Mock(), '/ilc/prod/exp2/path1/log/file', 'default')
+      self.assertEqual(experiment, 'default')

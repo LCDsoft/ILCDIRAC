@@ -19,6 +19,7 @@ import DIRAC
 from ILCDIRAC.Core.Utilities.ResolveSE                     import getDestinationSEList
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilename
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
+from ILCDIRAC.Core.Utilities.ProductionData import getExperimentFromPath
 
 __RCSID__ = "$Id$"
 
@@ -131,21 +132,8 @@ class UploadOutputData(ModuleBase):
       self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('No output data upload attempted')
 
-    ##determine the experiment
-    example_file = self.prodOutputLFNs[0]
-    if "/ilc/prod/clic" in example_file:
-      self.experiment = "CLIC"
-    elif "/ilc/prod/ilc/sid" in example_file:
-      self.experiment = 'ILC_SID'
-    elif "/ilc/prod/ilc/mc-dbd" in example_file:
-      self.experiment = 'ILC_ILD'
-    elif "/ilc/prod/ilc/mc-opt" in example_file:
-      self.experiment = 'ILC_ILD'
-    elif "/ilc/prod/ilc/ild" in example_file:
-      self.experiment = 'ILC_ILD'
-    else:
-      self.log.warn("Failed to determine experiment, reverting to default: %s" % self.experiment)
-      
+    self.experiment = getExperimentFromPath(self.log, self.prodOutputLFNs[0], self.experiment)
+
     #Determine the final list of possible output files for the
     #workflow and all the parameters needed to upload them.
     result = self.getCandidateFiles(self.outputList, self.prodOutputLFNs, self.outputDataFileMask)

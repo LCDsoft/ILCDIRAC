@@ -251,4 +251,28 @@ def checkForMandatoryKeys(paramDict, keys):
       return S_ERROR('%s not defined' % k)
   return S_OK()
 
+
+def getExperimentFromPath(logger, exampleFile, defaultExperiment):
+  """ returns the experiment based on the base paths defined in the CS
+
+  Find experiment based on the basepaths defined in Operations/Production/ExperimentBasePaths
+
+  :param logger: logging instance
+  :param str exampleFile: file to match
+  :param str defaultExperiment: experiment to return if no match
+  :returns: experiment string
+  """
+  basePaths = Operations().getOptionsDict('Production/ExperimentBasePaths')
+  if not basePaths['OK']:
+    logger.warn("Could not get ExperimentBasePaths", basePaths['Message'])
+  else:
+    for experiment, paths in basePaths['Value'].iteritems():
+      for path in paths.split(','):
+        if exampleFile.startswith(path.strip()):
+          logger.info("Found experiment %s for %s matching %s" % (experiment, path, exampleFile))
+          return experiment
+
+  logger.warn("Failed to determine experiment, reverting to default: %s" % defaultExperiment)
+  return defaultExperiment
+
 #EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#EOF#

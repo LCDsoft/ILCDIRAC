@@ -18,7 +18,7 @@ from DIRAC.Resources.Storage.StorageElement import StorageElementItem as Storage
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
-from ILCDIRAC.Core.Utilities.ProductionData                import getLogPath
+from ILCDIRAC.Core.Utilities.ProductionData import getLogPath, getExperimentFromPath
 
 __RCSID__ = "$Id$"
 
@@ -83,21 +83,8 @@ class UploadLogFile(ModuleBase):
       self.logFilePath = self.logFilePath[0]
     if not isinstance(self.logLFNPath, basestring):
       self.logLFNPath = self.logLFNPath[0]
-      
-    #FIXME: What if experiments change path, pick this up from the CS instead, or find a better way
-    example_file = self.logFilePath
-    if "/ilc/prod/clic" in example_file:
-      self.experiment = "CLIC"
-    elif "/ilc/prod/ilc/sid" in example_file:
-      self.experiment = 'ILC_SID'
-    elif "/ilc/prod/ilc/mc-dbd" in example_file:
-      self.experiment = 'ILC_ILD'
-    elif "/ilc/prod/ilc/mc-opt" in example_file:
-      self.experiment = 'ILC_ILD'
-    elif "/ilc/prod/ilc/ild" in example_file:
-      self.experiment = 'ILC_ILD'
-    else:
-      self.log.warn("Failed to determine experiment, reverting to default: %s" % self.experiment)
+
+    self.experiment = getExperimentFromPath(self.log, self.logFilePath, self.experiment)
 
     return S_OK('Parameters resolved')
 
