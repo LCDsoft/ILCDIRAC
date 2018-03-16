@@ -1,3 +1,33 @@
+[v28r0p4]
+
+*WorkloadManagementSystem
+
+NEW: (!187) `JobResetAgent`: automatically resets jobs that somehow got stuck in staging or completed status
+
+*FrameworkSystem
+
+NEW: (!191) new `MonitorAgents` to restart stuck agents
+
+*WorkloadManagementSystem
+
+NEW: (!187) `JobResetAgent`: automatically resets jobs that somehow got stuck in staging or completed status
+
+*Workflow
+
+CHANGE: (!182) UploadLogFile and UploadOutputData: Change logic to determine the experiment. ILD is using new paths: /ilc/prod/ilc/mc-opt
+and /ilc/prod/ilc/ild (Testing only)
+
+*ILCTransformationSystem
+
+NEW: (!180) Adding new FileStatusTransformationAgent
+NEW: (!184) FileStatusTransformationAgent's errors are sent in email notification
+FIX: (!186) `dirac-clic-make-productions`: reset extraCommandLine options after each (reco) production so multiple overlay options do not appear in the string.
+NEW: (!186) `dirac-clic-make-productions`: add option to set arbitrary options for Applications (Marlin, DDSim, Overlay at the moment). All options that can be set with setter functions can be set via an extra section, e.g., "[Marlin]". Can be used to set a different SteeringFile name. Sections are automatically created with **-p**
+NEW: (!188) `dirac-ilc-replication-transformation`, `dirac-ilc-moving-transformation` have additional parameter --groupSize to set the number of files per task
+NEW: (!188) `dirac-ilc-replication-transformation` allows multiple ProdIDs to be passed
+NEW: (!188) New configuration section in Operations/Defaults/Production/TransformationDatatypes maps Datatypes with TransformationTypes, e.g. REC -> MCReconstruction etc. Used in `dirac-ilc-replication-transformation` and `dirac-ilc-moving-transformation` to check consistency of ProdID and datatype
+NEW: (!189) Add Whizard2 to the CLIC production script (dirac-clic-make-productions)
+
 [v28r0p3]
 
 *Workflow
