@@ -53,6 +53,9 @@ class TestMaking( unittest.TestCase ):
       'MoveTypes': '',
       'overlayEvents': '',
       'cliReco': '--Config.Tracking=Tracked',
+      'whizard2Version': 'myWhizardVersion',
+      'whizard2SinFile': 'myWhizardSinFile1, myWhizardSinFile2',
+      'numberOfTasks': '1, 2',
     }
 
     self.pMockMod = Mock()
@@ -124,6 +127,9 @@ class TestMaking( unittest.TestCase ):
     self.assertEqual( c.eventsPerJobs, [1000, 2000] )
     self.assertEqual( c.eventsInSplitFiles, [5000, 6000] )
 
+    self.assertEqual(c.whizard2Version, "myWhizardVersion")
+    self.assertEqual(c.whizard2SinFile, ['myWhizardSinFile1', 'myWhizardSinFile2'])
+
     self.configDict['prodIDs'] = "123, 456, 789"
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
                 new=Mock(return_value=cpMock ) ), \
@@ -135,7 +141,7 @@ class TestMaking( unittest.TestCase ):
                 new=Mock(return_value=cpMock ) ):
       c.loadParameters( parameter )
     self.assertEqual( c.prodIDs, [1, 1] )
-    self.assertEqual( c.cliReco, '--Config.Tracking=Tracked' )
+    self.assertEqual(c.cliRecoOption, '--Config.Tracking=Tracked')
 
 
     self.configDict['eventsInSplitFiles'] = "1000"
@@ -173,7 +179,8 @@ class TestMaking( unittest.TestCase ):
     self.assertIsInstance( ret, Marlin )
     self.assertEqual( ret.detectortype, 'myDetectorModel' )
     self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
-    self.assertEqual( self.chain.cliReco, '--Config.Tracking=Tracked --Config.Overlay=300GeV ' )
+    self.assertEqual(self.chain.cliRecoOption, '--Config.Tracking=Tracked')
+    self.assertEqual(ret.extraCLIArguments, '--Config.Tracking=Tracked  --Config.Overlay=300GeV ')
 
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
                 new=Mock(return_value=cpMock ) ):
@@ -184,11 +191,36 @@ class TestMaking( unittest.TestCase ):
     self.assertIsInstance( ret, Marlin )
     self.assertEqual( ret.detectortype, 'myDetectorModel' )
     self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
-    self.assertEqual( self.chain.cliReco, '--Config.Tracking=Tracked' )
+    self.assertEqual(self.chain.cliRecoOption, '--Config.Tracking=Tracked')
+    self.assertEqual(ret.extraCLIArguments, '--Config.Tracking=Tracked ')
 
+  def test_createWhizard2Application(self):
 
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard2
 
-  def test_createDDSimApplication( self ):
+    cpMock = Mock()
+    cpMock.read = Mock()
+    cpMock.get = self.mockConfig
+
+    parameter = Mock()
+    parameter.whizard2SinFile = 'filename'
+    parameter.dumpConfigFile = False
+    with patch("ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
+               new=Mock(return_value=cpMock)), \
+         patch("DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations",
+               new=Mock(return_value=self.opsMock)):
+      self.chain.loadParameters(parameter)
+
+    ret = self.chain.createWhizard2Application({'ProdID': '123',
+                                                'EvtType': 'process',
+                                                'Energy': '555',
+                                                'Machine': 'clic'},
+                                               100,
+                                               'sinFile')
+    self.assertIsInstance(ret, Whizard2)
+    self.assertEqual(ret.version, 'myWhizardVersion')
+
+  def test_createDDSimApplication(self):
 
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
 
@@ -277,8 +309,7 @@ class TestMaking( unittest.TestCase ):
         parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
       )
     self.assertEqual( retMeta, {} )
-
-    self.assertEqual( self.chain.cliReco, ' --Config.Overlay=1.4TeV ' )
+    self.assertEqual(self.chain.cliRecoOption, '')
 
   def test_createSimProduction( self ):
     with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod ):
@@ -289,6 +320,16 @@ class TestMaking( unittest.TestCase ):
       )
     self.assertEqual( retMeta, {} )
 
+  def test_createGenProduction(self):
+    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod):
+      retMeta = self.chain.createGenerationProduction(meta={'ProdID': 23, 'Energy': 350, 'EvtType': 'ttBond'},
+                                                      prodName="prodJamesProd",
+                                                      parameterDict=self.chain.getParameterDictionary('MI6')[0],
+                                                      eventsPerJob=10,
+                                                      nbTasks='10',
+                                                      sinFile='myWhizardSinFile'
+                                                     )
+    self.assertEqual(retMeta, {})
 
   def test_createMovingTransformation( self ):
     self.chain.outputSE = "Source"
@@ -300,25 +341,37 @@ class TestMaking( unittest.TestCase ):
     self.chain._flags._moveSim=True
     self.chain._flags._moves=True
     self.chain._flags._dryRun=False
-    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation.createDataTransformation") as moveMock:
       self.chain.createMovingTransformation( {'ProdID':666}, 'MCReconstruction' )
-      moveMock.assert_called_once_with( "Target", "Source", 666, "DST" )
+      moveMock.assert_called_once_with('Moving', "Target", "Source", 666, "DST")
 
-    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation.createDataTransformation") as moveMock:
       self.chain.createMovingTransformation( {'ProdID':666}, 'MCSimulation' )
-      moveMock.assert_called_once_with( "Target", "Source", 666, "SIM" )
+      moveMock.assert_called_once_with('Moving', "Target", "Source", 666, "SIM")
 
 
     self.chain._flags._rec=True
     self.chain._flags._moves=False
     self.chain._flags._dryRun=False
-    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation.createMovingTransformation" ) as moveMock:
+    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation.createDataTransformation") as moveMock:
       self.chain.createMovingTransformation( {'ProdID':666}, 'MCReconstruction' )
       moveMock.assert_not_called()
 
     with self.assertRaisesRegexp( RuntimeError, 'ERROR creating Moving'):
       self.chain.createMovingTransformation( {'ProdID':666}, "Split" )
 
+  def test_setApplicationOptions(self):
+    application = Mock()
+    application.setSomeParameter = Mock()
+    self.chain.applicationOptions['AppName'] = [('SomeParameter', 'SomeValue')]
+    self.chain._setApplicationOptions('AppName', application)
+    application.setSomeParameter.assert_called_once_with('SomeValue')
+
+    from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
+    application = Marlin()
+    self.chain.applicationOptions['AppName'] = [('SomeOtherParameter', 'SomeValue')]
+    with self.assertRaisesRegexp(AttributeError, 'Cannot set'):
+      self.chain._setApplicationOptions('AppName', application)
 
 
 class TestMakingFlags( unittest.TestCase ):

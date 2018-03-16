@@ -45,7 +45,7 @@ install:SL6:
     - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
-    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly flake8
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly flake8 psutil
     - cd ..
   artifacts:
      paths:
@@ -81,7 +81,7 @@ install:CC7:
     - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
-    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly flake8
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly flake8 psutil
     - cd ..
   artifacts:
      paths:
@@ -174,7 +174,7 @@ checkFormat:
     - cd installation/ILCDIRAC
     - source ../bashrc
     - git remote add CLICDP https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC.git
-    - git fetch CLICDP ${ILCDIRAC_BRANCH}:${ILCDIRAC_BRANCH}
+    - git fetch --no-tags CLICDP ${ILCDIRAC_BRANCH}:${ILCDIRAC_BRANCH}
     - git diff -U0 $(git merge-base HEAD CLICDP/$ILCDIRAC_BRANCH) | flake8 --diff
     - echo "Formatting correct"
 
