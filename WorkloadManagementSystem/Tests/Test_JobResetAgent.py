@@ -83,7 +83,6 @@ class TestJobResetAgent(unittest.TestCase):
                       call('ProdJobs', self.jobResetAgent.prodJobTypes)]
 
     self.jobResetAgent.beginExecution()
-    self.jobResetAgent.am_setOption.assert_any_call('shifterProxy', 'DataManager')
     self.jobResetAgent.am_getOption.assert_has_calls(getOptionCalls)
     # accounting dictionary should be cleared
     self.assertEquals(self.jobResetAgent.accounting, {})

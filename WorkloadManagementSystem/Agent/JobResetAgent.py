@@ -50,7 +50,6 @@ class JobResetAgent(AgentModule):
     AgentModule.__init__(self, *args, **kwargs)
     self.name = 'JobResetAgent'
     self.enabled = True
-    self.shifterProxy = 'DataManager'
 
     self.userJobTypes = ['User']
     self.prodJobTypes = ['MCGeneration', 'MCSimulation', 'MCReconstruction', 'MCReconstruction_Overlay', 'Split',
@@ -70,16 +69,15 @@ class JobResetAgent(AgentModule):
     self.jobDB = JobDB()
 
     self.jobStateUpdateClient = RPCClient('WorkloadManagement/JobStateUpdate',
-                                          useCertificates=False,
+                                          useCertificates=True,
                                           timeout=10)
 
     self.jobManagerClient = RPCClient('WorkloadManagement/JobManager',
-                                      useCertificates=False,
+                                      useCertificates=True,
                                       timeout=10)
 
   def beginExecution(self):
     """ Reload the configurations before every cycle """
-    self.shifterProxy = self.am_setOption('shifterProxy', 'DataManager')
 
     self.enabled = self.am_getOption('EnableFlag', True)
     self.addressTo = self.am_getOption('MailTo', self.addressTo)
@@ -173,7 +171,7 @@ class JobResetAgent(AgentModule):
                                         (minorStatus, appStatus))})
       return res
 
-    self.log.warn("Something not as expected for Job Status, please check: %s" % jobID)
+    self.logError("Something not as expected for Job Status, ", "please check: %s" % jobID)
     return S_OK()
 
   def treatUserJobWithReq(self, jobID, request):
@@ -418,7 +416,7 @@ class JobResetAgent(AgentModule):
 
     res = self.jobStateUpdateClient.setJobStatus(jobID, status, minorStatus, application)
     if not res["OK"]:
-      self.logError("Failed to mark ", "Job: %s as %s" % (jobID, status))
+      self.logError("Failed to mark ", "Job: %s as %s, Error: %s" % (jobID, status, res['Message']))
       return res
 
     self.log.notice("Job %s is successfully maked as %s" % (jobID, status))
