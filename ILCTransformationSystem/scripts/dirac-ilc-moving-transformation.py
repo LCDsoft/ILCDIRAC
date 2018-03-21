@@ -45,13 +45,14 @@ def _createTrafo():
   from ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation import createDataTransformation
   for index, prodID in enumerate(clip.prodIDs):
     datatype = clip.datatype if clip.datatype else ['GEN', 'SIM', 'REC'][index % 3]
-    resCreate = createDataTransformation(clip.targetSE,
-                                         clip.sourceSE,
-                                         prodID,
-                                         datatype,
-                                         clip.extraname,
-                                         clip.forcemoving,
-                                         clip.groupSize,
+    resCreate = createDataTransformation(transformationType='Moving',
+                                         targetSE=clip.targetSE,
+                                         sourceSE=clip.sourceSE,
+                                         prodID=prodID,
+                                         datatype=datatype,
+                                         extraname=clip.extraname,
+                                         forceMoving=clip.forcemoving,
+                                         groupSize=clip.groupSize,
                                         )
     if not resCreate['OK']:
       return 1
