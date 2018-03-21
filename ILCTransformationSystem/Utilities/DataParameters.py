@@ -61,7 +61,10 @@ class Params(object):
     return S_OK()
 
   def setGroupSize(self, size):
-    self.groupSize = size
+    try:
+      self.groupSize = int(size)
+    except ValueError:
+      return S_ERROR("Expected integer for groupsize")
     return S_OK()
 
   def registerSwitches(self, script):
