@@ -37,8 +37,13 @@ def _createTrafo():
     return 1
   from ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation import createDataTransformation
   for prodID in clip.prodIDs:
-    resCreate = createDataTransformation('Replication', clip.targetSE, clip.sourceSE, prodID,
-                                         clip.datatype, clip.extraname, clip.groupSize,
+    resCreate = createDataTransformation(transformationType='Replication',
+                                         targetSE=clip.targetSE,
+                                         sourceSE=clip.sourceSE,
+                                         prodID=prodID,
+                                         datatype=clip.datatype,
+                                         extraname=clip.extraname,
+                                         groupSize=clip.groupSize,
                                         )
     if not resCreate['OK']:
       return 1
