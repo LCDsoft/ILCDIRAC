@@ -1,3 +1,14 @@
+[v28r0p5]
+
+*WorkloadManagementSystem
+
+FIX: (!194) fixing **JobResetAgent**
+
+*ILCTransformationSystem
+
+FIX: (!195) Fixed bugs that prevented the use of `dirac-ilc-moving-transformation` and `dirac-ilc-replication-transformation`
+
+
 [v28r0p4]
 
 *WorkloadManagementSystem
