@@ -856,8 +856,8 @@ finalOutputSE = %(finalOutputSE)s
       prodID = self.prodIDs[index]
       eventsPerJob = self.eventsPerJobs[index]
       eventsPerBaseFile = self.eventsInSplitFiles[index]
-      sinFile = self.whizard2SinFile[index]
-      nbTasks = self.numberOfTasks[index]
+      sinFile = self.whizard2SinFile[index] if self._flags.gen else ''
+      nbTasks = self.numberOfTasks[index] if self._flags.gen else -1
 
       metaInput = self.meta(prodID, process, energy)
       self.createTransformations(metaInput, sinFile, eventsPerJob, nbTasks, eventsPerBaseFile)  # pylint: disable=E1121
