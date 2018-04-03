@@ -853,7 +853,7 @@ finalOutputSE = %(finalOutputSE)s
 
       if self._flags.gen:
         genMeta = self.createGenerationProduction(metaInput, prodName, parameterDict, eventsPerJob,
-                                                  nbTasks, sinFile)  # pylint: disable=E1121
+                                                  nbTasks, sinFile)
         self._updateMeta(metaInput, genMeta, eventsPerJob)
 
       if self._flags.spl:
@@ -900,7 +900,7 @@ finalOutputSE = %(finalOutputSE)s
       nbTasks = self.numberOfTasks[index] if self._flags.gen else -1
 
       metaInput = self.meta(prodID, process, energy)
-      self.createTransformations(metaInput, sinFile, eventsPerJob, nbTasks, eventsPerBaseFile)  # pylint: disable=E1121
+      self.createTransformations(metaInput, sinFile, eventsPerJob, nbTasks, eventsPerBaseFile)
 
 
 
