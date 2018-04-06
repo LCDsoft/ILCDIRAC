@@ -9,6 +9,7 @@ the agent so that it is restarted automatically.
 # imports
 from collections import defaultdict
 from datetime import datetime
+from functools import partial
 
 import os
 import psutil
@@ -158,7 +159,7 @@ class MonitorAgents(AgentModule):
     age = now - lastAccessTime
     return S_OK(age)
 
-  def restartAgent(self, pid):
+  def restartAgent(self, pid, agentName):
     """ kills an agent which is then restarted automatically """
     try:
       agentProc = psutil.Process(int(pid))
@@ -168,7 +169,7 @@ class MonitorAgents(AgentModule):
       for proc in processesToTerminate:
         proc.terminate()
 
-      gone, alive = psutil.wait_procs(processesToTerminate, timeout=5, callback=self.on_terminate)
+      _gone, alive = psutil.wait_procs(processesToTerminate, timeout=5, callback=partial(self.on_terminate, agentName))
       for proc in alive:
         self.log.info("Forcefully killing process %s" % proc.pid)
         proc.kill()
@@ -204,7 +205,7 @@ class MonitorAgents(AgentModule):
         self.accounting[agentName]["Treatment"] = "Please restart it manually"
         return S_OK()
 
-      res = self.restartAgent(int(pid))
+      res = self.restartAgent(int(pid), agentName)
       if not res["OK"]:
         return res
 

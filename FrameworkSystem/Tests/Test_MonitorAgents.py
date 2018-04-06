@@ -178,7 +178,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
     res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
     self.assertTrue(res["OK"])
-    self.restartAgent.restartAgent.assert_called_once_with(int(pid))
+    self.restartAgent.restartAgent.assert_called_once_with(int(pid), agentName)
 
   def test_get_last_access_time(self):
     """ test for getLastAccessTime function """
