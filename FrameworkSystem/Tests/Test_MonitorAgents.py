@@ -2,11 +2,12 @@
 
 import unittest
 from datetime import datetime, timedelta
+from mock import MagicMock, call, patch
+import psutil
 
 import ILCDIRAC.FrameworkSystem.Agent.MonitorAgents as MAA
 from ILCDIRAC.FrameworkSystem.Agent.MonitorAgents import MonitorAgents
 
-from mock import MagicMock, call
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC import gLogger
@@ -195,6 +196,26 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertTrue(res["OK"])
     self.assertIsInstance(res["Value"], timedelta)
     self.assertEquals(res["Value"].seconds, 3600)
+
+  def test_restartAgent(self):
+    """ test for restartAgent """
+    psMock = MagicMock(name="psutil")
+    procMock2 = MagicMock(name="process2kill")
+    psMock.wait_procs.return_value = ("gone", [procMock2])
+    procMock = MagicMock(name="process")
+    procMock.children.return_value = []
+    psMock.Process.return_value = procMock
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=psMock):
+      res = self.restartAgent.restartAgent(12345, "agentX")
+    self.assertTrue(res['OK'])
+
+    psMock = MagicMock(name="psutil2")
+    psMock.Process = MagicMock("RaisingProc")
+    psMock.Error = psutil.Error
+    psMock.Process.side_effect = psutil.Error()
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=psMock):
+      res = self.restartAgent.restartAgent(12345, "agentX")
+    self.assertFalse(res['OK'])
 
 
 if __name__ == "__main__":
