@@ -48,10 +48,10 @@ class TestMonitorAgents(unittest.TestCase):
                       call('MailTo', self.restartAgent.addressTo),
                       call('MailFrom', self.restartAgent.addressFrom)]
 
-    self.restartAgent.getAllRunningAgents = MagicMock(return_value=S_OK())
+    self.restartAgent.getRunningInstances = MagicMock(return_value=S_OK())
     self.restartAgent.beginExecution()
     self.restartAgent.am_getOption.assert_has_calls(getOptionCalls, any_order=True)
-    self.restartAgent.getAllRunningAgents.assert_called()
+    self.restartAgent.getRunningInstances.assert_called()
 
     # accounting dictionary should be cleared
     self.assertEquals(self.restartAgent.accounting, {})
@@ -90,12 +90,12 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertEquals(self.restartAgent.accounting, {})
     self.assertEquals(self.restartAgent.errors, [])
 
-  def test_get_all_running_agents(self):
-    """ test for getAllRunningAgents function """
+  def test_get_running_instances(self):
+    """ test for getRunningInstances function """
     self.restartAgent.sysAdminClient.getOverallStatus = MagicMock()
     self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_ERROR()
 
-    res = self.restartAgent.getAllRunningAgents()
+    res = self.restartAgent.getRunningInstances(instanceType='Agents')
     self.assertFalse(res["OK"])
 
     agents = {'Agents': {'DataManagement': {'FTS3Agent': {'MEM': '0.3', 'Setup': True, 'PID': '18128',
@@ -110,7 +110,7 @@ class TestMonitorAgents(unittest.TestCase):
                                                       'Module': 'FTSAgent', 'Installed': False, 'Timeup': 0}
 
     self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(agents)
-    res = self.restartAgent.getAllRunningAgents()
+    res = self.restartAgent.getRunningInstances(instanceType='Agents')
 
     # only insalled agents with RunitStatus RUN should be returned
     self.assertTrue('FTSAgent' not in res["Value"])
@@ -179,7 +179,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
     res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
     self.assertTrue(res["OK"])
-    self.restartAgent.restartAgent.assert_called_once_with(int(pid), agentName)
+    self.restartAgent.restartAgent.assert_called_once_with(int(pid), agentName, False)
 
   def test_get_last_access_time(self):
     """ test for getLastAccessTime function """

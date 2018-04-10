@@ -1,9 +1,9 @@
 """
-Restarts an agent in case it gets stuck
+Restarts an agent or executor in case it gets stuck
 
-This agent is designed to supervise the Agents and retarts them in case if they get stuck.
+This agent is designed to supervise the Agents and Executors, and restarts them in case they get stuck.
 The agent checks the age of the log file and if it is deemed too old will kill
-the agent so that it is restarted automatically.
+the agent so that it is restarted automatically. Executors will only be restarted if there are jobs in checking status
 """
 
 # imports
@@ -21,6 +21,7 @@ from DIRAC.Core.Utilities.PrettyPrint import printTable
 from DIRAC.FrameworkSystem.Client.SystemAdministratorClient import SystemAdministratorClient
 from DIRAC.ConfigurationSystem.Client.Helpers.Path import cfgPath
 from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
+from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
 
 __RCSID__ = "$Id$"
 AGENT_NAME = "Framework/MonitorAgents"
@@ -29,6 +30,11 @@ AGENT_NAME = "Framework/MonitorAgents"
 HOUR = 3600
 MINUTES = 60
 SECONDS = 1
+
+# Define constant
+NO_CHECKING_JOBS = 'NO_CHECKING_JOBS'
+CHECKING_JOBS = 'CHECKING_JOBS'
+NO_RESTART = 'NO_RESTART'
 
 
 class MonitorAgents(AgentModule):
@@ -39,11 +45,14 @@ class MonitorAgents(AgentModule):
     self.name = 'MonitorAgents'
     self.setup = "Production"
     self.enabled = False
+    self.restartExecutors = False
     self.diracLocation = "/opt/dirac/pro"
 
     self.sysAdminClient = SystemAdministratorClient("localhost")
+    self.jobMonClient = JobMonitoringClient()
     self.nClient = NotificationClient()
-    self.agents = list()
+    self.agents = dict()
+    self.executors = dict()
     self.errors = list()
     self.accounting = defaultdict(dict)
 
@@ -60,14 +69,20 @@ class MonitorAgents(AgentModule):
     """ Reload the configurations before every cycle """
     self.setup = self.am_getOption("Setup", self.setup)
     self.enabled = self.am_getOption("EnableFlag", self.enabled)
+    self.restartExecutors = self.am_getOption("RestartExectors", self.restartExecutors)
     self.diracLocation = os.environ.get("DIRAC", self.diracLocation)
     self.addressTo = self.am_getOption('MailTo', self.addressTo)
     self.addressFrom = self.am_getOption('MailFrom', self.addressFrom)
 
-    res = self.getAllRunningAgents()
+    res = self.getRunningInstances(instanceType='Agents')
     if not res["OK"]:
       return S_ERROR("Failure to get running agents")
     self.agents = res["Value"]
+
+    res = self.getRunningInstances(instanceType='Executors')
+    if not res["OK"]:
+      return S_ERROR("Failure to get running executors")
+    self.executors = res["Value"]
 
     self.accounting.clear()
     return S_OK()
@@ -102,16 +117,20 @@ class MonitorAgents(AgentModule):
 
     return S_OK()
 
-  def getAllRunningAgents(self):
-    """ returns a dict of running agents. Key is agent's name, value contains Polling Time, PID
-        and log file location """
+  def getRunningInstances(self, instanceType='Agents'):
+    """ returns a dict of running agents or executors. Key is agent's name, value contains Polling Time, PID
+        and log file location
+
+    :param str instanceType: 'Agents' or 'Executors'
+    :returns: Dictionary of running instances
+    """
 
     res = self.sysAdminClient.getOverallStatus()
     if not res["OK"]:
       self.logError("Failure to get agents from system administrator client", res["Message"])
       return res
 
-    val = res['Value']['Agents']
+    val = res['Value'][instanceType]
     runningAgents = defaultdict(dict)
     for system, agents in val.iteritems():
       for agentName, agentInfo in agents.iteritems():
@@ -137,6 +156,12 @@ class MonitorAgents(AgentModule):
         self.logError("Failure when checking agent", "%s, %s" % (agentName, res['Message']))
         ok = False
 
+    for executorName, val in self.executors.iteritems():
+      res = self.checkAgent(executorName, val["PollingTime"], val["LogFileLocation"], val["PID"], isExecutor=True)
+      if not res['OK']:
+        self.logError("Failure when checking executor", "%s, %s" % (executorName, res['Message']))
+        ok = False
+
     self.sendNotification()
 
     if not ok:
@@ -159,8 +184,22 @@ class MonitorAgents(AgentModule):
     age = now - lastAccessTime
     return S_OK(age)
 
-  def restartAgent(self, pid, agentName):
+  def restartAgent(self, pid, agentName, isExecutor=False):
     """ kills an agent which is then restarted automatically """
+
+    if isExecutor:
+      res = self.checkForCheckingJobs(agentName)
+      if not res['OK']:
+        return res
+      if res['OK'] and res['Value'] == NO_CHECKING_JOBS:
+        self.accounting.pop(agentName, None)
+        return S_OK(NO_RESTART)
+
+    if not self.enabled or (isExecutor and not self.restartExecutors):
+      self.log.info("Restarting agents is disabled, please restart %s manually" % agentName)
+      self.accounting[agentName]["Treatment"] = "Please restart it manually"
+      return S_OK(NO_RESTART)
+
     try:
       agentProc = psutil.Process(int(pid))
       processesToTerminate = agentProc.children(recursive=True)
@@ -180,7 +219,7 @@ class MonitorAgents(AgentModule):
       self.logError("Exception occurred in terminating processes", "%s" % err)
       return S_ERROR()
 
-  def checkAgent(self, agentName, pollingTime, currentLogLocation, pid):
+  def checkAgent(self, agentName, pollingTime, currentLogLocation, pid, isExecutor=False):
     """ checks the age of agent's log file, if it is too old then restarts the agent """
 
     self.log.info("Checking Agent: %s" % agentName)
@@ -200,16 +239,27 @@ class MonitorAgents(AgentModule):
       self.log.info("Current log file is too old for Agent %s" % agentName)
       self.accounting[agentName]["LogAge"] = age.seconds / MINUTES
 
-      if not self.enabled:
-        self.log.info("Restarting agents is disabled, please restart %s manually" % agentName)
-        self.accounting[agentName]["Treatment"] = "Please restart it manually"
-        return S_OK()
-
-      res = self.restartAgent(int(pid), agentName)
+      res = self.restartAgent(int(pid), agentName, isExecutor)
       if not res["OK"]:
         return res
-
-      self.accounting[agentName]["Treatment"] = "Successfully Restarted"
-      self.log.info("Agent %s has been successfully restarted" % agentName)
+      elif res['OK'] and res['Value'] != NO_RESTART:
+        self.accounting[agentName]["Treatment"] = "Successfully Restarted"
+        self.log.info("Agent %s has been successfully restarted" % agentName)
 
     return S_OK()
+
+  def checkForCheckingJobs(self, executorName):
+    """ checks if there are checking jobs with the **executorName** as current MinorStatus """
+
+    attrDict = {'Status': 'Checking', 'MinorStatus': executorName}
+
+    # returns list of jobs IDs
+    resJobs = self.jobMonClient.getJobs(attrDict)
+    if not resJobs['OK']:
+      self.logError("Could not get jobs for this executor", "%s: %s" % (executorName, resJobs['Message']))
+      return resJobs
+    if resJobs['Value']:
+      self.log.info("Found %d jobs in 'Checking' status for %s" % (len(resJobs['Value']), executorName))
+      return S_OK(CHECKING_JOBS)
+    self.log.info("Found no jobs in 'Checking' status for %s" % executorName)
+    return S_OK(NO_CHECKING_JOBS)
