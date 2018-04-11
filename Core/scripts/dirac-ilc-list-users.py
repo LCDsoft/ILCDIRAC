@@ -63,18 +63,19 @@ def printUsers():
   clip.setURLs()
   
   from DIRAC.Core.Security.VOMSService import VOMSService
-  voms = VOMSService( vo=clip.voName, adminUrl=clip.adminUrl, attributesUrl=clip.attributeUrl )
-  res = voms.admListMembers()
+  voms = VOMSService(vo=clip.voName)
+  res = voms.getUsers()
   if not res['OK']:
     gLogger.error(res['Message'])
     dexit(1)
   users = res['Value']
-  for user in users:
+  for userDN, userInfo in users.iteritems():
+    userInfo['DN'] = userDN
     if not clip.username:
-      printUser(user, clip.addPrint)
+      printUser(userInfo, clip.addPrint)
     else:
-      if user['DN'].lower().count(clip.username.lower()):
-        printUser(user, clip.addPrint)
+      if userDN.lower().count(clip.username.lower()):
+        printUser(userInfo, clip.addPrint)
 
 
 if __name__ == "__main__":
