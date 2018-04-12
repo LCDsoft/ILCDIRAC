@@ -155,8 +155,8 @@ class TestMonitorAgents(unittest.TestCase):
 
     res = self.restartAgent.execute()
     self.assertFalse(res["OK"])
-    calls = [call(agentOne, agentOnePollingTime, agentOneLogLoc, agentOnePID),
-             call(agentTwo, agentTwoPollingTime, agentTwoLogLoc, agentTwoPID)]
+    calls = [call(agentOne, agentOnePollingTime, agentOneLogLoc, agentOnePID, False),
+             call(agentTwo, agentTwoPollingTime, agentTwoLogLoc, agentTwoPID, False)]
 
     self.restartAgent.checkAgent.assert_has_calls(calls, any_order=True)
 

@@ -173,17 +173,13 @@ class MonitorAgents(AgentModule):
   def execute(self):
     """ execution in one cycle """
     ok = True
-    for agentName, val in self.agents.iteritems():
-      res = self.checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["PID"])
-      if not res['OK']:
-        self.logError("Failure when checking agent", "%s, %s" % (agentName, res['Message']))
-        ok = False
 
-    for executorName, val in self.executors.iteritems():
-      res = self.checkAgent(executorName, val["PollingTime"], val["LogFileLocation"], val["PID"], isExecutor=True)
-      if not res['OK']:
-        self.logError("Failure when checking executor", "%s, %s" % (executorName, res['Message']))
-        ok = False
+    for instances, isExecutor in [(self.agents, False), (self.executors, True)]:
+      for agentName, val in instances.iteritems():
+        res = self.checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["PID"], isExecutor)
+        if not res['OK']:
+          self.logError("Failure when checking agent", "%s, %s" % (agentName, res['Message']))
+          ok = False
 
     self.sendNotification()
 
