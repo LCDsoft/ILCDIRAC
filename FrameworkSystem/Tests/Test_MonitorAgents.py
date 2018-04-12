@@ -32,6 +32,16 @@ class TestMonitorAgents(unittest.TestCase):
   def tearDown(self):
     pass
 
+  @staticmethod
+  def getPSMock():
+    psMock = MagicMock(name="psutil")
+    procMock2 = MagicMock(name="process2kill")
+    psMock.wait_procs.return_value = ("gone", [procMock2])
+    procMock = MagicMock(name="process")
+    procMock.children.return_value = []
+    psMock.Process.return_value = procMock
+    return psMock
+
   def test_init(self):
     self.assertIsInstance(self.restartAgent, MonitorAgents)
     self.assertIsInstance(self.restartAgent.nClient, MagicMock)
@@ -199,23 +209,61 @@ class TestMonitorAgents(unittest.TestCase):
 
   def test_restartAgent(self):
     """ test for restartAgent """
-    psMock = MagicMock(name="psutil")
-    procMock2 = MagicMock(name="process2kill")
-    psMock.wait_procs.return_value = ("gone", [procMock2])
-    procMock = MagicMock(name="process")
-    procMock.children.return_value = []
-    psMock.Process.return_value = procMock
-    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=psMock):
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=self.getPSMock()):
       res = self.restartAgent.restartAgent(12345, "agentX")
     self.assertTrue(res['OK'])
 
-    psMock = MagicMock(name="psutil2")
+    psMock = self.getPSMock()
     psMock.Process = MagicMock("RaisingProc")
     psMock.Error = psutil.Error
     psMock.Process.side_effect = psutil.Error()
     with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=psMock):
       res = self.restartAgent.restartAgent(12345, "agentX")
     self.assertFalse(res['OK'])
+
+  def test_restartAgent_executors(self):
+    # disable restartExecutors, no checking jobs
+    self.restartAgent.accounting.clear()
+    self.restartAgent.enabled = True
+    self.restartAgent.restartExecutors = False
+    self.restartAgent.checkForCheckingJobs = MagicMock(return_value=S_OK("NO_CHECKING_JOBS"))
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=self.getPSMock()):
+      res = self.restartAgent.restartAgent(12345, "agentX", isExecutor=True)
+    self.assertTrue(res['OK'], res.get('Message', ''))
+    self.assertEqual(res['Value'], "NO_RESTART")
+    self.assertNotIn("agentX", self.restartAgent.accounting)
+
+    # disable restartExecutors, error checking jobs
+    self.restartAgent.accounting.clear()
+    self.restartAgent.enabled = True
+    self.restartAgent.restartExecutors = False
+    self.restartAgent.checkForCheckingJobs = MagicMock(return_value=S_ERROR("failed"))
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=self.getPSMock()):
+      res = self.restartAgent.restartAgent(12345, "agentX", isExecutor=True)
+    self.assertFalse(res['OK'])
+    self.assertEqual(res['Message'], "failed")
+
+    # disable restartExecutors, some checking jobs
+    self.restartAgent.accounting.clear()
+    self.restartAgent.enabled = True
+    self.restartAgent.restartExecutors = False
+    self.restartAgent.checkForCheckingJobs = MagicMock(return_value=S_OK("CHECKING_JOBS"))
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=self.getPSMock()):
+      res = self.restartAgent.restartAgent(12345, "agentX", isExecutor=True)
+    self.assertTrue(res['OK'], res.get('Message', ''))
+    self.assertEqual(res['Value'], "NO_RESTART")
+    self.assertIn("manually", self.restartAgent.accounting["agentX"]["Treatment"])
+
+    # enable restartExecutors, some checking jobs
+    self.restartAgent.accounting.clear()
+    self.restartAgent.enabled = True
+    self.restartAgent.restartExecutors = True
+    self.restartAgent.checkForCheckingJobs = MagicMock(return_value=S_OK("CHECKING_JOBS"))
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=self.getPSMock()):
+      res = self.restartAgent.restartAgent(12345, "agentX", isExecutor=True)
+    self.assertTrue(res['OK'], res.get('Message', ''))
+    self.assertIs(res['Value'], None)
+    self.assertNotIn("manually", self.restartAgent.accounting["agentX"].get("Treatment", ""))
 
 
 if __name__ == "__main__":
