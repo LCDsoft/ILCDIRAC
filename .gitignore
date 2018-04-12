@@ -13,3 +13,4 @@ docs/DOC
 docs/build
 docs/source/releasehistory.rst
 docs/source/releasenotes.rst
+.pytest_cache/
