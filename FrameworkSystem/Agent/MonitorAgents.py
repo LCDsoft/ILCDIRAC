@@ -4,6 +4,29 @@ Restarts an agent or executor in case it gets stuck
 This agent is designed to supervise the Agents and Executors, and restarts them in case they get stuck.
 The agent checks the age of the log file and if it is deemed too old will kill
 the agent so that it is restarted automatically. Executors will only be restarted if there are jobs in checking status
+
+
+
++----------------------------+--------------------------------------------+---------------------------------------+
+|  **Option**                |**Description**                             |  **Example**                          |
++----------------------------+--------------------------------------------+---------------------------------------+
+| Setup                      | Which setup to monitor                     | Production                            |
+|                            |                                            |                                       |
++----------------------------+--------------------------------------------+---------------------------------------+
+| EnableFlag                 | If agents or executors should be           | False                                 |
+|                            | automatically restarted or not             |                                       |
+|                            |                                            |                                       |
++----------------------------+--------------------------------------------+---------------------------------------+
+| RestartExecutors           | If executors should be restarted           | False                                 |
+|                            | automatically                              |                                       |
++----------------------------+--------------------------------------------+---------------------------------------+
+| MailTo                     | Email addresses receiving notifications    |                                       |
+|                            |                                            |                                       |
++----------------------------+--------------------------------------------+---------------------------------------+
+| MailFrom                   | Sender email address                       |                                       |
+|                            |                                            |                                       |
++----------------------------+--------------------------------------------+---------------------------------------+
+
 """
 
 # imports
