@@ -31,7 +31,6 @@ class UploadOutputDataTestCase( unittest.TestCase ):
     self.upod.workflow_commons['outputDataFileMask'] = [ 'mycoollist' ]
     with patch('%s.getProdFilename' % MODULE_NAME, new=Mock(side_effect=[ 'myOutputF_1', 'other_file.txt' ])):
       assertDiracSucceedsWith( self.upod.applicationSpecificInputs(), 'Parameters resolved', self )
-    assertEqualsImproved( self.upod.failoverTest, False, self )
     assertEqualsImproved( self.upod.outputList, [
       { 'appdict' : True, 'myOutput' : 'yes', 'outputFile' : 'myOutputF_1' },
       { 'outputFile' : 'other_file.txt' } ], self )
@@ -93,7 +92,6 @@ class UploadOutputDataTestCase( unittest.TestCase ):
     trans_mock.transferAndRegisterFileFailover.return_value = S_OK('bla')
     self.upod.enable = True
     self.upod.jobID = 13831
-    self.upod.failoverTest = True
     self.upod.prodOutputLFNs = [ '/ilc/prod/ilc/mc-dbd/example_file' ]
     with patch.object(self.upod, 'getCandidateFiles', new=Mock(return_value=S_OK({}))), \
          patch.object(self.upod, 'getFileMetadata', new=Mock(return_value=S_OK( { 'fileTestName' : { 'workflowSE' : 'testSE', 'otherTestMetadata' : True, 'localpath' : None, 'lfn' : None, 'resolvedSE' : None, 'filedict' : None } } ))), \

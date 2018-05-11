@@ -35,7 +35,6 @@ class UploadOutputData(ModuleBase):
     self.log = gLogger.getSubLogger( "UploadOutputData" )
     self.commandTimeOut = 10*60
     self.enable = True
-    self.failoverTest = False #flag to put file to failover SE by default
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])
     self.ops = Operations()
 
@@ -57,11 +56,6 @@ class UploadOutputData(ModuleBase):
     if not isinstance( self.enable, bool ):
       self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
       self.enable = False
-    
-    self.failoverTest = self.step_commons.get('TestFailover', self.failoverTest)
-    if not isinstance( self.failoverTest, bool ):
-      self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
-      self.failoverTest = False
 
     self.productionID = self.workflow_commons.get("PRODUCTION_ID", self.productionID)
 
@@ -196,24 +190,18 @@ class UploadOutputData(ModuleBase):
 
     #One by one upload the files with failover if necessary
     failover = {}
-    if not self.failoverTest:
-      for fileName, metadata in final.iteritems():
-        self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName, 
-                                                                                   ', '.join(metadata['resolvedSE'])))
-        result = failoverTransfer.transferAndRegisterFile(fileName, 
-                                                          metadata['localpath'], 
-                                                          metadata['lfn'], 
-                                                          metadata['resolvedSE'], 
-                                                          fileMetaDict = metadata['filedict'],
-                                                          fileCatalog = catalogs)
-        if not result['OK']:
-          self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata['filedict']))
-          failover[fileName] = metadata
-        else:
-          #lfn = metadata['lfn']
-          pass
-    else:
-      failover = final
+    for fileName, metadata in final.iteritems():
+      self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName,
+                                                                                 ', '.join(metadata['resolvedSE'])))
+      result = failoverTransfer.transferAndRegisterFile(fileName,
+                                                        metadata['localpath'],
+                                                        metadata['lfn'],
+                                                        metadata['resolvedSE'],
+                                                        fileMetaDict=metadata['filedict'],
+                                                        fileCatalog=catalogs)
+      if not result['OK']:
+        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata['filedict']))
+        failover[fileName] = metadata
 
     self.failoverSEs = self.ops.getValue("Production/%s/FailOverSE" % self.experiment, self.failoverSEs)  
 
