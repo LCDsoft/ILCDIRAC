@@ -308,10 +308,13 @@ class FileStatusTransformationAgent(AgentModule):
     if not res['OK']:
       return res
     result = res['Value']
-    retryStrategy = {}
+    retryStrategy = defaultdict(dict)
     for taskID in taskIDs:
+      if taskID is None:
+        self.log.error("Task ID is None", "Transformation: %s\n Files: %r " % (transID, transFiles))
+        retryStrategy[None]['Strategy'] = SET_UNUSED
+        continue
       res = self.reqClient.getRequest(requestID=result[taskID]['RequestID'])
-      retryStrategy[taskID] = {}
       if not res['OK']:
         self.log.notice('Request %s does not exist setting file status to unused' % result[taskID]['RequestID'])
         retryStrategy[taskID]['Strategy'] = SET_UNUSED
