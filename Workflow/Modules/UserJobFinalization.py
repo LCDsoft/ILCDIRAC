@@ -37,7 +37,6 @@ class UserJobFinalization(ModuleBase):
     self.version = __RCSID__
     self.log = gLogger.getSubLogger( "UserJobFinalization" )
     self.enable = True
-    self.failoverTest = False #flag to put file to failover SE by default
     self.defaultOutputSE = gConfig.getValue( '/Resources/StorageElementGroups/Tier1-USER', [])
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])
     #List all parameters here
@@ -61,10 +60,6 @@ class UserJobFinalization(ModuleBase):
     if not isinstance( self.enable, bool ):
       self.log.warn('Enable flag set to non-boolean value %s, setting to False' %self.enable)
       self.enable = False
-
-    if not isinstance( self.failoverTest, bool ):
-      self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
-      self.failoverTest = False
 
     self.jobID = os.environ.get('JOBID', self.jobID)
     if self.jobID != 0:
@@ -193,10 +188,7 @@ class UserJobFinalization(ModuleBase):
     filesToReplicate = {}
     filesToFailover = {}
     filesUploaded = []
-    if not self.failoverTest:
-      self.transferAndRegisterFiles(final, failoverTransfer, filesToFailover, filesUploaded, filesToReplicate)
-    else:
-      filesToFailover = final
+    self.transferAndRegisterFiles(final, failoverTransfer, filesToFailover, filesUploaded, filesToReplicate)
 
     ##if there are files to be failovered, we do it now
     resultTRFF = self.transferRegisterAndFailoverFiles(failoverTransfer, filesToFailover, filesUploaded)
