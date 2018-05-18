@@ -325,8 +325,10 @@ MoveTypes = %(moveTypes)s
       self.prodIDs = [ int( pID.strip() ) for pID in self.prodIDs if pID.strip() ]
       self.prodIDs = self.prodIDs if self.prodIDs else [ 1 for _ in self.energies ]
 
-      if not (self.processes or self.energies or self.eventsPerJobs) and self.prodIDs:
+      if not (self.processes and self.energies and self.eventsPerJobs) and self.prodIDs:
+        eventsPerJobSave = list(self.eventsPerJobs) if self.eventsPerJobs else None
         self._getProdInfoFromIDs()
+        self.eventsPerJobs = eventsPerJobSave if eventsPerJobSave else self.eventsPerJobs
 
       self.numberOfTasks = [int(nbtask.strip()) for nbtask in self.numberOfTasks if nbtask.strip()]
       self.numberOfTasks = self.numberOfTasks if self.numberOfTasks else [1 for _ in self.energies]
@@ -856,7 +858,9 @@ finalOutputSE = %(finalOutputSE)s
                                                   nbTasks, sinFile)
         self._updateMeta(metaInput, genMeta, eventsPerJob)
 
-      if self._flags.spl:
+      if self._flags.spl and eventsPerBaseFile == eventsPerJob:
+        gLogger.notice("*" * 80 + "\nSkipping split transformation for %s\n" % prodName + "*" * 80)
+      elif self._flags.spl:
         splitMeta = self.createSplitProduction( metaInput, prodName, parameterDict, eventsPerJob,
                                                 eventsPerBaseFile, limited=False )
         self._updateMeta( metaInput, splitMeta, eventsPerJob )
