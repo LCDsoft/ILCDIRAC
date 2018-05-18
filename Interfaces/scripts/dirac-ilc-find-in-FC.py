@@ -25,7 +25,7 @@ to list only the directories containing the files use the "-D" flag::
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK
-from DIRAC.Core.Utilities import uniqueElements
+from DIRAC.Core.Utilities.List import uniqueElements
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 
 __RCSID__ = "$Id$"

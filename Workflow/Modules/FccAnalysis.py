@@ -13,7 +13,7 @@ import glob
 # DIRAC libraries
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
-from DIRAC.Core.Utilities import shellCall
+from DIRAC.Core.Utilities.Subprocess import shellCall
 from DIRAC import gLogger, S_ERROR, S_OK
 
 __RCSID__ = "$Id$"
