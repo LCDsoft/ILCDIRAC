@@ -237,7 +237,7 @@ There is also the option to automatically split jobs over inputfiles, see
 
   from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
   from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
-  from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin, OverlayInput
+  from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
 
   dIlc = DiracILC()
 
