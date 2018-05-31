@@ -887,7 +887,7 @@ finalOutputSE = %(finalOutputSE)s
       if recMeta:
         self.createMovingTransformation( recMeta, 'MCReconstruction' )
 
-      if recMeta:
+      if overMeta:
         self.createMovingTransformation(overMeta, 'MCReconstruction_Overlay')
 
 
