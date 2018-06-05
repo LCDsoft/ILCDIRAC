@@ -43,6 +43,7 @@ class UserJob(Job):
     self.totalNumberOfEvents = None
     self.eventsPerJob = None
     self.numberOfFilesPerJob = 1
+    self._startJobIndex = 0
 
   def submit(self, diracinstance = None, mode = "wms"):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
@@ -348,8 +349,10 @@ class UserJob(Job):
    
     if sequenceType != "Atomic":
       self.setParameterSequence(sequenceType, sequenceList, addToWorkflow)
-      self.setParameterSequence( 'JobIndexList', range(len(sequenceList)), addToWorkflow='JobIndex' )
-      self._addParameter( self.workflow, 'JobIndex', 'int', 0, 'JobIndex' )
+      self.setParameterSequence('JobIndexList',
+                                range(self._startJobIndex, len(sequenceList) + self._startJobIndex),
+                                addToWorkflow='JobIndex')
+      self._addParameter(self.workflow, 'JobIndex', 'int', self._startJobIndex, 'JobIndex')
 
     self.log.info("Job splitting successful")
 
@@ -496,6 +499,18 @@ class UserJob(Job):
     self.log.info("Job splitting: submission consists of %d job(s)" % len(mapEventJob))
 
     return ['NumberOfEvents', mapEventJob, 'NbOfEvts']
+
+  def setSplittingStartIndex(self, start):
+    """Set the initial job index for the JobIndex parameter used to define the output file name index.
+
+    :param int start: value where to start from, must be positive integer
+    :returns: S_OK, S_ERROR
+    """
+    start = self._toInt(start)
+    if not start:
+      return self._reportError("Start Index must be positive integer")
+    self._startJobIndex = start
+    return S_OK()
 
   #############################################################################
   def _toInt(self, number):
