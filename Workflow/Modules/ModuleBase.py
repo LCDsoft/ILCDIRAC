@@ -14,7 +14,7 @@ import shutil
 import string
 import sys
 import urllib
-
+from pprint import pformat
 from random import choice
 
 from DIRAC                                                import S_OK, S_ERROR, gLogger
@@ -369,9 +369,9 @@ class ModuleBase(object):
     for the current step. Module parameters are resolved directly.
     """
     self.log.info("Calling module:", self.__class__ )
-    self.log.info("Workflow commons:", self.workflow_commons)
-    self.log.info("Request:", self.workflow_commons.get('Request'))
-    self.log.info("Step commons:", self.step_commons)
+    self.log.info("Workflow commons:", pformat(self.workflow_commons))
+    self.log.info("Request:", pformat(self.workflow_commons.get('Request')))
+    self.log.info("Step commons:", pformat(self.step_commons))
     
     self.jobReport = self._getJobReporter()
 

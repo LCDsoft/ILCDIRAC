@@ -9,6 +9,7 @@ defined in the production workflow.
 import os
 import random
 import time
+from pprint import pformat
 
 from DIRAC.DataManagementSystem.Client.FailoverTransfer    import FailoverTransfer
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
@@ -49,7 +50,7 @@ class UploadOutputData(ModuleBase):
   def applicationSpecificInputs(self):
     """ By convention the module parameters are resolved here.
     """
-    self.log.debug("Workflow commons: %s" % self.workflow_commons)
+    self.log.debug("Workflow commons: %s" % pformat(self.workflow_commons))
 
     self.enable = self.step_commons.get('Enable', self.enable)
     if not isinstance( self.enable, bool ):
