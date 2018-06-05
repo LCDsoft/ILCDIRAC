@@ -38,6 +38,7 @@ class Whizard2( LCApplication ):
     self.datatype = 'GEN'
     self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
     self._ops = Operations()
+    self._decayProc = ['decay_proc']
 
   def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is the jobID.
@@ -56,19 +57,36 @@ class Whizard2( LCApplication ):
     if self.addedtojob:
       return self._reportError("Cannot modify this attribute once application has been added to Job")
     self.eventType = evttype
+    return S_OK()
+
+  def setProcessVariables(self, processes):
+    """ set the list of processes to simulate
+    The sindarin will be modified later on to call simulate (list,of,processes)
+
+    :param processes: which processes to call simulate on, by default 'decay_proc'
+    :type processes: list, str
+    """
+    if isinstance(processes, basestring):
+      self._decayProc = [proc.strip() for proc in processes.split(',')]
+      return S_OK()
+    elif isinstance(processes, (set, list, tuple)):
+      self._decayProc = [proc.strip() for proc in processes]
+      return S_OK()
+
+    return self._reportError("Cannot handle this argument type")
+
 
   def setSinFile(self, whizard2SinFilePath):
     """ Set the Whizard2 options to be used
 
     Usage:
-      - Give path to Whizard2 streeing file.
-      - The decay process in the file should be stored in the variable decay_dec e.g.:
-          process decay_dec = "A", "A" => "b", "B"
-      - IMPORTANT set seed via iLCDirac API -> whizard2.setRandomSeed(1)
-      - IMPORTANT set n_events via iLCDirac API  -> whizard2.setNumberOfEvents(100)
-      - IMPORTANT set OutputFile via iLCDirac API -> whizard2.setOutputFile( outputFilename )
+      - Give path to the Whizard2 steering file.
+      - IMPORTANT: set *seed* via iLCDirac API -> whizard2.setRandomSeed(1)
+      - IMPORTANT: set *n_events* via iLCDirac API  -> whizard2.setNumberOfEvents(100)
+      - IMPORTANT: set *OutputFile* via iLCDirac API -> whizard2.setOutputFile( outputFilename )
+      - The variables in which processes are defined which should be simulated can be set via `setProcessVariables`
 
-    :param string whizard2SinFilePath: Path to the whizard2 sin file.
+    :param str whizard2SinFilePath: Path to the whizard2 sin file.
     """
     self._checkArgs( { 'whizard2SinFilePath' : types.StringType } )
 
@@ -78,9 +96,6 @@ class Whizard2( LCApplication ):
 
     # Read file
     self.whizard2SinFile = open(whizard2SinFilePath).read()
-    # Check that the file follows the above mentioned rules
-    if "processdecay_proc" not in self.whizard2SinFile.replace(" ", ""):
-      return self._reportError('The sin file does not contain a decay string "process decay_proc"')
 
     if "n_events" in self.whizard2SinFile:
       return self._reportError('Do not set n_events in the sin file, set it via the iLCDirac API')
@@ -88,8 +103,10 @@ class Whizard2( LCApplication ):
     if "seed" in self.whizard2SinFile:
       return self._reportError('Do not set seed in the sin file, set it via the iLCDirac API')
 
-    if "simulate(decay_proc)" in self.whizard2SinFile.replace(" ", ""):
-      return self._reportError('Do not call "simulate (decay_proc)" in the sin file, this is done by iLCDirac')
+    if "simulate(" in self.whizard2SinFile.replace(" ", ""):
+      return self._reportError('Do not call "simulate ()" in the sin file, this is done by iLCDirac')
+
+    return None
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -121,6 +138,10 @@ class Whizard2( LCApplication ):
 
     if not self.numberOfEvents :
       return S_ERROR('Number of events not set!')
+
+    for process in self._decayProc:
+      if process not in self.whizard2SinFile:
+        return S_ERROR('Process "%s" not found in sindarin file, please check your inputs' % process)
 
     if self._jobtype != 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
@@ -157,12 +178,14 @@ class Whizard2( LCApplication ):
                                "Random seed for the generator"))
     md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     md1.addParameter(Parameter("whizard2SinFile",     '', "string", "", "", False, False, "Whizard2 steering options"))
+    md1.addParameter(Parameter("decayProc", [], "list", "", "", False, False, "processses to simulate"))
     return md1
 
   def _applicationModuleValues(self, moduleinstance):
     moduleinstance.setValue("randomSeed",      self.randomSeed)
     moduleinstance.setValue("debug",           self.debug)
     moduleinstance.setValue("whizard2SinFile", self.whizard2SinFile)
+    moduleinstance.setValue("decayProc", self._decayProc)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()

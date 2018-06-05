@@ -30,6 +30,7 @@ class Whizard2Analysis(ModuleBase):
     self.randomSeed = -1
     self.whizard2SinFile = ''
     self.eventstring = ['+++ Generating event']
+    self.decayProc = ['decay_proc']
 
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -95,7 +96,7 @@ class Whizard2Analysis(ModuleBase):
     whizard2Steer.append('')
     whizard2Steer.append('n_events = %s' % self.NumberOfEvents)
     whizard2Steer.append('')
-    whizard2Steer.append('simulate (decay_proc) {')
+    whizard2Steer.append('simulate (%s) {' % ",".join(self.decayProc))
     whizard2Steer.append('        $sample = "%s"' % self.OutputFile.rsplit('.',1)[0] )
     if self.OutputFile.rsplit('.',1)[-1] == 'slcio':
       whizard2Steer.append('        sample_format = lcio')
