@@ -1,6 +1,6 @@
 #!/bin/env python
 """
-Create a production to replicate files from one storage elment to another
+Create a production to replicate files from one storage element to another
 
 Example::
 
@@ -15,6 +15,7 @@ Options:
 """
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, exit as dexit
+from DIRAC.TransformationSystem.Utilities.ReplicationTransformation import createDataTransformation
 
 from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import Params
 
@@ -35,14 +36,15 @@ def _createTrafo():
   if not clip.checkSettings(Script)['OK']:
     gLogger.error("ERROR: Missing settings")
     return 1
-  from ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation import createDataTransformation
-  for prodID in clip.prodIDs:
-    resCreate = createDataTransformation(transformationType='Replication',
+  for prodID in clip.metaValues:
+    resCreate = createDataTransformation(flavour='Replication',
                                          targetSE=clip.targetSE,
                                          sourceSE=clip.sourceSE,
-                                         prodID=prodID,
-                                         datatype=clip.datatype,
+                                         metaKey=clip.metaKey,
+                                         metaValue=prodID,
+                                         extraData={'Datatype': clip.datatype},
                                          extraname=clip.extraname,
+                                         plugin=clip.plugin,
                                          groupSize=clip.groupSize,
                                         )
     if not resCreate['OK']:

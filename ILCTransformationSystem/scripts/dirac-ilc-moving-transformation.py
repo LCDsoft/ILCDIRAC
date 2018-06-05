@@ -19,8 +19,10 @@ Options:
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, exit as dexit
+from DIRAC.TransformationSystem.Utilities.ReplicationTransformation import createDataTransformation
 
-from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import Params
+from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import Params, checkDatatype
+#from ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation import createDataTransformation
 
 __RCSID__ = "$Id$"
 
@@ -42,16 +44,21 @@ def _createTrafo():
   if not clip.checkSettings(Script)['OK']:
     gLogger.error("ERROR: Missing settings")
     return 1
-  from ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation import createDataTransformation
-  for index, prodID in enumerate(clip.prodIDs):
+  for index, prodID in enumerate(clip.metaValues):
     datatype = clip.datatype if clip.datatype else ['GEN', 'SIM', 'REC'][index % 3]
-    resCreate = createDataTransformation(transformationType='Moving',
+    plugin = 'Broadcast' if clip.forcemoving or clip.flavour != 'Moving' else 'BroadcastProcessed'
+    retData = checkDatatype(prodID, datatype)
+    if not retData['OK']:
+      gLogger.error("ERROR: %s" % retData['Message'])
+      return 1
+    resCreate = createDataTransformation(flavour='Moving',
                                          targetSE=clip.targetSE,
                                          sourceSE=clip.sourceSE,
-                                         prodID=prodID,
-                                         datatype=datatype,
+                                         metaKey=clip.metaKey,
+                                         metaValue=prodID,
+                                         extraData={'Datatype': datatype},
                                          extraname=clip.extraname,
-                                         forceMoving=clip.forcemoving,
+                                         plugin=plugin,
                                          groupSize=clip.groupSize,
                                         )
     if not resCreate['OK']:

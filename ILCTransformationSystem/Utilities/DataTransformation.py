@@ -2,41 +2,12 @@
 Utilities to create Transformations to Move Files
 """
 
-import os
-
 from DIRAC.TransformationSystem.Client.Transformation import Transformation
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
 from DIRAC import gLogger, S_OK, S_ERROR
 
-
-def checkDatatype(prodID, datatype):
-  """ check if the datatype makes sense for given production """
-  # skip data type check when creating replications in development for prod productions this check doesn't work
-  if os.environ.get('SKIP_CHECK', False):
-    gLogger.warn("Skipping Datatype check!")
-    return S_OK()
-
-  tClient = TransformationClient()
-  cond = dict(TransformationID=prodID)
-  trafo = tClient.getTransformations(cond)
-  if not trafo['OK']:
-    return trafo
-  if len(trafo['Value']) != 1:
-    return S_ERROR("Did not get unique production for this prodID")
-
-  trafoType = trafo['Value'][0]['Type'].split("_")[0]
-
-  dataTypes = Operations().getOptionsDict('Production/TransformationDatatypes')
-  if not dataTypes['OK']:
-    return dataTypes
-
-  dataTypes = dataTypes['Value']
-  if trafoType not in dataTypes[datatype]:
-    return S_ERROR("Datatype %r doesn't fit production type %r for prodID %s" % (datatype, trafoType, prodID))
-
-  return S_OK()
+from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import checkDatatype
 
 
 def createDataTransformation(transformationType, targetSE, sourceSE, prodID, datatype,
