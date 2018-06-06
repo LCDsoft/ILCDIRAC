@@ -325,6 +325,16 @@ MoveTypes = %(moveTypes)s
       self.prodIDs = [ int( pID.strip() ) for pID in self.prodIDs if pID.strip() ]
       self.prodIDs = self.prodIDs if self.prodIDs else [ 1 for _ in self.energies ]
 
+      # if one of the lists only has size 1 and there is a longer list we extend
+      # the list to the maximum size assuming the values are re-used
+      maxLength = 0
+      parameterLists = [self.processes, self.energies, self.eventsPerJobs, self.whizard2SinFile]
+      for parList in parameterLists:
+        maxLength = len(parList) if len(parList) > maxLength else maxLength
+      for parList in parameterLists:
+        if len(parList) == 1 and maxLength > 1:
+          parList.extend([parList[0]] * (maxLength - 1))
+
       if not (self.processes and self.energies and self.eventsPerJobs) and self.prodIDs:
         eventsPerJobSave = list(self.eventsPerJobs) if self.eventsPerJobs else None
         self._getProdInfoFromIDs()
