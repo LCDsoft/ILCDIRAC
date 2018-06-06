@@ -1,3 +1,31 @@
+[v28r0p6]
+
+Release date: 2018-06-06
+
+
+*Interfaces
+
+NEW: (!207) Whizard2: add possibility to simulate multiple processes with the function `~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2.Whizard2.setProcessVariables`
+
+*FrameworkSystem
+
+FIX: (!199) MonitorAgents fix exception after restarting of agent. Wring signature for callback function
+NEW: (!201) `MonitorAgents` now also monitors executors, restarts them if **RestartExecutors** is True, solves ILCDIRAC-824
+
+*Docs
+
+FIX: (!204) Fixed wrong imports in splitting example
+FIX: (!205) Fixed syntax errors in splitting example
+NEW: (!205) added parametric job name to splitting example
+
+*ILCTransformationSystem
+
+FIX: (!198) Fix a problem in `dirac-clic-make-production` when starting chains from generator files
+NEW: (!198) In `dirac-clic-make-production`, allow creating chains only with prodIDs and obtain the EvtType, Energy and Number of Events from the ProductionInfo or FileCatalog
+FIX: (!202) `FileStatusTransformationAgent`: Protect against exception when `TaskID==None`, solves ILCDIRAC-831
+FIX: (!206) `dirac-clic-make-productions`: Fix a bug when not creating RecOver productions, the wrong check was done for the creation of the moving transformation
+NEW: (!206) `dirac-clic-make-productions`: When creating chains, the splitting step will be skipped if the number of events per job and the number of events in the generator files is the same. This allows the creation of multiple chains some of which contain splitting steps and some not
+
 [v28r0p5]
 
 *WorkloadManagementSystem
