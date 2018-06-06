@@ -237,24 +237,25 @@ There is also the option to automatically split jobs over inputfiles, see
 
   from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
   from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
-  from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin, OverlayInput
+  from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
 
   dIlc = DiracILC()
 
   job = UserJob()
-  job.setOutputSandbox( "*.log" )
+  job.setName("MuonSim_%n") # %n will be replaced by the task number
+  job.setOutputSandbox("*.log")
   ## output data name is automatically changed to, e.g., ddsimout_5.slcio
-  job.setOutputData( "ddsimout.slcio", outputPath="sim1" )
-  job.setCLICConfig( "ILCSoft-2017-07-27" )
+  job.setOutputData("ddsimout.slcio", OutputPath="sim1")
+  job.setCLICConfig("ILCSoft-2017-07-27")
   ## creates 10 jobs with 100 events each
-  job.setSplitEvents( eventsPerJob=100, numberOfJobs=10 )
+  job.setSplitEvents(eventsPerJob=100, numberOfJobs=10)
 
   ddsim = DDSim()
   ddsim.setVersion("ILCSoft-2017-07-27_gcc62")
   ddsim.setDetectorModel("CLIC_o3_v13")
-  ddsim.setExtraCLIArguments( " --enableGun --gun.particle=mu- " )
-  ddsim.setNumberOfEvents( 100 )
-  ddsim.setSteeringFile( "clic_steer.py" )
-  ddsim.setOutputFile( "ddsimout.slcio" )
-  myJob.append(ddsim)
-  myJob.submit(dIlc)
+  ddsim.setExtraCLIArguments(" --enableGun --gun.particle=mu- ")
+  ddsim.setNumberOfEvents(100)
+  ddsim.setSteeringFile("clic_steer.py")
+  ddsim.setOutputFile("ddsimout.slcio")
+  job.append(ddsim)
+  job.submit(dIlc)

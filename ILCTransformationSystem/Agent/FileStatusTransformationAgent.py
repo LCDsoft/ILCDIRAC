@@ -157,6 +157,10 @@ class FileStatusTransformationAgent(AgentModule):
                       (self.transformationStatuses, self.transformationTypes))
       return S_OK()
 
+    self.log.notice('Will treat %d transformations' % len(transformations))
+    self.log.notice('Transformations: %s' % ",".join([str(transformation['TransformationID'])
+                                                      for transformation in transformations]))
+
     for trans in transformations:
       transID = trans['TransformationID']
       if 'SourceSE' not in trans or not trans['SourceSE']:
@@ -209,8 +213,8 @@ class FileStatusTransformationAgent(AgentModule):
 
       res = self.getDataTransformationType(trans['TransformationID'])
       if not res['OK']:
-        self.log.error('Failure to determine Data Transformation Type for Transformation ID:',
-                       trans['TransformationID'])
+        self.log.error('Failure to determine Data Transformation Type', "%s: %s"
+                       % (trans['TransformationID'], res['Message']))
         continue
 
       trans['DataTransType'] = res['Value']
@@ -262,7 +266,7 @@ class FileStatusTransformationAgent(AgentModule):
     if replication:
       return S_OK(REPLICATION_TRANS)
 
-    return S_ERROR("Unknown Transformation Type %s" % res['Value'])
+    return S_ERROR("Unknown Transformation Type '%r'" % res['Value'])
 
   def setFileStatus(self, transID, transFiles, status):
     """ sets transformation file status  """
@@ -304,10 +308,13 @@ class FileStatusTransformationAgent(AgentModule):
     if not res['OK']:
       return res
     result = res['Value']
-    retryStrategy = {}
+    retryStrategy = defaultdict(dict)
     for taskID in taskIDs:
+      if taskID is None:
+        self.log.error("Task ID is None", "Transformation: %s\n Files: %r " % (transID, transFiles))
+        retryStrategy[None]['Strategy'] = SET_UNUSED
+        continue
       res = self.reqClient.getRequest(requestID=result[taskID]['RequestID'])
-      retryStrategy[taskID] = {}
       if not res['OK']:
         self.log.notice('Request %s does not exist setting file status to unused' % result[taskID]['RequestID'])
         retryStrategy[taskID]['Strategy'] = SET_UNUSED

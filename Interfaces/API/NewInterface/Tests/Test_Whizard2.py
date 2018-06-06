@@ -61,12 +61,6 @@ class Whizard2TestCase( unittest.TestCase ):
     assertEqualsImproved( self.whiz.whizard2SinFile, 'process decay_proc = "A", "A" => "b", "B"', self )
 
   @patch( "os.path.isfile", new = Mock(return_value=True ) )
-  @patch('__builtin__.open', mock_open(read_data='process decay_pros = "A", "A" => "b", "B"'))
-  @patch( "%s._checkArgs" % MODULE_NAME, new=Mock(return_value=True))
-  def test_setSinFile_fails1( self ):
-    assertDiracFailsWith( self.whiz.setSinFile('/some/path') , '"process decay_proc"', self )
-
-  @patch( "os.path.isfile", new = Mock(return_value=True ) )
   @patch('__builtin__.open', mock_open(read_data='process decay_proc = "A", "A" => "b", "B"\n n_events'))
   @patch( "%s._checkArgs" % MODULE_NAME, new=Mock(return_value=True))
   def test_setSinFile_fails2( self ):
@@ -78,11 +72,11 @@ class Whizard2TestCase( unittest.TestCase ):
   def test_setSinFile_fails3( self ):
     assertDiracFailsWith( self.whiz.setSinFile('/some/path') , 'Do not set seed', self )
 
-  @patch( "os.path.isfile", new = Mock(return_value=True ) )
+  @patch('os.path.isfile', new=Mock(return_value=True))
   @patch('__builtin__.open', mock_open(read_data='process decay_proc = "A", "A" => "b", "B"\n simulate  ( decay_proc)'))
-  @patch( "%s._checkArgs" % MODULE_NAME, new=Mock(return_value=True))
-  def test_setSinFile_fails4( self ):
-    assertDiracFailsWith( self.whiz.setSinFile('/some/path') , 'Do not call "simulate (decay_proc)"', self )
+  @patch('%s._checkArgs' % MODULE_NAME, new=Mock(return_value=True))
+  def test_setSinFile_fails4(self):
+    assertDiracFailsWith(self.whiz.setSinFile('/some/path'), 'Do not call "simulate ()"', self)
 
   def test_checkworkflow_app_missing( self ):
     self.whiz._inputapp = [ 'some_depdency', 'unavailable_dependency_fail_on_this' ]
@@ -116,7 +110,7 @@ class Whizard2TestCase( unittest.TestCase ):
 
   def test_checkconsistency( self ):
     self.whiz.version = '2.3.1'
-    self.whiz.whizard2SinFile = 'mymodel.sin'
+    self.whiz.whizard2SinFile = 'mymodel.sin \n decay_proc'
     self.whiz.outputFile = 'myoutput.stdhep'
     self.whiz._jobtype = 'User'
     self.whiz.numberOfEvents = 100
@@ -145,7 +139,7 @@ class Whizard2TestCase( unittest.TestCase ):
 
   def test_checkconsistency_nouserjob( self ):
     self.whiz.version = '2.3.1'
-    self.whiz.whizard2SinFile = 'sqrts=350 GeV\n model=SM'
+    self.whiz.whizard2SinFile = 'sqrts=350 GeV\n model=SM \ndecay_proc'
     self.whiz.eventType = 'ee -> ff'
     self.whiz._jobtype = 'notUser'
     self.whiz.numberOfEvents = 100
@@ -161,14 +155,14 @@ class Whizard2TestCase( unittest.TestCase ):
 
   def test_checkconsistency_nouserjob_fails( self ):
     self.whiz.version = '2.3.1'
-    self.whiz.whizard2SinFile = 'mymodel.sin'
+    self.whiz.whizard2SinFile = 'mymodel.sin \ndecay_proc'
     self.whiz.numberOfEvents = 100
     self.whiz._jobtype = 'notUser'
     assertDiracFailsWith( self.whiz._checkConsistency( Mock() ), 'evttype not set, please set event type!', self )
 
   def test_checkconsistency_nouserjob_fails2( self ):
     self.whiz.version = '2.3.1'
-    self.whiz.whizard2SinFile = 'model=SM'
+    self.whiz.whizard2SinFile = 'model=SM \ndecay_proc'
     self.whiz.eventType = 'ee -> ff'
     self.whiz._jobtype = 'notUser'
     self.whiz.numberOfEvents = 100
@@ -176,7 +170,7 @@ class Whizard2TestCase( unittest.TestCase ):
 
   def test_checkconsistency_nouserjob_fails3( self ):
     self.whiz.version = '2.3.1'
-    self.whiz.whizard2SinFile = 'sqrts=350 GeV'
+    self.whiz.whizard2SinFile = 'sqrts=350 GeV \ndecay_proc'
     self.whiz.eventType = 'ee -> ff'
     self.whiz._jobtype = 'notUser'
     self.whiz.numberOfEvents = 100
@@ -184,7 +178,7 @@ class Whizard2TestCase( unittest.TestCase ):
 
   def test_checkconsistency_nouserjob_fails4( self ):
     self.whiz.version = '2.3.1'
-    self.whiz.whizard2SinFile = 'sqrts=350 GeV\n sqrts=550 GeV '
+    self.whiz.whizard2SinFile = 'sqrts=350 GeV\n sqrts=550 GeV \ndecay_proc'
     self.whiz.eventType = 'ee -> ff'
     self.whiz._jobtype = 'notUser'
     self.whiz.numberOfEvents = 100
@@ -192,11 +186,33 @@ class Whizard2TestCase( unittest.TestCase ):
 
   def test_checkconsistency_nouserjob_fails5( self ):
     self.whiz.version = '2.3.1'
-    self.whiz.whizard2SinFile = 'sqrts=350 GeV\n model=SM\n model=Susy'
+    self.whiz.whizard2SinFile = 'sqrts=350 GeV\n model=SM\n model=Susy \ndecay_proc'
     self.whiz.eventType = 'ee -> ff'
     self.whiz._jobtype = 'notUser'
     self.whiz.numberOfEvents = 100
     assertDiracFailsWith( self.whiz._checkConsistency( Mock() ), 'Multiple instances of "model=..." detected, only one can be processed', self )
+
+  def test_checkconsistency_nouserjob_fails6(self):
+    self.whiz.version = '2.3.1'
+    self.whiz.whizard2SinFile = 'sqrts=350 GeV\n model=SM\n model=Susy'
+    self.whiz.eventType = 'ee -> ff'
+    self.whiz._jobtype = 'notUser'
+    self.whiz.numberOfEvents = 100
+    assertDiracFailsWith(self.whiz._checkConsistency(Mock()), '"decay_proc" not found', self)
+
+  def test_setProcessVariables(self):
+    ret = self.whiz.setProcessVariables('  decay_proc  ')
+    self.assertTrue(ret['OK'])
+    self.assertEqual(self.whiz._decayProc, ['decay_proc'])
+
+    ret = self.whiz.setProcessVariables(('  decay_proc  ', 'decay_another   '))
+    self.assertTrue(ret['OK'])
+    self.assertEqual(self.whiz._decayProc, ['decay_proc', 'decay_another'])
+
+    ret = self.whiz.setProcessVariables({'  decay_proc  ': 'decay_another   '})
+    self.assertFalse(ret['OK'])
+    self.assertIn('Cannot handle', ret.get('Message'))
+
 
 def runTests():
   """Runs our tests"""

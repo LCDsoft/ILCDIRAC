@@ -133,7 +133,7 @@ class CLICDetProdChain( object ):
       return self._sim
     @property
     def rec( self ): #pylint: disable=missing-docstring
-      return self._rec and not self._over
+      return self._rec
     @property
     def over( self ): #pylint: disable=missing-docstring
       return self._over
@@ -325,6 +325,11 @@ MoveTypes = %(moveTypes)s
       self.prodIDs = [ int( pID.strip() ) for pID in self.prodIDs if pID.strip() ]
       self.prodIDs = self.prodIDs if self.prodIDs else [ 1 for _ in self.energies ]
 
+      if not (self.processes and self.energies and self.eventsPerJobs) and self.prodIDs:
+        eventsPerJobSave = list(self.eventsPerJobs) if self.eventsPerJobs else None
+        self._getProdInfoFromIDs()
+        self.eventsPerJobs = eventsPerJobSave if eventsPerJobSave else self.eventsPerJobs
+
       self.numberOfTasks = [int(nbtask.strip()) for nbtask in self.numberOfTasks if nbtask.strip()]
       self.numberOfTasks = self.numberOfTasks if self.numberOfTasks else [1 for _ in self.energies]
 
@@ -359,6 +364,38 @@ MoveTypes = %(moveTypes)s
     if parameter.dumpConfigFile:
       print self
       raise RuntimeError('')
+
+  def _getProdInfoFromIDs(self):
+    """get the processName, energy and eventsPerJob from the MetaData catalog
+
+    :raises: AttributeError if some of the information cannot be found
+    :returns: None
+    """
+    if not self.prodIDs:
+      raise AttributeError("No prodIDs defined")
+
+    self.eventsPerJobs = []
+    self.processes = []
+    self.energies = []
+    from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
+    from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+    trc = TransformationClient()
+    fc = FileCatalogClient()
+    for prodID in self.prodIDs:
+      gLogger.notice("Getting information for %s" % prodID)
+      tRes = trc.getTransformation(str(prodID))
+      if not tRes['OK']:
+        raise AttributeError("No prodInfo found for %s" % prodID)
+      self.eventsPerJobs.append(int(tRes['Value']['EventsPerTask']))
+      lfnRes = fc.findFilesByMetadata({'ProdID': prodID})
+      if not lfnRes['OK'] or not lfnRes['Value']:
+        raise AttributeError("Could not find files for %s: %s " % (prodID, lfnRes.get('Message', lfnRes.get('Value'))))
+      path = os.path.dirname(lfnRes['Value'][0])
+      fileRes = fc.getDirectoryUserMetadata(path)
+      self.processes.append(fileRes['Value']['EvtType'])
+      self.energies.append(fileRes['Value']['Energy'])
+      gLogger.notice("Found (Evts,Type,Energy): %s %s %s " %
+                     (self.eventsPerJobs[-1], self.processes[-1], self.energies[-1]))
 
   def _productionName( self, metaDict, parameterDict, prodType ):
     """ create the production name """
@@ -545,9 +582,7 @@ finalOutputSE = %(finalOutputSE)s
 
     return overlay
 
-
-
-  def createMarlinApplication( self, energy ):
+  def createMarlinApplication(self, energy, over):
     """ create Marlin Application without overlay """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
     marlin = Marlin()
@@ -556,7 +591,7 @@ finalOutputSE = %(finalOutputSE)s
     marlin.setDetectorModel( self.detectorModel )
     marlin.detectortype = self.detectorModel
 
-    if self._flags.over:
+    if over:
       self.addOverlayOptionsToMarlin( energy )
 
     self.cliReco = ' '.join([self.cliRecoOption, self.cliReco])
@@ -657,14 +692,14 @@ finalOutputSE = %(finalOutputSE)s
     simulationMeta = simProd.getMetadata()
     return simulationMeta
 
-  def createReconstructionProduction( self, meta, prodName, parameterDict ):
+  def createReconstructionProduction(self, meta, prodName, parameterDict, over):
     """ create reconstruction production """
-    gLogger.notice( "*"*80 + "\nCreating reconstruction production: %s " % prodName )
+    gLogger.notice("*" * 80 + "\nCreating %s reconstruction production: %s " % ('overlay' if over else '', prodName))
     from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
     recProd = ProductionJob()
     recProd.dryrun = self._flags.dryRun
     recProd.setLogLevel( self.productionLogLevel )
-    productionType = 'MCReconstruction_Overlay' if self._flags.over else 'MCReconstruction'
+    productionType = 'MCReconstruction_Overlay' if over else 'MCReconstruction'
     recProd.setProdType( productionType )
     recProd.setClicConfig( self.clicConfig )
 
@@ -673,24 +708,25 @@ finalOutputSE = %(finalOutputSE)s
       raise RuntimeError( "Error setting inputDataQuery for Reconstruction production: %s " % res['Message'] )
 
     recProd.setOutputSE( self.outputSE )
-    recType = 'rec_overlay' if self._flags.over else 'rec'
+    recType = 'rec_overlay' if over else 'rec'
     recProd.setWorkflowName( self._productionName( meta, parameterDict, recType ) )
     recProd.setProdGroup( self.prodGroup )
 
     #Add overlay if needed
-    if self._flags.over:
+    if over:
+      print "adding overlay", over
       res = recProd.append( self.createOverlayApplication( float( meta['Energy'] ) ) )
       if not res['OK']:
         raise RuntimeError( "Error appending overlay to reconstruction transformation: %s" % res['Message'] )
 
     #Add reconstruction
-    res = recProd.append( self.createMarlinApplication( float( meta['Energy'] ) ) )
+    res = recProd.append(self.createMarlinApplication(float(meta['Energy']), over))
     if not res['OK']:
       raise RuntimeError( "Error appending Marlin to reconstruction production: %s" % res['Message'] )
     recProd.addFinalization(True,True,True,True)
 
     description = "CLICDet2017 %s" % meta['Energy']
-    description += "Overlay" if self._flags.over else "No Overlay"
+    description += "Overlay" if over else "No Overlay"
     if prodName:
       description += ", %s"%prodName
     recProd.setDescription( description )
@@ -815,14 +851,16 @@ finalOutputSE = %(finalOutputSE)s
     prodName = metaInput['EvtType']
 
     for parameterDict in self.getParameterDictionary( prodName ):
-      splitMeta, genMeta, simMeta, recMeta = None, None, None, None
+      splitMeta, genMeta, simMeta, recMeta, overMeta = None, None, None, None, None
 
       if self._flags.gen:
         genMeta = self.createGenerationProduction(metaInput, prodName, parameterDict, eventsPerJob,
-                                                  nbTasks, sinFile)  # pylint: disable=E1121
+                                                  nbTasks, sinFile)
         self._updateMeta(metaInput, genMeta, eventsPerJob)
 
-      if self._flags.spl:
+      if self._flags.spl and eventsPerBaseFile == eventsPerJob:
+        gLogger.notice("*" * 80 + "\nSkipping split transformation for %s\n" % prodName + "*" * 80)
+      elif self._flags.spl:
         splitMeta = self.createSplitProduction( metaInput, prodName, parameterDict, eventsPerJob,
                                                 eventsPerBaseFile, limited=False )
         self._updateMeta( metaInput, splitMeta, eventsPerJob )
@@ -831,8 +869,11 @@ finalOutputSE = %(finalOutputSE)s
         simMeta = self.createSimulationProduction( metaInput, prodName, parameterDict )
         self._updateMeta( metaInput, simMeta, eventsPerJob )
 
-      if self._flags.rec or self._flags.over:
-        recMeta = self.createReconstructionProduction( metaInput, prodName, parameterDict )
+      if self._flags.rec:
+        recMeta = self.createReconstructionProduction(metaInput, prodName, parameterDict, over=False)
+
+      if self._flags.over:
+        overMeta = self.createReconstructionProduction(metaInput, prodName, parameterDict, over=True)
 
       if genMeta:
         self.createMovingTransformation(genMeta, 'MCGeneration')
@@ -846,6 +887,9 @@ finalOutputSE = %(finalOutputSE)s
       if recMeta:
         self.createMovingTransformation( recMeta, 'MCReconstruction' )
 
+      if overMeta:
+        self.createMovingTransformation(overMeta, 'MCReconstruction_Overlay')
+
 
   def createAllTransformations( self ):
     """ loop over the list of processes, energies and possibly prodIDs to create all the productions """
@@ -856,11 +900,11 @@ finalOutputSE = %(finalOutputSE)s
       prodID = self.prodIDs[index]
       eventsPerJob = self.eventsPerJobs[index]
       eventsPerBaseFile = self.eventsInSplitFiles[index]
-      sinFile = self.whizard2SinFile[index]
-      nbTasks = self.numberOfTasks[index]
+      sinFile = self.whizard2SinFile[index] if self._flags.gen else ''
+      nbTasks = self.numberOfTasks[index] if self._flags.gen else -1
 
       metaInput = self.meta(prodID, process, energy)
-      self.createTransformations(metaInput, sinFile, eventsPerJob, nbTasks, eventsPerBaseFile)  # pylint: disable=E1121
+      self.createTransformations(metaInput, sinFile, eventsPerJob, nbTasks, eventsPerBaseFile)
 
 
 

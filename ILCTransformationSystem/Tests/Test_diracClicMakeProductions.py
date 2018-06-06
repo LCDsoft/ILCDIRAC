@@ -6,7 +6,7 @@ import ConfigParser
 
 from mock import MagicMock as Mock, patch
 
-from DIRAC import S_OK
+from DIRAC import S_OK, S_ERROR
 
 #pylint: disable=protected-access, invalid-name
 THE_SCRIPT = "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions"
@@ -175,7 +175,7 @@ class TestMaking( unittest.TestCase ):
                 new=Mock(return_value=cpMock ) ):
       self.chain.loadParameters( parameter )
 
-    ret = self.chain.createMarlinApplication( 300.0 )
+    ret = self.chain.createMarlinApplication(300.0, over=True)
     self.assertIsInstance( ret, Marlin )
     self.assertEqual( ret.detectortype, 'myDetectorModel' )
     self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
@@ -187,7 +187,7 @@ class TestMaking( unittest.TestCase ):
       self.chain.loadParameters( parameter )
     self.chain._flags._over = False
 
-    ret = self.chain.createMarlinApplication( 300.0 )
+    ret = self.chain.createMarlinApplication(300.0, over=False)
     self.assertIsInstance( ret, Marlin )
     self.assertEqual( ret.detectortype, 'myDetectorModel' )
     self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
@@ -307,6 +307,7 @@ class TestMaking( unittest.TestCase ):
         meta = { 'ProdID':23, 'Energy':350 },
         prodName = "prodJamesProd",
         parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
+        over=False,
       )
     self.assertEqual( retMeta, {} )
     self.assertEqual(self.chain.cliRecoOption, '')
@@ -373,6 +374,50 @@ class TestMaking( unittest.TestCase ):
     with self.assertRaisesRegexp(AttributeError, 'Cannot set'):
       self.chain._setApplicationOptions('AppName', application)
 
+  def test_getProdInfoFromIDs(self):
+    # successful
+    self.chain.prodIDs = [12345]
+    trClientMock = Mock(name='trClient')
+    trClientMock.getTransformation.return_value = S_OK({'EventsPerTask': 123})
+    trMock = Mock(return_value=trClientMock)
+    fcClientMock = Mock(name='fcClient')
+    fcClientMock.findFilesByMetadata.return_value = S_OK(['/path/to/file'])
+    fcClientMock.getDirectoryUserMetadata.return_value = S_OK({'EvtType': 'haha', 'Energy': 321})
+    fcMock = Mock(return_value=fcClientMock)
+    with patch('DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient', new=trMock), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient', new=fcMock):
+      self.chain._getProdInfoFromIDs()
+    self.assertEqual(self.chain.eventsPerJobs, [123])
+    self.assertEqual(self.chain.processes, ['haha'])
+    self.assertEqual(self.chain.energies, [321])
+
+    # first exception
+    self.chain.prodIDs = []
+    with self.assertRaisesRegexp(AttributeError, 'No prodIDs'):
+      self.chain._getProdInfoFromIDs()
+
+    # second exception
+    self.chain.prodIDs = [12345]
+    trClientMock = Mock(name='trClient')
+    trClientMock.getTransformation.return_value = S_ERROR('No such prod')
+    trMock = Mock(return_value=trClientMock)
+    with patch('DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient', new=trMock), \
+         self.assertRaisesRegexp(AttributeError, 'No prodInfo found'):
+      self.chain._getProdInfoFromIDs()
+
+    # third exception
+    self.chain.prodIDs = [12345]
+    trClientMock = Mock(name='trClient')
+    trClientMock.getTransformation.return_value = S_OK({'EventsPerTask': 123})
+    trMock = Mock(return_value=trClientMock)
+    fcClientMock = Mock(name='fcClient')
+    fcClientMock.findFilesByMetadata.return_value = S_ERROR('No files found')
+    fcMock = Mock(return_value=fcClientMock)
+    with patch('DIRAC.TransformationSystem.Client.TransformationClient.TransformationClient', new=trMock), \
+         patch('DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient', new=fcMock), \
+         self.assertRaisesRegexp(AttributeError, 'Could not find file'):
+      self.chain._getProdInfoFromIDs()
+
 
 class TestMakingFlags( unittest.TestCase ):
   """ Test the flags used in CLICDetProdChain """
@@ -399,7 +444,7 @@ class TestMakingFlags( unittest.TestCase ):
     f._gen = True
     f._spl = True
     f._sim = True
-    f._rec = True
+    f._rec = False
     f._over = True
     self.assertTrue( f.dryRun )
     self.assertTrue( f.gen )
@@ -431,7 +476,7 @@ class TestMakingFlags( unittest.TestCase ):
   def test_str( self ):
     self.flags._gen = True
     self.flags._sim = True
-    self.flags._rec = True
+    self.flags._rec = False
     self.flags._over = True
 
     flagStr = str( self.flags )
