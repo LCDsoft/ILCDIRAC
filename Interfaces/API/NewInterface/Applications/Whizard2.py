@@ -15,6 +15,7 @@ Usage:
 
 import types
 import os
+import re
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from DIRAC import S_OK, S_ERROR
@@ -168,8 +169,17 @@ class Whizard2( LCApplication ):
         return S_ERROR('No energy set in sin file, please set "sqrts=...GeV"')
       elif len(sqrtMatches) != 1:
         return S_ERROR('Multiple instances of "sqrts=..GeV" detected, only one can be processed')
-      self.prodparameters['Energy'] = sqrtMatches[0].replace("sqrts=", "").replace("GeV", "")
-      self.energy = self.prodparameters['Energy']
+
+      if not self.energy:
+        self.prodparameters['Energy'] = sqrtMatches[0].replace("sqrts=", "").replace("GeV", "")
+        self.energy = float(self.prodparameters['Energy'])
+      else:
+        self.whizard2SinFile = re.sub(r"sqrts *= *[0-9]* *GeV", "sqrts = %s GeV" %
+                                      self.energy,
+                                      self.whizard2SinFile)
+        self.prodparameters['Energy'] = str(self.energy)
+
+      self.prodparameters['SinFile'] = self.whizard2SinFile
 
       modelMatches = [ x for x in parsedString if x.startswith('model=') ]
       if not modelMatches:

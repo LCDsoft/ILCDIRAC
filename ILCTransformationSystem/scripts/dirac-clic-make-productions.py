@@ -543,7 +543,7 @@ finalOutputSE = %(finalOutputSE)s
     whiz.setSinFile(sinFile)
     whiz.setEvtType(meta['EvtType'])
     whiz.setNumberOfEvents(eventsPerJob)
-
+    whiz.setEnergy(meta['Energy'])
     self._setApplicationOptions("Whizard2", whiz)
 
     return whiz
