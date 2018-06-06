@@ -60,11 +60,18 @@ class Whizard2( LCApplication ):
     return S_OK()
 
   def setProcessVariables(self, processes):
-    """ set the list of processes to simulate
-    The sindarin will be modified later on to call simulate (list,of,processes)
+    """ Set the list of processes to simulate
+
+    The sindarin file will be modified later on to call **simulate (proc_a, proc_b)**.
+    The process variables have to be defined in the sindarin file::
+
+      process proc_a ...
+      process proc_b ...
+
+    .. versionadded:: v28r0p6
 
     :param processes: which processes to call simulate on, by default 'decay_proc'
-    :type processes: list, str
+    :type processes: python:list, str
     """
     if isinstance(processes, basestring):
       self._decayProc = [proc.strip() for proc in processes.split(',')]
@@ -81,10 +88,11 @@ class Whizard2( LCApplication ):
 
     Usage:
       - Give path to the Whizard2 steering file.
-      - IMPORTANT: set *seed* via iLCDirac API -> whizard2.setRandomSeed(1)
-      - IMPORTANT: set *n_events* via iLCDirac API  -> whizard2.setNumberOfEvents(100)
-      - IMPORTANT: set *OutputFile* via iLCDirac API -> whizard2.setOutputFile( outputFilename )
-      - The variables in which processes are defined which should be simulated can be set via `setProcessVariables`
+      - IMPORTANT: set **seed** via iLCDirac API -> `Whizard2.setRandomSeed`
+      - IMPORTANT: set **n_events** via iLCDirac API  -> `Whizard2.setNumberOfEvents`
+      - IMPORTANT: set **OutputFile** via iLCDirac API -> `Whizard2.setOutputFile`
+      - The variables in which processes are defined which should be simulated can be set
+        via `Whizard2.setProcessVariables`
 
     :param str whizard2SinFilePath: Path to the whizard2 sin file.
     """
