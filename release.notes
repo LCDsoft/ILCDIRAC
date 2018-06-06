@@ -5,12 +5,12 @@ Release date: 2018-06-06
 
 *Interfaces
 
-NEW: (!207) Whizard2: add possibility to simulate multiple processes with the function `~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2.Whizard2.setProcessVariables`
+NEW: (!207) Whizard2: add possibility to simulate multiple processes with the function :func:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2.Whizard2.setProcessVariables`
 
 *FrameworkSystem
 
-FIX: (!199) MonitorAgents fix exception after restarting of agent. Wring signature for callback function
-NEW: (!201) `MonitorAgents` now also monitors executors, restarts them if **RestartExecutors** is True, solves ILCDIRAC-824
+FIX: (!199) :mod:`~ILCDIRAC.FrameworkSystem.Agent.MonitorAgents` fix exception after restarting of agent. Wring signature for callback function
+NEW: (!201) :mod:`~ILCDIRAC.FrameworkSystem.Agent.MonitorAgents` now also monitors executors, restarts them if **RestartExecutors** is True, solves ILCDIRAC-824
 
 *Docs
 
@@ -22,7 +22,7 @@ NEW: (!205) added parametric job name to splitting example
 
 FIX: (!198) Fix a problem in `dirac-clic-make-productions` when starting chains from generator files
 NEW: (!198) In `dirac-clic-make-productions`, allow creating chains only with prodIDs and obtain the EvtType, Energy and Number of Events from the ProductionInfo or FileCatalog
-FIX: (!202) `FileStatusTransformationAgent`: Protect against exception when `TaskID==None`, solves ILCDIRAC-831
+FIX: (!202) :class:`~ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent`: Protect against exception when **TaskID==None**, solves ILCDIRAC-831
 FIX: (!206) `dirac-clic-make-productions`: Fix a bug when not creating RecOver productions, the wrong check was done for the creation of the moving transformation
 NEW: (!206) `dirac-clic-make-productions`: When creating chains, the splitting step will be skipped if the number of events per job and the number of events in the generator files is the same. This allows the creation of multiple chains some of which contain splitting steps and some not
 
@@ -30,7 +30,7 @@ NEW: (!206) `dirac-clic-make-productions`: When creating chains, the splitting s
 
 *WorkloadManagementSystem
 
-FIX: (!194) fixing **JobResetAgent**
+FIX: (!194) fixing :mod:`~ILCDIRAC.WorkloadManagement.Agent.JobResetAgent`
 
 *ILCTransformationSystem
 
@@ -41,27 +41,27 @@ FIX: (!195) Fixed bugs that prevented the use of `dirac-ilc-moving-transformatio
 
 *WorkloadManagementSystem
 
-NEW: (!187) **JobResetAgent**: automatically resets jobs that somehow got stuck in staging or completed status
+NEW: (!187) :mod:`~ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent`: automatically resets jobs that somehow got stuck in staging or completed status
 
 *FrameworkSystem
 
-NEW: (!191) new **MonitorAgents** to restart stuck agents
+NEW: (!191) new :mod:`~ILCDIRAC.FrameworkSystem.Agent.MonitorAgents` to restart stuck agents
 
 *Workflow
 
-CHANGE: (!182) UploadLogFile and UploadOutputData: Change logic to determine the experiment. ILD is using new paths: /ilc/prod/ilc/mc-opt
+CHANGE: (!182) :mod:`~ILCDIRAC.Workflow.Modules.UploadLogFile` and :mod:`~ILCDIRAC.Workflow.Modules.UploadOutputData`: Change logic to determine the experiment. ILD is using new paths: /ilc/prod/ilc/mc-opt
 and /ilc/prod/ilc/ild (Testing only)
 
 *ILCTransformationSystem
 
-NEW: (!180) Adding new **FileStatusTransformationAgent**
-NEW: (!184) FileStatusTransformationAgent's errors are sent in email notification
+NEW: (!180) Adding new :class:`~ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent`
+NEW: (!184) :class:`~ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent`'s errors are sent in email notification
 FIX: (!186) `dirac-clic-make-productions`: reset extraCommandLine options after each (reco) production so multiple overlay options do not appear in the string.
 NEW: (!186) `dirac-clic-make-productions`: add option to set arbitrary options for Applications (Marlin, DDSim, Overlay at the moment). All options that can be set with setter functions can be set via an extra section, e.g., "[Marlin]". Can be used to set a different SteeringFile name. Sections are automatically created with **-p**
 NEW: (!188) `dirac-ilc-replication-transformation`, `dirac-ilc-moving-transformation` have additional parameter --groupSize to set the number of files per task
 NEW: (!188) `dirac-ilc-replication-transformation` allows multiple ProdIDs to be passed
 NEW: (!188) New configuration section in Operations/Defaults/Production/TransformationDatatypes maps Datatypes with TransformationTypes, e.g. REC -> MCReconstruction etc. Used in `dirac-ilc-replication-transformation` and `dirac-ilc-moving-transformation` to check consistency of ProdID and datatype
-NEW: (!189) Add Whizard2 to the CLIC production script (dirac-clic-make-productions)
+NEW: (!189) Add Whizard2 to the CLIC production script (`dirac-clic-make-productions`)
 
 [v28r0p3]
 
