@@ -3,7 +3,7 @@
 import unittest
 from mock import MagicMock as Mock, patch
 from DIRAC import S_OK, S_ERROR
-from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkAndGetProdProxy
+from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkAndGetProdProxy, checkOrGetGroupProxy
 
 __RCSID__ = "$Id$"
 
@@ -80,6 +80,27 @@ class CheckProxyTest( unittest.TestCase ):
          patch("%s.getProxyInfo" % MODULE_NAME, new=Mock(side_effect=[S_ERROR("no proxy info"),S_ERROR("Still no proxy")])):
       res = checkAndGetProdProxy()
       self.assertTrue( not res['OK'] )
+
+  def test_checkOrGet(self):
+    """test for checkOrGetGroupProxy: .............................................................."""
+    with patch('%s.call' % MODULE_NAME, new=Mock(return_value=0)), \
+         patch('%s.getProxyInfo' % MODULE_NAME, new=Mock(return_value=S_OK({'group': 'ilc_prod'}))):
+      res = checkOrGetGroupProxy(['ilc_prod', 'fcc_prod'])
+      self.assertTrue(res['OK'])
+      self.assertEqual(res['Value'], 'fcc_prod')
+
+    with patch('%s.call' % MODULE_NAME, new=Mock(return_value=0)), \
+         patch('%s.getProxyInfo' % MODULE_NAME, new=Mock(return_value=S_OK({'group': 'ilc_user'}))):
+      res = checkOrGetGroupProxy(['ilc_prod', 'fcc_prod'])
+      self.assertFalse(res['OK'])
+      self.assertIn('More than one', res['Message'])
+
+    with patch('%s.call' % MODULE_NAME, new=Mock(return_value=0)), \
+         patch('%s.getProxyInfo' % MODULE_NAME, new=Mock(return_value=S_OK({'group': 'ilc_user'}))):
+      res = checkOrGetGroupProxy('ilc_user')
+      self.assertTrue(res['OK'])
+      self.assertEqual(res['Value'], 'ilc_user')
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( CheckProxyTest )

@@ -34,26 +34,33 @@ def checkOrGetGroupProxy( group ):
   """Check if current proxy corresponds to the given group, and if not call the
   :any:`getNewProxy` method to obtain a proxy for this group
 
-  :param string group: dirac group of the desired proxy
-  :returns: :func:`S_OK() <DIRAC:DIRAC.Core.Utilities.ReturnValues.S_OK>`, :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_ERROR`
+  :param group: dirac group of the desired proxy
+  :type group: python:list, str
+  :returns: :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_OK`,
+     :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_ERROR`
   """
   result = getProxyInfo()
-
+  groups = group
+  if not isinstance(groups, (list, set, tuple)):
+    groups = [groups]
   if result['OK'] and 'group' in result['Value']:
-    if result['Value']['group'] == group:
+    if result['Value']['group'] in groups:
       return S_OK()
     else:
       print "You don't have an %s proxy, trying to get one..." % group
   else:
     print "Error to get proxy information, trying to get proxy"
 
-  newProxyRetVal = getNewProxy( group=group )
+  if not len(groups) == 1:
+    return S_ERROR("More than one proxy group possible, cannot continue, please get proper proxy")
+
+  newProxyRetVal = getNewProxy(group=groups[0])
   if newProxyRetVal: ## != 0
     return S_ERROR("dirac-proxy-init failed")
 
   result = getProxyInfo()
   if result['OK'] and 'group' in result['Value']:
-    if result['Value']['group'] == group:
+    if result['Value']['group'] in groups:
       return S_OK()
     else:
       print 'You do not have a valid group'
