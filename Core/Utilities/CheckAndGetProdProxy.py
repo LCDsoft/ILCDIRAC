@@ -45,7 +45,7 @@ def checkOrGetGroupProxy( group ):
     groups = [groups]
   if result['OK'] and 'group' in result['Value']:
     if result['Value']['group'] in groups:
-      return S_OK()
+      return S_OK(result['Value']['group'])
     else:
       print "You don't have an %s proxy, trying to get one..." % group
   else:
@@ -61,7 +61,7 @@ def checkOrGetGroupProxy( group ):
   result = getProxyInfo()
   if result['OK'] and 'group' in result['Value']:
     if result['Value']['group'] in groups:
-      return S_OK()
+      return S_OK(result['Value']['group'])
     else:
       print 'You do not have a valid group'
       return S_ERROR( "Could not obtain valid group" )

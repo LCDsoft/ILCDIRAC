@@ -84,7 +84,7 @@ class CheckProxyTest( unittest.TestCase ):
   def test_checkOrGet(self):
     """test for checkOrGetGroupProxy: .............................................................."""
     with patch('%s.call' % MODULE_NAME, new=Mock(return_value=0)), \
-         patch('%s.getProxyInfo' % MODULE_NAME, new=Mock(return_value=S_OK({'group': 'ilc_prod'}))):
+         patch('%s.getProxyInfo' % MODULE_NAME, new=Mock(return_value=S_OK({'group': 'fcc_prod'}))):
       res = checkOrGetGroupProxy(['ilc_prod', 'fcc_prod'])
       self.assertTrue(res['OK'])
       self.assertEqual(res['Value'], 'fcc_prod')
