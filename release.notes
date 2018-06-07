@@ -1,3 +1,23 @@
+[v28r0p7]
+
+Release date: 2018-06-07
+
+*ILCTransformationSystem
+
+NEW: (!209) New function :func:`~ILCDIRAC.Core.Utilities.ProductionData.getExperimentFromPath` which determines the experiment based on the path of the file. Replaces hardcoded values with flexible reading from the configuration system. See section **Operations/Production/ExperimentBasePaths**
+NEW: (!210) `dirac-clic-make-productions` sets some parameters based on the proxy, e.g., fcc_prod or ilc_prod groups
+CHANGE: (!210) `dirac-clic-make-productions` non-integer energies can be used for productions, e.g. 91.2 GeV
+CHANGE: (!210) `dirac-clic-make-productions` more easy settings for multiple production chains, setting one or more entries to a list should in most cases be possible, other values will be taken for all chains.
+
+*Interfaces
+
+NEW: (!210) The :class:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2.Whizard2` interface now allows the setting of the energy in the Sindarin file via the API, if parsing does not work an error is raised
+CHANGE: (!210) :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob`: instead of checking the proxy group the proxy properties are checked for ProductionManagement
+
+*Core
+
+CHANGE: (!210) `checkOrGetGroupProxy` now also takes a list as argument and returns :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_OK` with the group found
+
 [v28r0p6]
 
 Release date: 2018-06-06
