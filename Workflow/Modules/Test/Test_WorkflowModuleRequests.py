@@ -22,6 +22,8 @@ from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData
 from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
 from ILCDIRAC.Workflow.Modules.UserJobFinalization import UserJobFinalization
 
+from ILCDIRAC.Tests.Utilities.OperationsMock import createOperationsMock
+
 __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.Workflow.Modules'
@@ -510,12 +512,12 @@ class TestModuleBase( ModulesTestCase ):
 # UploadLogFile.py
 #############################################################################
 
+@patch('ILCDIRAC.Core.Utilities.ProductionData.Operations', new=createOperationsMock())
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
 @patch("DIRAC.Resources.Storage.StorageElement.StorageElementItem", new=Mock() )
 @patch("DIRAC.Resources.Storage.StorageFactory.StorageFactory", new=Mock() )
 @patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
 @patch("%s.UploadLogFile.StorageElement" % MODULE_NAME, new=Mock(return_value=S_OK()))
-@patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', new=Mock())
 class TestUploadLogFile( ModulesTestCase ):
   """ test UploadLogFile """
 
@@ -763,6 +765,7 @@ class TestUploadLogFile( ModulesTestCase ):
 # UploadOutputData.py
 #############################################################################
 
+@patch('ILCDIRAC.Core.Utilities.ProductionData.Operations', new=createOperationsMock())
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
 @patch("%s.ModuleBase.getProxyInfoAsString" % MODULE_NAME, new=Mock(return_value=S_OK()))
 class UploadOutputDataSuccess( ModulesTestCase ):

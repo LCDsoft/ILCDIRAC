@@ -9,6 +9,7 @@ from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Workflow.Modules.UploadOutputData import UploadOutputData 
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
   assertDiracSucceeds, assertDiracSucceedsWith
+from ILCDIRAC.Tests.Utilities.OperationsMock import createOperationsMock
 
 __RCSID__ = "$Id$"
 
@@ -44,12 +45,14 @@ class UploadOutputDataTestCase( unittest.TestCase ):
     self.upod.stepStatus = S_ERROR( 'test_something_went_wrong' )
     assertDiracSucceedsWith( self.upod.execute(), 'No output data upload attempt', self )
 
+  @patch('ILCDIRAC.Core.Utilities.ProductionData.Operations', new=createOperationsMock())
   def test_execute_getcandidate_fails( self ):
     self.upod.prodOutputLFNs = [ '/ilc/prod/clic/example_file' ]
     with patch.object(self.upod, 'getCandidateFiles', new=Mock(return_value=S_ERROR('cand_file_not_found_testerr'))):
       assertDiracFailsWith( self.upod.execute(), 'cand_file_not_found_testerr', self )
       assertEqualsImproved( self.upod.experiment, 'CLIC', self )
 
+  @patch('ILCDIRAC.Core.Utilities.ProductionData.Operations', new=createOperationsMock())
   def test_execute_metadata_not_found( self ):
     self.upod.prodOutputLFNs = [ '/ilc/prod/ilc/sid/example_file' ]
     with patch.object(self.upod, 'getCandidateFiles', new=Mock(return_value=S_OK({}))), \
@@ -57,6 +60,7 @@ class UploadOutputDataTestCase( unittest.TestCase ):
       assertDiracFailsWith( self.upod.execute(), 'no_meta_test_data_err', self )
       assertEqualsImproved( self.upod.experiment, 'ILC_SID', self )
 
+  @patch('ILCDIRAC.Core.Utilities.ProductionData.Operations', new=createOperationsMock())
   def test_execute_metadata_empty( self ):
     self.upod.prodOutputLFNs = [ '/ilc/prod/ilc/mc-dbd/example_file' ]
     with patch.object(self.upod, 'getCandidateFiles', new=Mock(return_value=S_OK({}))), \
@@ -64,6 +68,7 @@ class UploadOutputDataTestCase( unittest.TestCase ):
       assertDiracSucceeds( self.upod.execute(), self )
       assertEqualsImproved( self.upod.experiment, 'ILC_ILD', self )
 
+  @patch('ILCDIRAC.Core.Utilities.ProductionData.Operations', new=createOperationsMock())
   def test_execute_nooutputse( self ):
     self.upod.prodOutputLFNs = [ '/ilc/prod/ilc/mc-dbd/example_file' ]
     with patch.object(self.upod, 'getCandidateFiles', new=Mock(return_value=S_OK({}))), \
@@ -72,6 +77,7 @@ class UploadOutputDataTestCase( unittest.TestCase ):
       assertDiracFailsWith( self.upod.execute(), 'getdestlist_testerr', self )
       assertEqualsImproved( self.upod.experiment, 'ILC_ILD', self )
 
+  @patch('ILCDIRAC.Core.Utilities.ProductionData.Operations', new=createOperationsMock())
   def test_execute_disabledmodule( self ):
     self.upod.prodOutputLFNs = [ '/ilc/prod/ilc/mc-dbd/example_file' ]
     with patch.object(self.upod, 'getCandidateFiles', new=Mock(return_value=S_OK({}))), \
@@ -80,6 +86,7 @@ class UploadOutputDataTestCase( unittest.TestCase ):
       assertDiracSucceedsWith( self.upod.execute(), 'Module is disabled by control flag', self )
       assertEqualsImproved( self.upod.experiment, 'ILC_ILD', self )
 
+  @patch('ILCDIRAC.Core.Utilities.ProductionData.Operations', new=createOperationsMock())
   def test_execute_success( self ):
     trans_mock = Mock()
     trans_mock.transferAndRegisterFile.return_value = S_OK('bla')
