@@ -477,7 +477,11 @@ finalOutputSE = %(finalOutputSE)s
   @staticmethod
   def metaEnergy( energy ):
     """ return string of the energy with no digits """
-    return str( int( energy ) )
+    if float(energy).is_integer():
+      energy = str(int(energy))
+    else:
+      energy = "%1.1f" % energy
+    return energy
 
   @staticmethod
   def checkOverlayParameter( overlayParameter ):
