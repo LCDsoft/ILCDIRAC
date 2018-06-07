@@ -90,7 +90,7 @@ class CheckProxyTest( unittest.TestCase ):
       self.assertEqual(res['Value'], 'fcc_prod')
 
     with patch('%s.call' % MODULE_NAME, new=Mock(return_value=0)), \
-         patch('%s.getProxyInfo' % MODULE_NAME, new=Mock(return_value=S_OK({'group': 'ilc_user'}))):
+         patch('%s.getProxyInfo' % MODULE_NAME, new=Mock(return_value=S_OK({'groupProperties': 'NormalUser'}))):
       res = checkOrGetGroupProxy(['ilc_prod', 'fcc_prod'])
       self.assertFalse(res['OK'])
       self.assertIn('More than one', res['Message'])

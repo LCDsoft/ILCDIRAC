@@ -273,7 +273,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
 
   def test_createproduction( self ):
     job = self.prodJob
-    job.proxyinfo = { 'OK' : 'yes, trust me', 'Value' : {'group' : 'ilc_prod'} }
+    job.proxyinfo = {'OK': 'yes, trust me', 'Value': {'groupProperties': 'ProductionManagement'}}
     job.created = False
     job.inputdataquery = True
     job.slicesize = 10
@@ -305,7 +305,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
 
   def test_createproduction_2( self ):
     job = self.prodJob
-    job.proxyinfo = { 'OK' : 'yes, trust me', 'Value' : {'group' : 'ilc_prod'} }
+    job.proxyinfo = {'OK': 'yes, trust me', 'Value': {'groupProperties': 'ProductionManagement'}}
     job.created = False
     job.inputdataquery = True
     job.slicesize = 10
@@ -336,7 +336,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
 
   def test_createproduction_nofinalization( self ):
     job = self.prodJob
-    job.proxyinfo = { 'OK' : 'yes, trust me', 'Value' : {'group' : 'ilc_prod'} }
+    job.proxyinfo = {'OK': 'yes, trust me', 'Value': {'groupProperties': 'ProductionManagement'}}
     job.created = False
     job.call_finalization = False
     job.workflow.setName('mytestworkflow')
@@ -364,17 +364,17 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
   @patch('__builtin__.open', mock_open())
   def test_createproduction_basic_checks( self ):
     job = self.prodJob
-    job.proxyinfo = { 'OK' : False, 'Value' : {'group' : 'ilc_prod'}, 'Message' : 'not ok' }
+    job.proxyinfo = {'OK': False, 'Message': 'not ok'}
     res = job.createProduction()
-    assertDiracFailsWith( res, 'you need a ilc_prod proxy', self )
+    assertDiracFailsWith(res, 'you need a production proxy', self)
     job.proxyinfo = { 'OK' : True, 'Value' : {} }
     res = job.createProduction()
     assertDiracFailsWith( res, 'could not determine group', self )
-    job.proxyinfo = { 'OK' : True, 'Value' : { 'group' : 'LHCz'} }
+    job.proxyinfo = {'OK': True, 'Value': {'groupProperties': 'NormalUser'}}
     res = job.createProduction()
     assertDiracFailsWith( res, 'not allowed to create production', self )
     job.created = True
-    job.proxyinfo = { 'OK' : True, 'Value' : {'group' : 'ilc_prod'} }
+    job.proxyinfo = {'OK': True, 'Value': {'groupProperties': 'ProductionManagement'}}
     res = job.createProduction()
     assertDiracFailsWith( res, 'already created', self )
     job.created = False
@@ -393,7 +393,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
   @patch('__builtin__.open', mock_open())
   def test_createproduction_dryrun( self ):
     job = self.prodJob
-    job.proxyinfo = { 'OK' : 'yes, trust me', 'Value' : {'group' : 'ilc_prod'} }
+    job.proxyinfo = {'OK': 'yes, trust me', 'Value': {'groupProperties': 'ProductionManagement'}}
     job.created = False
     job.dryrun = True
     job.call_finalization = True
