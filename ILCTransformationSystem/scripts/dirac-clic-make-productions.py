@@ -207,19 +207,27 @@ MoveTypes = %(moveTypes)s
       self.__splitStringToOptions( config, self._moveTypes, 'MoveTypes', prefix='_' )
       self._moves = config.getboolean( PP, 'move' )
 
-
-  def __init__( self, params=None):
+  def __init__(self, params=None, group='ilc_prod'):
 
     from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
     self._ops = Operations( vo='ilc' )
 
-    self._machine = 'clic'
+    self._machine = {'ilc_prod': 'clic',
+                     'fcc_prod': 'fccee',
+                     }[group]
+
     self.prodGroup = 'several'
-    self.detectorModel = self._ops.getValue( 'Production/CLIC/DefaultDetectorModel' )
-    self.softwareVersion = self._ops.getValue( 'Production/CLIC/DefaultSoftwareVersion' )
-    self.clicConfig = self._ops.getValue( 'Production/CLIC/DefaultConfigVersion' )
+    prodPath = os.path.join('/Production', self._machine.upper())
+    self.basepath = self._ops.getValue(os.path.join(prodPath, 'BasePath'))
+
+    self.detectorModel = self._ops.getValue(os.path.join(prodPath, 'DefaultDetectorModel'))
+    self.softwareVersion = self._ops.getValue(os.path.join(prodPath, 'DefaultSoftwareVersion'))
+    self.clicConfig = self._ops.getValue(os.path.join(prodPath, 'DefaultConfigVersion'))
     self.productionLogLevel = 'VERBOSE'
     self.outputSE = 'CERN-DST-EOS'
+
+    self.ddsimSteeringFile = 'clic_steer.py'
+    self.marlinSteeringFile = 'clicReconstruction.xml'
 
     self.eventsPerJobs = ''
     self.numberOfTasks = ''
@@ -324,6 +332,16 @@ MoveTypes = %(moveTypes)s
       ## these do not have to exist so we fill them to the same length if they are not set
       self.prodIDs = [ int( pID.strip() ) for pID in self.prodIDs if pID.strip() ]
       self.prodIDs = self.prodIDs if self.prodIDs else [ 1 for _ in self.energies ]
+
+      # if one of the lists only has size 1 and there is a longer list we extend
+      # the list to the maximum size assuming the values are re-used
+      maxLength = 0
+      parameterLists = [self.processes, self.energies, self.eventsPerJobs, self.whizard2SinFile]
+      for parList in parameterLists:
+        maxLength = len(parList) if len(parList) > maxLength else maxLength
+      for parList in parameterLists:
+        if len(parList) == 1 and maxLength > 1:
+          parList.extend([parList[0]] * (maxLength - 1))
 
       if not (self.processes and self.energies and self.eventsPerJobs) and self.prodIDs:
         eventsPerJobSave = list(self.eventsPerJobs) if self.eventsPerJobs else None
@@ -459,7 +477,11 @@ finalOutputSE = %(finalOutputSE)s
   @staticmethod
   def metaEnergy( energy ):
     """ return string of the energy with no digits """
-    return str( int( energy ) )
+    if float(energy).is_integer():
+      energy = str(int(energy))
+    else:
+      energy = "%1.1f" % energy
+    return energy
 
   @staticmethod
   def checkOverlayParameter( overlayParameter ):
@@ -543,7 +565,7 @@ finalOutputSE = %(finalOutputSE)s
     whiz.setSinFile(sinFile)
     whiz.setEvtType(meta['EvtType'])
     whiz.setNumberOfEvents(eventsPerJob)
-
+    whiz.setEnergy(meta['Energy'])
     self._setApplicationOptions("Whizard2", whiz)
 
     return whiz
@@ -554,7 +576,7 @@ finalOutputSE = %(finalOutputSE)s
 
     ddsim = DDSim()
     ddsim.setVersion( self.softwareVersion )
-    ddsim.setSteeringFile( 'clic_steer.py' )
+    ddsim.setSteeringFile(self.ddsimSteeringFile)
     ddsim.setDetectorModel( self.detectorModel )
 
     self._setApplicationOptions("DDSim", ddsim)
@@ -598,15 +620,7 @@ finalOutputSE = %(finalOutputSE)s
     marlin.setExtraCLIArguments(self.cliReco)
     self.cliReco = ''
 
-    steeringFile = {
-      350. : "clicReconstruction.xml",
-      380. : "clicReconstruction.xml",
-      420. : "clicReconstruction.xml",
-      1400.: "clicReconstruction.xml",
-      3000.: "clicReconstruction.xml",
-    }.get( energy, 'clicReconstruction.xml' )
-
-    marlin.setSteeringFile( steeringFile )
+    marlin.setSteeringFile(self.marlinSteeringFile)
 
     self._setApplicationOptions("Marlin", marlin)
 
@@ -615,14 +629,9 @@ finalOutputSE = %(finalOutputSE)s
   def createGenerationProduction(self, meta, prodName, parameterDict, eventsPerJob, nbTasks, sinFile):
     """ create generation production """
     gLogger.notice("*" * 80 + "\nCreating generation production: %s " % prodName)
-    from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-    genProd = ProductionJob()
-    genProd.dryrun = self._flags.dryRun
-    genProd.setLogLevel(self.productionLogLevel)
+    genProd = self.getProductionJob()
     genProd.setProdType('MCGeneration')
-    genProd.setOutputSE(self.outputSE)
     genProd.setWorkflowName(self._productionName(meta, parameterDict, 'gen'))
-    genProd.setProdGroup(self.prodGroup)
     # Add the application
     res = genProd.append(self.createWhizard2Application(meta, eventsPerJob, sinFile))
     if not res['OK']:
@@ -653,18 +662,13 @@ finalOutputSE = %(finalOutputSE)s
   def createSimulationProduction( self, meta, prodName, parameterDict ):
     """ create simulation production """
     gLogger.notice( "*"*80 + "\nCreating simulation production: %s " % prodName )
-    from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-    simProd = ProductionJob()
-    simProd.dryrun = self._flags.dryRun
-    simProd.setLogLevel( self.productionLogLevel )
+    simProd = self.getProductionJob()
     simProd.setProdType( 'MCSimulation' )
     simProd.setClicConfig( self.clicConfig )
     res = simProd.setInputDataQuery( meta )
     if not res['OK']:
       raise RuntimeError( "Error creating Simulation Production: %s" % res['Message'] )
-    simProd.setOutputSE( self.outputSE )
     simProd.setWorkflowName( self._productionName( meta, parameterDict, 'sim') )
-    simProd.setProdGroup( self.prodGroup )
     #Add the application
     res = simProd.append( self.createDDSimApplication() )
     if not res['OK']:
@@ -695,10 +699,7 @@ finalOutputSE = %(finalOutputSE)s
   def createReconstructionProduction(self, meta, prodName, parameterDict, over):
     """ create reconstruction production """
     gLogger.notice("*" * 80 + "\nCreating %s reconstruction production: %s " % ('overlay' if over else '', prodName))
-    from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-    recProd = ProductionJob()
-    recProd.dryrun = self._flags.dryRun
-    recProd.setLogLevel( self.productionLogLevel )
+    recProd = self.getProductionJob()
     productionType = 'MCReconstruction_Overlay' if over else 'MCReconstruction'
     recProd.setProdType( productionType )
     recProd.setClicConfig( self.clicConfig )
@@ -707,10 +708,8 @@ finalOutputSE = %(finalOutputSE)s
     if not res['OK']:
       raise RuntimeError( "Error setting inputDataQuery for Reconstruction production: %s " % res['Message'] )
 
-    recProd.setOutputSE( self.outputSE )
     recType = 'rec_overlay' if over else 'rec'
     recProd.setWorkflowName( self._productionName( meta, parameterDict, recType ) )
-    recProd.setProdGroup( self.prodGroup )
 
     #Add overlay if needed
     if over:
@@ -752,19 +751,14 @@ finalOutputSE = %(finalOutputSE)s
   def createSplitProduction( self, meta, prodName, parameterDict, eventsPerJob, eventsPerBaseFile, limited=False ):
     """ create splitting transformation for splitting files """
     gLogger.notice( "*"*80 + "\nCreating split production: %s " % prodName )
-    from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
-    splitProd = ProductionJob()
+    splitProd = self.getProductionJob()
     splitProd.setProdPlugin( 'Limited' if limited else 'Standard' )
     splitProd.setProdType( 'Split' )
-    splitProd.setLogLevel( self.productionLogLevel )
-    splitProd.dryrun = self._flags.dryRun
 
     res = splitProd.setInputDataQuery(meta)
     if not res['OK']:
       raise RuntimeError( 'Split production: failed to set inputDataQuery: %s' % res['Message'] )
-    splitProd.setOutputSE( self.outputSE )
     splitProd.setWorkflowName( self._productionName( meta, parameterDict, 'stdhepSplit' ) )
-    splitProd.setProdGroup( self.prodGroup )
 
     #Add the application
     res = splitProd.append( self.createSplitApplication( eventsPerJob, eventsPerBaseFile, 'stdhep' ) )
@@ -818,6 +812,16 @@ finalOutputSE = %(finalOutputSE)s
         gLogger.notice( "*"*80 + "\nCreating moving transformation for prodID: %s, %s, %s " % (meta['ProdID'], prodType, dataType ) )
         createDataTransformation('Moving', targetSE, sourceSE, prodID, dataType)
 
+  def getProductionJob(self):
+    """ return production job instance with some parameters set """
+    from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
+    prodJob = ProductionJob()
+    prodJob.setLogLevel(self.productionLogLevel)
+    prodJob.setProdGroup(self.prodGroup)
+    prodJob.setOutputSE(self.outputSE)
+    prodJob.basepath = self.basepath
+    prodJob.dryrun = self._flags.dryRun
+    return prodJob
 
   def _updateMeta( self, outputDict, inputDict, eventsPerJob ):
     """ add some values from the inputDict to the outputDict to fake the input dataquery result in dryRun mode """
@@ -915,11 +919,11 @@ if __name__ == "__main__":
   CLIP.registerSwitches()
   Script.parseCommandLine()
   from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkOrGetGroupProxy
-  CHECKGROUP = checkOrGetGroupProxy( 'ilc_prod' )
+  CHECKGROUP = checkOrGetGroupProxy(['ilc_prod', 'fcc_prod'])
   if not CHECKGROUP['OK']:
     exit(1)
   try:
-    CHAIN = CLICDetProdChain( CLIP )
+    CHAIN = CLICDetProdChain(params=CLIP, group=CHECKGROUP['Value'])
     CHAIN.createAllTransformations()
   except (AttributeError, RuntimeError) as excp:
     if str(excp) != '':

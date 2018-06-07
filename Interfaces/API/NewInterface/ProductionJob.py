@@ -354,15 +354,14 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
   def createProduction(self, name = None):
     """ Create production.
     """
-    
+
     if not self.proxyinfo['OK']:
-      return S_ERROR("Not allowed to create production, you need a ilc_prod proxy.")
-    if 'group' in self.proxyinfo['Value']:
-      group = self.proxyinfo['Value']['group']
-      if not group == "ilc_prod":
-        return S_ERROR("Not allowed to create production, you need a ilc_prod proxy.")
-    else:
-      return S_ERROR("Could not determine group, you do not have the right proxy.")
+      return S_ERROR("Not allowed to create production, you need a production proxy.")
+    if 'groupProperties' not in self.proxyinfo['Value']:
+      return S_ERROR("Could not determine groupProperties, you do not have the right proxy.")
+    groupProperties = self.proxyinfo['Value']['groupProperties']
+    if 'ProductionManagement' not in groupProperties:
+      return S_ERROR("Not allowed to create production, you need a production proxy.")
 
     if self.created:
       return S_ERROR("Production already created.")

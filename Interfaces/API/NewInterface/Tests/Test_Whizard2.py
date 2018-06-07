@@ -153,6 +153,24 @@ class Whizard2TestCase( unittest.TestCase ):
     assertEqualsImproved( self.whiz.prodparameters['Model'], 'SM', self )
     assertEqualsImproved( self.whiz.prodparameters['nbevts'], 100, self )
 
+  def test_checkconsistency_nouserjob_2(self):
+    self.whiz.version = '2.3.1'
+    self.whiz.whizard2SinFile = '  sqrts  =   350   GeV\n model=SM \ndecay_proc'
+    self.whiz.eventType = 'ee -> ff'
+    self.whiz._jobtype = 'notUser'
+    self.whiz.numberOfEvents = 100
+    self.whiz.energy = 1337
+    assertDiracSucceeds(self.whiz._checkConsistency(Mock()), self)
+    self.assertIn({'outputFile': '@{OutputFile}', 'outputPath': '@{OutputPath}',
+                   'outputDataSE': '@{OutputSE}'}, self.whiz._listofoutput)
+    for keyword in ['Process', 'Energy', 'nbevts', 'Model']:
+      self.assertIn(keyword, self.whiz.prodparameters)
+    assertEqualsImproved(self.whiz.prodparameters['Energy'], '1337', self)
+    assertEqualsImproved(self.whiz.prodparameters['Process'], 'ee -> ff', self)
+    assertEqualsImproved(self.whiz.prodparameters['Model'], 'SM', self)
+    assertEqualsImproved(self.whiz.prodparameters['nbevts'], 100, self)
+    self.assertIn("sqrts = 1337 GeV", self.whiz.whizard2SinFile)
+
   def test_checkconsistency_nouserjob_fails( self ):
     self.whiz.version = '2.3.1'
     self.whiz.whizard2SinFile = 'mymodel.sin \ndecay_proc'
