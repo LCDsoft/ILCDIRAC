@@ -16,6 +16,7 @@ variables:
   LCG_BUNDLE_VERSION: "v13r0"
   ILCDIRAC_VERSION: "v28r0"
   DIRAC_BRANCH: "rel-v6r19"
+  DIRAC_TAG: "v6r19rp7"
   SETUP: "ILC-Production"
   ILCDIRAC_BRANCH: "Rel-v28r0"
 
@@ -307,7 +308,9 @@ maketarballs:
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
     - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
-    - dirac-distribution -l ILCDIRAC -r $CI_COMMIT_TAG -D ../../ILCDIRACTars
+    - echo -e "DefaultModules = ILCDIRAC\n\nSources\n{\n  ILCDIRAC = https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC.git\n}\nReleases\n{\n $CI_COMMIT_TAG\n  {\n    Modules = ILCDIRAC:$CI_COMMIT_TAG\n    Depends = DIRAC:$DIRAC_TAG\n  }\n}\n" > thisrelease.cfg
+    - cat thisrelease.cfg
+    - dirac-distribution -l ILCDIRAC -r $CI_COMMIT_TAG -D ../../ILCDIRACTars -C thisrelease.cfg
   artifacts:
     paths:
       - ILCDIRACTars
