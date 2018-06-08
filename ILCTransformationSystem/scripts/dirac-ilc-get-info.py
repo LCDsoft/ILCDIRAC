@@ -2,7 +2,8 @@
 """Print production properties and more information for given production
 
 Example
-dirac-ilc-get-info -p 5678
+
+  dirac-ilc-get-info -p 5678
 
 Options:
   -p, --ProductionID prodID      ProductionID
@@ -16,7 +17,9 @@ from DIRAC import S_OK, S_ERROR, exit as dexit
 
 __RCSID__ = "$Id$"
 
+
 class _Params(object):
+  """ CLI parameters """
   def __init__(self):
     self.filename = ""
     self.prodid = 0
@@ -37,27 +40,32 @@ class _Params(object):
     Script.registerSwitch('f:', "File=", "File name", self.setFilename)
     Script.setUsageMessage("%s -p 12345" % Script.scriptName)
 
+
 def _createTransfoInfo(trans):
   """creates information for Transformation"""
   info = []
-  parametersToShow = ['Type', 'LongDescription', 'TransformationGroup','Status',
+  parametersToShow = ['Type', 'LongDescription', 'TransformationGroup', 'Status',
                       'Plugin', 'TransformationName', 'AuthorDN', 'InputDataQuery']
+  maxLength = len(max(parametersToShow + trans['AddParams'].keys(), key=len))
   for key in parametersToShow:
     if key in trans:
-      info.append ( "    %s: %s" % (key.ljust(len(max(parametersToShow, key=len))), trans[key]) )
-  if 'AddParams' in trans:
-    for key, val in trans['AddParams'].items():
-      if key in ['DetailedInfo', 'JobType', 'FCInputQuery', 'detectorType', 'NbInputFiles', 'nbevts', 'Energy']:
-        continue
-      if ".slcio" in key:
-        continue
-      if key.count('whizardparams'):
-        pp = pprint.PrettyPrinter(indent=4)
-        whizp = pp.pformat(eval(val))
-        info.append(" - Uses the following whizard parameters:")
-        info.append("      %s" % whizp)
-      else:
-        info.append("    %s: %s" %(key.ljust(len(max(trans['AddParams'], key=len))), val))
+      info.append("    %s: %s" % (key.ljust(maxLength), trans[key]))
+  for key, val in trans.get('AddParams', {}).iteritems():
+    if key in ['DetailedInfo', 'JobType', 'FCInputQuery', 'detectorType', 'NbInputFiles', 'nbevts', 'Energy'] \
+       or any(key.endswith(ext) for ext in('slcio', 'stdhep')):
+      continue
+    if 'whizardparams' in key:
+      pp = pprint.PrettyPrinter(indent=4)
+      whizp = pp.pformat(eval(val))
+      info.append(" - Uses the following whizard parameters:")
+      info.append("      %s" % whizp)
+    elif 'SinFile' in key:
+      # strip empty lines from the file
+      sinFile = [line for line in val.splitlines() if line]
+      info.append("    %s: %s" % (key.ljust(maxLength),
+                                  ("\n" + " " * (maxLength + 6)).join(sinFile)))
+    else:
+      info.append("    %s: %s" % (key.ljust(maxLength), val))
 
   info.append("")
   return info
@@ -65,11 +73,9 @@ def _createTransfoInfo(trans):
 def _createFileInfo(fmeta):
   """creates information for file"""
   from DIRAC.Core.Utilities import DEncode
-  if 'ProdID' in fmeta:
-    del fmeta['ProdID']
+  fmeta.pop('ProdID', None)
 
   info = []
-
 
   parametersToShow = ['Machine', 'Energy', 'MachineParams', 'EvtClass', 'ProcessID', 'GenProcessID',
                       'EvtType', 'Polarisation', 'BeamParticle1', 'BeamParticle2',
@@ -77,9 +83,8 @@ def _createFileInfo(fmeta):
                       'SWPackages', 'SoftwareTag', 'ILDConfig', 'DetectorModel', 'NumberOfEvents',
                       'CrossSection'
                      ]
-  datatypes = dict( gen = "Generator Sample", SIM = "Simulated Sample",
-                    REC="Reconstructed Sample", DST="Reconstructed Sample")
-  datatypes.setdefault("Unknown Datatype")
+  datatypes = dict(GEN="Generator Sample", SIM="Simulated Sample",
+                   REC="Reconstructed Sample", DST="Reconstructed Sample")
   maxLength = len(max(parametersToShow, key=len))
 
   for parameter in parametersToShow:
@@ -88,7 +93,7 @@ def _createFileInfo(fmeta):
 
     value = fmeta[parameter]
     if parameter == 'Datatype':
-      value = datatypes[value]
+      value = datatypes.get(value.upper(), ("Unknown Datatype"))
 
     if parameter == 'Energy':
       value += " GeV"
@@ -148,7 +153,6 @@ def _createFileInfo(fmeta):
 
   if fmeta:
     info.append('Remaining file metadata: %s' % str(fmeta))
-
 
   return info
 
