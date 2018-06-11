@@ -112,7 +112,8 @@ class TransformationPlugin(DTP):
           self.util.logDebug( "Removed: %s no descendents" % lfn )
           inputFiles.pop( lfn, None )
 
-      self.util.logWarn( "Failed getDescendents: %s " % descendents['Failed'] )
+      if descendents['Failed']:
+        self.util.logWarn("Failed getDescendents: %s " % descendents['Failed'])
 
     self.util.logInfo( "Number of input files after selection: %d " % len( inputFiles ) )
 
