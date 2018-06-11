@@ -264,6 +264,11 @@ class ILDProductionJobDBD( ProductionJob ):
         body = string.replace( importLine, '<MODULE>', 'UploadLogFile' )
         logUpload.setBody( body )
 
+        errorReport = ModuleDefinition('ReportErrors')
+        errorReport.setDescription('Reports errors at the end')
+        body = importLine.replace('<MODULE>', 'ReportErrors')
+        errorReport.setBody(body)
+
         finalization = StepDefinition( 'Job_Finalization' )
         finalization.addModule( dataUpload )
         up = finalization.createModuleInstance( 'UploadOutputData', 'dataUpload' )
@@ -281,7 +286,10 @@ class ILDProductionJobDBD( ProductionJob ):
         finalization.addModule( failoverRequest )
         fr = finalization.createModuleInstance( 'FailoverRequest', 'failoverRequest' )
         fr.setValue( "enable", self.finalsdict['sendFailover'] )
-        
+
+        finalization.addModule(errorReport)
+        fr = finalization.createModuleInstance('ReportErrors', 'reportErrors')
+
         self.workflow.addStep( finalization )
         self.workflow.createStepInstance( 'Job_Finalization', 'finalization' )
 

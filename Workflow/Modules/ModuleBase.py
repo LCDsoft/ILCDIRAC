@@ -14,6 +14,7 @@ import shutil
 import string
 import sys
 import urllib
+from collections import defaultdict
 from pprint import pformat
 from random import choice
 
@@ -529,6 +530,8 @@ class ModuleBase(object):
       message = '%s exited With Status %s' % (self.applicationName, status)
       self.setApplicationStatus(message)
       self.log.error(message)
+      errorKey = "%s_%s" % (self.applicationName, self.applicationVersion)
+      self.workflow_commons.setdefault('ErrorDict', defaultdict(list))[errorKey].extend([message, self.stdError])
       if not self.ignoreapperrors:
         return S_ERROR(message)
     else:
