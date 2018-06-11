@@ -20,6 +20,9 @@ the agent so that it is restarted automatically. Executors will only be restarte
 | RestartExecutors           | If executors should be restarted           | False                                 |
 |                            | automatically                              |                                       |
 +----------------------------+--------------------------------------------+---------------------------------------+
+| RestartServices            | If services should be restarted            | False                                 |
+|                            | automatically                              |                                       |
++----------------------------+--------------------------------------------+---------------------------------------+
 | MailTo                     | Email addresses receiving notifications    |                                       |
 |                            |                                            |                                       |
 +----------------------------+--------------------------------------------+---------------------------------------+
@@ -36,10 +39,12 @@ from functools import partial
 
 import os
 import psutil
+import socket
 
 # from DIRAC
 from DIRAC import S_OK, S_ERROR, gConfig
 from DIRAC.Core.Base.AgentModule import AgentModule
+from DIRAC.Core.DISET.RPCClient import RPCClient
 from DIRAC.Core.Utilities.PrettyPrint import printTable
 from DIRAC.FrameworkSystem.Client.SystemAdministratorClient import SystemAdministratorClient
 from DIRAC.ConfigurationSystem.Client.Helpers.Path import cfgPath
@@ -69,13 +74,15 @@ class MonitorAgents(AgentModule):
     self.setup = "Production"
     self.enabled = False
     self.restartExecutors = False
+    self.restartServices = False
     self.diracLocation = "/opt/dirac/pro"
 
-    self.sysAdminClient = SystemAdministratorClient("localhost")
+    self.sysAdminClient = SystemAdministratorClient(socket.gethostname())
     self.jobMonClient = JobMonitoringClient()
     self.nClient = NotificationClient()
     self.agents = dict()
     self.executors = dict()
+    self.services = dict()
     self.errors = list()
     self.accounting = defaultdict(dict)
 
@@ -92,7 +99,8 @@ class MonitorAgents(AgentModule):
     """ Reload the configurations before every cycle """
     self.setup = self.am_getOption("Setup", self.setup)
     self.enabled = self.am_getOption("EnableFlag", self.enabled)
-    self.restartExecutors = self.am_getOption("RestartExectors", self.restartExecutors)
+    self.restartExecutors = self.am_getOption("RestartExecutors", self.restartExecutors)
+    self.restartServices = self.am_getOption("RestartServices", self.restartServices)
     self.diracLocation = os.environ.get("DIRAC", self.diracLocation)
     self.addressTo = self.am_getOption('MailTo', self.addressTo)
     self.addressFrom = self.am_getOption('MailFrom', self.addressFrom)
@@ -106,6 +114,11 @@ class MonitorAgents(AgentModule):
     if not res["OK"]:
       return S_ERROR("Failure to get running executors")
     self.executors = res["Value"]
+
+    res = self.getRunningInstances(instanceType='Services')
+    if not res["OK"]:
+      return S_ERROR("Failure to get running services")
+    self.services = res["Value"]
 
     self.accounting.clear()
     return S_OK()
@@ -158,11 +171,14 @@ class MonitorAgents(AgentModule):
     for system, agents in val.iteritems():
       for agentName, agentInfo in agents.iteritems():
         if agentInfo['Setup'] and agentInfo['Installed'] and agentInfo['RunitStatus'] == 'Run':
-          confPath = cfgPath('/Systems/' + system + '/' + self.setup + '/Agents/' + agentName + '/PollingTime')
-          runningAgents[agentName]["PollingTime"] = gConfig.getValue(confPath, HOUR)
-          runningAgents[agentName]["LogFileLocation"] = os.path.join(self.diracLocation, 'runit', system, agentName,
-                                                                     'log', 'current')
+          confPath = cfgPath('/Systems/' + system + '/' + self.setup + '/%s/' % instanceType + agentName)
+          for option, default in (('PollingTime', HOUR), ('Port', None)):
+            optPath = os.path.join(confPath, option)
+            runningAgents[agentName][option] = gConfig.getValue(optPath, default)
+          runningAgents[agentName]["LogFileLocation"] = \
+              os.path.join(self.diracLocation, 'runit', system, agentName, 'log', 'current')
           runningAgents[agentName]["PID"] = agentInfo["PID"]
+          runningAgents[agentName]['System'] = system
 
     return S_OK(runningAgents)
 
@@ -174,12 +190,18 @@ class MonitorAgents(AgentModule):
     """ execution in one cycle """
     ok = True
 
-    for instances, isExecutor in [(self.agents, False), (self.executors, True)]:
+    for instances, enabled, isExecutor in [(self.agents, self.enabled, False), (self.executors, self.restartExecutors, True)]:
       for agentName, val in instances.iteritems():
-        res = self.checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["PID"], isExecutor)
+        res = self.checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["PID"], enabled, isExecutor)
         if not res['OK']:
           self.logError("Failure when checking agent", "%s, %s" % (agentName, res['Message']))
           ok = False
+
+    for service, options in self.services.iteritems():
+      res = self.checkService(service, options)
+      if not res['OK']:
+        self.logError("Failure when checking service", "%s, %s" % (service, res['Message']))
+        ok = False
 
     self.sendNotification()
 
@@ -203,7 +225,7 @@ class MonitorAgents(AgentModule):
     age = now - lastAccessTime
     return S_OK(age)
 
-  def restartAgent(self, pid, agentName, isExecutor=False):
+  def restartAgent(self, pid, agentName, enabled=False, isExecutor=False):
     """ kills an agent which is then restarted automatically """
 
     if isExecutor:
@@ -214,7 +236,7 @@ class MonitorAgents(AgentModule):
         self.accounting.pop(agentName, None)
         return S_OK(NO_RESTART)
 
-    if not self.enabled or (isExecutor and not self.restartExecutors):
+    if not (self.enabled and enabled):
       self.log.info("Restarting agents is disabled, please restart %s manually" % agentName)
       self.accounting[agentName]["Treatment"] = "Please restart it manually"
       return S_OK(NO_RESTART)
@@ -238,7 +260,26 @@ class MonitorAgents(AgentModule):
       self.logError("Exception occurred in terminating processes", "%s" % err)
       return S_ERROR()
 
-  def checkAgent(self, agentName, pollingTime, currentLogLocation, pid, isExecutor=False):
+  def checkService(self, serviceName, options):
+    """Pings the service"""
+    system = options['System']
+    port = options['Port']
+    host = socket.gethostname()
+    url = 'dips://%s:%s/%s/%s' % (host, port, system, serviceName)
+    self.log.info("Pinging service", url)
+    pingRes = RPCClient(url).ping()
+    if not pingRes['OK']:
+      self.logError('Failure pinging service', pingRes['Message'])
+      res = self.restartAgent(int(options['PID']), serviceName, enabled=self.restartServices)
+      if not res["OK"]:
+        return res
+      elif res['OK'] and res['Value'] != NO_RESTART:
+        self.accounting[agentName]["Treatment"] = "Successfully Restarted"
+        self.log.info("Agent %s has been successfully restarted" % agentName)
+    self.log.info("Service responded OK")
+    return S_OK()
+
+  def checkAgent(self, agentName, pollingTime, currentLogLocation, pid, restartEnabled=False, isExecutor=False):
     """ checks the age of agent's log file, if it is too old then restarts the agent """
 
     self.log.info("Checking Agent: %s" % agentName)
@@ -258,7 +299,7 @@ class MonitorAgents(AgentModule):
       self.log.info("Current log file is too old for Agent %s" % agentName)
       self.accounting[agentName]["LogAge"] = age.seconds / MINUTES
 
-      res = self.restartAgent(int(pid), agentName, isExecutor)
+      res = self.restartAgent(int(pid), agentName, restartEnabled, isExecutor)
       if not res["OK"]:
         return res
       elif res['OK'] and res['Value'] != NO_RESTART:
