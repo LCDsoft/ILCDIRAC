@@ -16,7 +16,7 @@ variables:
   LCG_BUNDLE_VERSION: "v13r0"
   ILCDIRAC_VERSION: "v28r0"
   DIRAC_BRANCH: "rel-v6r19"
-  DIRAC_TAG: "v6r19rp7"
+  DIRAC_TAG: "v6r19p7"
   SETUP: "ILC-Production"
   ILCDIRAC_BRANCH: "Rel-v28r0"
 
