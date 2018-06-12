@@ -329,6 +329,11 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     body = importLine.replace('<MODULE>', 'UploadLogFile')
     logUpload.setBody(body)
 
+    errorReport = ModuleDefinition('ReportErrors')
+    errorReport.setDescription('Reports errors at the end')
+    body = importLine.replace('<MODULE>', 'ReportErrors')
+    errorReport.setBody(body)
+
     finalization = StepDefinition('Job_Finalization')
     finalization.addModule(dataUpload)
     up = finalization.createModuleInstance('UploadOutputData', 'dataUpload')
@@ -345,7 +350,10 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     finalization.addModule(failoverRequest)
     fr = finalization.createModuleInstance('FailoverRequest', 'failoverRequest')
     fr.setValue("enable", self.finalsdict['sendFailover'])
-    
+
+    finalization.addModule(errorReport)
+    fr = finalization.createModuleInstance('ReportErrors', 'reportErrors')
+
     self.workflow.addStep(finalization)
     self.workflow.createStepInstance('Job_Finalization', 'finalization')
 
@@ -710,7 +718,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     
     if not self.energy:
       if application.energy:
-        self.energy = Decimal(str(application.energy))
+        self.energy = Decimal((("%1.2f" % float(application.energy)).rstrip('0').rstrip('.')))
       else:
         return S_ERROR("Could not find the energy defined, it is needed for the production definition.")
     elif not application.energy:
@@ -834,12 +842,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     tD = Decimal('1000.0')
     unit = 'gev' if energy < tD else 'tev'
     energy = energy if energy < tD else energy/tD
-
-    if float(energy).is_integer():
-      energyPath = str(int(energy))
-    else:
-      energyPath = "%1.1f" % energy
-
+    energyPath = ("%1.2f" % energy).rstrip('0').rstrip('.')
     energyPath = energyPath+unit+'/'
 
     self.log.info ("Energy path is: ", energyPath)

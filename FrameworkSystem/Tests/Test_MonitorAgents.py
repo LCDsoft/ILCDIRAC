@@ -7,7 +7,7 @@ import psutil
 
 import ILCDIRAC.FrameworkSystem.Agent.MonitorAgents as MAA
 from ILCDIRAC.FrameworkSystem.Agent.MonitorAgents import MonitorAgents
-
+from ILCDIRAC.Tests.Utilities.Mocks import rpcMock
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC import gLogger
@@ -28,6 +28,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.log = gLogger
     self.restartAgent.sysAdminClient = MagicMock()
     self.restartAgent.enabled = True
+    self.restartAgent.restartAgents = True
 
   def tearDown(self):
     pass
@@ -155,8 +156,8 @@ class TestMonitorAgents(unittest.TestCase):
 
     res = self.restartAgent.execute()
     self.assertFalse(res["OK"])
-    calls = [call(agentOne, agentOnePollingTime, agentOneLogLoc, agentOnePID, False),
-             call(agentTwo, agentTwoPollingTime, agentTwoLogLoc, agentTwoPID, False)]
+    calls = [call(agentOne, agentOnePollingTime, agentOneLogLoc, agentOnePID),
+             call(agentTwo, agentTwoPollingTime, agentTwoLogLoc, agentTwoPID)]
 
     self.restartAgent.checkAgent.assert_has_calls(calls, any_order=True)
 
@@ -166,7 +167,7 @@ class TestMonitorAgents(unittest.TestCase):
   def test_check_agent(self):
     """ test for checkAgent function """
     self.restartAgent.getLastAccessTime = MagicMock()
-    self.restartAgent.restartAgent = MagicMock(return_value=S_OK())
+    self.restartAgent.restartInstance = MagicMock(return_value=S_OK())
 
     agentName = 'agentX'
     pollingTime = MAA.HOUR
@@ -182,14 +183,120 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
     res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
     self.assertTrue(res["OK"])
-    self.restartAgent.restartAgent.assert_not_called()
+    self.restartAgent.restartInstance.assert_not_called()
 
     # agents with log file age of more than max(pollingTime+Hour, 2 Hour) should be restarted
     logAge = timedelta(hours=3)
+    self.restartAgent.restartAgents = False
     self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
     res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
     self.assertTrue(res["OK"])
-    self.restartAgent.restartAgent.assert_called_once_with(int(pid), agentName, False)
+    self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, False)
+
+  def test_check_executors(self):
+    """Test the checkExecutor function."""
+    self.restartAgent.getLastAccessTime = MagicMock()
+    self.restartAgent.restartInstance = MagicMock(return_value=S_OK())
+    self.restartAgent.checkForCheckingJobs = MagicMock()
+    self.restartAgent.restartExecutors = True
+
+    agentName = 'executorX'
+    currentLogLocation = '/fake/log/file'
+    pid = '12345'
+    options = dict(PID=pid, LogFileLocation=currentLogLocation)
+    self.restartAgent.getLastAccessTime.return_value = S_ERROR()
+    res = self.restartAgent.checkExecutor(agentName, options)
+    self.assertFalse(res["OK"])
+
+    # log file ok
+    logAge = timedelta(hours=1)
+    self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
+    res = self.restartAgent.checkExecutor(agentName, options)
+    self.assertTrue(res["OK"])
+    self.restartAgent.restartInstance.assert_not_called()
+
+    # log file too old, no checking jobs
+    logAge = timedelta(hours=3)
+    self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
+    self.restartAgent.checkForCheckingJobs.return_value = S_OK('NO_CHECKING_JOBS')
+    res = self.restartAgent.checkExecutor(agentName, options)
+    self.assertTrue(res["OK"])
+    self.restartAgent.restartInstance.assert_not_called()
+
+    # log file too old, checking jobs failed
+    logAge = timedelta(hours=3)
+    self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
+    self.restartAgent.checkForCheckingJobs.return_value = S_ERROR()
+    res = self.restartAgent.checkExecutor(agentName, options)
+    self.assertFalse(res["OK"])
+    self.restartAgent.restartInstance.assert_not_called()
+
+    # log file too old, checking jobs OK
+    logAge = timedelta(hours=3)
+    self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
+    self.restartAgent.checkForCheckingJobs.return_value = S_OK('CHECKING_JOBS')
+    res = self.restartAgent.checkExecutor(agentName, options)
+    self.assertTrue(res["OK"])
+    self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, True)
+
+    # log file too old, checking jobs OK, restart failed
+    self.restartAgent.restartInstance = MagicMock(return_value=S_ERROR())
+    logAge = timedelta(hours=3)
+    self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
+    self.restartAgent.checkForCheckingJobs.return_value = S_OK('CHECKING_JOBS')
+    res = self.restartAgent.checkExecutor(agentName, options)
+    self.assertFalse(res["OK"])
+    self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, True)
+
+    # log file too old, checking jobs OK, restart disabled
+    self.restartAgent.restartExecutors = False
+    self.restartAgent.restartInstance = MagicMock(return_value=S_OK('NO_RESTART'))
+    logAge = timedelta(hours=3)
+    self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
+    self.restartAgent.checkForCheckingJobs.return_value = S_OK('CHECKING_JOBS')
+    res = self.restartAgent.checkExecutor(agentName, options)
+    self.assertTrue(res["OK"])
+    self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, False)
+
+  def test_check_services(self):
+    """Test for checkServices function."""
+    self.restartAgent.getLastAccessTime = MagicMock()
+    self.restartAgent.restartInstance = MagicMock(return_value=S_OK())
+
+    agentName = 'serviceX'
+    pid = '12345'
+    options = dict(PID=pid, System='Skynet', Port=999)
+    self.restartAgent.restartServices = False
+
+    # service responds ok
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.RPCClient", new=rpcMock(S_OK())):
+      res = self.restartAgent.checkService(agentName, options)
+    self.assertTrue(res["OK"])
+    self.restartAgent.restartInstance.assert_not_called()
+
+    # service responds not ok
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.RPCClient", new=rpcMock(S_ERROR())):
+      res = self.restartAgent.checkService(agentName, options)
+    self.assertTrue(res["OK"])
+    self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, False)
+
+    # service responds not ok
+    self.restartAgent.restartInstance.reset_mock()
+    self.restartAgent.restartInstance.return_value = S_OK('NO_RESTART')
+    self.restartAgent.restartServices = False
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.RPCClient", new=rpcMock(S_ERROR())):
+      res = self.restartAgent.checkService(agentName, options)
+    self.assertTrue(res["OK"])
+    self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, False)
+
+    # service responds not ok, restart Failed
+    self.restartAgent.restartInstance.reset_mock()
+    self.restartAgent.restartServices = True
+    self.restartAgent.restartInstance.return_value = S_ERROR()
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.RPCClient", new=rpcMock(S_ERROR())):
+      res = self.restartAgent.checkService(agentName, options)
+    self.assertFalse(res["OK"])
+    self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, True)
 
   def test_get_last_access_time(self):
     """ test for getLastAccessTime function """
@@ -207,10 +314,10 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertIsInstance(res["Value"], timedelta)
     self.assertEquals(res["Value"].seconds, 3600)
 
-  def test_restartAgent(self):
-    """ test for restartAgent """
+  def test_restartInstance(self):
+    """Test restartInstance function."""
     with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=self.getPSMock()):
-      res = self.restartAgent.restartAgent(12345, "agentX")
+      res = self.restartAgent.restartInstance(12345, "agentX", True)
     self.assertTrue(res['OK'])
 
     psMock = self.getPSMock()
@@ -218,53 +325,26 @@ class TestMonitorAgents(unittest.TestCase):
     psMock.Error = psutil.Error
     psMock.Process.side_effect = psutil.Error()
     with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=psMock):
-      res = self.restartAgent.restartAgent(12345, "agentX")
+      res = self.restartAgent.restartInstance(12345, "agentX", True)
     self.assertFalse(res['OK'])
 
-  def test_restartAgent_executors(self):
-    # disable restartExecutors, no checking jobs
-    self.restartAgent.accounting.clear()
-    self.restartAgent.enabled = True
-    self.restartAgent.restartExecutors = False
-    self.restartAgent.checkForCheckingJobs = MagicMock(return_value=S_OK("NO_CHECKING_JOBS"))
-    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=self.getPSMock()):
-      res = self.restartAgent.restartAgent(12345, "agentX", isExecutor=True)
-    self.assertTrue(res['OK'], res.get('Message', ''))
-    self.assertEqual(res['Value'], "NO_RESTART")
-    self.assertNotIn("agentX", self.restartAgent.accounting)
+  def test_checkingJobs(self):
+    """Test checkForCheckingJobs function."""
+    self.restartAgent.jobMonClient = MagicMock()
 
-    # disable restartExecutors, error checking jobs
-    self.restartAgent.accounting.clear()
-    self.restartAgent.enabled = True
-    self.restartAgent.restartExecutors = False
-    self.restartAgent.checkForCheckingJobs = MagicMock(return_value=S_ERROR("failed"))
-    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=self.getPSMock()):
-      res = self.restartAgent.restartAgent(12345, "agentX", isExecutor=True)
-    self.assertFalse(res['OK'])
-    self.assertEqual(res['Message'], "failed")
+    # failed to get jobs
+    self.restartAgent.jobMonClient.getJobs.return_value = S_ERROR()
+    self.assertFalse(self.restartAgent.checkForCheckingJobs('executor')['OK'])
 
-    # disable restartExecutors, some checking jobs
-    self.restartAgent.accounting.clear()
-    self.restartAgent.enabled = True
-    self.restartAgent.restartExecutors = False
-    self.restartAgent.checkForCheckingJobs = MagicMock(return_value=S_OK("CHECKING_JOBS"))
-    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=self.getPSMock()):
-      res = self.restartAgent.restartAgent(12345, "agentX", isExecutor=True)
-    self.assertTrue(res['OK'], res.get('Message', ''))
-    self.assertEqual(res['Value'], "NO_RESTART")
-    self.assertIn("manually", self.restartAgent.accounting["agentX"]["Treatment"])
+    # No checking jobs
+    self.restartAgent.jobMonClient.getJobs.return_value = S_OK(0)
+    self.assertTrue(self.restartAgent.checkForCheckingJobs('executor')['OK'])
+    self.assertEqual(self.restartAgent.checkForCheckingJobs('executor')['Value'], 'NO_CHECKING_JOBS')
 
-    # enable restartExecutors, some checking jobs
-    self.restartAgent.accounting.clear()
-    self.restartAgent.enabled = True
-    self.restartAgent.restartExecutors = True
-    self.restartAgent.checkForCheckingJobs = MagicMock(return_value=S_OK("CHECKING_JOBS"))
-    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.psutil", new=self.getPSMock()):
-      res = self.restartAgent.restartAgent(12345, "agentX", isExecutor=True)
-    self.assertTrue(res['OK'], res.get('Message', ''))
-    self.assertIs(res['Value'], None)
-    self.assertNotIn("manually", self.restartAgent.accounting["agentX"].get("Treatment", ""))
-
+    # checking jobs
+    self.restartAgent.jobMonClient.getJobs.return_value = S_OK({1: 1, 2: 2})
+    self.assertTrue(self.restartAgent.checkForCheckingJobs('executor')['OK'])
+    self.assertEqual(self.restartAgent.checkForCheckingJobs('executor')['Value'], 'CHECKING_JOBS')
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestMonitorAgents)
