@@ -718,7 +718,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     
     if not self.energy:
       if application.energy:
-        self.energy = Decimal((("%1.2f" % float(application.energy)).rstrip('0.')))
+        self.energy = Decimal((("%1.2f" % float(application.energy)).rstrip('0').rstrip('.')))
       else:
         return S_ERROR("Could not find the energy defined, it is needed for the production definition.")
     elif not application.energy:
@@ -842,12 +842,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     tD = Decimal('1000.0')
     unit = 'gev' if energy < tD else 'tev'
     energy = energy if energy < tD else energy/tD
-
-    if float(energy).is_integer():
-      energyPath = str(int(energy))
-    else:
-      energyPath = "%1.1f" % energy
-
+    energyPath = ("%1.2f" % energy).rstrip('0').rstrip('.')
     energyPath = energyPath+unit+'/'
 
     self.log.info ("Energy path is: ", energyPath)

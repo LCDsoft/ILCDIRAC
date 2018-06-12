@@ -58,6 +58,13 @@ class ProductionJobTestCase( unittest.TestCase ):
     res = self.prodJob.getEnergyPath()
     self.assertEqual( "1.4tev/", res )
 
+  def test_Energy43222(self):
+    """Test ProductionJob getEnergyPath 432.22gev."""
+    self.prodJob.energy = 432.22
+    res = self.prodJob.getEnergyPath()
+    self.assertEqual("432.22gev/", res)
+
+
 #FIXME Add checks that the important lines were really executed
 class ProductionJobCompleteTestCase( unittest.TestCase ):
   """ Tests the rest of the ProductionJob TestCases """

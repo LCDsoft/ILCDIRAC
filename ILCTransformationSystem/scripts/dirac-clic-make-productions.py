@@ -476,11 +476,8 @@ finalOutputSE = %(finalOutputSE)s
 
   @staticmethod
   def metaEnergy( energy ):
-    """ return string of the energy with no digits """
-    if float(energy).is_integer():
-      energy = str(int(energy))
-    else:
-      energy = "%1.1f" % energy
+    """ return string of the energy with no non-zero digits """
+    energy = ("%1.2f" % energy).rstrip('0').rstrip('.')
     return energy
 
   @staticmethod
