@@ -1,3 +1,29 @@
+[v28r0p8]
+
+Release date: 2018-06-12
+
+*ILCTransformationSystem
+
+FIX: (!212) `dirac-ilc-get-info`: fixes and modifications for new whizard2 production
+FIX: (!216) TransformationPlugin: BroadcastProcessed: only print about failure for ``getDescendents`` if there was a failure
+
+*Interfaces
+
+NEW: (!214) New function :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplittingStartIndex` to set the starting index for the naming of output files.
+CHANGE: (!215) :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob` classes now execute the :class:`~ILCDIRAC.Workflow.Modules.ReportErrors.ReportErrors` Module at the very end, solves ILCDIRAC-760. Only works for productions created with this or later releases.
+FIX: (!212) :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob`: Fix for meta energy _without_ decimal digits
+NEW: (!218) Parametric (Splitting) Jobs can now be tested locally. Only the first entry of the sequence will be run however! Fixes ILCDIRAC-818
+FIX: (!218) When testing jobs locally, the LFNs in the input sandbox will be treated without exceptions.
+
+*FrameworkSystem
+
+NEW: (!213) :class:`~ILCDIRAC.FrameworkSystem.Agents.MonitorAgents.MonitorAgents` now also monitors services by pinging them
+
+*Workflow
+
+NEW: (!215) New module :class:`~ILCDIRAC.Workflow.Modules.ReportErrors.ReportErrors` to print out application errors at the end of ProductionJob workflow executions
+
+
 [v28r0p7]
 
 Release date: 2018-06-07
