@@ -450,7 +450,7 @@ class DiracILC(Dirac):
         if os.path.exists(os.path.join(os.getcwd(), os.path.basename(isFile))):
           self.log.debug("Input Sandbox %s found in the job directory, no need to copy it" % isFile)
         else:
-          if os.path.isabs(isFile):
+          if os.path.isabs(isFile) and os.path.exists(isFile):
             self.log.debug("Input Sandbox %s is a file with absolute path, copying it" % isFile)
             shutil.copy(isFile, os.getcwd())
           elif os.path.isdir(isFile):
