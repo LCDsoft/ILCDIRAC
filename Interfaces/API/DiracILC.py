@@ -363,7 +363,7 @@ class DiracILC(Dirac):
 
     shutil.copy(jobXMLFile, '%s/%s' % (os.getcwd(), os.path.basename(jobXMLFile)))
 
-    res = self._Dirac__getJDLParameters(job)
+    res = self._Dirac__getJDLParameters(job)  # pylint: disable=no-member
     if not res['OK']:
       self.log.error("Could not extract job parameters from job")
       return res
@@ -382,7 +382,7 @@ class DiracILC(Dirac):
         return self._errorReport('LocalSite/LocalSE should be defined in your config file')
       localSEList = localSEList.replace(' ', '').split(',')
       self.log.debug("List of local SEs: %s" % localSEList)
-      inputDataPolicy = self._Dirac__getVOPolicyModule('InputDataModule')
+      inputDataPolicy = self._Dirac__getVOPolicyModule('InputDataModule')  # pylint: disable=no-member
       if not inputDataPolicy:
         return self._errorReport('Could not retrieve DIRAC/VOPolicy/InputDataModule for VO')
 
@@ -421,7 +421,7 @@ class DiracILC(Dirac):
         self.log.warn('Input data resolution failed')
         return result
 
-    softwarePolicy = self._Dirac__getVOPolicyModule('SoftwareDistModule')
+    softwarePolicy = self._Dirac__getVOPolicyModule('SoftwareDistModule')  # pylint: disable=no-member
     if softwarePolicy:
       moduleFactory = ModuleFactory()
       moduleInstance = moduleFactory.getModule(softwarePolicy, {'Job': parameters})
@@ -520,7 +520,7 @@ class DiracILC(Dirac):
         executionEnv[nameEnv] = valEnv
         self.log.verbose('%s = %s' % (nameEnv, valEnv))
 
-    cbFunction = self._Dirac__printOutput
+    cbFunction = self._Dirac__printOutput  # pylint: disable=no-member
 
     result = shellCall(0, command, env=executionEnv, callbackFunction=cbFunction)
     if not result['OK']:
@@ -573,7 +573,7 @@ class DiracILC(Dirac):
             return S_ERROR('Can not copy OutputSandbox file %s' % osFile)
 
     self.log.verbose('Cleaning up %s...' % tmpdir)
-    self._Dirac__cleanTmp(tmpdir)
+    self._Dirac__cleanTmp(tmpdir)  # pylint: disable=no-member
     os.chdir(curDir)
 
     if status:
