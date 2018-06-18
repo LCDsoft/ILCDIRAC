@@ -11,6 +11,7 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
+#pylint: disable=invalid-name
 
 import sys
 import os
@@ -21,7 +22,7 @@ import fakeEnvironment #pylint: disable=unused-import
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath( os.path.join( os.environ.get("DIRAC",'/data/sailer/software/DIRAC/DiracDevV6r13'), "ILCDIRAC" ) ) )
+sys.path.insert(0, os.path.abspath(os.path.join(os.environ.get('DIRAC',''), 'ILCDIRAC')))
 
 # -- General configuration ------------------------------------------------
 
@@ -58,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'ILCDIRAC'
-copyright = u'2010--2017,CERN'
+copyright = u'2010--2018,CERN'
 author = u'S.Sposs,R.Ete,C.Grefe,P.Majewski,A.Sailer,M.Petric,J.Ebbing'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -66,7 +67,7 @@ author = u'S.Sposs,R.Ete,C.Grefe,P.Majewski,A.Sailer,M.Petric,J.Ebbing'
 # built documents.
 #
 # The short X.Y version.
-version = '26.0'
+version = '29.0'
 # The full version, including alpha/beta/rc tags.
 
 ##Get release from ILCDIRAC Tag
@@ -314,6 +315,6 @@ autodoc_member_order = 'groupwise'
 autodoc_member_order = 'bysource'
 
 
-intersphinx_mapping = { 'DIRAC': ('http://dirac.readthedocs.io/en/rel-v6r20', None),
-                        'python': ('https://docs.python.org/2.7', None),
-                      }
+intersphinx_mapping = {'DIRAC': ('http://dirac.readthedocs.io/en/rel-v6r20', None),
+                       'python': ('https://docs.python.org/2.7', None),
+                       }
