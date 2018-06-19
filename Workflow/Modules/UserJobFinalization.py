@@ -352,15 +352,15 @@ class UserJobFinalization(ModuleBase):
         self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
         filesToFailover[fileName] = metadata
       else:
-        #Only attempt replication after successful upload
+        # Only attempt replication after successful upload and if there is more than one userOutputSE
         lfn = metadata['lfn']
         filesUploaded.append(lfn)
-        seList = metadata['resolvedSE']
+        seList = self.userOutputSE
         replicateSE = ''
         uploadedSE = resultFT['Value'].get('uploadedSE', '')
         if uploadedSE:
           for se in seList:
-            if not se == uploadedSE:
+            if se != uploadedSE:
               replicateSE = se
               break
 
