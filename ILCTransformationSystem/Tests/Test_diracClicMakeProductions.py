@@ -11,7 +11,7 @@ from DIRAC import S_OK, S_ERROR
 #pylint: disable=protected-access, invalid-name
 THE_SCRIPT = "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions"
 theScript = importlib.import_module(THE_SCRIPT)
-
+SCP = "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser"
 __RCSID__ = "$Id$"
 
 CONFIG_DICT = {}
@@ -39,7 +39,8 @@ class TestMaking( unittest.TestCase ):
       'prodGroup': "myProdGroup",
       'detectorModel': 'myDetectorModel',
       'softwareVersion': 'mySoftwareVersion',
-      'clicConfig': 'myClicConfig',
+      'configVersion': 'my',
+      'configPackage': 'ClicConfig',
       'processes': 'process1, process2',
       'energies': '100, 200',
       'eventsPerJobs': '1000, 2000',
@@ -63,11 +64,25 @@ class TestMaking( unittest.TestCase ):
     self.pMockMod.return_value = self.pjMock
     self.pjMock.getMetadata.return_value = {}
 
+    self.cpMock = self.getCPMock()
+
+  def getCPMock(self):
+    """Return a Mock for the ConfigParser."""
+    cpMock = Mock()
+    cpMock.read = Mock()
+    cpMock.get = self.mockConfig
+    cpMock.has_option = self.hasMock
+    return cpMock
+
   def mockConfig( self, *args, **kwargs ): #pylint: disable=unused-argument
     """ mock the configparser object """
 
     self.assertEqual( args[0], theScript.PP )
     return self.configDict[ args[1] ]
+
+  def hasMock(self, *args, **kwargs):  # pylint: disable=unused-argument
+    """Mock the configparser.has_option function."""
+    return self.configDict.get(args[1])
 
   def mockOpsConfig( self, *args, **kwargs ): #pylint: disable=unused-argument
     """ mock the operations getConfig calls """
@@ -111,14 +126,9 @@ class TestMaking( unittest.TestCase ):
 
     c = self.chain
 
-    cpMock = Mock()
-    cpMock.read = Mock()
-    cpMock.get = self.mockConfig
-
     parameter.prodConfigFilename = 'filename'
 
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ):
+    with patch(SCP, new=Mock(return_value=self.cpMock)):
       c.loadParameters( parameter )
     self.assertEqual( c.prodGroup, "myProdGroup" )
     self.assertEqual( c.detectorModel, "myDetectorModel" )
@@ -131,14 +141,13 @@ class TestMaking( unittest.TestCase ):
     self.assertEqual(c.whizard2SinFile, ['myWhizardSinFile1', 'myWhizardSinFile2'])
 
     self.configDict['prodIDs'] = "123, 456, 789"
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ), \
+    with patch(SCP, new=Mock(return_value=self.cpMock)), \
       self.assertRaisesRegexp( AttributeError, "Lengths of Processes"):
       c.loadParameters( parameter )
 
-    cpMock.has_option.return_value = False
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ):
+    self.cpMock.has_option = Mock()
+    self.cpMock.has_option.return_value = False
+    with patch(SCP, new=Mock(return_value=self.cpMock)):
       c.loadParameters( parameter )
     self.assertEqual( c.prodIDs, [1, 1] )
     self.assertEqual(c.cliRecoOption, '--Config.Tracking=Tracked')
@@ -146,8 +155,7 @@ class TestMaking( unittest.TestCase ):
 
     self.configDict['eventsInSplitFiles'] = "1000"
     c._flags._spl = True
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ), \
+    with patch(SCP, new=Mock(return_value=self.cpMock)), \
       self.assertRaisesRegexp( AttributeError, "Length of eventsInSplitFiles"):
       c.loadParameters( parameter )
 
@@ -155,8 +163,7 @@ class TestMaking( unittest.TestCase ):
 
     parameter.prodConfigFilename = None
     parameter.dumpConfigFile = True
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ), \
+    with patch(SCP, new=Mock(return_value=self.cpMock)), \
       self.assertRaisesRegexp( RuntimeError, ''):
       c.loadParameters( parameter )
 
@@ -164,15 +171,10 @@ class TestMaking( unittest.TestCase ):
 
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
 
-    cpMock = Mock()
-    cpMock.read = Mock()
-    cpMock.get = self.mockConfig
-
     parameter = Mock()
     parameter.prodConfigFilename = 'filename'
     parameter.dumpConfigFile = False
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ):
+    with patch(SCP, new=Mock(return_value=self.cpMock)):
       self.chain.loadParameters( parameter )
 
     ret = self.chain.createMarlinApplication(300.0, over=True)
@@ -182,8 +184,7 @@ class TestMaking( unittest.TestCase ):
     self.assertEqual(self.chain.cliRecoOption, '--Config.Tracking=Tracked')
     self.assertEqual(ret.extraCLIArguments, '--Config.Tracking=Tracked  --Config.Overlay=300GeV ')
 
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ):
+    with patch(SCP, new=Mock(return_value=self.cpMock)):
       self.chain.loadParameters( parameter )
     self.chain._flags._over = False
 
@@ -198,15 +199,10 @@ class TestMaking( unittest.TestCase ):
 
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard2
 
-    cpMock = Mock()
-    cpMock.read = Mock()
-    cpMock.get = self.mockConfig
-
     parameter = Mock()
     parameter.whizard2SinFile = 'filename'
     parameter.dumpConfigFile = False
-    with patch("ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-               new=Mock(return_value=cpMock)), \
+    with patch(SCP, new=Mock(return_value=self.cpMock)), \
          patch("DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations",
                new=Mock(return_value=self.opsMock)):
       self.chain.loadParameters(parameter)
@@ -224,15 +220,10 @@ class TestMaking( unittest.TestCase ):
 
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
 
-    cpMock = Mock()
-    cpMock.read = Mock()
-    cpMock.get = self.mockConfig
-
     parameter = Mock()
     parameter.prodConfigFilename = 'filename'
     parameter.dumpConfigFile = False
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ), \
+    with patch(SCP, new=Mock(return_value=self.cpMock)), \
          patch( "DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations",
                 new=Mock(return_value=self.opsMock ) ):
       self.chain.loadParameters( parameter )
@@ -245,15 +236,10 @@ class TestMaking( unittest.TestCase ):
 
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import StdHepSplit
 
-    cpMock = Mock()
-    cpMock.read = Mock()
-    cpMock.get = self.mockConfig
-
     parameter = Mock()
     parameter.prodConfigFilename = 'filename'
     parameter.dumpConfigFile = False
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ):
+    with patch(SCP, new=Mock(return_value=self.cpMock)):
       self.chain.loadParameters( parameter )
 
     ret = self.chain.createSplitApplication( 100, 1000, 'stdhep')
@@ -266,15 +252,10 @@ class TestMaking( unittest.TestCase ):
 
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
 
-    cpMock = Mock()
-    cpMock.read = Mock()
-    cpMock.get = self.mockConfig
-
     parameter = Mock()
     parameter.prodConfigFilename = 'filename'
     parameter.dumpConfigFile = False
-    with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser",
-                new=Mock(return_value=cpMock ) ):
+    with patch(SCP, new=Mock(return_value=self.cpMock)):
       self.chain.loadParameters( parameter )
     ret = self.chain.createOverlayApplication( 350 )
     self.assertIsInstance( ret, OverlayInput )

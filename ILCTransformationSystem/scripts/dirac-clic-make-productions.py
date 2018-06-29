@@ -26,6 +26,16 @@ from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithUnit, energyToInt
 PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
 APPLICATION_LIST = ['Marlin', 'DDSim', 'Overlay', 'Whizard2']
+LIST_ATTRIBUTES = ['ignoreMetadata']
+STRING_ATTRIBUTES = ['configPackage', 'configVersion']
+
+
+def listify(value):
+  """Turn a comma separate string into a list."""
+  if isinstance(value, list):
+    return value
+  return [val.strip() for val in value.split(',') if val.strip()]
+
 
 class Params(object):
   """Parameter Object"""
@@ -66,7 +76,8 @@ class CLICDetProdChain( object ):
   :param str process: name of the process to generate or use in meta data search
   :param str detectorModel: Detector Model to use in simulation/reconstruction
   :param str softwareVersion: softwareVersion to use for generation/simulation/reconstruction
-  :param str clicConfig: Steering file version to use for simulation/reconstruction
+  :param str configVersion: Steering file version to use for simulation/reconstruction
+  :param str configPackage: Steering file package to use for simulation/reconstruction
   :param float energy: energy to use for generation or meta data search
   :param in eventsPerJob: number of events per job
   :param in numberOfTasks: number of production jobs/task to create (default is 1)
@@ -222,7 +233,8 @@ MoveTypes = %(moveTypes)s
 
     self.detectorModel = self._ops.getValue(os.path.join(prodPath, 'DefaultDetectorModel'))
     self.softwareVersion = self._ops.getValue(os.path.join(prodPath, 'DefaultSoftwareVersion'))
-    self.clicConfig = self._ops.getValue(os.path.join(prodPath, 'DefaultConfigVersion'))
+    self.configVersion = self._ops.getValue(os.path.join(prodPath, 'DefaultConfigVersion'))
+    self.configPackage = self._ops.getValue(os.path.join(prodPath, 'DefaultConfigPackage'))
     self.productionLogLevel = 'VERBOSE'
     self.outputSE = 'CERN-DST-EOS'
 
@@ -250,6 +262,8 @@ MoveTypes = %(moveTypes)s
     self.whizard2Version = self._ops.getValue('Production/CLIC/DefaultWhizard2Version')
     self.whizard2SinFile = ''
 
+    self.ignoreMetadata = []
+
     self.applicationOptions = {appName: [] for appName in APPLICATION_LIST}
 
     self._flags = self.Flags()
@@ -263,11 +277,15 @@ MoveTypes = %(moveTypes)s
 
   def meta( self, prodID, process, energy ):
     """ return meta data dictionary, always new"""
-    return { 'ProdID': str(prodID),
+    metaD = {'ProdID': str(prodID),
              'EvtType': process,
              'Energy' : self.metaEnergy( energy ),
              'Machine': self._machine,
-           }
+             }
+    for key in self.ignoreMetadata:
+      metaD.pop(key)
+    return metaD
+
 
 
   def loadParameters( self, parameter ):
@@ -283,7 +301,8 @@ MoveTypes = %(moveTypes)s
       self.prodGroup = config.get(PP, 'prodGroup')
       self.detectorModel = config.get(PP, 'detectorModel')
       self.softwareVersion = config.get(PP, 'softwareVersion')
-      self.clicConfig = config.get(PP, 'clicConfig')
+      if config.has_option(PP, 'clicConfig'):
+        self.configVersion = config.get(PP, 'clicConfig')
 
       # Check if Whizard version is set, otherwise use default from CS
       if config.has_option(PP, 'whizard2Version'):
@@ -312,6 +331,13 @@ MoveTypes = %(moveTypes)s
       if config.has_option(PP, 'cliReco'):
         self.cliRecoOption = config.get(PP, 'cliReco')
 
+      for attribute in LIST_ATTRIBUTES:
+        if config.has_option(PP, attribute):
+          setattr(self, attribute, listify(config.get(PP, attribute)))
+
+      for attribute in STRING_ATTRIBUTES:
+        if config.has_option(PP, attribute):
+          setattr(self, attribute, config.get(PP, attribute))
 
       self.overlayEvents = self.checkOverlayParameter(config.get(PP, 'overlayEvents')) \
                            if config.has_option(PP, 'overlayEvents') else ''
@@ -441,7 +467,8 @@ detectorModel = %(detectorModel)s
 softwareVersion = %(softwareVersion)s
 whizard2Version = %(whizard2Version)s
 whizard2SinFile = %(whizard2SinFile)s
-clicConfig = %(clicConfig)s
+configVersion = %(configVersion)s
+configPackage = %(configPackage)s
 eventsPerJobs = %(eventsPerJobs)s
 ## Number of jobs/task to generate (default = 1)
 # numberOfTasks =
@@ -475,8 +502,10 @@ finalOutputSE = %(finalOutputSE)s
 """ %( pDict )
 
   @staticmethod
-  def metaEnergy( energy ):
-    """ return string of the energy with no non-zero digits """
+  def metaEnergy(energy):
+    """Return string of the energy with no non-zero digits."""
+    if isinstance(energy, basestring):
+      return energy
     energy = ("%1.2f" % energy).rstrip('0').rstrip('.')
     return energy
 
@@ -661,7 +690,7 @@ finalOutputSE = %(finalOutputSE)s
     gLogger.notice( "*"*80 + "\nCreating simulation production: %s " % prodName )
     simProd = self.getProductionJob()
     simProd.setProdType( 'MCSimulation' )
-    simProd.setClicConfig( self.clicConfig )
+    simProd.setConfigPackage(appName=self.configPackage, version=self.configVersion)
     res = simProd.setInputDataQuery( meta )
     if not res['OK']:
       raise RuntimeError( "Error creating Simulation Production: %s" % res['Message'] )
@@ -699,7 +728,7 @@ finalOutputSE = %(finalOutputSE)s
     recProd = self.getProductionJob()
     productionType = 'MCReconstruction_Overlay' if over else 'MCReconstruction'
     recProd.setProdType( productionType )
-    recProd.setClicConfig( self.clicConfig )
+    recProd.setConfigPackage(appName=self.configPackage, version=self.configVersion)
 
     res = recProd.setInputDataQuery( meta )
     if not res['OK']:
@@ -820,7 +849,7 @@ finalOutputSE = %(finalOutputSE)s
     prodJob.dryrun = self._flags.dryRun
     return prodJob
 
-  def _updateMeta( self, outputDict, inputDict, eventsPerJob ):
+  def _updateMeta(self, outputDict, inputDict, eventsPerJob):
     """ add some values from the inputDict to the outputDict to fake the input dataquery result in dryRun mode """
     if not self._flags.dryRun:
       outputDict.clear()

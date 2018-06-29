@@ -134,15 +134,16 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+version, 'ILDConfig package' )
     return S_OK()  
 
-  def setClicConfig(self,version):
-    """ Define the ClicConfig package to obtain
-    """
-    appName = 'ClicConfig'
-    self._addSoftware(appName.lower(), version)
-    self._addParameter( self.workflow, 'ClicConfigPackage', 'JDL', appName+version, 'ClicConfig package' )
-    self.prodparameters['ClicConfigVersion'] = version
-    return S_OK()
+  def setClicConfig(self, version):
+    """Define the ClicConfig package to obtain."""
+    return self.setConfigPackage('ClicConfig', version)
 
+  def setConfigPackage(self, appName, version):
+    """Define the config package to obtain."""
+    self._addSoftware(appName.lower(), version)
+    self._addParameter(self.workflow, appName + 'Package', 'JDL', appName + version, appName + 'package')
+    self.prodparameters[appName + 'Version'] = version
+    return S_OK()
 
   def setDryRun(self, run):
     """ In case one wants to get all the info as if the prod was being submitted
