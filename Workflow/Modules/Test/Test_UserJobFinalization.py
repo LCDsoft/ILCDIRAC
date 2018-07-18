@@ -34,7 +34,6 @@ class TestUserJobFinalization( unittest.TestCase ):
     result = self.ujf.applicationSpecificInputs()
     assertDiracSucceedsWith_equals( result, 'Parameters resolved', self )
     assertEqualsImproved( self.ujf.enable, True, self )
-    assertEqualsImproved( self.ujf.failoverTest, False, self )
     assertEqualsImproved( self.ujf.jobID, '123956', self )
     assertEqualsImproved( self.ujf.userOutputData, [ 'something1',
                                                      'something2' ], self )
@@ -45,7 +44,6 @@ class TestUserJobFinalization( unittest.TestCase ):
 
   def test_application_specific_inputs_corrupt_state( self ):
     self.ujf.enable = 123
-    self.ujf.failoverTest = 'yes please'
     log_mock = Mock()
     self.ujf.log = log_mock
     self.ujf.userOutputData = [ 'testentryOutputData' ]
@@ -58,7 +56,6 @@ class TestUserJobFinalization( unittest.TestCase ):
       assertDiracSucceedsWith_equals( result, 'Parameters resolved', self )
       assertEqualsImproved( self.ujf.jobID, 87942, self )
       assertEqualsImproved( self.ujf.enable, False, self )
-      assertEqualsImproved( self.ujf.failoverTest, False, self )
       assertEqualsImproved( self.ujf.userOutputData, [ 'testentryOutputData' ],
                             self )
       assertEqualsImproved( self.ujf.userOutputSE, [ 'Some TestOutput Storage',
