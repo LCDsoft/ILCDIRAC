@@ -15,10 +15,10 @@ stages:
 variables:
   LCG_BUNDLE_VERSION: "v14r2"
   ILCDIRAC_VERSION: "v29r0-pre1"
-  DIRAC_BRANCH: "rel-v6r20"
-  DIRAC_TAG: "v6r20p3"
+  DIRAC_BRANCH: "integration"
+  DIRAC_TAG: "v6r21-pre1"
   SETUP: "ILC-Production"
-  ILCDIRAC_BRANCH: "Rel-v29r0"
+  ILCDIRAC_BRANCH: "master"
 
 .install_template: &install
   stage: install
