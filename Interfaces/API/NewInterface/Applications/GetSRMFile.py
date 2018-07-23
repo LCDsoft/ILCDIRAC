@@ -1,10 +1,12 @@
 """
 Download files directly from an SRM. Use this to download files not available in the DiracFileCatalog
 """
-__RCSID__ = "$Id$"
 from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
+
+LOG = gLogger.getSubLogger(__name__)
+__RCSID__ = "$Id$"
 
 class GetSRMFile(LCUtilityApplication):
   """ Gets a given file from storage directly using srm path.
@@ -52,7 +54,7 @@ class GetSRMFile(LCUtilityApplication):
     return S_OK()
 
   def _prodjobmodules(self, step):
-    self._log.error("This application is not meant to be used in Production context")
+    LOG.error("This application is not meant to be used in Production context")
     return S_ERROR('Should not use in Production')
 
 

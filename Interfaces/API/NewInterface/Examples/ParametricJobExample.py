@@ -14,6 +14,8 @@ from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
 from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
 
+LOG = gLogger.getSubLogger(__name__)
+
 __RCSID__ = "$Id$" 
 
 def getFiles():
@@ -27,7 +29,7 @@ def getFiles():
   
   result = fc.findFilesByMetadata(meta, "/ilc/prod/clic")
   if not result["OK"]:
-    gLogger.error(result["Message"])
+    LOG.error(result["Message"])
     dexit(1)
   return result['Value']
 
@@ -41,7 +43,7 @@ def getJob():
   ma.setGearFile("clic_ild_cdr.gear")
   result = j.append(ma)
   if not result['OK']:
-    gLogger.error(result["Message"])
+    LOG.error(result["Message"])
     dexit(1)
   j.setCPUTime(10000)
   j.setOutputSandbox("*.log")
@@ -66,6 +68,4 @@ if __name__ == '__main__':
     #The rest of the sumission is the same
     res = job.submit(d)
     if not res["OK"]:
-      gLogger.error("Failed to submit the job: ", res["Message"])
-      
-  
+      LOG.error("Failed to submit the job: ", res["Message"])

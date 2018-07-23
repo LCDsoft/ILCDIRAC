@@ -12,6 +12,9 @@ __RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK, exit as dexit
+from DIRAC import gLogger
+
+LOG = gLogger.getSubLogger(__name__)
 
 class _Params(object):
   def __init__(self):
@@ -42,7 +45,6 @@ def _getOutputs():
   if not repoLocation:
     Script.showHelp()
     dexit(1)
-  from DIRAC import gLogger
   from DIRAC.Interfaces.API.Dirac import Dirac
 
   dirac = Dirac(True, repoLocation)
@@ -50,17 +52,17 @@ def _getOutputs():
   exitCode = 0
   res = dirac.monitorRepository(False)
   if not res['OK']:
-    gLogger.error("Failed because %s" % res['Message'])
+    LOG.error("Failed because %s" % res['Message'])
     dexit(1)
     
   res = dirac.retrieveRepositorySandboxes()
   if not res['OK']:
-    gLogger.error("Failed because %s" % res['Message'])
+    LOG.error("Failed because %s" % res['Message'])
     dexit(1)
   if clip.outputdata:
     res = dirac.retrieveRepositoryData()
     if not res['OK']:
-      gLogger.error("Failed because %s" % res['Message'])
+      LOG.error("Failed because %s" % res['Message'])
       exit(1)
   dexit(exitCode)
 

@@ -4,6 +4,7 @@ Test Fcc module
 
 """
 
+import inspect
 import os
 import unittest
 from mock import patch, MagicMock as Mock
@@ -18,6 +19,7 @@ __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Applications.Fcc'
 
+# pylint: disable=protected-access
 
 class FccMixin( object ):
   """ Base class for the Fcc test cases
@@ -88,7 +90,8 @@ class FccMixin( object ):
   @patch("os.listdir", new=Mock(return_value=[]))
   @patch("os.path.exists", new=Mock(return_value=True))
   def test_checkconsistency( self ):
-    with patch.object(self.fcc, '_importToSandbox', new=Mock(return_value=True)):
+    with patch.object(self.fcc, '_importToSandbox', new=Mock(return_value=True)), \
+        patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
       
       info_message = (
         "Application general consistency : _checkConsistency()"
@@ -103,7 +106,8 @@ class FccMixin( object ):
   def test_checkconsistency_noversion( self ):
     self.fcc.version = None
     error_message = 'Version not set!'
-    assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      assertDiracFailsWith(self.fcc._checkConsistency(), error_message, self)
     self.log_mock.error.assert_called_once_with( error_message )
 
   @patch("os.path.exists", new=Mock(return_value=True))
@@ -114,7 +118,8 @@ class FccMixin( object ):
       "You have to provide at least an executable"
       " and a configuration file for each application" % {'name':self.fcc.appname}
     )
-    assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      assertDiracFailsWith(self.fcc._checkConsistency(), error_message, self)
     self.log_mock.error.assert_called_once_with( error_message )
 
   @patch("os.listdir", new=Mock(return_value=[]))
@@ -126,7 +131,8 @@ class FccMixin( object ):
       "You have to provide at least an executable"
       " and a configuration file for each application" % {'name':self.fcc.appname}
     )
-    assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      assertDiracFailsWith(self.fcc._checkConsistency(), error_message, self)
     self.log_mock.error.assert_called_once_with( error_message )
 
   @patch("os.listdir", new=Mock(return_value=[]))
@@ -139,7 +145,8 @@ class FccMixin( object ):
       "Create an new application with the other configuration\n"
       "You can also use the 'getInputFromApp' method to link applications" % {'name':self.fcc.appname}
     )
-    assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      assertDiracFailsWith(self.fcc._checkConsistency(), error_message, self)
     self.log_mock.error.assert_called_once_with( error_message )
 
   def test_checkfinalconsistency_outputfile( self ):
@@ -162,13 +169,15 @@ class FccMixin( object ):
 
   def test_importfiles_no_sandbox( self ):
     self.fcc._tempInputSandbox = None
-    self.assertTrue( self.fcc._importFiles() )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      self.assertTrue(self.fcc._importFiles())
     self.log_mock.warn.assert_called_once_with( "Sandboxing : Your application has an empty input sandbox" )
 
   @patch("%s._findPath" % MODULE_NAME, new=Mock(return_value=('sandboxFile1', False)))
   def test_importfiles_findpath_failed( self ):
     self.fcc._tempInputSandbox = ['sandboxFile1']
-    self.assertFalse( self.fcc._importFiles() )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      self.assertFalse(self.fcc._importFiles())
     error_message = (
       "Sandboxing : The path 'sandboxFile1' does not exist\n"
       "Please ensure that your path exists in an accessible file system "
@@ -179,7 +188,8 @@ class FccMixin( object ):
   @patch("%s._findPath" % MODULE_NAME, new=Mock(return_value=('/afs/sandboxFile1', True)))
   def test_importfiles_afs_warn_check( self ):
     self.fcc._tempInputSandbox = ['/afs/sandboxFile1']
-    self.assertTrue( self.fcc._importFiles() )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      self.assertTrue(self.fcc._importFiles())
     warn_message = (
       "Sandboxing : You plan to upload '/afs/sandboxFile1'"
       " which is stored on AFS\n"
@@ -260,7 +270,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
       "FCCSW specific consistency : Error in parsing FCCSW application :\n"
       "You have to provide a valid path of the FCCSW installation"
     )
-    assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      assertDiracFailsWith(self.fcc._checkConsistency(), error_message, self)
     self.log_mock.error.assert_called_once_with( error_message )
 
   @patch('os.path.exists', new=Mock(return_value=False) )
@@ -269,7 +280,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
       "FCCSW specific consistency : Error in parsing FCCSW application :\n"
       "You have to provide a valid path of the FCCSW installation"
     )
-    assertDiracFailsWith( self.fcc._checkConsistency(), error_message, self )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      assertDiracFailsWith(self.fcc._checkConsistency(), error_message, self)
     self.log_mock.error.assert_called_once_with( error_message )
 
   def test_checkconsistency_makedirs_failed( self ):
@@ -277,8 +289,9 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     def replace_exists( path ):
       return exists_dict[path]
 
-    with patch('os.path.exists') as  mock_exists, \
-         patch('os.makedirs') as mock_makedirs:
+    with patch('os.path.exists') as mock_exists, \
+         patch('os.makedirs') as mock_makedirs, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
       
       mock_exists.side_effect = replace_exists
       # Throw OS error   
@@ -309,11 +322,12 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
 
     read_message = 'Sandboxing : FCC file reading successfull'
 
-    with patch('os.path.exists') as  mock_exists, \
+    with patch('os.path.exists') as mock_exists, \
          patch('os.listdir') as mock_listdir, \
          patch('os.path.isfile') as mock_isfile, \
          patch("%s._checkConsistency" % MODULE_NAME) as mock_check, \
-         patch("%s._readFromFile" % MODULE_NAME) as  mock_read:
+         patch("%s._readFromFile" % MODULE_NAME) as mock_read, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       mock_exists.return_value = True
       mock_listdir.return_value = [build_folder]
@@ -340,11 +354,12 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
       " on '%(name)s' successfull" % {'name':self.fcc.appname}
     )
 
-    with patch('os.path.exists') as  mock_exists, \
+    with patch('os.path.exists') as mock_exists, \
          patch('os.listdir') as mock_listdir, \
          patch('os.path.isfile') as mock_isfile, \
          patch("%s._checkConsistency" % MODULE_NAME) as mock_check, \
-         patch("%s._readFromFile" % MODULE_NAME) as  mock_read:
+         patch("%s._readFromFile" % MODULE_NAME) as mock_read, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       mock_exists.return_value = True
       mock_listdir.return_value = [build_folder]
@@ -373,8 +388,9 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     def replace_exists( path ):
       return exists_dict[path]
 
-    with patch('os.path.exists') as  mock_exists, \
-         patch('shutil.copyfile') as mock_shutil:
+    with patch('os.path.exists') as mock_exists, \
+         patch('shutil.copyfile') as mock_shutil, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       mock_exists.side_effect = replace_exists
       self.assertTrue( self.fcc._resolveTreeOfFiles(files, ".ext") )
@@ -391,7 +407,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
         
   def test_resolvetreeoffiles_nofiles( self ):
     files = []
-    self.assertTrue( self.fcc._resolveTreeOfFiles(files, ".ext") )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      self.assertTrue(self.fcc._resolveTreeOfFiles(files, ".ext"))
     warn_message = (
       "Sandboxing : FCCSW configuration file"
       " does not seem to need any additional '.ext' files"
@@ -409,8 +426,9 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     def replace_exists( path ):
       return exists_dict[path]
 
-    with patch('os.path.exists') as  mock_exists, \
-         patch('os.makedirs') as mock_makedirs:
+    with patch('os.path.exists') as mock_exists, \
+         patch('os.makedirs') as mock_makedirs, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       mock_makedirs.side_effect = OSError("oserror")
       mock_exists.side_effect = replace_exists
@@ -450,9 +468,10 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     def replace_exists( path ):
       return exists_dict[path]
 
-    with patch('os.path.exists') as  mock_exists, \
+    with patch('os.path.exists') as mock_exists, \
          patch('os.makedirs'), \
-         patch('shutil.copyfile') as mock_shutil: 
+         patch('shutil.copyfile') as mock_shutil, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
       
       mock_exists.side_effect = replace_exists   
       # throw OS error
@@ -484,7 +503,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
   @patch("%s._importToSandbox" % MODULE_NAME, new=Mock(return_value=True))
   def test_importtosandbox_setfiltertofolders_failed( self ):
     with patch.object(self.fcc, '_importFccswFiles', new=Mock(return_value=True)), \
-         patch.object(self.fcc, '_setFilterToFolders', new=Mock(return_value=False)):
+        patch.object(self.fcc, '_setFilterToFolders', new=Mock(return_value=False)), \
+        patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       self.assertFalse( self.fcc._importToSandbox() )
       self.log_mock.error.assert_called_once_with( "_setFilterToFolders() failed" )
@@ -492,7 +512,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
   @patch("%s._importFiles" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s._importToSandbox" % MODULE_NAME, new=Mock(return_value=False))
   def test_importtosandbox_super_method_failed( self ):
-    with patch.object(self.fcc, '_importFccswFiles', new=Mock(return_value=True)):
+    with patch.object(self.fcc, '_importFccswFiles', new=Mock(return_value=True)), \
+        patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
       self.assertFalse( self.fcc._importToSandbox() )
       self.log_mock.error.assert_called_once_with(  "Sandboxing : _importToSandbox() failed" )
 
@@ -537,7 +558,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
   @patch("%s._readFromFile" % MODULE_NAME, new=Mock(return_value=("", "error message")))
   def test_importfccswfiles_read_failed( self ):
     with patch.object(self.fcc, '_resolveTreeOfFiles', new=Mock(return_value=True)), \
-         patch("os.path.exists", new=Mock(return_value=True)) :
+        patch("os.path.exists", new=Mock(return_value=True)), \
+        patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       self.assertFalse( self.fcc._importFccswFiles() )
       self.log_mock.error.assert_called_once_with( "error message" )
@@ -564,7 +586,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
   @patch("%s._readFromFile" % MODULE_NAME, new=Mock(return_value=("some content", "some message")))
   def test_importfccswfiles_resolvefiles_failed( self ):
     with patch.object(self.fcc, '_resolveTreeOfFiles', new=Mock(return_value=False)), \
-         patch("os.path.exists", new=Mock(return_value=True)) :
+        patch("os.path.exists", new=Mock(return_value=True)), \
+        patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       self.assertFalse( self.fcc._importFccswFiles() )    
       self.log_mock.error.assert_called_once_with( "Sandboxing : _resolveTreeOfFiles() failed" )
@@ -578,7 +601,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
   @patch("os.path.exists", new=Mock(return_value=False))
   def test_setfiltertofolders_exists_failed( self ):
     self.fcc._foldersToFilter = set(['folder_to_filter1'])
-    self.assertFalse( self.fcc._setFilterToFolders() )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      self.assertFalse(self.fcc._setFilterToFolders())
     error_message = (
       "Sandboxing : _filterFolders() failed\n"
       "The folder '%(folder)s' does not exist\n"
@@ -588,14 +612,16 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
 
   @patch("os.path.exists", new=Mock(return_value=True))
   def test_setfiltertofolders_filtering_failed( self ):
-    with patch.object(self.fcc, '_filterFolders', new=Mock(return_value=False)):    
+    with patch.object(self.fcc, '_filterFolders', new=Mock(return_value=False)), \
+        patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
       self.fcc._foldersToFilter = set(['folder_to_filter1'])
       self.assertFalse( self.fcc._setFilterToFolders() )
       self.log_mock.error.assert_called_once_with( "Sandboxing : _filterFolders() failed" )
 
   @patch("os.path.exists", new=Mock(return_value=True))
   def test_setfiltertofolders_filtering_succeed( self ):
-    with patch.object(self.fcc, '_filterFolders', new=Mock(return_value=True)):   
+    with patch.object(self.fcc, '_filterFolders', new=Mock(return_value=True)), \
+        patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
       self.fcc._foldersToFilter = set(['folder_to_filter1'])
       self.assertTrue( self.fcc._setFilterToFolders() )
       self.log_mock.debug.assert_called_with( "Sandboxing : Folders filtering successfull" )
@@ -615,11 +641,12 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     def replace_isfile( path ):
       return isfile_dict[os.path.basename(path)]
     
-    with patch('os.path.exists') as  mock_exists, \
+    with patch('os.path.exists') as mock_exists, \
          patch('os.listdir') as mock_listdir, \
          patch('os.makedirs'), \
          patch('shutil.copyfile'), \
-         patch('os.path.isfile') as mock_isfile: 
+         patch('os.path.isfile') as mock_isfile, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       mock_exists.return_value = True
 
@@ -660,9 +687,10 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     def replace_listdir( path ):
       return listdir_dict[path]
     
-    with patch('os.path.exists') as  mock_exists, \
+    with patch('os.path.exists') as mock_exists, \
          patch('os.listdir') as mock_listdir, \
-         patch('os.makedirs') as mock_makedirs :
+         patch('os.makedirs') as mock_makedirs, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       mock_exists.return_value = False
 
@@ -690,7 +718,8 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     temp_folder = "/my/temp/folder"
     actual_folder = "/my/actual/folder"
 
-    with patch('os.makedirs') as  mock_makedirs:
+    with patch('os.makedirs') as mock_makedirs, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
   
       mock_makedirs.side_effect = OSError("oserror")
 
@@ -723,10 +752,11 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     def replace_isfile( path ):
       return isfile_dict[os.path.basename(path)]
     
-    with patch('os.path.exists') as  mock_exists, \
+    with patch('os.path.exists') as mock_exists, \
          patch('os.listdir') as mock_listdir, \
          patch('shutil.copyfile') as mock_shutil, \
-         patch('os.path.isfile') as mock_isfile: 
+         patch('os.path.isfile') as mock_isfile, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
       
       # throw OS error
       mock_shutil.side_effect = IOError("ioerror")
@@ -772,10 +802,11 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     def replace_isfile( path ):
       return isfile_dict[os.path.basename(path)]
     
-    with patch('os.path.exists') as  mock_exists, \
+    with patch('os.path.exists') as mock_exists, \
          patch('os.listdir') as mock_listdir, \
          patch('shutil.copyfile') as mock_shutil, \
-         patch('os.path.isfile') as mock_isfile: 
+         patch('os.path.isfile') as mock_isfile, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       mock_listdir.side_effect = replace_listdir
       mock_isfile.side_effect = replace_isfile
@@ -826,10 +857,11 @@ class FccSwTestCase( FccMixin, unittest.TestCase ):
     def replace_isfile( path ):
       return isfile_dict[os.path.basename(path)]
     
-    with patch('os.path.exists') as  mock_exists, \
+    with patch('os.path.exists') as mock_exists, \
          patch('os.listdir') as mock_listdir, \
          patch('shutil.copyfile') as mock_shutil, \
-         patch('os.path.isfile') as mock_isfile: 
+         patch('os.path.isfile') as mock_isfile, \
+         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
 
       mock_listdir.side_effect = replace_listdir
       mock_isfile.side_effect = replace_isfile
@@ -876,7 +908,6 @@ class FccAnalysisTestCase( FccMixin, unittest.TestCase ):
     fccphysics.setOutputFile(output_file)
 
     self.fcc = fccphysics
-    self.fcc._log = self.log_mock
 
   def test_randomGenerator( self ):
     assertEqualsImproved( self.fcc.randomGenerator, {"Pythia":[]}, self )
@@ -899,10 +930,12 @@ class FccAnalysisTestCase( FccMixin, unittest.TestCase ):
 
   @patch("%s._importFiles" % MODULE_NAME, new=Mock(return_value=True))
   def test_importtosandbox( self ):
-    self.assertTrue( self.fcc._importToSandbox() )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      self.assertTrue(self.fcc._importToSandbox())
     self.log_mock.debug.assert_called_with( "Sandboxing : Importation of user files/folders successfull" )
 
   @patch("%s._importFiles" % MODULE_NAME, new=Mock(return_value=False))
   def test_importtosandbox_failed( self ):
-    self.assertFalse( self.fcc._importToSandbox() )
+    with patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
+      self.assertFalse(self.fcc._importToSandbox())
     self.log_mock.error.assert_called_once_with( "Sandboxing : _importFiles() failed" )

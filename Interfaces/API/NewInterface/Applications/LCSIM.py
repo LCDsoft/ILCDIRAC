@@ -5,13 +5,14 @@ LCSIM: Reconstruction after SLIC Simulation
 import os
 import types
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.CheckXMLValidity         import checkXMLValidity
 from ILCDIRAC.Core.Utilities.InstalledFiles import Exists
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class LCSIM(LCApplication):
@@ -140,10 +141,10 @@ class LCSIM(LCApplication):
   def _checkConsistency(self, job=None):
 
     if not self.energy :
-      self._log.info('Energy set to 0 !')
+      LOG.info('Energy set to 0 !')
 
     if not self.numberOfEvents :
-      self._log.info('Number of events set to 0 !')
+      LOG.info('Number of events set to 0 !')
 
     if not self.version:
       return S_ERROR('No version found')

@@ -31,10 +31,11 @@ import os
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.InstalledFiles import Exists
 from ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin import DDInterfaceMixin
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class DDSim( DDInterfaceMixin, LCApplication ):
@@ -104,7 +105,7 @@ class DDSim( DDInterfaceMixin, LCApplication ):
 
     parameterName = [ pN for pN in job.workflow.parameters.getParametersNames() if 'ConfigPackage' in pN ]
     if parameterName:
-      self._log.notice( "Found config parameter" , parameterName )
+      LOG.notice("Found config parameter", parameterName)
       config = job.workflow.parameters.find( parameterName[0] )
       configversion = config.value
     else:
@@ -137,8 +138,8 @@ class DDSim( DDInterfaceMixin, LCApplication ):
         #self.prodparameters['slic_detectormodel'] = self.detectorModel
       self.prodparameters['slic_detectormodel'] = self.detectorModel
 
-    if not self.startFrom :
-      self._log.info('No startFrom defined for DDSim : start from the beginning')
+    if not self.startFrom:
+      LOG.info('No startFrom defined for DDSim : start from the beginning')
 
     return S_OK()
 

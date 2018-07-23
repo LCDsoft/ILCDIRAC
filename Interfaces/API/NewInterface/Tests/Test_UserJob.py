@@ -22,15 +22,16 @@ MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.UserJob'
 
 #pylint: disable=protected-access
 
+
+
 class UserJobTestCase( unittest.TestCase ):
   """ Base class for the UserJob test cases
   """
   def setUp( self ):
     """set up the objects"""
+    self.log_mock = Mock(name="SubMock")
     with patch('%s.getProxyInfo' % MODULE_NAME, new=Mock(return_value=None)):
       self.ujo = UserJob()
-      self.log_mock = Mock()
-      self.ujo.log = self.log_mock
 
 
   def test_submit_noproxy( self ):
@@ -159,8 +160,8 @@ class UserJobTestCase( unittest.TestCase ):
   def test_split_bydata( self ):
     self.ujo.splittingOption = "byData"
 
-    with patch("%s.UserJob.setParameterSequence" % MODULE_NAME) as mock_parametric:
-  
+    with patch("%s.UserJob.setParameterSequence" % MODULE_NAME) as mock_parametric, \
+         patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
       info_message = "Job splitting successful"
       assertDiracSucceeds( self.ujo._split(), self )
       self.log_mock.info.assert_called_with( info_message )
@@ -172,8 +173,8 @@ class UserJobTestCase( unittest.TestCase ):
   def test_split_byevents( self ):
     self.ujo.splittingOption = "byEvents"
  
-    with patch("%s.UserJob.setParameterSequence" % MODULE_NAME) as mock_parametric:
-  
+    with patch("%s.UserJob.setParameterSequence" % MODULE_NAME) as mock_parametric, \
+         patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
       info_message = "Job splitting successful"
       assertDiracSucceeds( self.ujo._split(), self )
       self.log_mock.info.assert_called_with( info_message )
@@ -185,7 +186,8 @@ class UserJobTestCase( unittest.TestCase ):
   def test_split_atomicsubmission( self ):
     self.ujo.splittingOption = None
     info_message = "Job splitting successful"
-    assertDiracSucceeds( self.ujo._split(), self )
+    with patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
+      assertDiracSucceeds(self.ujo._split(), self)
     self.log_mock.info.assert_called_with( info_message )
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=False))
@@ -195,7 +197,8 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=True))
   @patch("%s.UserJob._checkJobConsistency" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_checkjobconsistency_failed( self ):
-    assertDiracFailsWith( self.ujo._split(), "failed", self )
+    with patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
+      assertDiracFailsWith(self.ujo._split(), "failed", self)
     self.log_mock.error.assert_called_once()
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=1))
@@ -203,7 +206,8 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._splitByData" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_bydata_failed( self ):
     self.ujo.splittingOption = "byData"
-    assertDiracFailsWith( self.ujo._split(), "_splitBySomething() failed", self )
+    with patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
+      assertDiracFailsWith(self.ujo._split(), "_splitBySomething() failed", self)
     self.log_mock.error.assert_called_once()
 
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=1))
@@ -211,7 +215,8 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._splitByEvents" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_byevents_failed( self ):
     self.ujo.splittingOption = "byEvents"
-    assertDiracFailsWith( self.ujo._split(), "_splitBySomething() failed", self )
+    with patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
+      assertDiracFailsWith(self.ujo._split(), "_splitBySomething() failed", self)
     self.log_mock.error.assert_called_once()
   
   @patch("%s.UserJob._toInt" % MODULE_NAME, new=Mock(return_value=1))
@@ -219,7 +224,8 @@ class UserJobTestCase( unittest.TestCase ):
   @patch("%s.UserJob._atomicSubmission" % MODULE_NAME, new=Mock(return_value=False))
   def test_split_atomicsubmission_failed( self ):
     self.ujo.splittingOption = None
-    assertDiracFailsWith( self.ujo._split(), "_splitBySomething() failed", self )
+    with patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
+      assertDiracFailsWith(self.ujo._split(), "_splitBySomething() failed", self)
     self.log_mock.error.assert_called_once()
 
   def test_atomicsubmission( self ):
@@ -242,7 +248,8 @@ class UserJobTestCase( unittest.TestCase ):
     self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = {"byEvents": lambda x: x }
     self.ujo.splittingOption = "byHand"
-    self.assertFalse( self.ujo._checkJobConsistency() )
+    with patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
+      self.assertFalse(self.ujo._checkJobConsistency())
     self.log_mock.error.assert_called_once()
 
   def test_checkjobconsistency_no_same_events( self ):
@@ -253,7 +260,8 @@ class UserJobTestCase( unittest.TestCase ):
     self.ujo.applicationlist = [app1, app2]
     self.ujo._switch = {"byEvents": lambda x: x }
     self.ujo.splittingOption = "byEvents"
-    self.assertTrue( self.ujo._checkJobConsistency())
+    with patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
+      self.assertTrue(self.ujo._checkJobConsistency())
     self.log_mock.warn.assert_called_once_with( "Job: Applications should all have the same number of events" )
 
   def test_checkjobconsistency_negative_events( self ):
@@ -274,13 +282,15 @@ class UserJobTestCase( unittest.TestCase ):
 
   def test_splitbydata_no_data( self ):
     self.ujo._data = None
-    self.assertFalse( self.ujo._splitByData() )
+    with patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
+      self.assertFalse(self.ujo._splitByData())
     self.log_mock.error.assert_called_once()
 
   def test_splitbydata_incorrectparameter( self ):
     self.ujo._data = ["/path/to/data1","/path/to/data2"]
     self.ujo.numberOfFilesPerJob = 3
-    self.assertFalse( self.ujo._splitByData() )
+    with patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
+      self.assertFalse(self.ujo._splitByData())
     self.log_mock.error.assert_called_once()
 
   def test_splitbyevents_1st_case( self ):
@@ -337,7 +347,8 @@ class UserJobTestCase( unittest.TestCase ):
     assertEqualsImproved( self.ujo._toInt("2"), 2, self )
 
   def test_toint_negative( self ):
-    self.assertFalse( self.ujo._toInt("-2") )
+    with patch('%s.LOG' % MODULE_NAME, new=self.log_mock):
+      self.assertFalse(self.ujo._toInt("-2"))
     self.log_mock.error.assert_called_once()
 
   def test_setsplitevents( self ):
@@ -354,4 +365,3 @@ class UserJobTestCase( unittest.TestCase ):
       self.assertIn( data, self.ujo._data )
 
     assertEqualsImproved( self.ujo.splittingOption, "byData", self )
-    

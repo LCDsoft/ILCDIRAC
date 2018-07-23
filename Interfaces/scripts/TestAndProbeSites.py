@@ -4,6 +4,10 @@ __RCSID__ = "$Id$"
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK
 
+from DIRAC import gLogger
+
+LOG = gLogger.getSubLogger(__name__)
+
 class Params(object):
   def __init__(self):
     self.site = None
@@ -28,7 +32,7 @@ def testAndProbeSites():
   clip.registerSwitches()
   Script.parseCommandLine()
   
-  from DIRAC import gLogger, exit as dexit
+  from DIRAC import exit as dexit
   
   from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import CheckWNs
@@ -39,7 +43,7 @@ def testAndProbeSites():
   
   res = getQueues(siteList = clip.site, ceList = clip.ce)
   if not res['OK']:
-    gLogger.error("Failed getting the queues", res['Message'])
+    LOG.error("Failed getting the queues", res['Message'])
     dexit(1)
   
   sitedict = res['Value']
@@ -48,7 +52,7 @@ def testAndProbeSites():
   for ces in sitedict.values():
     CEs.extend(ces.keys())
 
-  gLogger.notice("Found %s CEs to look at." % len(CEs))
+  LOG.notice("Found %s CEs to look at." % len(CEs))
 
   
   d = DiracILC(True, "SiteProbe.rep")
@@ -59,14 +63,14 @@ def testAndProbeSites():
     c = CheckWNs()
     res = j.append(c)
     if not res['OK']:
-      gLogger.error(res['Message'])
+      LOG.error(res['Message'])
       continue
     j.setOutputSandbox("*.log")
     j.setCPUTime(30000)
     j.dontPromptMe()
     res = j.submit(d)
     if not res['OK']:
-      gLogger.error("Failed to submit job, aborting")
+      LOG.error("Failed to submit job, aborting")
       dexit(1)
   
   dexit(0)

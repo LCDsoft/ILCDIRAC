@@ -5,11 +5,12 @@ Mokka: Simulation after Whizard or StdHepCut
 import os
 import types
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class Mokka(LCApplication):
@@ -87,8 +88,8 @@ class Mokka(LCApplication):
     if os.path.exists(macfile) or macfile.lower().count("lfn:"):
       self.inputSB.append(macfile)
     elif self.macFile:
-      self._log.notice("Mac file not found locally and is not an lfn, I hope you know what you are doing...")
-      self._log.notice("MacFile:", self.macFile)
+      LOG.notice("Mac file not found locally and is not an lfn, I hope you know what you are doing...")
+      LOG.notice("MacFile:", self.macFile)
     else:
       pass
 
@@ -122,8 +123,8 @@ class Mokka(LCApplication):
     if os.path.exists(dbSlice) or dbSlice.lower().count("lfn:"):
       self.inputSB.append(dbSlice)
     elif dbSlice:
-      self._log.notice("Slice not found locally and is not an lfn, I hope you know what you are doing...")
-      self._log.notice("DB slice:", self.dbSlice)
+      LOG.notice("Slice not found locally and is not an lfn, I hope you know what you are doing...")
+      LOG.notice("DB slice:", self.dbSlice)
     else:
       pass
 

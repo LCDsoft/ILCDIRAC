@@ -45,6 +45,9 @@ from DIRAC.Core.Workflow.Parameter                  import Parameter
 
 from DIRAC import S_OK, S_ERROR, gLogger
 
+LOG = gLogger.getSubLogger(__name__)
+
+
 __RCSID__ = "$Id$"
 
 #pylint: disable=no-self-use, unused-argument
@@ -125,7 +128,6 @@ class Application(object): #pylint: disable=too-many-instance-attributes
     #flag set to true in Job.append
     self.addedtojob = False
     ####Following are needed for error report
-    self._log = gLogger.getSubLogger(self.__class__.__name__)
     self._errorDict = {}
     
     #This is used to filter out the members that should not be set when using a dict as input
@@ -154,7 +156,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
       try:
         getattr(self, "set%s" % param )( value )
       except AttributeError:
-        self._log.error("The %s class does not have a set%s method." % (self.__class__.__name__, param))
+        LOG.error("The %s class does not have a set%s method." % (self.__class__.__name__, param))
     return S_OK()  
   
   def _getParamsDict(self):
@@ -300,12 +302,12 @@ class Application(object): #pylint: disable=too-many-instance-attributes
   def listAttributes(self):
     """ Method to list attributes for users. Doesn't list any private or semi-private attributes
     """
-    self._log.notice('Attribute list :')
+    LOG.notice('Attribute list :')
     for key, val in self.__dict__.items():
       if key not in self._paramsToExclude:
         if not val:
           val = "Not defined"
-        self._log.notice("  %s: %s"%( key, val))
+        LOG.notice("  %s: %s" % (key, val))
 
   def checkProductionMetaData(self, metaDict ):
     """ check that the production metadata coming out of this application is correct.
@@ -314,9 +316,9 @@ class Application(object): #pylint: disable=too-many-instance-attributes
     :param dict metaDict: production job metadata dictionary, will be updated
     :returns: S_OK, S_ERROR
     """
-    self._log.debug( "Checking production metadata for application %s " % self.__class__.__name__ )
+    LOG.debug("Checking production metadata for application %s " % self.__class__.__name__)
     for key, val in metaDict.iteritems():
-      self._log.debug( "%s: %s" % (key, val) )
+      LOG.debug("%s: %s" % (key, val))
 
     return S_OK()
 
@@ -413,13 +415,13 @@ class Application(object): #pylint: disable=too-many-instance-attributes
     """ Method used to return the needed module for UserJobs. It's different from the ProductionJobs 
     (userJobFinalization for instance)
     """
-    self._log.error("This application does not implement the modules, you get an empty list")
+    LOG.error("This application does not implement the modules, you get an empty list")
     return S_ERROR('Not implemented')
   
   def _prodjobmodules(self, stepdefinition):
     """ Same as above, but the other way around.
     """
-    self._log.error("This application does not implement the modules, you get an empty list")
+    LOG.error("This application does not implement the modules, you get an empty list")
     return S_ERROR('Not implemented')
   
   def _checkConsistency(self, job=None):
@@ -660,5 +662,5 @@ class Application(object): #pylint: disable=too-many-instance-attributes
       self._errorDict[methodName] = tmp
     else:
       self._errorDict[methodName] = [finalReport]
-    self._log.error( finalReport )
+    LOG.error(finalReport)
     return S_ERROR( finalReport )

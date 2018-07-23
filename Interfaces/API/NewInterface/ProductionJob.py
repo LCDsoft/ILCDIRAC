@@ -33,6 +33,8 @@ from ILCDIRAC.Interfaces.Utilities import JobHelpers
 
 __RCSID__ = "$Id$"
 
+LOG = gLogger.getSubLogger(__name__)
+
 class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-instance-attributes
   """ Production job class. Suitable for CLIC studies. Need to sub class and overload for other clients.
   """
@@ -118,11 +120,11 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     """Set parameters checking in CS in case some defaults need to be changed.
     """
     if self.ops.getValue('%s/%s' % (self.csSection, name), ''):
-      self.log.debug('Setting %s from CS defaults = %s' % (name, self.ops.getValue('%s/%s' % (self.csSection, name))))
+      LOG.debug('Setting %s from CS defaults = %s' % (name, self.ops.getValue('%s/%s' % (self.csSection, name))))
       self._addParameter(self.workflow, name, parameterType, self.ops.getValue('%s/%s' % (self.csSection, name), 
                                                                                'default'), description)
     else:
-      self.log.debug('Setting parameter %s = %s' % (name, parameterValue))
+      LOG.debug('Setting parameter %s = %s' % (name, parameterValue))
       self._addParameter(self.workflow, name, parameterType, parameterValue, description)
   
   def setConfig(self,version):
@@ -229,7 +231,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       return retDirs
     dirs = retDirs['Value'].values()
     for mdir in dirs:
-      gLogger.notice("Directory: %s" % mdir)
+      LOG.notice("Directory: %s" % mdir)
       res = self.fc.getDirectoryUserMetadata(mdir)
       if not res['OK']:
         return self._reportError("Error looking up the catalog for directory metadata")
@@ -245,8 +247,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       self.nbevts = JobHelpers.getValue( compatmeta['NumberOfEvents'], int, None )
 
     self.basename = self.evttype
-    gLogger.notice("MetaData: %s" % compatmeta)
-    gLogger.notice("MetaData: %s" % metadata)
+    LOG.notice("MetaData: %s" % compatmeta)
+    LOG.notice("MetaData: %s" % metadata)
     if "Energy" in compatmeta:
       self.energycat = JobHelpers.getValue( compatmeta["Energy"], str, (int, long, basestring) )
         
@@ -384,11 +386,11 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     
     workflowName = self.workflow.getName()
     fileName = '%s.xml' % workflowName
-    self.log.verbose('Workflow XML file name is:', '%s' % fileName)
+    LOG.verbose('Workflow XML file name is:', '%s' % fileName)
     try:
       self.createWorkflow()
     except Exception as x:
-      self.log.error( "Exception creating workflow", repr(x) )
+      LOG.error("Exception creating workflow", repr(x))
       return S_ERROR('Could not create workflow')
     with open(fileName, 'r') as oFile:
       workflowXML = oFile.read()
@@ -420,7 +422,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       Trans.setEventsPerTask(self.slicesize)
     self.currtrans = Trans
     if self.dryrun:
-      self.log.notice('Would create prod called',name)
+      LOG.notice('Would create prod called', name)
       self.transfid = 12345
     else: 
       res = Trans.addTransformation()
@@ -456,10 +458,10 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     """ Define the number of tasks you want. Useful for generation jobs.
     """
     if not self.currtrans:
-      self.log.error("Not transformation defined earlier")
+      LOG.error("Not transformation defined earlier")
       return S_ERROR("No transformation defined")
     if self.inputBKSelection and self.plugin not in  ['Limited', 'SlicedLimited']:
-      self.log.error("Meta data selection activated, should not specify the number of jobs")
+      LOG.error("Meta data selection activated, should not specify the number of jobs")
       return S_ERROR()
     self.nbtasks = nbtasks
     self.currtrans.setMaxNumberOfTasks(self.nbtasks) #pylint: disable=E1101
@@ -485,7 +487,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       if not res['OK']:
         return res
     else:
-      self.log.notice("Would use %s as metadata query for production" % str(self.inputBKSelection))
+      LOG.notice("Would use %s as metadata query for production" % str(self.inputBKSelection))
     return S_OK()
   
   def addMetadataToFinalFiles(self, metadict):
@@ -571,11 +573,11 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     for name, val in self.prodparameters.iteritems():
       result = self._setProdParameter(currtrans, name, val)
       if not result['OK']:
-        self.log.error(result['Message'])
+        LOG.error(result['Message'])
 
     res = self._registerMetadata()
     if not res['OK']:
-      self.log.error("Could not register the following directories :", "%s" % str(res))
+      LOG.error("Could not register the following directories :", "%s" % str(res))
     return S_OK()  
   #############################################################################
   
@@ -589,9 +591,9 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     prevent_registration = self.ops.getValue("Production/PreventMetadataRegistration", False)
     
     if self.dryrun or prevent_registration:
-      self.log.notice("Would have created and registered the following\n",
+      LOG.notice("Would have created and registered the following\n",
                       "\n ".join( [ " * %s: %s" %( par, val ) for par,val in self.finalMetaDict.iteritems() ] ) )
-      self.log.notice("Would have set this as non searchable metadata", str(self.finalMetaDictNonSearch))
+      LOG.notice("Would have set this as non searchable metadata", str(self.finalMetaDictNonSearch))
       return S_OK()
     
     failed = []
@@ -600,17 +602,17 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       if result['OK']:
         if result['Value']['Successful']:
           if path in result['Value']['Successful']:
-            self.log.verbose("Successfully created directory:", "%s" % path)
+            LOG.verbose("Successfully created directory:", "%s" % path)
             res = self.fc.changePathMode({ path : 0o775 }, False)
             if not res['OK']:
-              self.log.error(res['Message'])
+              LOG.error(res['Message'])
               failed.append(path)
         elif result['Value']['Failed']:
           if path in result['Value']['Failed']:
-            self.log.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
+            LOG.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
             failed.append(path)
       else:
-        self.log.error('Failed to create directory:', result['Message'])
+        LOG.error('Failed to create directory:', result['Message'])
         failed.append(path)
 
       ## Get existing metadata, if it is the same don't set it again, otherwise throw error
@@ -620,7 +622,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
         failure = False
         for key, value in existingMetadata['Value'].iteritems():
           if key in meta and meta[key] != value:
-            self.log.error( "Metadata values for folder %s disagree for key %s: Existing(%r), new(%r)" % ( path, key, value, meta[key] ) )
+            LOG.error("Metadata values for folder %s disagree for key %s: Existing(%r), new(%r)" %
+                      (path, key, value, meta[key]))
             failure = True
           elif key in meta and meta[key] == value:
             metaCopy.pop(key, None)
@@ -629,29 +632,29 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
 
       result = self.fc.setMetadata(path.rstrip("/"), metaCopy)
       if not result['OK']:
-        self.log.error("Could not preset metadata", "%s" % str(metaCopy))
-        self.log.error("Could not preset metadata", "%s" % result['Message'] )
+        LOG.error("Could not preset metadata", "%s" % str(metaCopy))
+        LOG.error("Could not preset metadata", result['Message'])
 
     for path, meta in self.finalMetaDictNonSearch.items():
       result = self.fc.createDirectory(path)
       if result['OK']:
         if result['Value']['Successful']:
           if path in result['Value']['Successful']:
-            self.log.verbose("Successfully created directory:", "%s" % path)
+            LOG.verbose("Successfully created directory:", "%s" % path)
             res = self.fc.changePathMode({ path: 0o775}, False)
             if not res['OK']:
-              self.log.error(res['Message'])
+              LOG.error(res['Message'])
               failed.append(path)
         elif result['Value']['Failed']:
           if path in result['Value']['Failed']:
-            self.log.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
+            LOG.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
             failed.append(path)
       else:
-        self.log.error('Failed to create directory:', result['Message'])
+        LOG.error('Failed to create directory:', result['Message'])
         failed.append(path)
       result = self.fc.setMetadata(path.rstrip("/"), meta)
       if not result['OK']:
-        self.log.error("Could not preset metadata", "%s" % str(meta))        
+        LOG.error("Could not preset metadata", str(meta))
 
     if failed:
       return  { 'OK' : False, 'Failed': failed}
@@ -679,9 +682,9 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     if not self.dryrun:  
       result = prodClient.setTransformationParameter(int(prodID), str(pname), str(pvalue))
       if not result['OK']:
-        self.log.error('Problem setting parameter %s for production %s and value:\n%s' % (prodID, pname, pvalue))
+        LOG.error('Problem setting parameter %s for production %s and value:\n%s' % (prodID, pname, pvalue))
     else:
-      self.log.notice("Adding %s=%s to transformation" % (str(pname), str(pvalue)))
+      LOG.notice("Adding %s=%s to transformation" % (str(pname), str(pvalue)))
       result = S_OK()
     return result
   
@@ -779,13 +782,13 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       self.finalMetaDict[self.basepath + energypath + evttypepath + application.detectortype + "/REC"] = {'Datatype':"REC"}
       fname = self.basename+"_rec.slcio"
       application.setOutputRecFile(fname, path)  
-      self.log.info("Will store the files under", "%s" % path)
+      LOG.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
       path = self.basepath + energypath + evttypepath + application.detectortype + "/DST"
       self.finalMetaDict[self.basepath + energypath + evttypepath + application.detectortype + "/DST"] = {'Datatype':"DST"}
       fname = self.basename + "_dst.slcio"
       application.setOutputDstFile(fname, path)  
-      self.log.info("Will store the files under", "%s" % path)
+      LOG.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
     elif hasattr(application, "outputFile") and hasattr(application, 'datatype') and not application.outputFile and not application.willBeCut:
       path = self.basepath + energypath + evttypepath
@@ -803,7 +806,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
         application.datatype = self.datatype
       path += application.datatype
       self.finalMetaDict[path] = {'Datatype' : application.datatype}
-      self.log.info("Will store the files under", "%s" % path)
+      LOG.info("Will store the files under", "%s" % path)
       self.finalpaths.append(path)
       extension = 'stdhep'
       if application.datatype in ['SIM', 'REC']:
@@ -846,7 +849,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     energyPath = ("%1.2f" % energy).rstrip('0').rstrip('.')
     energyPath = energyPath+unit+'/'
 
-    self.log.info ("Energy path is: ", energyPath)
+    LOG.info("Energy path is: ", energyPath)
     return energyPath
 
 

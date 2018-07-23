@@ -16,7 +16,7 @@ Example usage:
 :author: Ching Bon Lam
 """
 
-from DIRAC import S_OK
+from DIRAC import S_OK, gLogger
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 from DIRAC.Core.Utilities.List import breakListIntoChunks
 
@@ -24,6 +24,7 @@ from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 
 __RCSID__ = "$Id$"
+LOG = gLogger.getSubLogger(__name__)
 
 class UserJob(Job):
   """ User job class. To be used by users, not for production.
@@ -64,17 +65,17 @@ class UserJob(Job):
         
     #Check the credentials. If no proxy or not user proxy, return an error
     if not self.proxyinfo['OK']:
-      self.log.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
+      LOG.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
       return self._reportError("Not allowed to submit a job, you need a %s proxy." % self.usergroup,
                                self.__class__.__name__)
     if 'group' in self.proxyinfo['Value']:
       group = self.proxyinfo['Value']['group']
       if group not in self.usergroup:
-        self.log.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
+        LOG.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
         return self._reportError("Not allowed to submit job, you need a %s proxy." % self.usergroup,
                                  self.__class__.__name__)
     else:
-      self.log.error("Could not determine group, you do not have the right proxy.")       
+      LOG.error("Could not determine group, you do not have the right proxy.")
       return self._reportError("Could not determine group, you do not have the right proxy.")
 
     res = self._addToWorkflow()
@@ -331,18 +332,18 @@ class UserJob(Job):
                      None: self._atomicSubmission,
                    }
 
-    self.log.info("Job splitting...")
+    LOG.info("Job splitting...")
 
     if not self._checkJobConsistency():
       errorMessage = "Job._checkJobConsistency() failed"
-      self.log.error(errorMessage)
+      LOG.error(errorMessage)
       return self._reportError(errorMessage)
 
     sequence = self._switch[self.splittingOption ]()
 
     if not sequence:
       errorMessage = "Job._splitBySomething() failed"
-      self.log.error(errorMessage)
+      LOG.error(errorMessage)
       return self._reportError(errorMessage)
 
     sequenceType, sequenceList, addToWorkflow = sequence[0], sequence[1], sequence[2] 
@@ -354,7 +355,7 @@ class UserJob(Job):
                                 addToWorkflow='JobIndex')
       self._addParameter(self.workflow, 'JobIndex', 'int', self._startJobIndex, 'JobIndex')
 
-    self.log.info("Job splitting successful")
+    LOG.info("Job splitting successful")
 
     return S_OK()
 
@@ -366,7 +367,7 @@ class UserJob(Job):
     :rtype: tuple of (str, list, bool/str)
     """
 
-    self.log.verbose("Job splitting: No splitting to apply, 'atomic submission' will be used")
+    LOG.verbose("Job splitting: No splitting to apply, 'atomic submission' will be used")
     return "Atomic", [], False
 
   #############################################################################
@@ -382,12 +383,12 @@ class UserJob(Job):
 
     """
 
-    self.log.info("Job consistency: _checkJobConsistency()...")
+    LOG.info("Job consistency: _checkJobConsistency()...")
 
     if self.splittingOption not in self._switch:
       splitOptions = ",".join( self._switch.keys() )
       errorMessage = "checkJobConsistency failed: Bad split value: possible values are %s" % splitOptions
-      self.log.error(errorMessage)
+      LOG.error(errorMessage)
       return False
 
     # All applications should have the same number of events
@@ -395,12 +396,12 @@ class UserJob(Job):
     sameNumberOfEvents = next(iter(self.applicationlist)).numberOfEvents
 
     if not all(app.numberOfEvents == sameNumberOfEvents for app in self.applicationlist):
-      self.log.warn("Job: Applications should all have the same number of events")
+      LOG.warn("Job: Applications should all have the same number of events")
 
     if (self.totalNumberOfEvents == -1 or sameNumberOfEvents == -1) and not self._data:
-      self.log.warn("Job: Number of events is -1 without input data. Was that intentional?")
+      LOG.warn("Job: Number of events is -1 without input data. Was that intentional?")
 
-    self.log.info("job._checkJobConsistency successful")
+    LOG.info("job._checkJobConsistency successful")
 
     return True
 
@@ -416,23 +417,23 @@ class UserJob(Job):
     # reset split attribute to avoid infinite loop
     self.splittingOption = None
 
-    self.log.info("Job splitting: Splitting 'byData' method...")
+    LOG.info("Job splitting: Splitting 'byData' method...")
 
     # Ensure that data have been specified by setInputData() method
     if not self._data:
       errorMessage = "Job splitting: missing input data"
-      self.log.error(errorMessage)
+      LOG.error(errorMessage)
       return False
 
 
     if self.numberOfFilesPerJob > len(self._data):
       errorMessage = "Job splitting: 'numberOfFilesPerJob' must be less/equal than the number of input data"
-      self.log.error(errorMessage)
+      LOG.error(errorMessage)
       return False
           
     self._data = breakListIntoChunks(self._data, self.numberOfFilesPerJob)
 
-    self.log.info("Job splitting: submission consists of %d job(s)" % len(self._data))
+    LOG.info("Job splitting: submission consists of %d job(s)" % len(self._data))
 
     return ["InputData", self._data , 'ParametricInputData']
 
@@ -448,12 +449,12 @@ class UserJob(Job):
     # reset split attribute to avoid infinite loop
     self.splittingOption = None
 
-    self.log.info("Job splitting: splitting 'byEvents' method...")
+    LOG.info("Job splitting: splitting 'byEvents' method...")
 
     if self.eventsPerJob and self.numberOfJobs:
       # 1st case: (numberOfJobs=3, eventsPerJob=10)
       # trivial case => each job (total of 3) run applications of 10 events each
-      self.log.debug("Job splitting: events per job and number of jobs")
+      LOG.debug("Job splitting: events per job and number of jobs")
 
       mapEventJob = [self.eventsPerJob] * self.numberOfJobs
 
@@ -462,10 +463,11 @@ class UserJob(Job):
       # Given the number of events per job and total of number of event we want,
       # we can compute the unknown which is the number of jobs.
 
-      self.log.debug("Job splitting: Events per job and total number of events")
+      LOG.debug("Job splitting: Events per job and total number of events")
 
       if self.eventsPerJob > self.totalNumberOfEvents:
-        self.log.error("Job splitting: The number of events per job has to be lower than or equal to the total number of events")
+        LOG.error("Job splitting: The number of events per job has to be "
+                  "lower than or equal to the total number of events")
         return False
 
       numberOfJobsIntDiv = self.totalNumberOfEvents / self.eventsPerJob
@@ -479,10 +481,10 @@ class UserJob(Job):
       
       # 3rd case: (split='byEvents', njobs=10, totalNumberOfEvents=10)
       # Then compute the right number of events per job  
-      self.log.debug("Job splitting: The number of jobs and the total number of events")
+      LOG.debug("Job splitting: The number of jobs and the total number of events")
 
       if (not self.totalNumberOfEvents) or (self.totalNumberOfEvents < self.numberOfJobs):
-        self.log.error("Job splitting: The number of events has to be greater than or equal to the number of jobs")
+        LOG.error("Job splitting: The number of events has to be greater than or equal to the number of jobs")
         return False
 
       eventPerJobIntDiv = self.totalNumberOfEvents / self.numberOfJobs
@@ -494,9 +496,9 @@ class UserJob(Job):
         for suplement in xrange(eventPerJobRest):
           mapEventJob[suplement] += 1
 
-    self.log.debug("Job splitting: events over the jobs: %s" % mapEventJob)
+    LOG.debug("Job splitting: events over the jobs: %s" % mapEventJob)
 
-    self.log.info("Job splitting: submission consists of %d job(s)" % len(mapEventJob))
+    LOG.info("Job splitting: submission consists of %d job(s)" % len(mapEventJob))
 
     return ['NumberOfEvents', mapEventJob, 'NbOfEvts']
 
@@ -538,7 +540,8 @@ class UserJob(Job):
       if number <= 0:
         raise ValueError
     except ValueError:
-      self.log.error("Job splitting: arguments must be positive integers")
+      print LOG
+      LOG.error("Job splitting: arguments must be positive integers")
       return False
 
     return number

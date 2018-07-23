@@ -13,7 +13,9 @@ __RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
 from DIRAC import exit as dexit
-from DIRAC import S_OK
+from DIRAC import S_OK, gLogger
+LOG = gLogger.getSubLogger(__name__)
+
 class _Params(object):
   """dummy"""
   def __init__(self):
@@ -32,7 +34,6 @@ def _createLFNList():
   cliparams = _Params()
   cliparams.registerSwitches()
   Script.parseCommandLine( ignoreErrors = False )
-  from DIRAC import gLogger
   
   repoLocation =  cliparams.repo
   if not repoLocation:
@@ -44,10 +45,10 @@ def _createLFNList():
   dirac.monitorRepository(False)
   lfns = []
   lfns = dirac.retrieveRepositoryOutputDataLFNs()
-  gLogger.notice("lfnlist=[")
+  LOG.notice("lfnlist=[")
   for lfn in lfns :
-    gLogger.notice('"LFN:%s",' % lfn)
-  gLogger.notice("]")
+    LOG.notice('"LFN:%s",' % lfn)
+  LOG.notice("]")
   dexit(0)
 
 if __name__=="__main__":

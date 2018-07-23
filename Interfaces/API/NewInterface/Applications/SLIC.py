@@ -5,12 +5,13 @@ SLIC : Simulation after Whizard or StdHepCut
 import os
 import types
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.InstalledFiles import Exists
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class SLIC(LCApplication):
@@ -63,7 +64,7 @@ class SLIC(LCApplication):
       if os.path.exists(detectorModel):
         self.inputSB.append(detectorModel)
       else:
-        self._log.notice("Specified detector model does not exist locally, I hope you know what you're doing")
+        LOG.notice("Specified detector model does not exist locally, I hope you know what you're doing")
 
 
     self.detectorModel = os.path.basename(detectorModel).replace(".zip","")
@@ -114,8 +115,8 @@ class SLIC(LCApplication):
       if self.detectorModel:
         self.prodparameters['slic_detectormodel'] = self.detectorModel
 
-    if not self.startFrom :
-      self._log.info('No startFrom defined for Slic : start from the begining')
+    if not self.startFrom:
+      LOG.info('No startFrom defined for Slic : start from the beginning')
 
     return S_OK()
 

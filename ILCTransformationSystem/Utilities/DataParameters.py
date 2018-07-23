@@ -11,12 +11,13 @@ from DIRAC.TransformationSystem.Utilities.ReplicationCLIParameters import Params
 
 VALIDDATATYPES = ('GEN', 'SIM', 'REC', 'DST')
 
+LOG = gLogger.getSubLogger(__name__)
 
 def checkDatatype(prodID, datatype):
   """Check if the datatype makes sense for given production."""
   # skip data type check when creating replications in development for prod productions this check doesn't work
   if os.environ.get('SKIP_CHECK', False):
-    gLogger.warn("Skipping Datatype check!")
+    LOG.warn("Skipping Datatype check!")
     return S_OK()
 
   tClient = TransformationClient()
@@ -104,7 +105,7 @@ class Params(DParams):
 
     if not self.errorMessages:
       return S_OK()
-    gLogger.error("\n".join(self.errorMessages))
+    LOG.error("\n".join(self.errorMessages))
     script.showHelp()
     return S_ERROR()
 

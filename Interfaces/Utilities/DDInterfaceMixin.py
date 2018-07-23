@@ -3,7 +3,11 @@
 import types
 import os
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
+
+LOG = gLogger.getSubLogger("ILCJob")
+
+
 
 class DDInterfaceMixin( object ):
   """Mixin for DD4hep interface functions
@@ -61,7 +65,7 @@ class DDInterfaceMixin( object ):
       if os.path.exists(detectorModel):
         self.inputSB.append(detectorModel)
       else:
-        self._log.notice("Specified detector model file does not exist locally, I hope you know what you're doing")
+        LOG.notice("Specified detector model file does not exist locally, I hope you know what you're doing")
       return S_OK()
 
     ## DetectorModel is part of the software
