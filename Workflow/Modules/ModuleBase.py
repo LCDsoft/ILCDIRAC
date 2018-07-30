@@ -670,7 +670,7 @@ class ModuleBase(object):
   def _cleanUp(self, lfnList):
     """ Clean up uploaded data for the LFNs in the list
     """
-    typeList = ['RegisterFile', 'ReplicateAndRegister']
+    typeList = ['RegisterFile', 'ReplicateAndRegister', 'RemoveReplica']
     request = self._getRequestContainer()
 
     #keep all the requests which are not in typeList or whose file is not in lfnList
