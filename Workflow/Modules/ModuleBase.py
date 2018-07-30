@@ -52,7 +52,7 @@ class ModuleBase(object):
     """ Initialization of module base.
     """
     super(ModuleBase, self).__init__()
-    self.log = gLogger.getSubLogger('ModuleBase')
+    self.log = gLogger.getSubLogger(__name__)
     # FIXME: do we need to do this for every module?
     result = getProxyInfoAsString()
     if not result['OK']:
@@ -544,7 +544,7 @@ class ModuleBase(object):
     """ Retrieve the accumulated reporting request, and produce a JSON file that is consumed by the JobWrapper
     """
     request = self._getRequestContainer()
-    self.log.notice("Request Before: %s" %request)
+    self.log.notice("Request Before: %s" % pformat(request))
     reportRequest = None
     resultJR = self.jobReport.generateForwardDISET()
     if not resultJR['OK']:
@@ -595,7 +595,7 @@ class ModuleBase(object):
     else:
       self.log.error( "No digest? That's not sooo important, anyway: %s" % resultDigest['Message'] )
 
-    self.log.notice("Request After: %s" %request)
+    self.log.notice("Request After: %s" % pformat(request))
     return S_OK()
 
   def redirectLogOutput(self, fd, message):
@@ -643,6 +643,7 @@ class ModuleBase(object):
 
   def addRemovalRequests(self, lfnList):
     """Create removalRequests for lfns in lfnList and add it to the common request"""
+    self.log.info("Adding removal request")
     request = self._getRequestContainer()
     remove = Operation()
     remove.Type = "RemoveFile"
