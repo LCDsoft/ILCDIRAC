@@ -16,9 +16,11 @@ from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths,
 from ILCDIRAC.Workflow.Utilities.DD4hepMixin              import DD4hepMixin
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
-__RCSID__ = "$Id$"
 
+__RCSID__ = '$Id$'
 DDSIMINPUTFORMATS = ('.stdhep', '.hepevt', '.HEPEvt', '.slcio', '.hepmc')
+LOG = gLogger.getSubLogger(__name__)
+
 
 class DDSimAnalysis(DD4hepMixin, ModuleBase):
   """
@@ -28,7 +30,6 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     super(DDSimAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
-    self.log = gLogger.getSubLogger( "DDSimAnalysis" )
     self.result = S_ERROR()
     self.applicationName = 'ddsim'
     self.startFrom = 0
@@ -81,31 +82,31 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result['Message'])
+      LOG.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('DDSim should not proceed as previous step did not end properly')
 
     ##TODO: Setup LD_LIBRARY_PATH for extensions
     res = getEnvironmentScript(self.platform, self.applicationName, self.applicationVersion, self.getEnvScript)
     if not res['OK']:
-      self.log.error("Could not obtain the environment script: ", res["Message"])
+      LOG.error("Could not obtain the environment script: ", res["Message"])
       return res
     envScriptPath = res["Value"]
 
     #get the path to the detector model, either local or from the software
     resXML = self._getDetectorXML()
     if not resXML['OK']:
-      self.log.error("Could not obtain the detector XML file: ", resXML["Message"])
+      LOG.error("Could not obtain the detector XML file: ", resXML["Message"])
       return resXML
     compactFile = resXML['Value']
 
     if len(self.InputFile):
       res = resolveIFpaths(self.InputFile)
       if not res['OK']:
-        self.log.error("Generator file not found")
+        LOG.error("Generator file not found")
         return res
       self.InputFile = res['Value']
 
@@ -115,13 +116,13 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
       if not os.path.exists(self.SteeringFile):
         res = getSteeringFileDirName(self.platform, self.applicationName, self.applicationVersion)
         if not res['OK']:
-          self.log.error("Could not find where the steering files are")
+          LOG.error("Could not find where the steering files are")
           return res
         steeringfiledirname = res['Value']
         if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
           self.SteeringFile = os.path.join(steeringfiledirname, self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
-        self.log.error("Missing steering file")
+        LOG.error("Missing steering file")
         return S_ERROR("Could not find steering file")
       self.extraCLIarguments += " --steeringFile %s " % self.SteeringFile
 
@@ -164,7 +165,7 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     script.append('echo =========')
     comm = 'ddsim --compactFile %(compactFile)s %(extraArgs)s' % dict(compactFile=compactFile,
                                                                       extraArgs=self.extraCLIarguments)
-    self.log.info("Command:", comm)
+    LOG.info("Command:", comm)
     script.append(comm)
     script.append('declare -x appstatus=$?')
     script.append('exit $appstatus')
@@ -182,13 +183,13 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
-      self.log.error("Something went terribly wrong, the log file is not present")
+      LOG.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed to produce log file' % (self.applicationName))
       if not self.ignoreapperrors:
         return S_ERROR('%s did not produce the expected log %s' % (self.applicationName, self.applicationLog))
     status = resultTuple[0]
 
-    self.log.info( "Status after the application execution is %s" % status )
+    LOG.info("Status after the application execution is %s" % status)
 
     return self.finalStatusReport(status)
 
@@ -220,7 +221,7 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
       for variable, value in addEnv['Value'].iteritems():
         script.append('declare -x %s=%s' % (variable, value))
     else:
-      self.log.verbose("No additional environment variables needed for this application")
+      LOG.verbose("No additional environment variables needed for this application")
 
     ## if these variables are not given in the configuration system we guess them from the G4DATA folder
     for var, folder in { "G4LEDATA" : "G4EMLOW",

@@ -2,15 +2,18 @@
 
 :author: Ching Bon Lam
 """
-__RCSID__ = "$Id$"
-
-
-from DIRAC.Core.Utilities.Subprocess                      import shellCall
-from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from DIRAC                                                import S_ERROR, gLogger
-from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 
 import os
+
+from DIRAC.Core.Utilities.Subprocess                      import shellCall
+from DIRAC                                                import S_ERROR, gLogger
+
+from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
+from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
+
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 class StdHepConverter(ModuleBase):
   """ Convert to SLCIO some stdhep files: Useful to run Tomato after Whizard
@@ -20,7 +23,6 @@ class StdHepConverter(ModuleBase):
     super(StdHepConverter, self).__init__()
 
     self.STEP_NUMBER = ''
-    self.log         = gLogger.getSubLogger( "StdHepConverter" )
     # Step parameters
     self.applicationName = 'StdhepConverter'
 
@@ -35,12 +37,12 @@ class StdHepConverter(ModuleBase):
       self.result = S_ERROR( 'No ILC platform selected' )
 
     if not self.result['OK']:
-      self.log.error('Failed to resolve input parameters:', self.result['Message'])
+      LOG.error('Failed to resolve input parameters:', self.result['Message'])
       return self.result
 
 
     if 'LCIO' not in os.environ:
-      self.log.error("Environment variable LCIO was not defined, cannot do anything")
+      LOG.error("Environment variable LCIO was not defined, cannot do anything")
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
     # removeLibc

@@ -8,8 +8,6 @@ Called by Job Agent.
 :author: Stephane Poss
 '''
 
-__RCSID__ = "$Id$"
-
 import os
 import shutil
 
@@ -24,6 +22,9 @@ from ILCDIRAC.Core.Utilities.resolvePathsAndNames            import resolveIFpat
 from ILCDIRAC.Core.Utilities.PrepareLibs                     import removeLibc
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir             import getSteeringFileDirName
 
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 class LCSIMAnalysis(CompactMixin, ModuleBase):
   """Define the LCSIM analysis part of the workflow
@@ -32,7 +33,6 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
     super(LCSIMAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
-    self.log = gLogger.getSubLogger( "LCSIMAnalysis" )
     self.result = S_ERROR()
     self.sourcedir = ''
     self.SteeringFile = ''
@@ -115,7 +115,7 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
       for files in self.InputData:
         if files.lower().find(".slcio") > -1:
           self.InputFile.append(files)
-    self.log.info("Input files to treat %s" % self.InputFile)      
+    LOG.info("Input files to treat %s" % self.InputFile)
     return S_OK('Parameters resolved')
 
   def runIt(self):
@@ -137,17 +137,17 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result["Message"])
+      LOG.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('LCSIM should not proceed as previous step did not end properly')
     
     
     res = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
     if not res['OK']:
-      self.log.error('LCSIM was not found in either the local area or shared area:', res['Message'])
+      LOG.error('LCSIM was not found in either the local area or shared area:', res['Message'])
       return res
     lcsim_name = res['Value']
     ##Need to fetch the new LD_LIBRARY_PATH
@@ -161,7 +161,7 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
         return S_ERROR('Missing slcio file!')
       runonslcio = res['Value']
     #for inputfile in inputfilelist:
-    #  self.log.verbose("Will try using %s"%(os.path.basename(inputfile)))
+    #  LOG.verbose("Will try using %s"%(os.path.basename(inputfile)))
     #  runonslcio.append(os.path.join(os.getcwd(),os.path.basename(inputfile)))
 
 
@@ -187,19 +187,19 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
       try:
         os.mkdir(os.path.join(cachedir, ".lcsim"))
       except OSError, x:
-        self.log.error("Could not create .lcsim folder !", str(x))
+        LOG.error("Could not create .lcsim folder !", str(x))
     if os.path.exists(os.path.join(cachedir, ".lcsim")):
       lcsimfolder = os.path.join(cachedir, ".lcsim")
       if os.path.exists(aliasproperties):
-        self.log.verbose("Copy alias.properties file in %s" % (lcsimfolder))
+        LOG.verbose("Copy alias.properties file in %s" % (lcsimfolder))
         shutil.copy(aliasproperties, os.path.join(lcsimfolder, aliasproperties))
       if os.path.exists(os.path.basename(self.detectorModel)):
         try:
           os.mkdir(os.path.join(lcsimfolder, "detectors"))
         except OSError, x:
-          self.log.error("Could not create detectors folder !", str(x))
+          LOG.error("Could not create detectors folder !", str(x))
         if os.path.exists(os.path.join(lcsimfolder, "detectors")):
-          self.log.verbose("Copy detector model.zip into the .lcsim/detectors folder")
+          LOG.verbose("Copy detector model.zip into the .lcsim/detectors folder")
           shutil.copy(os.path.basename(self.detectorModel), 
                       os.path.join(lcsimfolder, "detectors", os.path.basename(self.detectorModel)))
           
@@ -212,13 +212,13 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
         if not os.path.exists(myfile):
           res =  getSteeringFileDirName(self.platform, self.applicationName, self.applicationVersion)
           if not res['OK']:
-            self.log.error('Failed finding the steering file folder:', res["Message"])
+            LOG.error('Failed finding the steering file folder:', res["Message"])
             return res
           steeringfiledirname = res['Value']
           if os.path.exists(os.path.join(steeringfiledirname, myfile)):
             paths[myfile] = os.path.join(steeringfiledirname, myfile)
         if not os.path.exists(paths[myfile]):
-          self.log.error('Failed finding file', paths[myfile])
+          LOG.error('Failed finding file', paths[myfile])
           return S_ERROR("Could not find file %s" % paths[myfile])    
     self.SteeringFile = paths[os.path.basename(self.SteeringFile)]
     self.trackingstrategy = paths[os.path.basename(self.trackingstrategy)] 
@@ -228,10 +228,10 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
                            self.trackingstrategy, runonslcio, jars, cachedir,
                            self.OutputFile, self.outputREC, self.outputDST, self.debug)
     if not res['OK']:
-      self.log.error("Could not treat input lcsim file because %s" % res['Message'])
+      LOG.error("Could not treat input lcsim file because %s" % res['Message'])
       return S_ERROR("Error creating lcsim file")
     else:
-      self.log.verbose("File job.lcsim created properly")
+      LOG.verbose("File job.lcsim created properly")
     self.eventstring = [res['Value']]
     
     scriptName = 'LCSIM_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
@@ -257,7 +257,7 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
                                                                                                                             self.extraparams, 
                                                                                                                             lcsimfile,
                                                                                                                             self.extraCLIarguments)
-    self.log.info("Will run %s" % comm)
+    LOG.info("Will run %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')    
@@ -273,13 +273,13 @@ class LCSIMAnalysis(CompactMixin, ModuleBase):
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
-      self.log.error("Something went terribly wrong, the log file is not present")
+      LOG.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
       return S_ERROR('%s did not produce the expected log' % (self.applicationName))
 
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
-    self.log.info( "Status after the application execution is", str( status ) )
+    LOG.info("Status after the application execution is", str(status))
 
     return self.finalStatusReport(status)

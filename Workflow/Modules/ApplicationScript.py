@@ -13,7 +13,8 @@ from DIRAC                                                import S_OK, S_ERROR, 
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
 class ApplicationScript(ModuleBase):
   """ Default application environment. Called GenericApplication in the Interface.
@@ -21,14 +22,13 @@ class ApplicationScript(ModuleBase):
   def __init__(self):
     super(ApplicationScript, self).__init__()
     self.enable = True 
-    self.log = gLogger.getSubLogger( "ScriptAnalysis" )
     self.script = None
     self.arguments = ''
     self.applicationName = 'Application script'
     self.applicationVersion = ''
     
   def applicationSpecificInputs(self):
-    self.log.info("The arguments are %s"% self.arguments)
+    LOG.info("The arguments are %s" % self.arguments)
     if 'ParametricParameters' in self.workflow_commons:
       parametric = ' '
       if isinstance( self.workflow_commons['ParametricParameters'], list ):
@@ -48,11 +48,11 @@ class ApplicationScript(ModuleBase):
     if not self.applicationLog:
       self.applicationLog = '%s.log' % (os.path.basename(self.script))    
     if not self.result['OK']:
-      self.log.error("Failed with :", self.result['Message'])
+      LOG.error("Failed with :", self.result['Message'])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('ApplicationScript should not proceed as previous step did not end properly')
 
     
@@ -66,7 +66,7 @@ class ApplicationScript(ModuleBase):
     cmd.append(self.extraCLIarguments)
 
     command = ' '.join(cmd)
-    self.log.info( 'Command = %s' % (command))  #Really print here as this is useful to see
+    LOG.info('Command = %s' % (command))  # Really print here as this is useful to see
     
     com = []
     cmdSep = 'echo "%s"' % ('=' * 50)
@@ -88,7 +88,7 @@ class ApplicationScript(ModuleBase):
     self.stdError = ''    
     result = shellCall(0, finalCommand, callbackFunction = self.redirectLogOutput , bufferLimit = 20971520)
     if not result['OK']:
-      self.log.error("Application failed :", result["Message"])
+      LOG.error("Application failed :", result["Message"])
       return S_ERROR('Problem Executing Application')
 
     resultTuple = result['Value']
@@ -96,20 +96,20 @@ class ApplicationScript(ModuleBase):
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
-    self.log.info( "Status after %s execution is %s" %(os.path.basename(self.script), str(status)) )
+    LOG.info("Status after %s execution is %s" % (os.path.basename(self.script), str(status)))
     failed = False
     if status != 0:
-      self.log.info( "%s execution completed with non-zero status:" % os.path.basename(self.script) )
+      LOG.info("%s execution completed with non-zero status:" % os.path.basename(self.script))
       failed = True
     elif len(self.stdError) > 0:
-      self.log.info( "%s execution completed with application warning:" % os.path.basename(self.script) )
-      self.log.info(self.stdError)
+      LOG.info("%s execution completed with application warning:" % os.path.basename(self.script))
+      LOG.info(self.stdError)
     else:
-      self.log.info( "%s execution completed successfully:" % os.path.basename(self.script) )
+      LOG.info("%s execution completed successfully:" % os.path.basename(self.script))
 
     if failed is True:
-      self.log.error( "==================================\n StdError:\n" )
-      self.log.error( self.stdError )
+      LOG.error("==================================\n StdError:\n")
+      LOG.error(self.stdError)
       return S_ERROR('%s Exited With Status %s' % (os.path.basename(self.script), status))
 
     #Above can't be removed as it is the last notification for user jobs

@@ -27,8 +27,8 @@ from ILCDIRAC.Core.Utilities.WasteCPU                        import wasteCPUCycl
 from ILCDIRAC.Core.Utilities.OverlayFiles                    import energyWithLowerCaseUnit
 from ILCDIRAC.Core.Utilities.Configuration import getOptionValue
 
-
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
 
 def allowedBkg( bkg, energy = None, detector = None, detectormodel = None, machine = 'clic_cdr' ):
@@ -58,7 +58,6 @@ class OverlayInput (ModuleBase):
     super(OverlayInput, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
-    self.log = gLogger.getSubLogger( "OverlayInput" )
     self.applicationName = 'OverlayInput'
     self.curdir = os.getcwd()
     self.applicationLog = ''
@@ -140,11 +139,11 @@ class OverlayInput (ModuleBase):
         return S_ERROR("Number of events in the signal file is missing")
       self.nbinputsigfile = len(self.InputData)
 
-    self.log.info( "Signal Events Per Job: %d " % self.NbSigEvtsPerJob )
-    self.log.info( "Background Event Type: %s " % self.BkgEvtType )
-    self.log.info( "Meta Event Type: %s " % self.metaEventType )
-    self.log.info( "Background Events per bunch crossing: %3.2f" % self.ggtohadint )
-    self.log.info( "SignalEventsPerFile: %d " % self.nbsigeventsperfile )
+    LOG.info("Signal Events Per Job: %d " % self.NbSigEvtsPerJob)
+    LOG.info("Background Event Type: %s " % self.BkgEvtType)
+    LOG.info("Meta Event Type: %s " % self.metaEventType)
+    LOG.info("Background Events per bunch crossing: %3.2f" % self.ggtohadint)
+    LOG.info("SignalEventsPerFile: %d " % self.nbsigeventsperfile)
       
     if not self.NbSigEvtsPerJob and not self.nbsigeventsperfile:
       return S_ERROR("Could not determine the number of signal events per input file")
@@ -197,13 +196,13 @@ class OverlayInput (ModuleBase):
                                                                                  self.BkgEvtType),
                                               self.BkgEvtType)
 
-    self.log.info( "Number of Events Per BackgroundFile: %d " % self.nbofeventsperfile )
+    LOG.info("Number of Events Per BackgroundFile: %d " % self.nbofeventsperfile)
 
     meta['EvtType'] = self.metaEventType
     meta['ProdID'] = res
     if self.prodid:
       meta['ProdID'] = self.prodid
-    self.log.info("Using %s as metadata" % (meta))
+    LOG.info("Using %s as metadata" % (meta))
 
     return self.fcc.findFilesByMetadata(meta)
 
@@ -282,7 +281,7 @@ class OverlayInput (ModuleBase):
       self.NbSigEvtsPerJob = self.nbinputsigfile * self.nbsigeventsperfile
     if not self.NbSigEvtsPerJob:
       return S_ERROR('Could not determine the number of signal events per job')
-    self.log.verbose("There are %s signal event" % self.NbSigEvtsPerJob)
+    LOG.verbose("There are %s signal event" % self.NbSigEvtsPerJob)
     ##Now determine how many files are needed to cover all signal events
     totnboffilestoget = int(ceil(self.NbSigEvtsPerJob * numberofeventstoget / self.nbofeventsperfile))
 
@@ -301,7 +300,7 @@ class OverlayInput (ModuleBase):
     count = 0
     while 1:
       if error_count > 10 :
-        self.log.error('OverlayDB returned too many errors')
+        LOG.error('OverlayDB returned too many errors')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
 
       res = overlaymon.canRun(self.site)
@@ -325,7 +324,7 @@ class OverlayInput (ModuleBase):
 
     self.setApplicationStatus('Getting overlay files')
 
-    self.log.info('Will obtain %s files for overlay' % totnboffilestoget)
+    LOG.info('Will obtain %s files for overlay' % totnboffilestoget)
 
     os.mkdir("./overlayinput_" + self.metaEventType)
     os.chdir("./overlayinput_" + self.metaEventType)
@@ -369,13 +368,13 @@ class OverlayInput (ModuleBase):
         res = self.datMan.getFile(self.lfns[fileindex])
 
       if not res['OK']:
-        self.log.warn('Could not obtain %s' % self.lfns[fileindex])
+        LOG.warn('Could not obtain %s' % self.lfns[fileindex])
         fail_count += 1
         # Wait for a random time around 3 minutes
-        self.log.verbose("Waste happily some CPU time (on average 3 minutes)")
+        LOG.verbose("Waste happily some CPU time (on average 3 minutes)")
         resWaste = wasteCPUCycles(60 * random.gauss(3, 0.1))
         if not resWaste['OK']:
-          self.log.error("Could not waste as much CPU time as wanted, but whatever!")
+          LOG.error("Could not waste as much CPU time as wanted, but whatever!")
         continue
 
       filesobtained.append(self.lfns[fileindex])
@@ -392,16 +391,16 @@ class OverlayInput (ModuleBase):
       
     ##Print the file list
     mylist = os.listdir(os.getcwd())
-    self.log.info("List of Overlay files:")
-    self.log.info("\n".join(mylist))
+    LOG.info("List of Overlay files:")
+    LOG.info("\n".join(mylist))
     os.chdir(self.curdir)
     res = overlaymon.jobDone(self.site)
     if not res['OK']:
-      self.log.error("Could not declare the job as finished getting the files")
+      LOG.error("Could not declare the job as finished getting the files")
     if fail:
-      self.log.error("Did not manage to get all files needed, too many errors")
+      LOG.error("Did not manage to get all files needed, too many errors")
       return S_ERROR("Failed to get files")
-    self.log.info('Got all files needed.')
+    LOG.info('Got all files needed.')
     return S_OK()
 
   def getCASTORFile(self, lfn):
@@ -412,7 +411,7 @@ class OverlayInput (ModuleBase):
       lfile = prependpath + lfn
     else:
       lfile = lfn
-    self.log.info("Getting %s" % lfile)
+    LOG.info("Getting %s" % lfile)
     #command = "rfcp %s ./"%file
 
     basename = os.path.basename(lfile)
@@ -455,7 +454,7 @@ fi\n""" % (basename, lfile))
       lfile = prependpath + lfn
     else:
       lfile = lfn
-    self.log.info("Getting %s" % lfile)
+    LOG.info("Getting %s" % lfile)
 
     if os.path.exists("overlayinput.sh"):
       os.unlink("overlayinput.sh")
@@ -487,7 +486,7 @@ fi\n""" % (basename, lfile))
       lfile = prependpath + lfn
     else:
       lfile = lfn
-    self.log.info("Getting %s" % lfile)
+    LOG.info("Getting %s" % lfile)
     #command = "rfcp %s ./"%file
     #comm = []
     #comm.append("cp $X509_USER_PROXY /tmp/x509up_u%s"%os.getuid())
@@ -527,7 +526,7 @@ fi\n""" % (basename, lfile))
       lfile = prependpath + lfn
     else:
       lfile = lfn
-    self.log.info("Getting %s" % lfile)
+    LOG.info("Getting %s" % lfile)
     ###Don't check for CPU time as other wise, job can get killed
     self.__disableWatchDog()
 
@@ -564,7 +563,7 @@ fi\n""" % (basename, lfile))
       lfile = prependpath + lfn
     else:
       lfile = lfn
-    self.log.info("Getting %s" % lfile)
+    LOG.info("Getting %s" % lfile)
     ###Don't check for CPU time as other wise, job can get killed
     self.__disableWatchDog()
     
@@ -617,7 +616,7 @@ fi\n""" % (basename, lfile))
     """
     prependpath = '/grid'
     lfile = prependpath + lfn
-    self.log.info("Getting %s" % lfile)
+    LOG.info("Getting %s" % lfile)
     self.__disableWatchDog()
 
     if os.path.exists("overlayinput.sh"):
@@ -647,22 +646,22 @@ fi\n""" % (basename, lfile))
     """
     self.result = self.resolveInputVariables()
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result['Message'])
+      LOG.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
 
-    self.log.info( "Information after resolveInputVariables:" )
-    self.log.info( "Signal Events Per Job: %d " % self.NbSigEvtsPerJob )
-    self.log.info( "Background Event Type: %s " % self.BkgEvtType )
-    self.log.info( "Meta Event Type: %s " % self.metaEventType )
-    self.log.info( "Background Events per bunch crossing: %3.2f" % self.ggtohadint )
-    self.log.info( "SignalEventsPerFile: %d " % self.nbsigeventsperfile )
+    LOG.info("Information after resolveInputVariables:")
+    LOG.info("Signal Events Per Job: %d " % self.NbSigEvtsPerJob)
+    LOG.info("Background Event Type: %s " % self.BkgEvtType)
+    LOG.info("Meta Event Type: %s " % self.metaEventType)
+    LOG.info("Background Events per bunch crossing: %3.2f" % self.ggtohadint)
+    LOG.info("SignalEventsPerFile: %d " % self.nbsigeventsperfile)
 
     if not self.applicationLog:
       self.applicationLog = 'Overlay_input.log'
     self.applicationLog = os.path.join(os.getcwd(), self.applicationLog)
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('OverlayInput should not proceed as previous step did not end properly')
     self.setApplicationStatus('Starting up Overlay')
 
@@ -672,15 +671,15 @@ fi\n""" % (basename, lfile))
       res = self.__getFilesFromFC()
 
     if not res['OK']:
-      self.log.error("Failed to get the file list from the catalog:", res["Message"])
+      LOG.error("Failed to get the file list from the catalog:", res["Message"])
       self.setApplicationStatus('OverlayProcessor failed to get file list')
       return res
     else:
-      self.log.debug("Found these files: %s" % res)
+      LOG.debug("Found these files: %s" % res)
 
     self.lfns = res['Value']
     if not self.lfns:
-      self.log.error("No Overlay LFNs found")
+      LOG.error("No Overlay LFNs found")
       self.setApplicationStatus('OverlayProcessor got an empty list')
       return S_ERROR('OverlayProcessor got an empty list')
 
@@ -690,7 +689,7 @@ fi\n""" % (basename, lfile))
     self.__enableWatchDog()
 
     if not res['OK']:
-      self.log.error("Overlay failed with", res['Message'])
+      LOG.error("Overlay failed with", res['Message'])
       self.setApplicationStatus('OverlayInput failed to get files locally with message %s' % res['Message'])
       return S_ERROR('OverlayInput failed to get files locally')
     self.setApplicationStatus('OverlayInput finished getting all files successfully')

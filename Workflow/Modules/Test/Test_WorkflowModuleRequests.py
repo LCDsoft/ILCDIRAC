@@ -254,7 +254,6 @@ class TestModuleBase( ModulesTestCase ):
     mob.jobID = 444444
     mob.addRemovalRequests(lfnList)
     request = mob.workflow_commons['Request']
-    mob.log.notice(request)
     self.assertEqual( len(request), 1 )
 
   def test_MB_getCandidateFiles( self ):
@@ -582,8 +581,6 @@ class TestUploadLogFile( ModulesTestCase ):
   def test_ULF_ASI_ListLogPath( self ):
     """ULF.applicationSpecificInputs: getLogPath does not return strings............................"""
     self.ulf = UploadLogFile()
-    self.ulf.log = gLogger.getSubLogger("ULF-NoLogFiles")
-    self.ulf.log.setLevel("INFO")
     self.ulf.logFilePath = None
     self.ulf.logTargetPath = None
     self.ulf.workflow_commons = copy.deepcopy(self.mbase.workflow_commons)
@@ -608,8 +605,6 @@ class TestUploadLogFile( ModulesTestCase ):
   def test_ULF_ASI_expSid( self ):
     """ULF.applicationSpecificInputs: experiment Sid................................................"""
     self.ulf = UploadLogFile()
-    self.ulf.log = gLogger.getSubLogger("ULF-ExpChecks")
-    self.ulf.log.setLevel("DEBUG")
     self.ulf.workflow_commons = copy.deepcopy(self.mbase.workflow_commons)
     self.ulf.workflow_commons["LogFilePath"] = "/ilc/prod/ilc/sid/prodID/gen"
     self.ulf.workflow_commons["LogTargetPath"] = "/ilc/prod/ilc/sid/log.tar.gz"
@@ -1073,7 +1068,6 @@ class TestFailoverRequest( ModulesTestCase ):
     # setup the filedict from getFileMetaData and pass that to setRegistrationRequest
     gLogger.setLevel("ERROR")
     self.uod = UploadOutputData()
-    self.uod.log = gLogger.getSubLogger("FRQ-Exe-RegReqs")
     self.uod.prodOutputLFNs = ['/ilc/user/s/sailer/test3.stdhep']
     self.uod.jobReport = Mock()
     self.uod.jobReport.generateForwardDISET.return_value = S_ERROR("No JobRep")
@@ -1083,9 +1077,7 @@ class TestFailoverRequest( ModulesTestCase ):
     candidateFiles = {'test3.stdhep': {'lfn':'/ilc/user/s/sailer/test3.stdhep', 'workflowSE':'CERN-DIP-4'}}
     self.uod.getCandidateFiles = Mock(return_value=S_OK())
     res = self.uod.getFileMetadata(candidateFiles)
-    self.uod.log.debug("MetaData: %s" % res)
     fileDict = res['Value']
-    self.uod.log.debug("MetaData fileDict: %s" % fileDict)
     self.uod.getFileMetadata = Mock(return_value=res)
     self.uod.getDestinationSEList = Mock(return_value=S_OK(["CERN-DIP-4"]))
     self.uod.enable = True
@@ -1096,9 +1088,7 @@ class TestFailoverRequest( ModulesTestCase ):
     catalog = ["FileCatalog"]
     fot = FailoverTransfer( self.uod._getRequestContainer() )
     fot._setRegistrationRequest(lfn, targetSE, fileDict['test3.stdhep']['filedict'], catalog)
-    self.uod.log.info("RegReq: %s " % self.uod._getRequestContainer() )
     res = self.uod.generateFailoverFile( )
-    self.uod.log.info("failOverFile: %s " % res)
 
 #############################################################################
 # UploadOutputData.py
@@ -1120,7 +1110,6 @@ class TestUploadOutputData( ModulesTestCase ):
     gLogger.setLevel("ERROR")
     self.uod = UploadOutputData()
     self.uod.workflow_commons = dict( )
-    self.uod.log = gLogger.getSubLogger("testASI")
     os.environ['JOBID']="12345"
     self.uod.applicationSpecificInputs()
     del os.environ['JOBID']
@@ -1131,7 +1120,6 @@ class TestUploadOutputData( ModulesTestCase ):
     gLogger.setLevel("ERROR")
     self.uod = UploadOutputData()
     self.uod.workflow_commons = dict( )
-    self.uod.log = gLogger.getSubLogger("testASI")
     os.environ['JOBID']="12345"
     self.uod.step_commons = dict( Enable = "arg")
     self.uod.applicationSpecificInputs()
@@ -1143,7 +1131,6 @@ class TestUploadOutputData( ModulesTestCase ):
     gLogger.setLevel("ERROR")
     self.uod = UploadOutputData()
     self.uod.workflow_commons = dict( )
-    self.uod.log = gLogger.getSubLogger("testASI")
     self.uod.applicationSpecificInputs()
     self.assertFalse( self.uod.enable )
 
@@ -1151,7 +1138,6 @@ class TestUploadOutputData( ModulesTestCase ):
     """UOD.applicationSpecificInputs: checks if all variables have been properly set after this call"""
     gLogger.setLevel("ERROR")
     self.uod = UploadOutputData()
-    self.uod.log = gLogger.getSubLogger("Uod-Asi-AllVars")
     self.uod.workflow_commons = dict( JobReport = self.jr_mock, FileReport = self.fr_mock, PRODUCTION_ID=43321,
                                       JOB_ID = 12345,
                                       outputList = [{'outputFile': 'myFile_gen.stdhep'},
@@ -1203,7 +1189,6 @@ class TestUploadOutputData( ModulesTestCase ):
     os.environ['JOBID']="12345"
     self.uod.applicationSpecificInputs()
     del os.environ['JOBID']
-    self.uod.log.debug([ o['outputFile'] for o in self.uod.outputList] )
     self.assertEqual( len(self.uod.outputList), 4 )
 
   def test_GOL_Reco( self ):
@@ -1218,9 +1203,7 @@ class TestUploadOutputData( ModulesTestCase ):
     for obj in self.uod.outputList:
       self.uod.getTreatedOutputlistNew(proddata, olist, obj)
 
-    self.uod.log.debug ( "OList: %s " % olist )
     filesFound = [f in olist for f in ('h_nunu_dst_4193_2766', 'h_nunu_rec_4193_2766') ]
-    self.uod.log.debug("%s" % filesFound )
     self.assertTrue( all( filesFound ) )
 
   def test_GOL_RecoNew( self ):
@@ -1235,9 +1218,7 @@ class TestUploadOutputData( ModulesTestCase ):
     for obj in self.uod.outputList:
       self.uod.getTreatedOutputlistNew(proddata, olist, obj)
 
-    self.uod.log.debug ( "OList: %s " % olist )
     filesFound = [f in olist for f in ('h_nunu_dst_4193_2766', 'h_nunu_rec_4193_2766') ]
-    self.uod.log.debug("%s" % filesFound )
     self.assertTrue( all( filesFound ) )
 
   def test_GOL_gen( self ):
@@ -1256,7 +1237,6 @@ class TestUploadOutputData( ModulesTestCase ):
     for obj in self.uod.outputList:
       self.uod.getTreatedOutputlistNew(proddata, olist, obj)
 
-    self.uod.log.debug ( "OList: %s " % olist )
     filesFound = [f in olist for f in ('h_nunu_gen_4191_0000',
                                        'h_nunu_gen_4191_0001',
                                        'h_nunu_gen_4191_0002',
@@ -1265,7 +1245,6 @@ class TestUploadOutputData( ModulesTestCase ):
                                        'h_nunu_gen_4191_0005',
                                        'h_nunu_gen_4191_0006',
                                        'h_nunu_gen_4191_0007') ]
-    self.uod.log.debug("%s" % filesFound )
     self.assertTrue( all( filesFound ) )
 
   @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.Operations', new=Mock() )
@@ -1279,7 +1258,6 @@ class TestUploadOutputData( ModulesTestCase ):
     #
     gLogger.setLevel("ERROR")
     self.uod = UploadOutputData()
-    self.uod.log = gLogger.getSubLogger("UOD-Exe-RegReqs")
     self.uod.prodOutputLFNs = ['/ilc/user/s/sailer/test3.stdhep']
     self.uod.workflow_commons = dict(Enable=True)
     candidateFiles = {'test3.stdhep': {'lfn':'/ilc/user/s/sailer/test3.stdhep', 'workflowSE':'CERN-DIP-4'}}
@@ -1293,7 +1271,6 @@ class TestUploadOutputData( ModulesTestCase ):
     FailoverTransfer.transferAndRegisterFile = Mock(return_value=S_ERROR("IT ACTUALLY WORKS!!!!!!1eleven!!"))
     _resUodExe = self.uod.execute()
     res = self.uod.generateFailoverFile()
-    self.uod.log.info("RequestValidation: %s " % res)
 
 #############################################################################
 # UserJobFinalization.py

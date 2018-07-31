@@ -6,8 +6,6 @@ Run the Post generation filter, not the same as :mod:`~ILCDIRAC.Interfaces.API.N
 :author: sposs
 '''
 
-__RCSID__ = "$Id$"
-
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from DIRAC                                                import S_OK, S_ERROR, gLogger
@@ -16,6 +14,10 @@ from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename
 
 import os
 
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
+
 class PostGenSelection(ModuleBase):
   """ Apply cuts after generator (whizard). Used only by JJ Blaising up to now.
   """
@@ -23,7 +25,6 @@ class PostGenSelection(ModuleBase):
     super(PostGenSelection, self).__init__()
     self.STEP_NUMBER = ''
     self.enable = True 
-    self.log = gLogger.getSubLogger( "PostGenSelection" )
     self.applicationName = 'PostGenSel'
     self.InputFile = []
     self.NbEvtsKept = 0
@@ -71,18 +72,18 @@ class PostGenSelection(ModuleBase):
     if not self.platform:
       self.result = S_ERROR( 'No ILC platform selected' )  
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result["Message"])
+      LOG.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
     
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('PostGenSelection should not proceed as previous step did not end properly')
 
     if 'ROOTSYS' not in os.environ:
       return S_OK('Root environment is not set') 
     res = getSoftwareFolder(self.platform, "postgensel", self.applicationVersion)
     if not res['OK']:
-      self.log.error("Failed finding the sofware")
+      LOG.error("Failed finding the sofware")
       self.setApplicationStatus('PostGenSel: Could not find neither local area not shared area install')      
       return res
     
@@ -105,7 +106,7 @@ class PostGenSelection(ModuleBase):
     script.write('declare -x INDIR=$PWD/\n')
     script.write('declare -x MCGEN=WHIZARD\n')
     comm = "readstdhep 100000 %s\n" % base_file
-    self.log.info("Running %s" % comm)
+    LOG.info("Running %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
     script.write('exit $appstatus\n')
@@ -118,12 +119,12 @@ class PostGenSelection(ModuleBase):
     resultTuple = self.result['Value']
     status = resultTuple[0]
     if not status == 0:
-      self.log.error("Reading did not proceed properly")
+      LOG.error("Reading did not proceed properly")
       self.setApplicationStatus('PostGenSelection_Read Exited With Status %s' % (status))
       return S_ERROR('PostGenSelection_Read Exited With Status %s' % (status))
     
     if not os.path.exists(base_file + ".dat"):
-      self.log.error('%s does not exist locally, something went wrong, cannot proceed' % (base_file + ".dat"))
+      LOG.error('%s does not exist locally, something went wrong, cannot proceed' % (base_file + ".dat"))
       self.setApplicationStatus('%s not there!' % (base_file + ".dat"))
       return S_ERROR('%s file does not exist' % (base_file + ".dat"))
     
@@ -142,7 +143,7 @@ class PostGenSelection(ModuleBase):
     script.write('declare -x INDIR=$PWD/\n')
     script.write('declare -x MCGEN=WHIZARD\n')
     comm = 'writestdhep 100000 %s %s > writestdhep.out\n' % (self.NbEvtsKept, base_file)
-    self.log.info('Running %s' % comm )
+    LOG.info('Running %s' % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
     script.write('exit $appstatus\n')
@@ -159,4 +160,3 @@ class PostGenSelection(ModuleBase):
     self.workflow_commons["NbOfEvts"] = self.NbEvtsKept
     
     return self.finalStatusReport(status)
-  

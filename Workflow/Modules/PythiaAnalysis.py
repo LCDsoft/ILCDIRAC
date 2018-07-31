@@ -5,7 +5,7 @@ Run Pythia, but only specific versions (the CDR ttbar ones)
 
 :author: Stephane Poss
 '''
-__RCSID__ = "$Id$"
+
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase, generateRandomString
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
@@ -16,6 +16,10 @@ from DIRAC import gLogger, S_OK, S_ERROR
 
 import os
 
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
+
 class PythiaAnalysis(ModuleBase):
   """ Run pythia. Used for CDR vol2, but not for vol3: easier to produce the files locally.
   """
@@ -24,7 +28,6 @@ class PythiaAnalysis(ModuleBase):
     self.enable = True
     self.STEP_NUMBER = ''
     self.debug = True
-    self.log = gLogger.getSubLogger( "PythiaAnalysis" )
         
   def applicationSpecificInputs(self):
     
@@ -56,16 +59,16 @@ class PythiaAnalysis(ModuleBase):
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
-      self.log.error("Failed to resolve the input parameters:", self.result["Message"])
+      LOG.error("Failed to resolve the input parameters:", self.result["Message"])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
     res = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
     if not res['OK']:
-      self.log.error('Failed finding the software area')
+      LOG.error('Failed finding the software area')
       self.setApplicationStatus('Could find neither local area nor shared area install')
       return res
     myappDir = res['Value']
@@ -73,11 +76,11 @@ class PythiaAnalysis(ModuleBase):
     deptar = resolveDeps(self.platform, self.applicationName, self.applicationVersion)[0]
     res = getSoftwareFolder(self.platform, deptar["app"], deptar["version"])
     if not res['OK']:
-      self.log.error("Failed finding the dependency location")
+      LOG.error("Failed finding the dependency location")
       return res
     path = res['Value']
     if not os.path.exists("%s.ep" % path):
-      self.log.error('Could not find the lumi files!')
+      LOG.error('Could not find the lumi files!')
       return S_ERROR("Lumi files not found")
     
     originpath = "%s.ep" % path
@@ -85,13 +88,13 @@ class PythiaAnalysis(ModuleBase):
     try:
       os.mkdir(randomName)
     except EnvironmentError, x:
-      self.log.error("Failed setting up the temp directory")
+      LOG.error("Failed setting up the temp directory")
       return S_ERROR("Could not create temp dir: %s" % str(x))
     
     try:
       os.symlink(originpath,"%s/%s" % (randomName, os.path.basename(originpath)))
     except EnvironmentError, why:
-      self.log.error('Failed setting up the sym link to lumi files')
+      LOG.error('Failed setting up the sym link to lumi files')
       return S_ERROR("Cannot sym link lumi file: %s %s" % str(why))
     #try :
     #  shutil.copy(originpath,"/tmp/")
@@ -119,7 +122,7 @@ class PythiaAnalysis(ModuleBase):
     script.write('echo ======================================\n')
     script.write('env | sort >> localEnv.log\n')
     comm = "%s/%s_%s.exe\n" % (myappDir, self.applicationName, self.applicationVersion)
-    self.log.info("Will run %s" % comm)
+    LOG.info("Will run %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')
@@ -133,7 +136,7 @@ class PythiaAnalysis(ModuleBase):
     self.stdError = ''
     self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     if not self.result['OK']:
-      self.log.error('Something wrong during running:', self.result['Message'])
+      LOG.error('Something wrong during running:', self.result['Message'])
       self.setApplicationStatus('Error during running %s'% self.applicationName)
       return S_ERROR('Failed to run %s' % self.applicationName)
 
@@ -142,7 +145,7 @@ class PythiaAnalysis(ModuleBase):
     status = resultTuple[0]
 
     if not os.path.exists(self.applicationLog):
-      self.log.error("Something went terribly wrong, the log file is not present")
+      LOG.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
       if not self.ignoreapperrors:
         return S_ERROR('%s did not produce the expected log' % (self.applicationName))
@@ -152,7 +155,7 @@ class PythiaAnalysis(ModuleBase):
       try:
         os.rename("pythiaGen.lpt", base + self.STEP_NUMBER + ".lpt")
       except EnvironmentError:
-        self.log.error("Could not rename, deleting")
+        LOG.error("Could not rename, deleting")
         os.unlink("pythiaGen.lpt")
 
     with open(self.applicationLog) as logf:
@@ -164,5 +167,3 @@ class PythiaAnalysis(ModuleBase):
         status = 1
 
     return self.finalStatusReport(status) 
-
-  

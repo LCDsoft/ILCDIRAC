@@ -25,18 +25,19 @@ class TestFccAnalysis( unittest.TestCase ):
 
     def replace_realpath( path ):
       return os.path.join("/test/realpath", path)
-        
+
+    self.log_mock = Mock()
+
     self.patches = [patch("%s.os.path.realpath" % MODULE_NAME, new=Mock(side_effect=replace_realpath)),
                     patch("%s.os.path.dirname" % MODULE_NAME, new=Mock(return_value="/test/dirname")),
                     patch("%s.FccAnalysis.redirectLogOutput" % MODULE_NAME, new=Mock()),
+                    patch('%s.LOG' % MODULE_NAME, new=self.log_mock),
                     ]
 
     for patcher in self.patches:
       patcher.start()
 
     self.fccAna = FccAnalysis()
-    self.log_mock = Mock()
-    self.fccAna.log = self.log_mock
 
     self.fccAna.platform = "Testplatform123"
     self.fccAna.applicationLog = "testlog123"
@@ -44,7 +45,8 @@ class TestFccAnalysis( unittest.TestCase ):
     self.fccAna.applicationName = "fccApp"
     self.fccAna.applicationVersion = "v1.0"
     self.fccAna.STEP_NUMBER = "1"
-    self.fccAppIndex = "%s_%s_Step_%s" % (self.fccAna.applicationName, self.fccAna.applicationVersion, self.fccAna.STEP_NUMBER)
+    self.fccAppIndex = "%s_%s_Step_%s" % (self.fccAna.applicationName, self.fccAna.applicationVersion,
+                                          self.fccAna.STEP_NUMBER)
     self.applicationScript = os.path.realpath("%s.sh" % self.fccAppIndex)
     self.root_files = ["outputFile.root", "outputFile2.root"]
     self.exists_dict = {
@@ -53,7 +55,7 @@ class TestFccAnalysis( unittest.TestCase ):
       "/test/realpath/outputFile.root" : True,
       '/test/realpath/outputFile.txt' : True
       }
-    
+
   def replace_exists( self, path ):
     return self.exists_dict[path]
 

@@ -14,7 +14,8 @@ from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
 class LCIOConcatenate(ModuleBase):
   """ LCIO concatenate module
@@ -24,13 +25,12 @@ class LCIOConcatenate(ModuleBase):
     super(LCIOConcatenate, self).__init__()
 
     self.STEP_NUMBER = ''
-    self.log         = gLogger.getSubLogger( "LCIOConcatenate" )
         
     # Step parameters
     self.applicationName = "lcio"
     #
 
-    self.log.info("%s initialized" % ( self.__str__() ))
+    LOG.info("%s initialized" % (self.__str__()))
 
   def applicationSpecificInputs(self):
     """ Resolve LCIO concatenate specific parameters, called from ModuleBase
@@ -59,18 +59,18 @@ class LCIOConcatenate(ModuleBase):
     result = self.resolveInputVariables()
     # Checks
     if not result['OK']:
-      self.log.error("Failed to resolve input parameters:", result['Message'])
+      LOG.error("Failed to resolve input parameters:", result['Message'])
       return result
 
     if not self.platform:
       result = S_ERROR( 'No ILC platform selected' )
 
     if not result['OK']:
-      self.log.error("Failed to resolve input parameters:", result['Message'])
+      LOG.error("Failed to resolve input parameters:", result['Message'])
       return result
 
     if 'LCIO' not in os.environ:
-      self.log.error("Environment variable LCIO was not defined, cannot do anything")
+      LOG.error("Environment variable LCIO was not defined, cannot do anything")
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
     removeLibc( os.path.join( os.environ["LCIO"], "lib" ) )
@@ -141,7 +141,7 @@ exit $?
     resultTuple = result['Value']
     status      = resultTuple[0]
 
-    self.log.info( "Status after the application execution is %s" % str( status ) )
+    LOG.info("Status after the application execution is %s" % str(status))
     
     self.listDir()
     return self.finalStatusReport(status)

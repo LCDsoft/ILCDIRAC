@@ -13,7 +13,8 @@ from DIRAC.Core.Utilities.Subprocess                      import shellCall
 from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
 class CheckCollections(ModuleBase):
   """ Check the collections in a given slcio file.
@@ -23,7 +24,6 @@ class CheckCollections(ModuleBase):
     super(CheckCollections, self).__init__()
 
     self.STEP_NUMBER = ''
-    self.log         = gLogger.getSubLogger( "CheckCollections" )
     self.args        = ''
     #self.result      = S_ERROR()
     self.jobID       = None
@@ -46,11 +46,11 @@ class CheckCollections(ModuleBase):
       result = S_ERROR( 'No ILC platform selected' )
 
     if 'LCIO' not in os.environ:
-      self.log.error("Environment variable LCIO was not defined, cannot do anything")
+      LOG.error("Environment variable LCIO was not defined, cannot do anything")
       result = S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
     if not result['OK']:
-      self.log.error("Failed to resolve the input parameters:", self.result["Message"])
+      LOG.error("Failed to resolve the input parameters:", self.result["Message"])
       return result
 
     removeLibc( os.path.join( os.environ["LCIO"], "lib" ) )
@@ -152,7 +152,7 @@ exit $$appstatus
     resultTuple = self.result['Value']
     status      = resultTuple[0]
 
-    self.log.info( "Status after the application execution is %s" % str( status ) )
+    LOG.info("Status after the application execution is %s" % str(status))
 
     return self.finalStatusReport(status)
 

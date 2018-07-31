@@ -22,7 +22,9 @@ from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 class MokkaAnalysis(ModuleBase):
   """
@@ -32,7 +34,6 @@ class MokkaAnalysis(ModuleBase):
     super(MokkaAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
-    self.log = gLogger.getSubLogger( "MokkaAnalysis" )
     self.InputFile = [] 
     self.macFile = ''
     self.detectorModel = '' 
@@ -120,9 +121,9 @@ class MokkaAnalysis(ModuleBase):
     """
     
     #if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-    #  self.log.info('Skip this module, failure detected in a previous step :')
-    #  self.log.info('Workflow status : %s' %(self.workflowStatus))
-    #  self.log.info('Step Status %s' %(self.stepStatus))
+    #  LOG.info('Skip this module, failure detected in a previous step :')
+    #  LOG.info('Workflow status : %s' %(self.workflowStatus))
+    #  LOG.info('Step Status %s' %(self.stepStatus))
     #  return S_OK()
 
     self.result = S_OK()
@@ -133,14 +134,14 @@ class MokkaAnalysis(ModuleBase):
       self.result = S_ERROR( 'No Log file provided' )
 
     if not self.result['OK']:
-      self.log.error("Failed to resolve the input parameters:", self.result["Message"])
+      LOG.error("Failed to resolve the input parameters:", self.result["Message"])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('Mokka should not proceed as previous step did not end properly')
 
-    self.log.info( "Executing Mokka %s" % ( self.applicationVersion ))
+    LOG.info("Executing Mokka %s" % (self.applicationVersion))
 
     if self.dbSlice:
       if self.dbSlice.lower().startswith("lfn"):
@@ -151,16 +152,16 @@ class MokkaAnalysis(ModuleBase):
 
     
     res = getEnvironmentScript(self.platform, "mokka", self.applicationVersion, self.getEnvScript)
-    self.log.notice("Got the environment script: %s" % res )
+    LOG.notice("Got the environment script: %s" % res)
     if not res['OK']:
-      self.log.error("Error getting the env script: ", res['Message'])
+      LOG.error("Error getting the env script: ", res['Message'])
       return res
     env_script_path = res['Value']
     
 
     ####Setup MySQL instance      
     mysqlBasePath = '%s/mysqltmp/MokkaDBRoot-%s' %(os.getcwd(), generateRandomString(8))
-    self.log.notice("Placing mysql files in %s" % mysqlBasePath)
+    LOG.notice("Placing mysql files in %s" % mysqlBasePath)
     
     ###steering file that will be used to run
     mokkasteer = "mokka.steer"
@@ -168,7 +169,7 @@ class MokkaAnalysis(ModuleBase):
       try:
         os.rename("mokka.steer", "mymokka.steer")
       except EnvironmentError as err:
-        self.log.error("Failed renaming the steering file: ", str(err))
+        LOG.error("Failed renaming the steering file: ", str(err))
       self.SteeringFile = "mymokka.steer"
         
     ###prepare steering file
@@ -177,7 +178,7 @@ class MokkaAnalysis(ModuleBase):
       #self.InputFile = os.path.basename(self.InputFile)
       res = resolveIFpaths(self.InputFile)
       if not res['OK']:
-        self.log.error("Generator file not found")
+        LOG.error("Generator file not found")
         return res
       self.InputFile = res['Value']
     if len(self.macFile) > 0:
@@ -186,24 +187,24 @@ class MokkaAnalysis(ModuleBase):
       
     self.SteeringFile = os.path.basename(self.SteeringFile)
     if not os.path.exists(self.SteeringFile):
-      self.log.verbose("Steering file %s not found locally" % self.SteeringFile)
+      LOG.verbose("Steering file %s not found locally" % self.SteeringFile)
       res =  getSteeringFileDirName(self.platform, "mokka", self.applicationVersion)
       if not res['OK']:
-        self.log.error( "Missing Steering file directory:", res['Message'] )
+        LOG.error("Missing Steering file directory:", res['Message'])
         return res
       steeringfiledirname = res['Value']
       if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
         try:
           shutil.copy(os.path.join(steeringfiledirname, self.SteeringFile), "./" + self.SteeringFile )
         except EnvironmentError as err:
-          self.log.error("Failed copying file", self.SteeringFile)
+          LOG.error("Failed copying file", self.SteeringFile)
           return S_ERROR('Failed to access file %s: %s' % (self.SteeringFile, str(err)))
           #self.steeringFile = os.path.join(mySoftwareRoot,"steeringfiles",self.steeringFile)
     if not os.path.exists(self.SteeringFile):
-      self.log.error("Missing steering file, should not happen!")
+      LOG.error("Missing steering file, should not happen!")
       return S_ERROR("Could not find steering file")
     else:
-      self.log.verbose("Found local copy of %s" % self.SteeringFile)
+      LOG.verbose("Found local copy of %s" % self.SteeringFile)
     ### The following is because if someone uses particle gun, there is no InputFile
     if not len(self.InputFile):
       self.InputFile = ['']
@@ -215,7 +216,7 @@ class MokkaAnalysis(ModuleBase):
                                   self.OutputFile,
                                   self.inputdataMeta)
     if not steerok['OK']:
-      self.log.error('Failed to create MOKKA steering file')
+      LOG.error('Failed to create MOKKA steering file')
       return S_ERROR('Failed to create MOKKA steering file')
 
     ###Extra option depending on mokka version
@@ -348,7 +349,7 @@ echo "/Mokka/init/PDGFile $PARTICLETBL" >> %s
 
     ##Now run Mokka
     comm = 'Mokka %s -h localhost:$SOCKETPATH %s %s\n' % (mokkaextraoption, mokkasteer, self.extraCLIarguments)
-    self.log.info( "Command : %s" % (comm) )
+    LOG.info("Command : %s" % (comm))
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
 
@@ -384,12 +385,12 @@ done
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
-    self.log.info( "Status after Mokka execution is %s" % str( status ) )
+    LOG.info("Status after Mokka execution is %s" % str(status))
     if not os.path.exists(self.applicationLog):
-      self.log.error("Something went terribly wrong, the log file is not present")
+      LOG.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
       if not self.ignoreapperrors:
-        self.log.error("Missing log file")
+        LOG.error("Missing log file")
         return S_ERROR('%s did not produce the expected log' % (self.applicationName))
     ###Now change the name of Mokka output to the specified filename
     if os.path.exists("out.slcio"):
@@ -398,23 +399,23 @@ done
 
     failed = False
     if status not in [0, 106, 9]:
-      self.log.error( "Mokka execution completed with errors:" )
+      LOG.error("Mokka execution completed with errors:")
       failed = True
     elif status in [106, 9]:
-      self.log.info( "Mokka execution reached end of input generator file")
+      LOG.info("Mokka execution reached end of input generator file")
     else:
-      self.log.info( "Mokka execution finished successfully")
+      LOG.info("Mokka execution finished successfully")
 
     message = 'Mokka %s Successful' % (self.applicationVersion)
     if failed is True:
-      self.log.error( "==================================\n StdError:\n" )
-      self.log.error( self.stdError) 
+      LOG.error("==================================\n StdError:\n")
+      LOG.error(self.stdError)
       #self.setApplicationStatus('%s Exited With Status %s' %(self.applicationName,status))
-      self.log.error('Mokka Exited With Status %s' % (status))
+      LOG.error('Mokka Exited With Status %s' % (status))
       message = 'Mokka Exited With Status %s' % (status)
       self.setApplicationStatus(message)
       if not self.ignoreapperrors:
-        self.log.error("Application exists with error:", message)
+        LOG.error("Application exists with error:", message)
         return S_ERROR(message)
     else:
       if status in [106, 9]:
@@ -429,7 +430,7 @@ done
     
     res = getSoftwareFolder(sysconfig, appname, appversion)
     if not res['OK']:
-      self.log.error("Mokka: could not find installation directory!")
+      LOG.error("Mokka: could not find installation directory!")
       return res
     myMokkaDir = res['Value']
     
@@ -486,7 +487,7 @@ done
       for key in add_env['Value'].keys():
         script.write('declare -x %s=%s/%s\n' % (key, mySoftwareRoot, add_env['Value'][key]))
     else:
-      self.log.verbose("No additional environment variables needed for this application")
+      LOG.verbose("No additional environment variables needed for this application")
     script.close()
     #os.chmod(env_script_name, 0755)
     return S_OK(os.path.abspath(env_script_name))
@@ -507,7 +508,7 @@ done
 
     """
     if self.dbSlice and os.path.exists(self.dbSlice):
-      self.log.notice("DBSlice %s already in working directory"% self.dbSlice)
+      LOG.notice("DBSlice %s already in working directory" % self.dbSlice)
       return S_OK()
     else:
       appVersion = self.step_commons['applicationVersion']
@@ -516,26 +517,26 @@ done
       ##check if ildConfig is used, and then get the dbSlice from there, if it is on cvmfs
       ##if the tarball is not on cvmfs we exit, because it will be taken from the ILDConfig tarball
       if 'ILDConfigPackage' in self.workflow_commons:
-        self.log.notice("Using ILDConfig from CVMFS, get DBSlice from there")
+        LOG.notice("Using ILDConfig from CVMFS, get DBSlice from there")
         config_dir = self.workflow_commons['ILDConfigPackage']
         ildConfigVersion = config_dir.replace("ILDConfig", "")
         ildconfigCSPathApplication ="/AvailableTarBalls/%s/%s/%s/"%(self.platform, 'ildconfig', ildConfigVersion)
         cvmfsDBSlice = Operations().getValue(ildconfigCSPathApplication+"/CVMFSDBSlice")
         cvmfsPath = Operations().getValue(ildconfigCSPathApplication+"/CVMFSPath")
         if cvmfsDBSlice and os.path.exists(cvmfsDBSlice):
-          self.log.notice("Getting this dbSlice %s from CVMFS" % cvmfsDBSlice)
+          LOG.notice("Getting this dbSlice %s from CVMFS" % cvmfsDBSlice)
           self.untarDBSlice(cvmfsDBSlice)
           return S_OK()
         if cvmfsPath and not cvmfsDBSlice:
-          self.log.error("CVMFSDBSlice parameter not set for ILDConfig version", ildConfigVersion)
+          LOG.error("CVMFSDBSlice parameter not set for ILDConfig version", ildConfigVersion)
           return S_ERROR("CVMFSDBSlice parameter not set")
         return S_OK()
 
       ##check if this mokka version is CVMFS native, if not we assume the steeringFile Tarballs has the db slice
       cvmfsPath = Operations().getValue(csPathApplication+"/CVMFSPath")
       if not cvmfsPath:
-        self.log.info("This mokka version is not native to CVMFS")
-        self.log.info("Assuming CLICMokkaDB.sql")
+        LOG.info("This mokka version is not native to CVMFS")
+        LOG.info("Assuming CLICMokkaDB.sql")
         self.dbSlice = "CLICMokkaDB.sql"
         return S_OK()
 
@@ -543,7 +544,7 @@ done
       cvmfsDBSlice = Operations().getValue(csPathApplication+"/CVMFSDBSlice")
       if not cvmfsDBSlice:
         return S_ERROR("CVMFSDBSlice not defined for mokka version %s " % appVersion)
-      self.log.info("Getting this DBSlice: %s" % cvmfsDBSlice)
+      LOG.info("Getting this DBSlice: %s" % cvmfsDBSlice)
       #copy the db slice and extract it to local folder?
       #extract the name of the slice from the tarball name
       self.untarDBSlice(cvmfsDBSlice)
@@ -565,7 +566,7 @@ done
     dbSliceFileName = cvmfsDBSlice.split("/")[-1]
     if dbSliceFileName[-4:] == ".tgz":
       self.dbSlice = dbSliceFileName[:-4] #cutaway the ".tgz"
-      self.log.notice("untarDBSlice: Using this db %s" % self.dbSlice)
+      LOG.notice("untarDBSlice: Using this db %s" % self.dbSlice)
       import tarfile
       dbsliceTar = tarfile.open(cvmfsDBSlice, mode="r:gz")
       dbsliceTar.extractall(path='./')

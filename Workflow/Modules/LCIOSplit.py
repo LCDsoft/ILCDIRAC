@@ -14,7 +14,9 @@ from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename, resolveIFpaths
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 class LCIOSplit(ModuleBase):
   """ LCIO split module
@@ -24,14 +26,13 @@ class LCIOSplit(ModuleBase):
     super(LCIOSplit, self).__init__()
 
     self.STEP_NUMBER = ''
-    self.log         = gLogger.getSubLogger( "LCIOSplit" )
     self.nbEventsPerSlice = 0
     # Step parameters
     self.prod_outputdata = []
     self.applicationName = "lcio"
     #
     self.listoutput = {}
-    self.log.info("%s initialized" % ( self.__str__() ))
+    LOG.info("%s initialized" % (self.__str__()))
 
   def applicationSpecificInputs(self):
     """ Resolve LCIO concatenate specific parameters, called from ModuleBase
@@ -68,20 +69,20 @@ class LCIOSplit(ModuleBase):
     # Checks
     resultRIV = self.resolveInputVariables()
     if not resultRIV['OK']:
-      self.log.error("Failed to resolve input variables", resultRIV['Message'])
+      LOG.error("Failed to resolve input variables", resultRIV['Message'])
       return resultRIV
 
     if not self.platform:
       return S_ERROR( 'No ILC platform selected' )
 
     if "LCIO" not in os.environ:
-      self.log.error("Environment variable LCIO was not defined, cannot do anything")
+      LOG.error("Environment variable LCIO was not defined, cannot do anything")
       return S_ERROR("Environment variable LCIO was not defined, cannot do anything")
 
     if len(self.InputFile):
       res = resolveIFpaths(self.InputFile)
       if not res['OK']:
-        self.log.error("Missing slcio file!")
+        LOG.error("Missing slcio file!")
         self.setApplicationStatus('LCIOSplit: missing input slcio file')
         return S_ERROR('Missing slcio file!')
       runonslcio = res['Value'][0]
@@ -156,14 +157,14 @@ exit $?
     status = result['Value'][0]
 
     if not os.path.exists(self.applicationLog):
-      self.log.error("Cannot access log file, cannot proceed")
+      LOG.error("Cannot access log file, cannot proceed")
       return S_ERROR("Failed reading the log file")
 
     baseinputfilename = os.path.basename(runonslcio).split(".slcio")[0]
     output_file_base_name = ''
     if self.OutputFile:
       output_file_base_name = self.OutputFile.split('.slcio')[0]
-    self.log.info("Will rename all files using '%s' as base." % output_file_base_name)
+    LOG.info("Will rename all files using '%s' as base." % output_file_base_name)
     numberofeventsdict = {}
     fname = ''
     with open(self.applicationLog,"r") as logf:
@@ -180,7 +181,7 @@ exit $?
         elif line.count("events"):
           numberofeventsdict[fname] = int(line.split()[0])
 
-    self.log.verbose("Number of eventsdict dict: %s" % numberofeventsdict)   
+    LOG.verbose("Number of eventsdict dict: %s" % numberofeventsdict)
 
     ##Now update the workflow_commons dict with the relation between filename and number of events: needed for 
     #the registerOutputData
@@ -210,6 +211,6 @@ exit $?
         finalproddata.append(os.path.join(path, fileName))
       self.workflow_commons['ProductionOutputData'] = ";".join(finalproddata)  
     
-    self.log.info( "Status after the application execution is %s" % str( status ) )
+    LOG.info("Status after the application execution is %s" % str(status))
     self.listDir()
     return self.finalStatusReport(status)

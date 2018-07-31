@@ -1,8 +1,4 @@
-#!/usr/local/env python
-"""
-Test Fcc module
-
-"""
+"""Tests for the Fcc module."""
 
 import inspect
 import os
@@ -19,7 +15,7 @@ __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Applications.Fcc'
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access, too-many-public-methods, missing-docstring
 
 class FccMixin( object ):
   """ Base class for the Fcc test cases
@@ -93,10 +89,9 @@ class FccMixin( object ):
     with patch.object(self.fcc, '_importToSandbox', new=Mock(return_value=True)), \
         patch.object(inspect.getmodule(FccSw), 'LOG', new=self.log_mock):
       
-      info_message = (
-        "Application general consistency : _checkConsistency()"
-        " on '%(name)s' successfull" % {'name':self.fcc.appname}
-      )    
+      info_message = ("Application general consistency : _checkConsistency()"
+                      " on '%(name)s' successfull" % {'name': self.fcc.appname}
+                      )
       assertDiracSucceedsWith( self.fcc._checkConsistency(), info_message, self )
       self.log_mock.info.assert_called_with( info_message )
       self.log_mock.info.assert_any_call( "Sandboxing : Sandboxing successfull" )
