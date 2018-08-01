@@ -91,9 +91,9 @@ class MonitorAgents(AgentModule):
     self.errors = list()
     self.accounting = defaultdict(dict)
 
-    self.addressTo = ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"]
+    self.addressTo = ["andre.philippe.sailer@cern.ch"]
     self.addressFrom = "ilcdirac-admin@cern.ch"
-    self.emailSubject = "MonitorAgents"
+    self.emailSubject = "MonitorAgents on %s" % socket.gethostname()
 
   def logError(self, errStr, varMsg=''):
     """ appends errors in a list, which is sent in email notification """
@@ -271,7 +271,7 @@ class MonitorAgents(AgentModule):
     self.log.info("Pinging service", url)
     pingRes = RPCClient(url).ping()
     if not pingRes['OK']:
-      self.logError('Failure pinging service', pingRes['Message'])
+      self.logError('Failure pinging service: ', '%s: %s' % (url, pingRes['Message']))
       res = self.restartInstance(int(options['PID']), serviceName, self.restartServices)
       if not res["OK"]:
         return res
