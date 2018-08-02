@@ -185,6 +185,10 @@ class JobResetAgent(AgentModule):
                                         "because associated Request with ID: %s is Done" % request.RequestID)})
       return res
 
+    if request.Status in ("Waiting", "Scheduled"):
+      self.log.notice("Request is Waiting (for FTS): %s " % request)
+      return S_OK()
+
     self.log.notice("Request not Done: %s " % request)
     res = self.resetRequest(request.RequestID)
     if res["OK"]:
@@ -249,6 +253,11 @@ class JobResetAgent(AgentModule):
                                               "Done because associated Request with ID: %s is Done" %
                                               request.RequestID)})
       return res
+
+    if request.Status in ("Waiting", "Scheduled"):
+      self.log.notice("Request is Waiting (for FTS): %s " % request)
+      return S_OK()
+
 
     for op in request:
       self.log.info("Operation for completed job: %s, %s, %s, %s" %
