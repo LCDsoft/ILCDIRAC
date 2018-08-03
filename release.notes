@@ -8,24 +8,24 @@ NEW: Based on Dirac v6r20p7
 
 *WorkloadManagementSystem
 
-CHANGE: (!225) :mod:`~ILCDIRAC.WorkloadManagement.Agent.JobResetAgent`: only reset requests that are not waiting or scheduled
-FIX: (!225) :mod:`~ILCDIRAC.WorkloadManagement.Agent.JobResetAgent`: Take into account that some requests have multiple files
+CHANGE: (!225) :mod:`~ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent`: only reset requests that are not waiting or scheduled
+FIX: (!225) :mod:`~ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent`: Take into account that some requests have multiple files
 
 *Interfaces
 
-FIX: (!227) :mod:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin`: ensure errors for :func:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin.DDInterfaceMixin.setDetectorModel`cannot be ignored.
+FIX: (!227) :mod:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin`: ensure errors for :func:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin.DDInterfaceMixin.setDetectorModel` cannot be ignored.
 
 *Workflow
 
 FIX: (!222) :mod:`~ILCDIRAC.Workflow.Modules.ModuleBase`: Fix cleanup of request operations in case of failure. RemovalReplica requests are also removed, which in the past lead to un-fulfillable requests
 FIX: (!222) :mod:`~ILCDIRAC.Workflow.Modules.Modulebase`: only calculate checksum once.
-CHANGE: (!222) :mod:`~ILCDIRAC.Workflow.Modules.Modulebase`: change the name of the log output to `__name__`
+CHANGE: (!222) :mod:`~ILCDIRAC.Workflow.Modules.Modulebase`: change the name of the log output to **__name__**
 CHANGE: (!223) :mod:`~ILCDIRAC.Workflow.Modules.OverlayInput`: only wait 3 minutes between copying if the previous copy attempt failed, fixes ILCDIRAC-850
 
 *FrameworkSystem
 
-FIX: (!224) :mod:`~ILCDIRAC.Framework.Agents.MonitorAgents`: prevent exception for missing LogAge for services
-CHANGE: (!224) :mod:`~ILCDIRAC.Framework.Agents.MonitorAgents`: add hostname to the email subject, include service url in error messages
+FIX: (!224) :mod:`~ILCDIRAC.FrameworkSystem.Agents.MonitorAgents`: prevent exception for missing LogAge for services
+CHANGE: (!224) :mod:`~ILCDIRAC.FrameworkSystem.Agents.MonitorAgents`: add hostname to the email subject, include service url in error messages
 
 *ILCTransformationSystem
 
@@ -119,7 +119,7 @@ NEW: (!206) `dirac-clic-make-productions`: When creating chains, the splitting s
 
 *WorkloadManagementSystem
 
-FIX: (!194) fixing :mod:`~ILCDIRAC.WorkloadManagement.Agent.JobResetAgent`
+FIX: (!194) fixing :mod:`~ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent`
 
 *ILCTransformationSystem
 
