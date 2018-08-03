@@ -68,13 +68,11 @@ class DDInterfaceMixin( object ):
     else:
       knownDetectors = self.getKnownDetectorModels()
       if not knownDetectors['OK']:
-        self._log.error("Failed to get knownDetectorModels", knownDetectors["Message"] )
-        return knownDetectors
+        return self._reportError("Failed to get knownDetectorModels: %s" % knownDetectors["Message"])
       elif detectorModel in knownDetectors['Value']:
         self.detectorModel = detectorModel
       else:
-        self._log.error("Unknown detector model: ", detectorModel )
-        return S_ERROR( "Unknown detector model in %s: %s" % ( self.appname, detectorModel ) )
+        return self._reportError("Unknown detector model in %s: %s" % (self.appname, detectorModel))
     return S_OK()
 
 

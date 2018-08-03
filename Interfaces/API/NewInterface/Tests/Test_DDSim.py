@@ -181,7 +181,7 @@ class TestDDSim( unittest.TestCase ):
     detModel = "CLIC_o2_v03"
     ddsim = DDSim()
     res = ddsim.setDetectorModel( detModel )
-    self.assertEqual( res['Message'], "No known models" )
+    self.assertIn("No known models", res['Message'])
 
   @patch( "ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim.getKnownDetectorModels",
           new = Mock(return_value=S_OK({'CLIC_o2_v04':"/some/path"})))
@@ -193,6 +193,7 @@ class TestDDSim( unittest.TestCase ):
     self.assertEqual( ddsim.detectorModel, '' )
     self.assertFalse( ret['OK'] )
     self.assertIn( "Unknown detector model in ddsim: ATLAS", ret['Message'] )
+    self.assertIn("setDetectorModel", ddsim._errorDict)
 
   @patch( "os.path.exists", new = Mock(return_value=True ) )
   def test_setDetectorModel_TB_success( self ):
