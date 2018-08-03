@@ -52,7 +52,7 @@ class ModuleBase(object):
     """ Initialization of module base.
     """
     super(ModuleBase, self).__init__()
-    self.log = gLogger.getSubLogger('ModuleBase')
+    self.log = gLogger.getSubLogger(__name__)
     # FIXME: do we need to do this for every module?
     result = getProxyInfoAsString()
     if not result['OK']:
@@ -325,9 +325,10 @@ class ModuleBase(object):
       fileDict = {}
       fileDict['LFN'] = metadata['lfn']
       fileDict['Size'] = os.path.getsize(fileName)
-      fileDict['Addler'] = fileAdler(fileName)
-      fileDict['ADLER32'] = fileAdler(fileName)
-      fileDict['Checksum'] = fileAdler(fileName)
+      adlerChecksum = fileAdler(fileName)
+      fileDict['Addler'] = adlerChecksum
+      fileDict['ADLER32'] = adlerChecksum
+      fileDict['Checksum'] = adlerChecksum
       fileDict['ChecksumType'] = "ADLER32"
       fileDict['GUID'] = metadata['GUID']
       fileDict['Status'] = "Waiting"
@@ -544,7 +545,7 @@ class ModuleBase(object):
     """ Retrieve the accumulated reporting request, and produce a JSON file that is consumed by the JobWrapper
     """
     request = self._getRequestContainer()
-    self.log.notice("Request Before: %s" %request)
+    self.log.notice("Request Before: %s" % pformat(request))
     reportRequest = None
     resultJR = self.jobReport.generateForwardDISET()
     if not resultJR['OK']:
@@ -595,7 +596,7 @@ class ModuleBase(object):
     else:
       self.log.error( "No digest? That's not sooo important, anyway: %s" % resultDigest['Message'] )
 
-    self.log.notice("Request After: %s" %request)
+    self.log.notice("Request After: %s" % pformat(request))
     return S_OK()
 
   def redirectLogOutput(self, fd, message):
@@ -643,6 +644,7 @@ class ModuleBase(object):
 
   def addRemovalRequests(self, lfnList):
     """Create removalRequests for lfns in lfnList and add it to the common request"""
+    self.log.info("Adding removal request")
     request = self._getRequestContainer()
     remove = Operation()
     remove.Type = "RemoveFile"
@@ -668,7 +670,7 @@ class ModuleBase(object):
   def _cleanUp(self, lfnList):
     """ Clean up uploaded data for the LFNs in the list
     """
-    typeList = ['RegisterFile', 'ReplicateAndRegister']
+    typeList = ['RegisterFile', 'ReplicateAndRegister', 'RemoveReplica']
     request = self._getRequestContainer()
 
     #keep all the requests which are not in typeList or whose file is not in lfnList

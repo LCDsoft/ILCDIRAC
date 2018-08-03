@@ -59,7 +59,7 @@ class FileStatusTransformationAgent(AgentModule):
     self.transformationStatuses = ["Active"]
     self.transformationFileStatuses = ["Assigned", "Problematic", "Processed", "Unused"]
 
-    self.addressTo = ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"]
+    self.addressTo = ["andre.philippe.sailer@cern.ch"]
     self.addressFrom = "ilcdirac-admin@cern.ch"
     self.emailSubject = "FileStatusTransformationAgent"
 
@@ -89,7 +89,7 @@ class FileStatusTransformationAgent(AgentModule):
     self.transformationFileStatuses = self.am_getOption(
         'TransformationFileStatuses', ["Assigned", "Problematic", "Processed", "Unused"])
 
-    self.addressTo = self.am_getOption('MailTo', ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"])
+    self.addressTo = self.am_getOption('MailTo', ["andre.philippe.sailer@cern.ch"])
     self.addressFrom = self.am_getOption('MailFrom', "ilcdirac-admin@cern.ch")
 
     self.transformationFileStatuses = filter(self.checkFileStatusFuncExists, self.transformationFileStatuses)
@@ -319,7 +319,7 @@ class FileStatusTransformationAgent(AgentModule):
         self.log.notice('Request %s does not exist setting file status to unused' % result[taskID]['RequestID'])
         retryStrategy[taskID]['Strategy'] = SET_UNUSED
       else:
-        retryStrategy[taskID]['Strategy'] = RESET_REQUEST
+        retryStrategy[taskID]['Strategy'] = SET_UNUSED  # RESET_REQUEST
         retryStrategy[taskID]['RequestID'] = result[taskID]['RequestID']
 
     return S_OK(retryStrategy)

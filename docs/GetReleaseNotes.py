@@ -2,15 +2,23 @@
 """ script to obtain release notes from iLCDirac MRs from GitLab
 """
 
-import json
-import subprocess
-from datetime import datetime, timedelta
 
 from collections import defaultdict
+from datetime import datetime, timedelta
 import argparse
+import json
+import logging
+import subprocess
+from pprint import pformat
+
+import requests
 
 # ILCDIRAC Gitlab project ID
 ILCDIRAC_ID = 320
+
+LOGGER = logging.getLogger()
+logging.basicConfig(level=logging.WARNING, format='%(levelname)-5s - %(name)-8s: %(message)s')
+
 
 try:
   from GitTokens import GITLABTOKEN
@@ -26,6 +34,32 @@ except ImportError:
                     (without the triple quotes)
                     """
                    )
+
+SESSION = requests.Session()
+SESSION.headers.update({"PRIVATE-TOKEN": GITLABTOKEN})
+
+
+def _parsePrintLevel(level):
+  """Translate debug count to logging level."""
+  level = level if level <= 2 else 2
+  return [logging.INFO,
+          logging.INFO,
+          logging.DEBUG,
+          ][level]
+
+
+def req2Json(url, parameterDict=None, requestType='GET'):
+  """Call to gitlab API using requests package."""
+  log = LOGGER.getChild("Requests")
+  log.debug("Running %s with %s ", requestType, parameterDict)
+  req = getattr(SESSION, requestType.lower())(url, json=parameterDict)
+  if req.status_code not in (200, 201):
+    log.error("Unable to access API: %s", req.text)
+    raise RuntimeError("Failed to access API")
+
+  log.debug("Result obtained:\n %s", pformat(req.json()))
+  return req.json()
+
 
 def getCommands( *args ):
   """ create a flat list
@@ -78,7 +112,7 @@ def curl2Json( *commands, **kwargs ):
 def getGitlabPRs( state="opened" ):
   """ get PRs in the gitlab repository """
   glURL = gitlab( "merge_requests?state=%s" % state )
-  return curl2Json( glHeaders(), glURL )
+  return req2Json(glURL)
 
 
 def getFullSystemName( name ):
@@ -164,8 +198,9 @@ class GitlabInterface( object ):
     self.owner = owner
     self.repo = repo
     self._options = dict( owner=self.owner, repo=self.repo  )
+    self.printLevel = logging.INFO
 
-    self.branches = ['master', 'Rel-v26r0']
+    self.branches = ['master', 'Rel-v29r0', 'Rel-v30r0']
     self.openPRs = False
     self.startDate = str(datetime.now() - timedelta(days=14))[:10]
 
@@ -183,12 +218,15 @@ class GitlabInterface( object ):
 
     parser.add_argument("--openPRs", action="store_true", dest="openPRs", default=self.openPRs,
                         help="get release notes for open (unmerged) PRs, for testing purposes")
+    parser.add_argument("-d", "--debug", action="count", dest="debug", help="d, dd, ddd", default=0)
 
     parsed = parser.parse_args()
 
     self.branches = parsed.branches
     self.startDate = parsed.startDate
     self.openPRs = parsed.openPRs
+    self.printLevel = _parsePrintLevel(parsed.debug)
+    LOGGER.setLevel(self.printLevel)
 
   def getNotesFromPRs( self, prs ):
     """ Loop over prs, get base branch, get PR comment and collate into dict of branch:dict( #PRID, dict(comment, mergeDate) ) """
@@ -202,7 +240,7 @@ class GitlabInterface( object ):
       comment = parseForReleaseNotes( pr['description'] )
       prID = pr['iid']
       mergeDate = pr.get('updated_at', None)
-      print "PR:",baseBranch, prID, mergeDate[:10],
+      LOGGER.info("PR: %s, %s, %s", baseBranch, prID, mergeDate[:10])
       mergeDate = mergeDate if mergeDate is not None else '9999-99-99'
       if mergeDate[:10] < self.startDate:
         continue
@@ -218,10 +256,10 @@ class GitlabInterface( object ):
       prs = getGitlabPRs( state='open')
     else:
       prs = getGitlabPRs( state='merged')
-    #pprint(prs)
+    LOGGER.debug(pformat(prs))
     prs = self.getNotesFromPRs( prs )
     releaseNotes = collateReleaseNotes( prs )
-    print releaseNotes
+    LOGGER.info("\n%s", releaseNotes)
 
 
 if __name__ == "__main__":
@@ -229,7 +267,7 @@ if __name__ == "__main__":
   try:
     RUNNER.parseOptions()
   except RuntimeError as e:
-    print ("Error during runtime: %s", e)
+    LOGGER.error("Error during runtime: %r", e)
     exit(1)
 
   try:

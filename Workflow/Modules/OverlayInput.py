@@ -293,22 +293,7 @@ class OverlayInput (ModuleBase):
 
     if totnboffilestoget > maxNbFilesToGet:
       totnboffilestoget = maxNbFilesToGet
-#    res = self.ops.getOption("/Overlay/MaxConcurrentRunning",200)
-#    self.log.verbose("Will allow only %s concurrent running"%res['Value'])
-#    max_concurrent_running = res['Value']
-#
-#    jobpropdict = {}
-#    jobpropdict['ApplicationStatus'] = 'Getting overlay files'
-#    res = self.ops.getSections("/Overlay/Sites/")
-#    sites = []
-#    if res['OK']:
-#      sites = res['Value']
-#      self.log.verbose("Found the following sites to restrain: %s"%sites)
-#    if self.site in sites:
-#      res = self.ops.getOption("/Overlay/Sites/%s/MaxConcurrentRunning"%self.site,200)
-#      self.log.verbose("Will allow only %s concurrent running at %s"%(res['Value'],self.site))
-#      jobpropdict['Site']=self.site
-#      max_concurrent_running = res['Value']
+
     self.__disableWatchDog()
     overlaymon = RPCClient('Overlay/Overlay', timeout=60)
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
@@ -318,15 +303,6 @@ class OverlayInput (ModuleBase):
       if error_count > 10 :
         self.log.error('OverlayDB returned too many errors')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
-      #jobMonitor = RPCClient('WorkloadManagement/JobMonitoring',timeout=60)
-      #res = jobMonitor.getCurrentJobCounters(jobpropdict)
-      #if not res['OK']:
-      #  error_count += 1
-      #  time.sleep(60)
-      #  continue
-      #running = 0
-      #if 'Running' in res['Value']:
-      #  running = res['Value']['Running']
 
       res = overlaymon.canRun(self.site)
       if not res['OK']:
@@ -365,51 +341,49 @@ class OverlayInput (ModuleBase):
         break
 
       fileindex = random.randrange(nbfiles)
-      if fileindex not in usednumbers:
-          
-        usednumbers.append(fileindex)
+      if fileindex in usednumbers:
+        continue
 
-        triedDataManager = False
+      usednumbers.append(fileindex)
 
-        if self.site == 'LCG.CERN.ch':
-          res = self.getEOSFile(self.lfns[fileindex])
-        elif self.site == 'LCG.IN2P3-CC.fr':
-          res = self.getLyonFile(self.lfns[fileindex])
-        elif self.site == 'LCG.UKI-LT2-IC-HEP.uk':
-          res = self.getImperialFile(self.lfns[fileindex])
-        elif  self.site == 'LCG.RAL-LCG2.uk':
-          res = self.getRALFile(self.lfns[fileindex])
-        elif  self.site == 'LCG.KEK.jp':
-          res = self.getKEKFile(self.lfns[fileindex])
-        else:
-          self.__disableWatchDog()
-          res = self.datMan.getFile(self.lfns[fileindex])
-          triedDataManager = True
+      triedDataManager = False
 
-        #in case the specific copying did not work (mostly because the fileqs do
-        #not exist locally) try again to get the file via the DataManager
-        if (not res['OK']) and (not triedDataManager):
-          res = self.datMan.getFile(self.lfns[fileindex])
+      if self.site == 'LCG.CERN.ch':
+        res = self.getEOSFile(self.lfns[fileindex])
+      elif self.site == 'LCG.IN2P3-CC.fr':
+        res = self.getLyonFile(self.lfns[fileindex])
+      elif self.site == 'LCG.UKI-LT2-IC-HEP.uk':
+        res = self.getImperialFile(self.lfns[fileindex])
+      elif self.site == 'LCG.RAL-LCG2.uk':
+        res = self.getRALFile(self.lfns[fileindex])
+      elif self.site == 'LCG.KEK.jp':
+        res = self.getKEKFile(self.lfns[fileindex])
+      else:
+        self.__disableWatchDog()
+        res = self.datMan.getFile(self.lfns[fileindex])
+        triedDataManager = True
 
-        if not res['OK']:
-          self.log.warn('Could not obtain %s' % self.lfns[fileindex])
-          fail_count += 1
-          continue
-        
-        filesobtained.append(self.lfns[fileindex])
-        print "files now",filesobtained
-      ##If no file could be obtained, need to make sure the job fails  
+      # In case the specific copying did not work (mostly because the files do
+      # not exist locally) try again to get the file via the DataManager
+      if (not res['OK']) and (not triedDataManager):
+        res = self.datMan.getFile(self.lfns[fileindex])
+
+      if not res['OK']:
+        self.log.warn('Could not obtain %s' % self.lfns[fileindex])
+        fail_count += 1
+        # Wait for a random time around 3 minutes
+        self.log.verbose("Waste happily some CPU time (on average 3 minutes)")
+        resWaste = wasteCPUCycles(60 * random.gauss(3, 0.1))
+        if not resWaste['OK']:
+          self.log.error("Could not waste as much CPU time as wanted, but whatever!")
+        continue
+
+      filesobtained.append(self.lfns[fileindex])
+
+      # If no file could be obtained, need to make sure the job fails
       if len(usednumbers) == nbfiles and not filesobtained:
         fail = True
         break
-
-      if len(filesobtained) < totnboffilestoget:
-        ##Now wait for a random time around 3 minutes
-        ###Actually, waste CPU time !!!
-        self.log.verbose("Waste happily some CPU time (on average 3 minutes)")
-        res = wasteCPUCycles(60 * random.gauss(3, 0.1))
-        if not res['OK']:
-          self.log.error("Could not waste as much CPU time as wanted, but whatever!")
 
     ## Remove all scripts remaining
     scripts = glob.glob("*.sh")

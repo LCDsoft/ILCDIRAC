@@ -185,6 +185,10 @@ class JobResetAgent(AgentModule):
                                         "because associated Request with ID: %s is Done" % request.RequestID)})
       return res
 
+    if request.Status in ("Waiting", "Scheduled"):
+      self.log.notice("Request is Waiting (for FTS): %s " % request)
+      return S_OK()
+
     self.log.notice("Request not Done: %s " % request)
     res = self.resetRequest(request.RequestID)
     if res["OK"]:
@@ -250,19 +254,27 @@ class JobResetAgent(AgentModule):
                                               request.RequestID)})
       return res
 
+    if request.Status in ("Waiting", "Scheduled"):
+      self.log.notice("Request is Waiting (for FTS): %s " % request)
+      return S_OK()
+
+
     for op in request:
       self.log.info("Operation for completed job: %s, %s, %s, %s" %
                     (request.RequestID, op.Type, op.Status, op.Error))
       if op.Type == 'ReplicateAndRegister' and op.Status == 'Failed':
-        # Check if it failed because the file no longer exists
-        for lfn in op:
-          if "No such file" in lfn.Error:
-            res = self.markJob(jobID, "Done")
-            if res["OK"]:
-              self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Job "
-                                                    "Marked Done because no file is found for ReplicateAndRegister "
-                                                    "operation")})
-            return res
+        # Check if it failed because the file(s) no longer exists
+        lfnStatuses = [lfn.Error is not None and "No such file" in lfn.Error for lfn in op]
+        lfnErrors = [(lfn.LFN, lfn.Error) for lfn in op]
+        self.log.notice("LFN Status: %s" % lfnErrors)
+        if all(lfnStatuses):
+          res = self.markJob(jobID, "Done")
+          if res["OK"]:
+            self.accounting["Production"].append({"JobID": jobID,
+                                                  "JobStatus": "Completed",
+                                                  "Treatment": "Job marked Done because no file is found for operation",
+                                                  })
+          return res
         res = self.resetRequest(request.RequestID)
         if res["OK"]:
           self.accounting["Production"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Resetting "

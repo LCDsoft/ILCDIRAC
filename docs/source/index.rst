@@ -13,7 +13,7 @@ Welcome to the iLCDirac Documentation.
 
    DOC/Files/UserGuide/index
    DOC/Files/ProdGuide/index
-   Code Documenation <DOC/ILCDIRAC/ILCDIRAC>
+   Code Documentation <DOC/ILCDIRAC/ILCDIRAC>
    Release Notes <releasenotes>
    DOC/Files/acknowledgements
 
