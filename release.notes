@@ -1,3 +1,36 @@
+[v29r0p1]
+
+Release date: 2018-08-03
+
+*Core
+
+NEW: Based on Dirac v6r20p7
+
+*WorkloadManagementSystem
+
+CHANGE: (!225) :mod:`~ILCDIRAC.WorkloadManagement.Agent.JobResetAgent`: only reset requests that are not waiting or scheduled
+FIX: (!225) :mod:`~ILCDIRAC.WorkloadManagement.Agent.JobResetAgent`: Take into account that some requests have multiple files
+
+*Interfaces
+
+FIX: (!227) :mod:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin`: ensure errors for :func:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin.DDInterfaceMixin.setDetectorModel`cannot be ignored.
+
+*Workflow
+
+FIX: (!222) :mod:`~ILCDIRAC.Workflow.Modules.ModuleBase`: Fix cleanup of request operations in case of failure. RemovalReplica requests are also removed, which in the past lead to un-fulfillable requests
+FIX: (!222) :mod:`~ILCDIRAC.Workflow.Modules.Modulebase`: only calculate checksum once.
+CHANGE: (!222) :mod:`~ILCDIRAC.Workflow.Modules.Modulebase`: change the name of the log output to `__name__`
+CHANGE: (!223) :mod:`~ILCDIRAC.Workflow.Modules.OverlayInput`: only wait 3 minutes between copying if the previous copy attempt failed, fixes ILCDIRAC-850
+
+*FrameworkSystem
+
+FIX: (!224) :mod:`~ILCDIRAC.Framework.Agents.MonitorAgents`: prevent exception for missing LogAge for services
+CHANGE: (!224) :mod:`~ILCDIRAC.Framework.Agents.MonitorAgents`: add hostname to the email subject, include service url in error messages
+
+*ILCTransformationSystem
+
+FIX: (!226) :class:`~ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent`: Do not create reset request, set file unused to force creation of a new request.
+
 [v29r0]
 
 Release date: 2018-07-18
