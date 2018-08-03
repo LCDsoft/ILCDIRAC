@@ -319,7 +319,7 @@ class FileStatusTransformationAgent(AgentModule):
         self.log.notice('Request %s does not exist setting file status to unused' % result[taskID]['RequestID'])
         retryStrategy[taskID]['Strategy'] = SET_UNUSED
       else:
-        retryStrategy[taskID]['Strategy'] = RESET_REQUEST
+        retryStrategy[taskID]['Strategy'] = SET_UNUSED  # RESET_REQUEST
         retryStrategy[taskID]['RequestID'] = result[taskID]['RequestID']
 
     return S_OK(retryStrategy)

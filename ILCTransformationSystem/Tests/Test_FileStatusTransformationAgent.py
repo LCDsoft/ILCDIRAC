@@ -464,7 +464,7 @@ class TestFSTAgent(unittest.TestCase):
     res = self.fstAgent.retryStrategyForFiles(self.fakeTransID, transFiles)['Value']
 
     self.assertEquals(res[taskIDfile1]['Strategy'], FST.SET_UNUSED)
-    self.assertEquals(res[taskIDfile2]['Strategy'], FST.RESET_REQUEST)
+    self.assertEquals(res[taskIDfile2]['Strategy'], FST.SET_UNUSED)
 
   def test_retry_files(self):
     """ Test for retryFiles function """
