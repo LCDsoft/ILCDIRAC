@@ -18,33 +18,27 @@ Example usage:
 
 from DIRAC import S_OK, gLogger
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
-from DIRAC.Core.Utilities.List import breakListIntoChunks
 
 from ILCDIRAC.Interfaces.API.NewInterface.Job import Job
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+from ILCDIRAC.Interfaces.Utilities.SplitMixin import SplitMixin
+
 
 __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
 
-class UserJob(Job):
-  """ User job class. To be used by users, not for production.
-  """
-  def __init__(self, script = None):
-    super(UserJob, self).__init__( script )
+
+class UserJob(SplitMixin, Job):
+  """User job class. To be used by users, not for production."""
+
+  def __init__(self, script=None):
+    """Initialize UserJob, including proxy and splitmixin."""
+    super(UserJob, self).__init__(script)
     self.type = 'User'
     self.diracinstance = None
     self.usergroup = ['ilc_user', 'calice_user']
     self.proxyinfo = getProxyInfo()
-
-    ########## SPLITTING STUFF: ATTRIBUTES ##########
-    self._data = []
-    self.splittingOption = None
-    self._switch = {}
-    self.numberOfJobs = None
-    self.totalNumberOfEvents = None
-    self.eventsPerJob = None
-    self.numberOfFilesPerJob = 1
-    self._startJobIndex = 0
+    SplitMixin._initialize(self)
 
   def submit(self, diracinstance = None, mode = "wms"):
     """ Submit call: when your job is defined, and all applications are set, you need to call this to
@@ -55,15 +49,16 @@ class UserJob(Job):
     :param str mode: "wms" (default), "agent", or "local"
 
     .. note ::
-      The *local* mode means that the job will be run on the submission machine. Use this mode for testing of submission scripts
+      The *local* mode means that the job will be run on the submission machine. Use this mode for testing of
+      submission scripts
 
     """
-    if self.splittingOption:
+    if self._splittingOption:
       result = self._split()
       if 'OK' in result and not result['OK']:
         return result
-        
-    #Check the credentials. If no proxy or not user proxy, return an error
+
+    # Check the credentials. If no proxy or not user proxy, return an error
     if not self.proxyinfo['OK']:
       LOG.error("Not allowed to submit a job, you need a %s proxy." % self.usergroup)
       return self._reportError("Not allowed to submit a job, you need a %s proxy." % self.usergroup,
@@ -242,306 +237,3 @@ class UserJob(Job):
 
     self._addParameter( self.workflow, 'ClicConfigPackage', 'JDL', appName+version, 'CLIC Config package' )
     return S_OK()
-
-  
-  ##############################  SPLITTING STUFF: METHODS ################################
-  # Some methods have been added :
-  #
-  # * _atomicSubmission
-  # * _checkJobConsistency
-  # * setSplitEvents
-  # * setSplitInputData
-  # * setSplitDoNotAlterOutputFilename
-  # * _split
-  # * _splitByData
-  # * _splitByEvents
-  # * _toInt
-  #
-  # Given the type of splitting (Events or Data), these methods compute
-  # the right parameters of the method 'Job.setParameterSequence()'
-  ##########################################################################################
-  def setSplitEvents( self, eventsPerJob=None, numberOfJobs=None, totalNumberOfEvents=None ):
-    """This function sets split parameters for doing splitting over events
-
-    Example usage:
-
-    >>> job = UserJob()
-    >>> job.setSplitEvents( numberOfJobs=42, totalNumberOfEvents=126 )
-
-    Exactly two of the parmeters should be set
-    
-    :param int eventsPerJob: The events processed by a single job
-    :param int numberOfJobs: The number of jobs
-    :param int totalNumberOfEvents: The total number of events processed by all jobs
-
-    """
-
-    self.totalNumberOfEvents =  totalNumberOfEvents
-    self.eventsPerJob =  eventsPerJob
-    self.numberOfJobs =  numberOfJobs
-
-    self._addParameter( self.workflow, 'NbOfEvts', 'JDL', -1, 'Number of Events' )
-
-    self.splittingOption = "byEvents"
-
-  def setSplitInputData( self, lfns, numberOfFilesPerJob = 1):
-    """sets split parameters for doing splitting over input data
-    
-    Example usage:
-
-    >>> job = UserJob()
-    >>> job.setSplitInputData( listOfLFNs )
-
-    :param lfns: Logical File Names
-    :type lfns: list of LFNs
-    :param int numberOfFilesPerJob: The number of input data processed by a single job
-
-    """
-    self._data = lfns if isinstance(lfns, list) else [lfns]
-    self.numberOfFilesPerJob = numberOfFilesPerJob
-
-    self.splittingOption = "byData"
-
-  def setSplitDoNotAlterOutputFilename( self, value=True):
-    """if this option is set the output data lfns will _not_ include the JobIndex
-
-    :param bool value: if *True* disable the changing of the output data
-        filenames. If *False* the JobIndex will be added at the end of
-        OutputData LFNs before the extension. Or replace '%n' with the jobIndex
-        in the fileName. See :func:`~ILCDIRAC.Core.Utilities.Splitting.addJobIndexToFilename`
-    """
-    self._addParameter( self.workflow, 'DoNotAlterOutputData', 'JDL', value, 'Do Not Change Output Data' )
-
-  def _split(self):
-    """checks the consistency of the job and call the right split method.
-
-    :return: The success or the failure of the consistency checking
-    :rtype: DIRAC.S_OK, DIRAC.S_ERROR
-
-    """
-
-    self.eventsPerJob = self._toInt(self.eventsPerJob)
-    self.numberOfJobs = self._toInt(self.numberOfJobs)
-
-    if self.numberOfJobs is False or self.eventsPerJob is False:
-      return self._reportError("Splitting: Invalid values for splitting")
-
-    # FIXME: move somewhere more prominent
-    self._switch = { "byEvents": self._splitByEvents,
-                     "byData": self._splitByData,
-                     None: self._atomicSubmission,
-                   }
-
-    LOG.info("Job splitting...")
-
-    if not self._checkJobConsistency():
-      errorMessage = "Job._checkJobConsistency() failed"
-      LOG.error(errorMessage)
-      return self._reportError(errorMessage)
-
-    sequence = self._switch[self.splittingOption ]()
-
-    if not sequence:
-      errorMessage = "Job._splitBySomething() failed"
-      LOG.error(errorMessage)
-      return self._reportError(errorMessage)
-
-    sequenceType, sequenceList, addToWorkflow = sequence[0], sequence[1], sequence[2] 
-   
-    if sequenceType != "Atomic":
-      self.setParameterSequence(sequenceType, sequenceList, addToWorkflow)
-      self.setParameterSequence('JobIndexList',
-                                range(self._startJobIndex, len(sequenceList) + self._startJobIndex),
-                                addToWorkflow='JobIndex')
-      self._addParameter(self.workflow, 'JobIndex', 'int', self._startJobIndex, 'JobIndex')
-
-    LOG.info("Job splitting successful")
-
-    return S_OK()
-
-  #############################################################################
-  def _atomicSubmission(self):
-    """called when no splitting is necessary, do not return valid parameters fot setParameterSequence().
-    
-    :return: parameter name and parameter values for setParameterSequence(), addToWorkflow flag
-    :rtype: tuple of (str, list, bool/str)
-    """
-
-    LOG.verbose("Job splitting: No splitting to apply, 'atomic submission' will be used")
-    return "Atomic", [], False
-
-  #############################################################################
-  def _checkJobConsistency(self):
-    """checks if Job parameters are valid.
-
-    :return: The success or the failure of the consistency checking
-    :rtype: bool
-
-    :Example:
-
-    >>> self._checkJobConsistency()
-
-    """
-
-    LOG.info("Job consistency: _checkJobConsistency()...")
-
-    if self.splittingOption not in self._switch:
-      splitOptions = ",".join( self._switch.keys() )
-      errorMessage = "checkJobConsistency failed: Bad split value: possible values are %s" % splitOptions
-      LOG.error(errorMessage)
-      return False
-
-    # All applications should have the same number of events
-    # We can get this number from the first application for example
-    sameNumberOfEvents = next(iter(self.applicationlist)).numberOfEvents
-
-    if not all(app.numberOfEvents == sameNumberOfEvents for app in self.applicationlist):
-      LOG.warn("Job: Applications should all have the same number of events")
-
-    if (self.totalNumberOfEvents == -1 or sameNumberOfEvents == -1) and not self._data:
-      LOG.warn("Job: Number of events is -1 without input data. Was that intentional?")
-
-    LOG.info("job._checkJobConsistency successful")
-
-    return True
-
-  #############################################################################
-  def _splitByData(self):
-    """a job is submitted per input data.
-
-    :return: parameter name and parameter values for setParameterSequence()
-    :rtype: tuple of (str, list, bool/str)
-
-    """
-
-    # reset split attribute to avoid infinite loop
-    self.splittingOption = None
-
-    LOG.info("Job splitting: Splitting 'byData' method...")
-
-    # Ensure that data have been specified by setInputData() method
-    if not self._data:
-      errorMessage = "Job splitting: missing input data"
-      LOG.error(errorMessage)
-      return False
-
-
-    if self.numberOfFilesPerJob > len(self._data):
-      errorMessage = "Job splitting: 'numberOfFilesPerJob' must be less/equal than the number of input data"
-      LOG.error(errorMessage)
-      return False
-          
-    self._data = breakListIntoChunks(self._data, self.numberOfFilesPerJob)
-
-    LOG.info("Job splitting: submission consists of %d job(s)" % len(self._data))
-
-    return ["InputData", self._data , 'ParametricInputData']
-
-  #############################################################################
-  def _splitByEvents(self):
-    """a job is submitted per subset of events.
-    
-    :return: parameter name and parameter values for setParameterSequence()
-    :rtype: tuple of (str, list, bool/str)
-
-    """
-
-    # reset split attribute to avoid infinite loop
-    self.splittingOption = None
-
-    LOG.info("Job splitting: splitting 'byEvents' method...")
-
-    if self.eventsPerJob and self.numberOfJobs:
-      # 1st case: (numberOfJobs=3, eventsPerJob=10)
-      # trivial case => each job (total of 3) run applications of 10 events each
-      LOG.debug("Job splitting: events per job and number of jobs")
-
-      mapEventJob = [self.eventsPerJob] * self.numberOfJobs
-
-    elif self.eventsPerJob and self.totalNumberOfEvents:
-      # 2nd case: (split="byEvents", eventsPerJob=10, totalNumberOfEvents=10)
-      # Given the number of events per job and total of number of event we want,
-      # we can compute the unknown which is the number of jobs.
-
-      LOG.debug("Job splitting: Events per job and total number of events")
-
-      if self.eventsPerJob > self.totalNumberOfEvents:
-        LOG.error("Job splitting: The number of events per job has to be "
-                  "lower than or equal to the total number of events")
-        return False
-
-      numberOfJobsIntDiv = self.totalNumberOfEvents / self.eventsPerJob
-      numberOfJobsRest = self.totalNumberOfEvents % self.eventsPerJob
-
-      mapEventJob = [self.eventsPerJob] * numberOfJobsIntDiv
-
-      mapEventJob += [numberOfJobsRest] if numberOfJobsRest != 0 else []
-
-    else:
-      
-      # 3rd case: (split='byEvents', njobs=10, totalNumberOfEvents=10)
-      # Then compute the right number of events per job  
-      LOG.debug("Job splitting: The number of jobs and the total number of events")
-
-      if (not self.totalNumberOfEvents) or (self.totalNumberOfEvents < self.numberOfJobs):
-        LOG.error("Job splitting: The number of events has to be greater than or equal to the number of jobs")
-        return False
-
-      eventPerJobIntDiv = self.totalNumberOfEvents / self.numberOfJobs
-      eventPerJobRest = self.totalNumberOfEvents % self.numberOfJobs
-
-      mapEventJob = [eventPerJobIntDiv] * self.numberOfJobs
-
-      if eventPerJobRest != 0:
-        for suplement in xrange(eventPerJobRest):
-          mapEventJob[suplement] += 1
-
-    LOG.debug("Job splitting: events over the jobs: %s" % mapEventJob)
-
-    LOG.info("Job splitting: submission consists of %d job(s)" % len(mapEventJob))
-
-    return ['NumberOfEvents', mapEventJob, 'NbOfEvts']
-
-  def setSplittingStartIndex(self, start):
-    """Set the initial job index for the JobIndex parameter used to define the output file name index.
-
-    :param int start: value where to start from, must be positive integer
-    :returns: S_OK, S_ERROR
-    """
-    start = self._toInt(start)
-    if not start:
-      return self._reportError("Start Index must be positive integer")
-    self._startJobIndex = start
-    return S_OK()
-
-  #############################################################################
-  def _toInt(self, number):
-    """casts number parameter to an integer.
-
-    It also accepts 'string integer' parameter.
-
-    :param number: the number to cast (number of events, number of jobs)
-    :type number: str or int
-
-    :return: The success or the failure of the casting
-    :rtype: bool, int or None
-
-    :Example:
-
-    >>> number = self._toInt("1000")
-
-    """
-
-    if number is None:
-      return number
-
-    try:
-      number = int(number)
-      if number <= 0:
-        raise ValueError
-    except ValueError:
-      print LOG
-      LOG.error("Job splitting: arguments must be positive integers")
-      return False
-
-    return number
