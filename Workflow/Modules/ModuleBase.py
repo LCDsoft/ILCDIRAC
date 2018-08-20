@@ -450,7 +450,7 @@ class ModuleBase(object):
     #Next is also a module parameter, should be already set
     self.debug = self.step_commons.get('debug', self.debug)
 
-    if self.InputData:
+    if self.InputData and not self.NumberOfEvents:
       resNE = getNumberOfEvents(self.InputData)
       #NumberOfEvents == 0 does not necessarily mean things went wrong... This
       #is really almost(?)  impossible to solve, sometimes NumberOfEvents can
