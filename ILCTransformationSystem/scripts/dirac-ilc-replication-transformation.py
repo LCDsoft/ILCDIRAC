@@ -46,6 +46,8 @@ def _createTrafo():
                                          extraname=clip.extraname,
                                          plugin=clip.plugin,
                                          groupSize=clip.groupSize,
+                                         tGroup=clip.groupName,
+                                         enable=clip.enable,
                                         )
     if not resCreate['OK']:
       return 1
