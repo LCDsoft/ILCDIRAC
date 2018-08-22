@@ -1,6 +1,7 @@
 """ Test MonitorAgents """
 
 import unittest
+import sys
 from datetime import datetime, timedelta
 from mock import MagicMock, call, patch
 import psutil
@@ -30,8 +31,9 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.enabled = True
     self.restartAgent.restartAgents = True
 
-  def tearDown(self):
-    pass
+  @classmethod
+  def tearDownClass(cls):
+    sys.modules.pop('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents')
 
   @staticmethod
   def getPSMock():

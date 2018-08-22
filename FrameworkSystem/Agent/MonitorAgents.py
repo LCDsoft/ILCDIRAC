@@ -91,7 +91,7 @@ class MonitorAgents(AgentModule):
     self.errors = list()
     self.accounting = defaultdict(dict)
 
-    self.addressTo = ["andre.philippe.sailer@cern.ch"]
+    self.addressTo = ["ilcdirac-admin@cern.ch"]
     self.addressFrom = "ilcdirac-admin@cern.ch"
     self.emailSubject = "MonitorAgents on %s" % socket.gethostname()
 
