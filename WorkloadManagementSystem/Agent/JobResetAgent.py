@@ -55,7 +55,7 @@ class JobResetAgent(AgentModule):
     self.prodJobTypes = ['MCGeneration', 'MCSimulation', 'MCReconstruction', 'MCReconstruction_Overlay', 'Split',
                          'MCSimulation_ILD', 'MCReconstruction_ILD', 'MCReconstruction_Overlay_ILD', 'Split_ILD']
 
-    self.addressTo = ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"]
+    self.addressTo = ["ilcdirac-admin@cern.ch"]
     self.addressFrom = "ilcdirac-admin@cern.ch"
     self.emailSubject = "JobResetAgent"
 
@@ -79,7 +79,7 @@ class JobResetAgent(AgentModule):
   def beginExecution(self):
     """ Reload the configurations before every cycle """
 
-    self.enabled = self.am_getOption('EnableFlag', True)
+    self.enabled = self.am_getOption('EnableFlag', False)
     self.addressTo = self.am_getOption('MailTo', self.addressTo)
     self.addressFrom = self.am_getOption('MailFrom', self.addressFrom)
     self.userJobTypes = self.am_getOption('UserJobs', self.userJobTypes)

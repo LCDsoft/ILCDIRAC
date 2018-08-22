@@ -1,6 +1,7 @@
 """ Test JobResetAgent """
 
 import unittest
+import sys
 
 from datetime import datetime, timedelta
 from mock import MagicMock, call
@@ -53,8 +54,9 @@ class TestJobResetAgent(unittest.TestCase):
     self.failedRemoveRequest = self.createRequest(requestID=4, opType="RemoveFile",
                                                   opStatus="Failed", fileStatus="Failed")
 
-  def tearDown(self):
-    pass
+  @classmethod
+  def tearDownClass(cls):
+    sys.modules.pop('ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent')
 
   def test_init(self):
     self.assertIsInstance(self.jobResetAgent, JobResetAgent)
@@ -76,7 +78,7 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.accounting["Junk"].append("Funk")
     self.jobResetAgent.am_setOption = MagicMock()
     self.jobResetAgent.am_getOption = MagicMock()
-    getOptionCalls = [call('EnableFlag', True),
+    getOptionCalls = [call('EnableFlag', False),
                       call('MailTo', self.jobResetAgent.addressTo),
                       call('MailFrom', self.jobResetAgent.addressFrom),
                       call('UserJobs', self.jobResetAgent.userJobTypes),
