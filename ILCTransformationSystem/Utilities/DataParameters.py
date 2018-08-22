@@ -40,6 +40,17 @@ def checkDatatype(prodID, datatype):
   return S_OK()
 
 
+def getTransformationGroup(prodID, groupName):
+  """Return TransformationGroup of prodID."""
+  if groupName:
+    return groupName
+  tClient = TransformationClient()
+  res = tClient.getTransformationParameters(prodID, 'TransformationGroup')
+  if not res['OK']:
+    return None
+  return res['Value']
+
+
 class Params(DParams):
   """Command line parameter class."""
 

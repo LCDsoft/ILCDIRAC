@@ -13,11 +13,13 @@ Options:
 :since:  May 18, 2015
 :author: A. Sailer
 """
+from pprint import pformat
+
 from DIRAC.Core.Base import Script
-from DIRAC import gLogger, exit as dexit
+from DIRAC import gLogger as LOG, exit as dexit
 from DIRAC.TransformationSystem.Utilities.ReplicationTransformation import createDataTransformation
 
-from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import Params
+from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import Params, getTransformationGroup
 
 __RCSID__ = "$Id$"
 
@@ -34,21 +36,24 @@ def _createTrafo():
   registerSwitches(Script)
   Script.parseCommandLine()
   if not clip.checkSettings(Script)['OK']:
-    gLogger.error("ERROR: Missing settings")
+    LOG.error("ERROR: Missing settings")
     return 1
   for prodID in clip.metaValues:
-    resCreate = createDataTransformation(flavour='Replication',
-                                         targetSE=clip.targetSE,
-                                         sourceSE=clip.sourceSE,
-                                         metaKey=clip.metaKey,
-                                         metaValue=prodID,
-                                         extraData={'Datatype': clip.datatype},
-                                         extraname=clip.extraname,
-                                         plugin=clip.plugin,
-                                         groupSize=clip.groupSize,
-                                         tGroup=clip.groupName,
-                                         enable=clip.enable,
-                                        )
+    tGroup = getTransformationGroup(prodID, clip.groupName)
+    parDict = dict(flavour='Replication',
+                   targetSE=clip.targetSE,
+                   sourceSE=clip.sourceSE,
+                   metaKey=clip.metaKey,
+                   metaValue=prodID,
+                   extraData={'Datatype': clip.datatype},
+                   extraname=clip.extraname,
+                   plugin=clip.plugin,
+                   groupSize=clip.groupSize,
+                   tGroup=tGroup,
+                   enable=clip.enable,
+                   )
+    LOG.debug("Parameters: %s" % pformat(parDict))
+    resCreate = createDataTransformation(**parDict)
     if not resCreate['OK']:
       return 1
 
