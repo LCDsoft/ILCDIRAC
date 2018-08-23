@@ -323,19 +323,40 @@ class TestMaking( unittest.TestCase ):
     self.chain._flags._moveSim=True
     self.chain._flags._moves=True
     self.chain._flags._dryRun=False
-    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation.createDataTransformation") as moveMock:
+    with patch("DIRAC.TransformationSystem.Utilities.ReplicationTransformation.createDataTransformation") as moveMock:
       self.chain.createMovingTransformation( {'ProdID':666}, 'MCReconstruction' )
-      moveMock.assert_called_once_with('Moving', "Target", "Source", 666, "DST")
+      parDict = dict(flavour='Moving',
+                     targetSE='Target',
+                     sourceSE='Source',
+                     plugin='BroadcastProcessed',
+                     metaKey='ProdID',
+                     metaValue=666,
+                     extraData={'Datatype': 'DST'},
+                     tGroup='several',
+                     groupSize=1,
+                     enable=True,
+                     )
+      moveMock.assert_called_once_with(**parDict)
 
-    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation.createDataTransformation") as moveMock:
+    with patch("DIRAC.TransformationSystem.Utilities.ReplicationTransformation.createDataTransformation") as moveMock:
       self.chain.createMovingTransformation( {'ProdID':666}, 'MCSimulation' )
-      moveMock.assert_called_once_with('Moving', "Target", "Source", 666, "SIM")
-
+      parDict = dict(flavour='Moving',
+                     targetSE='Target',
+                     sourceSE='Source',
+                     plugin='BroadcastProcessed',
+                     metaKey='ProdID',
+                     metaValue=666,
+                     extraData={'Datatype': 'SIM'},
+                     tGroup='several',
+                     groupSize=1,
+                     enable=True,
+                     )
+      moveMock.assert_called_once_with(**parDict)
 
     self.chain._flags._rec=True
     self.chain._flags._moves=False
     self.chain._flags._dryRun=False
-    with patch("ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation.createDataTransformation") as moveMock:
+    with patch("DIRAC.TransformationSystem.Utilities.ReplicationTransformation.createDataTransformation") as moveMock:
       self.chain.createMovingTransformation( {'ProdID':666}, 'MCReconstruction' )
       moveMock.assert_not_called()
 

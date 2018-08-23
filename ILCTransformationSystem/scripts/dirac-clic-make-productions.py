@@ -15,6 +15,7 @@ Options:
 
 #pylint disable=wrong-import-position
 
+from pprint import pformat
 import ConfigParser
 import os
 
@@ -832,11 +833,26 @@ finalOutputSE = %(finalOutputSE)s
       gLogger.notice( "*"*80 + "\nNot creating moving transformation for prodID: %s, %s " % (meta['ProdID'], prodType ) )
       return
 
-    from ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation import createDataTransformation
+    from DIRAC.TransformationSystem.Utilities.ReplicationTransformation import createDataTransformation
     for dataType in dataTypes:
       if getattr( self._flags, "move%s" % dataType.capitalize() ):
         gLogger.notice( "*"*80 + "\nCreating moving transformation for prodID: %s, %s, %s " % (meta['ProdID'], prodType, dataType ) )
-        createDataTransformation('Moving', targetSE, sourceSE, prodID, dataType)
+        parDict = dict(flavour='Moving',
+                       targetSE=targetSE,
+                       sourceSE=sourceSE,
+                       plugin='BroadcastProcessed',
+                       metaKey='ProdID',
+                       metaValue=prodID,
+                       extraData={'Datatype': dataType},
+                       tGroup=self.prodGroup,
+                       groupSize=1,
+                       enable=not self._flags._dryRun,
+                     )
+        message = "Moving transformation with parameters"
+        gLogger.notice("%s:\n%s" % (message, pformat(parDict, indent=len(message) + 2, width=120)))
+        res = createDataTransformation(**parDict)
+        if not res['OK']:
+          gLogger.error("Failed to create moving transformation:", res['Message'])
 
   def getProductionJob(self):
     """ return production job instance with some parameters set """
