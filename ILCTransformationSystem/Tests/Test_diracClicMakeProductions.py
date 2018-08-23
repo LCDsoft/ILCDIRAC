@@ -457,11 +457,12 @@ class TestMakingFlags( unittest.TestCase ):
 
     f._dryRun = True
     f._moves = True
-    self.assertFalse( f.move )
-    self.assertFalse( f.moveGen )
-    self.assertFalse( f.moveSim )
-    self.assertFalse( f.moveRec )
-    self.assertFalse( f.moveDst )
+    f._moveRec = True
+    self.assertTrue(f.move)
+    self.assertFalse(f.moveGen)
+    self.assertFalse(f.moveSim)
+    self.assertTrue(f.moveRec)
+    self.assertFalse(f.moveDst)
 
     f._dryRun = False
     f._moveGen = True

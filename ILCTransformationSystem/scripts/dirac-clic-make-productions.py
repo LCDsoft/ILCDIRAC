@@ -151,19 +151,19 @@ class CLICDetProdChain( object ):
       return self._over
     @property
     def move( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._moves
+      return self._moves
     @property
     def moveGen( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and (self._gen or self._spl) and self._moves and self._moveGen
+      return (self._gen or self._spl) and self._moves and self._moveGen
     @property
     def moveSim( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._sim and self._moves and self._moveSim
+      return self._sim and self._moves and self._moveSim
     @property
     def moveRec( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and (self._rec or self._over) and self._moves and self._moveRec
+      return (self._rec or self._over) and self._moves and self._moveRec
     @property
     def moveDst( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and (self._rec or self._over) and self._moves and self._moveDst
+      return (self._rec or self._over) and self._moves and self._moveDst
 
 
     def __str__( self ):
