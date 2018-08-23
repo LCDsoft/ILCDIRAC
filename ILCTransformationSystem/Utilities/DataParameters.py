@@ -96,24 +96,9 @@ class Params(DParams):
 
     args = script.getPositionalArgs()
     if len(args) == 4:
-      self.setMetaValues(args[0])
-      # cast the metaValues to int
-      self.metaValues = [int(val) for val in self.metaValues]
-      self.setTargetSE(args[1])
-      self.setSourceSE(args[2])
-      self.setDatatype(args[3])
+      self.__setFourParameters(args)
     elif len(args) == 2 and self.allFor:
-      self.setMetaValues(self.allFor)
-      self.metaValues = [int(val) for val in self.metaValues]
-      # place the indiviual entries as well.
-      prodTemp = list(self.metaValues)
-      for prodID in prodTemp:
-        self.metaValues.append(prodID + 1)
-        self.metaValues.append(prodID + 2)
-      self.metaValues = sorted(self.metaValues)
-
-      self.setTargetSE(args[0])
-      self.setSourceSE(args[1])
+      self.__setAllForParameters(args)
     else:
       self.errorMessages.append("ERROR: Not enough arguments")
 
@@ -122,3 +107,25 @@ class Params(DParams):
     gLogger.error("\n".join(self.errorMessages))
     script.showHelp()
     return S_ERROR()
+
+  def __setFourParameters(self, args):
+    """Set parameters if four command line arguments are given."""
+    self.setMetaValues(args[0])
+    # cast the metaValues to int
+    self.metaValues = [int(val) for val in self.metaValues]
+    self.setTargetSE(args[1])
+    self.setSourceSE(args[2])
+    self.setDatatype(args[3])
+
+  def __setAllForParameters(self, args):
+    """Set parameters if two command line arguments are given along with allFor."""
+    self.setMetaValues(self.allFor)
+    self.metaValues = [int(val) for val in self.metaValues]
+    # place the indiviual entries as well.
+    prodTemp = list(self.metaValues)
+    for prodID in prodTemp:
+      self.metaValues.append(prodID + 1)
+      self.metaValues.append(prodID + 2)
+    self.metaValues = sorted(self.metaValues)
+    self.setTargetSE(args[0])
+    self.setSourceSE(args[1])
