@@ -1,9 +1,13 @@
 """ Test JobResetAgent """
 
+# pylint: disable=protected-access
+
 import unittest
 import sys
-
+from contextlib import contextmanager
 from datetime import datetime, timedelta
+
+import pytest
 from mock import MagicMock, call
 
 import ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent as JRA
@@ -21,38 +25,98 @@ import DIRAC
 __RCSID__ = "$Id$"
 
 
+@pytest.fixture
+def userProxyFixture(mocker):
+  """Mock UserProxy."""
+  @contextmanager
+  def _mockedCM(*args, **kwargs):
+    try:
+      yield S_OK()
+    finally:
+      pass
+  mocker.patch('ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent.UserProxy', new=_mockedCM)
+
+
+@pytest.fixture
+def failingUserProxyFixture(mocker):
+  """Mock UserProxy."""
+  @contextmanager
+  def _mockedCM(*args, **kwargs):
+    try:
+      yield S_ERROR("Failed to set up proxy")
+    finally:
+      pass
+  mocker.patch('ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent.UserProxy', new=_mockedCM)
+
+
+@pytest.fixture
+def fakeJobID():
+  """Return fake job ID."""
+  return 1
+
+
+@pytest.fixture
+def alreadyErrorMessage():
+  """Return error message."""
+  return "File already registered with alternative metadata"
+
+
+@pytest.fixture
+def today():
+  """Return a date."""
+  return datetime(2018, 12, 25, 0, 0, 0, 0)
+
+
+@pytest.fixture
+def jobResetAgent(aDate=today()):
+  """Fixture for jobResetAgent."""
+  agent = JRA
+  agent.AgentModule = MagicMock()
+  agent.JobDB = MagicMock(spec=DIRAC.WorkloadManagementSystem.DB.JobDB.JobDB)
+  agent.JobMonitoringClient = MagicMock()
+  agent.DataManager = MagicMock(spec=DIRAC.DataManagementSystem.Client.DataManager.DataManager)
+  agent.ReqClient = MagicMock(spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient)
+  agent.NotificationClient = MagicMock(spec=DIRAC.FrameworkSystem.Client.NotificationClient.NotificationClient)
+  agent.datetime = MagicMock()
+  agent.datetime.now.return_value = aDate
+
+  theAgent = JobResetAgent()
+  theAgent.log = gLogger
+  theAgent.enabled = True
+  theAgent._fcClient = MagicMock(spec=DIRAC.Resources.Catalog.FileCatalogFactory.FileCatalogFactory)
+  theAgent._fcClient.removeFile = MagicMock(return_value=S_ERROR('failed'))
+  theAgent.jobManagerClient = MagicMock()
+  theAgent.jobStateUpdateClient = MagicMock()
+
+  return theAgent
+
+
+def createRequest(requestID, opType, opStatus, fileStatus, lfnError=" ",
+                  lfn="/ilc/fake/lfn"):
+  """Create a request."""
+  req = Request({"RequestID": requestID})
+  op = Operation({"Type": opType, "Status": opStatus})
+  op.addFile(File({"LFN": lfn, "Status": fileStatus, "Error": lfnError}))
+  req.addOperation(op)
+  return req
+
+
 class TestJobResetAgent(unittest.TestCase):
   """ TestJobResetAgent class """
 
   def setUp(self):
-    self.agent = JRA
-    self.agent.AgentModule = MagicMock()
-    self.agent.JobDB = MagicMock(spec=DIRAC.WorkloadManagementSystem.DB.JobDB.JobDB)
-    self.agent.JobMonitoringClient = MagicMock()
-    self.agent.DataManager = MagicMock(spec=DIRAC.DataManagementSystem.Client.DataManager.DataManager)
-    self.agent.ReqClient = MagicMock(spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient)
-    self.agent.NotificationClient = MagicMock(spec=DIRAC.FrameworkSystem.Client.NotificationClient.NotificationClient)
-
-    self.today = datetime(2018, 12, 25, 0, 0, 0, 0)
-    self.agent.datetime = MagicMock()
-    self.agent.datetime.now.return_value = self.today
-
-    self.jobResetAgent = JobResetAgent()
-    self.jobResetAgent.log = gLogger
-    self.jobResetAgent.enabled = True
-    self.fakeJobID = 1
-
-    self.jobResetAgent.jobManagerClient = MagicMock()
-    self.jobResetAgent.jobStateUpdateClient = MagicMock()
-
-    self.doneRemoveRequest = self.createRequest(requestID=1, opType="RemoveFile",
-                                                opStatus="Done", fileStatus="Done")
-    self.doneReplicateRequest = self.createRequest(requestID=2, opType="ReplicateAndRegister",
-                                                   opStatus="Done", fileStatus="Done")
-    self.failedReplicateRequest = self.createRequest(requestID=3, opType="ReplicateAndRegister",
-                                                     opStatus="Failed", fileStatus="Failed")
-    self.failedRemoveRequest = self.createRequest(requestID=4, opType="RemoveFile",
-                                                  opStatus="Failed", fileStatus="Failed")
+    """Set up tests."""
+    self.jobResetAgent = jobResetAgent()
+    self.fakeJobID = fakeJobID()
+    self.today = today()
+    self.doneRemoveRequest = createRequest(requestID=1, opType="RemoveFile",
+                                           opStatus="Done", fileStatus="Done")
+    self.doneReplicateRequest = createRequest(requestID=2, opType="ReplicateAndRegister",
+                                              opStatus="Done", fileStatus="Done")
+    self.failedReplicateRequest = createRequest(requestID=3, opType="ReplicateAndRegister",
+                                                opStatus="Failed", fileStatus="Failed")
+    self.failedRemoveRequest = createRequest(requestID=4, opType="RemoveFile",
+                                             opStatus="Failed", fileStatus="Failed")
 
   @classmethod
   def tearDownClass(cls):
@@ -148,11 +212,11 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.markJob.assert_not_called()
 
   def test_treat_User_Job_With_Req(self):
-    """ test for treatUserJobWithReq function """
-    doneRequest = self.createRequest(requestID=1, opType="RemoveFile", opStatus="Done", fileStatus="Done")
+    """Test for treatUserJobWithReq function."""
+    doneRequest = createRequest(requestID=1, opType="RemoveFile", opStatus="Done", fileStatus="Done")
     failedRequestID = 2
-    failedRequest = self.createRequest(requestID=failedRequestID, opType="RemoveFile", opStatus="Failed",
-                                       fileStatus="Failed")
+    failedRequest = createRequest(requestID=failedRequestID, opType="RemoveFile", opStatus="Failed",
+                                  fileStatus="Failed")
     self.jobResetAgent.resetRequest = MagicMock()
     self.jobResetAgent.markJob = MagicMock()
 
@@ -167,13 +231,15 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.markJob.assert_not_called()
     self.jobResetAgent.resetRequest.assert_called_once_with(failedRequestID)
 
-  @staticmethod
-  def createRequest(requestID, opType, opStatus, fileStatus, lfnError=" "):
-    req = Request({"RequestID": requestID})
-    op = Operation({"Type": opType, "Status": opStatus})
-    op.addFile(File({"LFN": "/ilc/fake/lfn", "Status": fileStatus, "Error": lfnError}))
-    req.addOperation(op)
-    return req
+    # if request is waiting
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.resetRequest.reset_mock()
+    alreadyRegisteredRequest = createRequest(requestID=4, opType="RegisterFile",
+                                             opStatus="Waiting", fileStatus="Waiting")
+    self.assertTrue(self.jobResetAgent.treatUserJobWithReq(self.fakeJobID, alreadyRegisteredRequest)['OK'])
+    self.jobResetAgent.markJob.assert_not_called()
+    self.jobResetAgent.resetRequest.assert_not_called()
+
 
   def test_treat_Failed_Prod_With_Req(self):
     """ test for treatFailedProdWithReq function """
@@ -226,8 +292,9 @@ class TestJobResetAgent(unittest.TestCase):
 
     # job with failed ReplicateAndRegister operation should be marked done if file does not exist
     self.jobResetAgent.markJob.reset_mock()
-    request = self.createRequest(requestID=1, opType="RemoveFile", opStatus="Done",
-                                 fileStatus="Done", lfnError="No such file")
+    self.jobResetAgent.markJob = MagicMock(return_value=S_OK())
+    request = createRequest(requestID=1, opType="RemoveFile", opStatus="Done",
+                            fileStatus="Done", lfnError="No such file")
     self.jobResetAgent.treatCompletedProdWithReq(self.fakeJobID, request)
     self.jobResetAgent.markJob.assert_called_once_with(self.fakeJobID, "Done")
 
@@ -241,6 +308,28 @@ class TestJobResetAgent(unittest.TestCase):
     self.jobResetAgent.treatCompletedProdWithReq(self.fakeJobID, self.failedRemoveRequest)
     self.jobResetAgent.markJob.assert_not_called()
     self.jobResetAgent.resetRequest.assert_not_called()
+
+    # is waiting
+    self.jobResetAgent.markJob.reset_mock()
+    self.jobResetAgent.resetRequest.reset_mock()
+    alreadyRegisteredRequest = createRequest(requestID=4, opType="RegisterFile",
+                                             opStatus="Waiting", fileStatus="Waiting")
+    self.assertTrue(self.jobResetAgent.treatCompletedProdWithReq(self.fakeJobID, alreadyRegisteredRequest)['OK'])
+    self.jobResetAgent.markJob.assert_not_called()
+    self.jobResetAgent.resetRequest.assert_not_called()
+
+    # request failing because no such file, mark it done
+    self.jobResetAgent.accounting.clear()
+    request = createRequest(requestID=1, opType="ReplicateAndRegister", opStatus="Failed",
+                            fileStatus="Failed", lfnError="No such file", lfn="/ilc/fake/file")
+    self.jobResetAgent.markJob = MagicMock(return_value=S_OK())
+    self.jobResetAgent.treatCompletedProdWithReq(1234, request)
+    self.jobResetAgent.markJob.assert_called_once_with(1234, "Done")
+    self.assertEqual(1, len(self.jobResetAgent.accounting["Production"]))
+    self.assertEqual(1234, self.jobResetAgent.accounting["Production"][0]["JobID"])
+
+
+
 
   def test_treat_Completed_Prod_With_No_Req(self):
     """ test for treatCompletedProdWithNoReq function """
@@ -300,7 +389,7 @@ class TestJobResetAgent(unittest.TestCase):
   def test_get_input_data_for_jobs(self):
     """ test for getInputDataForJobs function """
     jobIDs = [1, 2]
-    lfn1 = "/ilc/fake/lfn1"
+    lfn1 = "lfn:/ilc/fake/lfn1"
     lfn2 = "/ilc/fake/lfn2"
     self.jobResetAgent.jobMonClient.getInputData.return_value = S_ERROR()
 
@@ -309,7 +398,7 @@ class TestJobResetAgent(unittest.TestCase):
 
     self.jobResetAgent.jobMonClient.getInputData.return_value = S_OK([lfn1, lfn2])
     res = self.jobResetAgent.getInputDataForJobs(jobIDs)
-    self.assertEquals(res["Value"], {lfn1: jobIDs, lfn2: jobIDs})
+    self.assertEquals(res["Value"], {lfn1[4:]: jobIDs, lfn2: jobIDs})
 
   def test_reschedule_jobs(self):
     """ test for rescheduleJobs function """
@@ -449,6 +538,96 @@ class TestJobResetAgent(unittest.TestCase):
     # accounting dict and errors list should be cleared after notification is sent
     self.assertEquals(self.jobResetAgent.accounting, {})
     self.assertEquals(self.jobResetAgent.errors, [])
+
+
+def test_treat_User_Job_With_RegisterFile(userProxyFixture, jobResetAgent, fakeJobID, alreadyErrorMessage):
+  """Test user jobs with RegisterFile request operations."""
+  jobResetAgent.markJob = MagicMock()
+  jobResetAgent.resetRequest = MagicMock()
+
+  # if Already registered file request
+  jobResetAgent.markJob.reset_mock()
+  jobResetAgent.resetRequest.reset_mock()
+  jobResetAgent._fcClient.removeFile.return_value = S_OK(dict(Failed={},
+                                                              Successful={'/ilc/fake/lfn': True}))
+  alreadyRegisteredRequest = createRequest(requestID=4, opType="RegisterFile",
+                                           opStatus="Failed", fileStatus="Failed",
+                                           lfnError=alreadyErrorMessage)
+  jobResetAgent.treatUserJobWithReq(fakeJobID, alreadyRegisteredRequest)
+  jobResetAgent.markJob.assert_not_called()
+  jobResetAgent.resetRequest.assert_called_once_with(4)
+  jobResetAgent._fcClient.removeFile.assert_called_once_with('/ilc/fake/lfn')
+
+  # request is waiting
+  jobResetAgent.markJob.reset_mock()
+  jobResetAgent.resetRequest.reset_mock()
+  jobResetAgent._fcClient.removeFile.reset_mock()
+  alreadyRegisteredRequest = createRequest(requestID=4, opType="RegisterFile",
+                                           opStatus="Waiting", fileStatus="Waiting",
+                                           lfnError=None)
+  jobResetAgent.treatUserJobWithReq(fakeJobID, alreadyRegisteredRequest)
+  jobResetAgent.markJob.assert_not_called()
+  jobResetAgent.resetRequest.assert_not_called()
+  jobResetAgent._fcClient.removeFile.assert_not_called()
+
+  # request is waiting
+  jobResetAgent.markJob.reset_mock()
+  jobResetAgent.resetRequest.reset_mock()
+  jobResetAgent._fcClient.removeFile.reset_mock()
+  alreadyRegisteredRequest = createRequest(requestID=4, opType="RegisterFile",
+                                           opStatus="Failed", fileStatus="Failed",
+                                           lfnError="File not found")
+  jobResetAgent.treatUserJobWithReq(fakeJobID, alreadyRegisteredRequest)
+  jobResetAgent.markJob.assert_not_called()
+  jobResetAgent._fcClient.removeFile.assert_not_called()
+
+  # removeFile failed
+  jobResetAgent.markJob.reset_mock()
+  jobResetAgent.resetRequest.reset_mock()
+  jobResetAgent._fcClient.removeFile.reset_mock()
+  jobResetAgent._fcClient.removeFile.return_value = S_OK(dict(Failed={'/ilc/fake/lfn': "not author"},
+                                                              Successful={}))
+  alreadyRegisteredRequest = createRequest(requestID=4, opType="RegisterFile",
+                                           opStatus="Failed", fileStatus="Failed",
+                                           lfnError=alreadyErrorMessage)
+  res = jobResetAgent.treatUserJobWithReq(fakeJobID, alreadyRegisteredRequest)
+  assert not res['OK']
+  jobResetAgent.markJob.assert_not_called()
+  jobResetAgent.resetRequest.assert_not_called()
+  jobResetAgent._fcClient.removeFile.assert_called_once_with("/ilc/fake/lfn")
+
+  # removeFile failed with S_ERROR
+  jobResetAgent.markJob.reset_mock()
+  jobResetAgent.resetRequest.reset_mock()
+  jobResetAgent._fcClient.removeFile.reset_mock()
+  jobResetAgent._fcClient.removeFile.return_value = S_ERROR("Failed")
+  alreadyRegisteredRequest = createRequest(requestID=4, opType="RegisterFile",
+                                           opStatus="Failed", fileStatus="Failed",
+                                           lfnError=alreadyErrorMessage)
+  res = jobResetAgent.treatUserJobWithReq(fakeJobID, alreadyRegisteredRequest)
+  assert not res['OK']
+  jobResetAgent.markJob.assert_not_called()
+  jobResetAgent.resetRequest.assert_not_called()
+  jobResetAgent._fcClient.removeFile.assert_called_once_with("/ilc/fake/lfn")
+
+
+def test_treat_User_Job_With_RegisterFile_2(failingUserProxyFixture, jobResetAgent, fakeJobID, alreadyErrorMessage):
+  """Test when UserProxy failed."""
+  jobResetAgent.markJob = MagicMock()
+  jobResetAgent.resetRequest = MagicMock()
+
+  jobResetAgent.markJob.reset_mock()
+  jobResetAgent.resetRequest.reset_mock()
+  jobResetAgent._fcClient.removeFile.reset_mock()
+  jobResetAgent._fcClient.removeFile.return_value = S_ERROR("Failed")
+  alreadyRegisteredRequest = createRequest(requestID=4, opType="RegisterFile",
+                                           opStatus="Failed", fileStatus="Failed",
+                                           lfnError=alreadyErrorMessage)
+  res = jobResetAgent.treatUserJobWithReq(fakeJobID, alreadyRegisteredRequest)
+  assert not res['OK']
+  jobResetAgent.markJob.assert_not_called()
+  jobResetAgent.resetRequest.assert_not_called()
+  jobResetAgent._fcClient.removeFile.assert_not_called()
 
 
 if __name__ == "__main__":
