@@ -199,8 +199,10 @@ class MonitorAgents(AgentModule):
 
     res = self.componentControl()
     if not res['OK']:
-      self.logError("Failure to control components", res['Message'])
-      ok = False
+      if "Stopped does not exist" not in res['Message'] and \
+         "Running does not exist" not in res['Message']:
+        self.logError("Failure to control components", res['Message'])
+        ok = False
 
     self.sendNotification()
 
