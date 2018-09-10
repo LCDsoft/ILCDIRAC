@@ -245,6 +245,8 @@ jobTests:CC7Prod:
     - .gitlab-ci.d/run-setests.sh
   coverage: '/\d+\%\s*$/'
   retry: 2
+  only:
+    - schedules
 
 setests:SL6:
   <<: *seTests
