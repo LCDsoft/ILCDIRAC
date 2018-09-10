@@ -348,6 +348,136 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertTrue(self.restartAgent.checkForCheckingJobs('executor')['OK'])
     self.assertEqual(self.restartAgent.checkForCheckingJobs('executor')['Value'], 'CHECKING_JOBS')
 
+  def test_componentControl_1(self):
+    """Fail to get status."""
+    self.restartAgent.controlComponents = True
+    self.restartAgent.errors = []
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_ERROR()
+    self.assertFalse(self.restartAgent.componentControl()['OK'])
+
+  def test_componentControl_2(self):
+    """Total Success."""
+    self.restartAgent.controlComponents = True
+    self.restartAgent.errors = []
+
+    def god(*args, **_kwargs):
+      """Mock getOptionsDict."""
+      if 'running' in args[0].lower():
+        return S_OK({'Framework__StartMe': '',
+                     'Framework__Running': ''})
+      if 'stopped' in args[0].lower():
+        return S_OK({'Framework__StopMe': '',
+                     'Framework__Stopped': '',
+                     'Framework__Unknown': ''})
+      return S_ERROR()
+    gConfigMock = MagicMock()
+    gConfigMock.getOptionsDict.side_effect = god
+
+    agents = {'Agents': {'Framework': {'StopMe': {'RunitStatus': 'Run'},
+                                       'StartMe': {'RunitStatus': 'Down'},
+                                       'Running': {'RunitStatus': 'Run'},
+                                       'Stopped': {'RunitStatus': 'Down'},
+                                       'Uninstalled': {'RunitStatus': 'Unknown'},
+                                       }}}
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(agents)
+    self.restartAgent.sysAdminClient.startComponent = MagicMock()
+    self.restartAgent.sysAdminClient.stopComponent = MagicMock()
+
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
+      res = self.restartAgent.componentControl()
+    self.assertTrue(res['OK'])
+    self.restartAgent.sysAdminClient.startComponent.assert_called_with('Framework', 'StartMe')
+    self.restartAgent.sysAdminClient.stopComponent.assert_called_with('Framework', 'StopMe')
+    self.assertIn('Unknown instance', self.restartAgent.errors[0])
+
+  def test_componentControl_2b(self):
+    """Total Success."""
+    self.restartAgent.controlComponents = False
+    self.restartAgent.errors = []
+
+    def god(*args, **_kwargs):
+      """Mock getOptionsDict."""
+      if 'running' in args[0].lower():
+        return S_OK({'Framework__StartMe': '',
+                     'Framework__Running': ''})
+      if 'stopped' in args[0].lower():
+        return S_OK({'Framework__StopMe': '',
+                     'Framework__Stopped': '',
+                     'Framework__Unknown': ''})
+      return S_ERROR()
+    gConfigMock = MagicMock()
+    gConfigMock.getOptionsDict.side_effect = god
+
+    agents = {'Agents': {'Framework': {'StopMe': {'RunitStatus': 'Run'},
+                                       'StartMe': {'RunitStatus': 'Down'},
+                                       'Running': {'RunitStatus': 'Run'},
+                                       'Stopped': {'RunitStatus': 'Down'},
+                                       'Uninstalled': {'RunitStatus': 'Unknown'},
+                                       }}}
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(agents)
+    self.restartAgent.sysAdminClient.startComponent = MagicMock()
+    self.restartAgent.sysAdminClient.stopComponent = MagicMock()
+
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
+      res = self.restartAgent.componentControl()
+    self.assertTrue(res['OK'])
+    self.restartAgent.sysAdminClient.startComponent.assert_not_called()
+    self.restartAgent.sysAdminClient.stopComponent.assert_not_called()
+    self.assertIn('Unknown instance', self.restartAgent.errors[0])
+    self.assertIn('should be started', self.restartAgent.accounting['Framework__StartMe']['Treatment'])
+    self.assertIn('should be stopped', self.restartAgent.accounting['Framework__StopMe']['Treatment'])
+
+  def test_componentControl_3(self):
+    """Failed to get options."""
+    self.restartAgent.controlComponents = True
+    self.restartAgent.errors = []
+
+    def god(*args, **_kwargs):
+      """Mock getOptionsDict."""
+      if 'running' in args[0].lower():
+        return S_OK({'Framework__StopMe': '',
+                     'Framework__Stopped': '',
+                     'Framework__Unknown': ''})
+      if 'stopped' in args[0].lower():
+        return S_ERROR("No Stopped")
+      return S_ERROR()
+    gConfigMock = MagicMock()
+    gConfigMock.getOptionsDict.side_effect = god
+
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK({})
+    self.restartAgent.sysAdminClient.startComponent = MagicMock()
+    self.restartAgent.sysAdminClient.stopComponent = MagicMock()
+
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
+      res = self.restartAgent.componentControl()
+    self.assertFalse(res['OK'])
+    self.assertIn("No Stopped", res['Message'])
+
+  def test_componentControl_4(self):
+    """Bad host config."""
+    self.restartAgent.controlComponents = True
+    self.restartAgent.errors = []
+
+    def god(*args, **_kwargs):
+      """Mock getOptionsDict."""
+      if 'running' in args[0].lower():
+        return S_OK({'Framework__Twice': ''})
+      if 'stopped' in args[0].lower():
+        return S_OK({'Framework__Twice': ''})
+      return S_ERROR()
+    gConfigMock = MagicMock()
+    gConfigMock.getOptionsDict.side_effect = god
+
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK({})
+    self.restartAgent.sysAdminClient.startComponent = MagicMock()
+    self.restartAgent.sysAdminClient.stopComponent = MagicMock()
+
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
+      res = self.restartAgent.componentControl()
+    self.assertFalse(res['OK'])
+    self.assertIn("Bad host configuration", res['Message'])
+
+
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestMonitorAgents)
   TESTRESULT = unittest.TextTestRunner(verbosity=3).run(SUITE)

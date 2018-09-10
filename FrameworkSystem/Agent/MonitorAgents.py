@@ -6,32 +6,11 @@ The agent checks the age of the log file and if it is deemed too old will kill
 the agent so that it is restarted automatically. Executors will only be restarted if there are jobs in checking status
 
 
-
-+----------------------------+--------------------------------------------+---------------------------------------+
-|  **Option**                |**Description**                             |  **Example**                          |
-+----------------------------+--------------------------------------------+---------------------------------------+
-| Setup                      | Which setup to monitor                     | Production                            |
-|                            |                                            |                                       |
-+----------------------------+--------------------------------------------+---------------------------------------+
-| EnableFlag                 | If agents or executors should be           | False                                 |
-|                            | automatically restarted or not             |                                       |
-|                            |                                            |                                       |
-+----------------------------+--------------------------------------------+---------------------------------------+
-| RestartAgents              | If agents should be restarted              | False                                 |
-|                            | automatically                              |                                       |
-+----------------------------+--------------------------------------------+---------------------------------------+
-| RestartExecutors           | If executors should be restarted           | False                                 |
-|                            | automatically                              |                                       |
-+----------------------------+--------------------------------------------+---------------------------------------+
-| RestartServices            | If services should be restarted            | False                                 |
-|                            | automatically                              |                                       |
-+----------------------------+--------------------------------------------+---------------------------------------+
-| MailTo                     | Email addresses receiving notifications    |                                       |
-|                            |                                            |                                       |
-+----------------------------+--------------------------------------------+---------------------------------------+
-| MailFrom                   | Sender email address                       |                                       |
-|                            |                                            |                                       |
-+----------------------------+--------------------------------------------+---------------------------------------+
+.. literalinclude:: ../ConfigTemplate.cfg
+  :start-after: ##BEGIN MonitorAgents
+  :end-before: ##END
+  :dedent: 2
+  :caption: MonitorAgents options
 
 """
 
@@ -80,6 +59,7 @@ class MonitorAgents(AgentModule):
     self.restartAgents = False
     self.restartExecutors = False
     self.restartServices = False
+    self.controlComponents = False
     self.diracLocation = "/opt/dirac/pro"
 
     self.sysAdminClient = SystemAdministratorClient(socket.gethostname())
@@ -110,6 +90,7 @@ class MonitorAgents(AgentModule):
     self.diracLocation = os.environ.get("DIRAC", self.diracLocation)
     self.addressTo = self.am_getOption('MailTo', self.addressTo)
     self.addressFrom = self.am_getOption('MailFrom', self.addressFrom)
+    self.controlComponents = self.am_getOption('ControlComponents', self.controlComponents)
 
     res = self.getRunningInstances(instanceType='Agents')
     if not res["OK"]:
@@ -215,6 +196,11 @@ class MonitorAgents(AgentModule):
       if not res['OK']:
         self.logError("Failure when checking service", "%s, %s" % (service, res['Message']))
         ok = False
+
+    res = self.componentControl()
+    if not res['OK']:
+      self.logError("Failure to control components", res['Message'])
+      ok = False
 
     self.sendNotification()
 
@@ -364,3 +350,81 @@ class MonitorAgents(AgentModule):
       return S_OK(CHECKING_JOBS)
     self.log.info("Found no jobs in 'Checking' status for %s" % executorName)
     return S_OK(NO_CHECKING_JOBS)
+
+  def componentControl(self):
+    """Monitor and control component status as defined in the CS.
+
+    Check for running and stopped components and ensure they have the proper status as defined in the CS
+    Registry/Hosts/_HOST_/[Running|Stopped] sections
+
+    :returns: :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_OK`,
+       :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_ERROR`
+    """
+    # get the current status of the components
+    resOverall = self.sysAdminClient.getOverallStatus()
+    if not resOverall['OK']:
+      return resOverall
+    currentStatus = {'Down': set(), 'Run': set(), 'All': set()}
+    informationDict = resOverall['Value']
+    for systemsDict in informationDict.values():
+      for system, instancesDict in systemsDict.items():
+        for instanceName, instanceInfoDict in instancesDict.items():
+          identifier = '%s__%s' % (system, instanceName)
+          runitStatus = instanceInfoDict.get('RunitStatus')
+          if runitStatus in ('Run', 'Down'):
+            currentStatus[runitStatus].add(identifier)
+
+    # get the configured status of the components
+    host = socket.gethostname()
+    defaultStatus = {'Down': set(), 'Run': set(), 'All': set()}
+    resRunning = gConfig.getOptionsDict(os.path.join('/Registry/Hosts/', host, 'Running'))
+    resStopped = gConfig.getOptionsDict(os.path.join('/Registry/Hosts/', host, 'Stopped'))
+    if not resRunning['OK']:
+      return resRunning
+    if not resStopped['OK']:
+      return resStopped
+    defaultStatus['Run'] = set(resRunning['Value'].keys())
+    defaultStatus['Down'] = set(resStopped['Value'].keys())
+
+    if defaultStatus['Run'].intersection(defaultStatus['Down']):
+      self.logError("Overlap in configuration", str(defaultStatus['Run'].intersection(defaultStatus['Down'])))
+      return S_ERROR("Bad host configuration")
+
+    for state in ('Down', 'Run'):
+      currentStatus['All'].update(currentStatus[state])
+      defaultStatus['All'].update(defaultStatus[state])
+
+    # ensure instances are in the right state
+    shouldBe = {}
+    shouldBe['Run'] = defaultStatus['Run'].intersection(currentStatus['Down'])
+    shouldBe['Down'] = defaultStatus['Down'].intersection(currentStatus['Run'])
+    shouldBe['Unknown'] = defaultStatus['All'].symmetric_difference(currentStatus['All'])
+
+    for instance in shouldBe['Run']:
+      self.log.info("Starting instance %s" % instance)
+      system, name = instance.split('__')
+      if self.controlComponents:
+        res = self.sysAdminClient.startComponent(system, name)
+        if not res['OK']:
+          self.logError("Failed to start component:", "%s: %s" % (instance, res['Message']))
+        else:
+          self.accounting[instance]["Treatment"] = "Instance was down, started instance"
+      else:
+        self.accounting[instance]["Treatment"] = "Instance is down, should be started"
+
+    for instance in shouldBe['Down']:
+      self.log.info("Stopping instance %s" % instance)
+      system, name = instance.split('__')
+      if self.controlComponents:
+        res = self.sysAdminClient.stopComponent(system, name)
+        if not res['OK']:
+          self.logError("Failed to stop component:", "%s: %s" % (instance, res['Message']))
+        else:
+          self.accounting[instance]["Treatment"] = "Instance was running, stopped instance"
+      else:
+        self.accounting[instance]["Treatment"] = "Instance is running, should be stopped"
+
+    for instance in shouldBe['Unknown']:
+      self.logError("Unknown instance", "%r, either uninstall or add to config" % instance)
+
+    return S_OK()
