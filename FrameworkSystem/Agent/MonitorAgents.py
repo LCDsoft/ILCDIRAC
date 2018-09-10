@@ -78,7 +78,7 @@ class MonitorAgents(AgentModule):
   def logError(self, errStr, varMsg=''):
     """ appends errors in a list, which is sent in email notification """
     self.log.error(errStr, varMsg)
-    self.errors.append(errStr + varMsg)
+    self.errors.append(errStr + " " + varMsg)
 
   def beginExecution(self):
     """ Reload the configurations before every cycle """
