@@ -1,23 +1,29 @@
 #!/usr/bin/env python
-""" create rst files for documentation of ILCDIRAC """
-import os
+"""Create rst files for documentation of ILCDIRAC."""
 
-BASEPATH = "DOC"
-ILCDIRACPATH = os.path.join(os.environ.get("DIRAC"), "ILCDIRAC" )
-DIRACPATH = os.environ.get("DIRAC")
+import os
+import shutil
+import logging
+
+logging.basicConfig()
+LOG = logging.getLogger(name="MakeDoc")
+LOG.setLevel(logging.INFO)
 
 ORIGDIR = os.getcwd()
+DIRACPATH = os.environ.get("DIRAC")
+ILCDIRACPATH = os.path.join(DIRACPATH, "ILCDIRAC")
+BASEPATH = os.path.join(ORIGDIR, "DOC")
 
-BASEPATH = os.path.join( ORIGDIR, BASEPATH )
+IGNORE_FOLDERS = ('productions', 'source', 'test')
 
-IGNORE_FOLDERS = ( 'productions', 'source', 'test' )
 
-def mkdir( folder ):
-  """create a folder, ignore if it exists"""
+def mkdir(folder):
+  """Create a folder, ignore if it exists."""
   try:
-    os.mkdir( os.path.join(os.getcwd(),folder) )
+    os.mkdir(os.path.join(os.getcwd(), folder))
   except OSError as e:
-    print "Exception",repr(e)
+    LOG.debug("Exception when creating dir %s: %r", folder, e)
+
 
 def mkRest( filename, modulename, fullmodulename, subpackages=None, modules=None ):
   """make a rst file for filename"""
@@ -53,6 +59,7 @@ def mkRest( filename, modulename, fullmodulename, subpackages=None, modules=None
     
 def mkModuleRest( classname, fullclassname ):
   """ create rst file for class"""
+  LOG.info("Creating RST file for %s", fullclassname)
   filename = classname+".rst"
   with open(filename, 'w') as rst:
     lines = []
@@ -79,19 +86,19 @@ def mkModuleRest( classname, fullclassname ):
       lines.append( "   :private-members:" )
     rst.write("\n".join(lines))
 
-  
+
 def getsubpackages( abspath, direc):
   """return list of subpackages with full path"""
   packages = []
   for dire in direc:
     if "test" in dire.lower():
       continue
-    #print os.path.join( DIRACPATH,abspath,dire, "__init__.py" )
-    if os.path.exists( os.path.join( DIRACPATH,abspath,dire, "__init__.py" ) ) and \
-      dire.lower() not in IGNORE_FOLDERS:
-      #packages.append( os.path.join( "DOC", abspath, dire) )
+    LOG.debug("Found __init__ %s", os.path.join(DIRACPATH, abspath, dire, "__init__.py"))
+    if os.path.exists(os.path.join(DIRACPATH, abspath, dire, "__init__.py")) and \
+       dire.lower() not in IGNORE_FOLDERS:
       packages.append( os.path.join( dire) )
-  #print "packages",packages
+  if packages:
+    LOG.info("In %r found package(s): %s", abspath, ", ".join(packages))
   return packages
 
 def getmodules( _abspath, _direc, files ):
@@ -111,7 +118,9 @@ def createDoc():
   mkdir(BASEPATH)
   os.chdir(BASEPATH)
 
-  for root,direc,files in os.walk(ILCDIRACPATH):
+  for root, direc, files in os.walk(ILCDIRACPATH):
+    configTemplate = [os.path.join(root, _) for _ in files if _ == 'ConfigTemplate.cfg']
+
     files = [ _ for _ in files if _.endswith(".py") ]
     if "__init__.py" not in files:
       continue
@@ -125,7 +134,7 @@ def createDoc():
     if abspath:
       mkdir( abspath )
       os.chdir( abspath )
-    #print "Making rst",modulename
+    LOG.debug("Making rst: %s", modulename)
     mkRest( modulename+".rst", modulename, fullmodulename, subpackages=packages, modules=getmodules(abspath, direc, files) )
 
     for filename in files:
@@ -137,6 +146,10 @@ def createDoc():
         continue
       fullclassname = ".".join(abspath.split("/")+[filename])
       mkModuleRest( filename.split(".py")[0], fullclassname.split(".py")[0] )
+
+    if configTemplate:
+      LOG.debug("Copying %s to %s", configTemplate[0], os.path.join(BASEPATH, abspath))
+      shutil.copy(configTemplate[0], os.path.join(BASEPATH, abspath))
 
     os.chdir(BASEPATH)
   return 0
