@@ -125,11 +125,11 @@ class MonitorAgents(AgentModule):
     rows = []
     for instanceName, val in self.accounting.iteritems():
       rows.append([[instanceName],
-                   [str(val.get('LogAge', 'Not Relevant'))],
-                   [val.get('Treatment', 'No Treatment')]])
+                   [val.get('Treatment', 'No Treatment')],
+                   [str(val.get('LogAge', 'Not Relevant'))]])
 
     if rows:
-      columns = ["Instance", "Log File Age (Minutes)", "Treatment"]
+      columns = ["Instance", "Treatment", "Log File Age (Minutes)"]
       emailBody += printTable(columns, rows, printOut=False, numbering=False, columnSeparator=' | ')
 
     if self.errors:
