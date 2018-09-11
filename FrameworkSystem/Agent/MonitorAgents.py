@@ -136,7 +136,7 @@ class MonitorAgents(AgentModule):
       emailBody += "\n\nErrors:"
       emailBody += "\n".join(self.errors)
 
-    self.log.notice(emailBody)
+    self.log.notice("Sending Email:\n" + emailBody)
     for address in self.addressTo:
       res = self.nClient.sendMail(address, self.emailSubject, emailBody, self.addressFrom, localAttempt=False)
       if not res['OK']:
