@@ -472,15 +472,18 @@ class MonitorAgents(AgentModule):
     self.log.debug("Found configured URLs for %s: %s" % (module, urls))
     self.log.debug("This URL is %s" % url)
     runitStatus = options['RunitStatus']
+    wouldHave = 'Would have ' if not self.commitURLs else ''
     if runitStatus == 'Run' and url not in urls:
-      self.accounting[serviceName + "/URL"]["Treatment"] = "Added URL %s to URLs" % url
       urls.append(url)
-      self.log.info("Added URL %s to URLs: %s" % (url, urls))
+      message = "%sAdded URL %s to URLs: %s" % (wouldHave, url, urls)
+      self.log.info(message)
+      self.accounting[serviceName + "/URL"]["Treatment"] = message
       self.csAPI.modifyValue(urlsConfigPath, ",".join(urls))
     if runitStatus == 'Down' and url in urls:
-      self.accounting[serviceName + "/URL"]["Treatment"] = "Removed URL %s from URLs" % url
       urls.remove(url)
-      self.log.info("Removed url %s from URLs: %s" % (url, urls))
+      message = "%sRemoved URL %s from URLs" % (wouldHave, url)
+      self.log.info(message)
+      self.accounting[serviceName + "/URL"]["Treatment"] = message
       self.csAPI.modifyValue(urlsConfigPath, ",".join(urls))
 
   @staticmethod
