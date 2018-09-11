@@ -484,12 +484,12 @@ class MonitorAgents(AgentModule):
       self.accounting[serviceName + "/URL"]["Treatment"] = "Added URL %s to URLs" % url
       urls.append(url)
       self.log.info("Added URL %s to URLs: %s" % (url, urls))
-      self.csAPI.setOption(urlsConfigPath, list(urls))
+      self.csAPI.modifyValue(urlsConfigPath, ",".join(urls))
     if runitStatus == 'Down' and url in urls:
       self.accounting[serviceName + "/URL"]["Treatment"] = "Removed URL %s from URLs" % url
       urls.remove(url)
       self.log.info("Removed url %s from URLs: %s" % (url, urls))
-      self.csAPI.setOption(urlsConfigPath, list(urls))
+      self.csAPI.modifyValue(urlsConfigPath, ",".join(urls))
 
   @staticmethod
   def _getURL(serviceName, options):

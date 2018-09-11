@@ -536,9 +536,9 @@ class TestMonitorAgents(unittest.TestCase):
     with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
       res = self.restartAgent.checkURLs()
     self.assertTrue(res['OK'])
-    self.restartAgent.csAPI.setOption.assert_has_calls([call('/Systems/Sys/Production/URLs/Serv', tempurls),
-                                                        call('/Systems/Sys/Production/URLs/Serv', newurls)],
-                                                       any_order=False)
+    self.restartAgent.csAPI.modifyValue.assert_has_calls([call('/Systems/Sys/Production/URLs/Serv', ",".join(tempurls)),
+                                                          call('/Systems/Sys/Production/URLs/Serv', ",".join(newurls))],
+                                                         any_order=False)
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestMonitorAgents)
