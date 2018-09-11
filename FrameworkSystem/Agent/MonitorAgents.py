@@ -1,10 +1,12 @@
-"""
-Restarts an agent or executor in case it gets stuck.
+"""Monitor agent, executor or service behaviour and intervene if necessary.
 
-This agent is designed to supervise the Agents and Executors, and restarts them in case they get stuck.
+This agent is designed to supervise the Agents, Executors and Services, and restarts them in case they get stuck.
 The agent checks the age of the log file and if it is deemed too old will kill
 the agent so that it is restarted automatically. Executors will only be restarted if there are jobs in checking status
 
+Check for running and stopped components and ensure they have the proper status as defined in the CS
+Registry/Hosts/_HOST_/[Running|Stopped] sections. For services also the URL will be added or removed from the
+configuration.
 
 .. literalinclude:: ../ConfigTemplate.cfg
   :start-after: ##BEGIN MonitorAgents
