@@ -215,10 +215,13 @@ class MonitorAgents(AgentModule):
         self.logError("Failure to control components", res['Message'])
         ok = False
 
-    res = self.checkURLs()
-    if not res['OK']:
-      self.logError("Failure to check URLs", res['Message'])
-      ok = False
+    if ok:
+      res = self.checkURLs()
+      if not res['OK']:
+        self.logError("Failure to check URLs", res['Message'])
+        ok = False
+    else:
+      self.logError('Something was wrong before, not checking URLs this time')
 
     self.sendNotification()
 
