@@ -1,11 +1,11 @@
-""" Test MonitorAgents """
+"""Test MonitorAgents."""
 
 import unittest
+import socket
 import sys
 from datetime import datetime, timedelta
 from mock import MagicMock, call, patch
 import psutil
-import socket
 
 import ILCDIRAC.FrameworkSystem.Agent.MonitorAgents as MAA
 from ILCDIRAC.FrameworkSystem.Agent.MonitorAgents import MonitorAgents
@@ -19,9 +19,10 @@ __RCSID__ = "$Id$"
 
 
 class TestMonitorAgents(unittest.TestCase):
-  """ TestMonitorAgents class """
+  """TestMonitorAgents class."""
 
   def setUp(self):
+    """Set up test environment."""
     self.agent = MAA
     self.agent.AgentModule = MagicMock()
     self.agent.NotificationClient = MagicMock(spec=DIRAC.FrameworkSystem.Client.NotificationClient.NotificationClient)
@@ -35,10 +36,12 @@ class TestMonitorAgents(unittest.TestCase):
 
   @classmethod
   def tearDownClass(cls):
+    """Remove monitoragent module after tests to avoid side effects."""
     sys.modules.pop('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents')
 
   @staticmethod
   def getPSMock():
+    """Mock psutil."""
     psMock = MagicMock(name="psutil")
     procMock2 = MagicMock(name="process2kill")
     psMock.wait_procs.return_value = ("gone", [procMock2])
@@ -48,6 +51,7 @@ class TestMonitorAgents(unittest.TestCase):
     return psMock
 
   def test_init(self):
+    """Test the init function."""
     self.assertIsInstance(self.restartAgent, MonitorAgents)
     self.assertIsInstance(self.restartAgent.nClient, MagicMock)
     self.assertIsInstance(self.restartAgent.sysAdminClient, MagicMock)
@@ -55,7 +59,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertEquals(self.restartAgent.addressFrom, "ilcdirac-admin@cern.ch")
 
   def test_begin_execution(self):
-    """ test for beginExecution function """
+    """Test for the beginExecution function."""
     self.restartAgent.accounting["Junk"]["Funk"] = 1
     self.restartAgent.am_getOption = MagicMock()
     getOptionCalls = [call('Setup', self.restartAgent.setup),
@@ -72,7 +76,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertEquals(self.restartAgent.accounting, {})
 
   def test_send_notification(self):
-    """ test for sendNotification function """
+    """Test for the sendNotification function."""
     self.restartAgent.errors = []
     self.restartAgent.accounting = {}
 
@@ -106,7 +110,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertEquals(self.restartAgent.errors, [])
 
   def test_get_running_instances(self):
-    """ test for getRunningInstances function """
+    """Test for the getRunningInstances function."""
     self.restartAgent.sysAdminClient.getOverallStatus = MagicMock()
     self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_ERROR()
 
@@ -138,7 +142,7 @@ class TestMonitorAgents(unittest.TestCase):
 
   @patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock())
   def test_execute(self):
-    """ test for execute function """
+    """Test for the execute function."""
     self.restartAgent.sendNotification = MagicMock()
 
     agentOne = 'FTS3Agent'
@@ -159,7 +163,6 @@ class TestMonitorAgents(unittest.TestCase):
 
     self.restartAgent.checkAgent = MagicMock(side_effect=[S_OK(), S_ERROR()])
 
-
     res = self.restartAgent.execute()
     self.assertFalse(res["OK"])
     calls = [call(agentOne, agentOnePollingTime, agentOneLogLoc, agentOnePID),
@@ -171,7 +174,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.sendNotification.assert_called()
 
   def test_check_agent(self):
-    """ test for checkAgent function """
+    """Test for the checkAgent function."""
     self.restartAgent.getLastAccessTime = MagicMock()
     self.restartAgent.restartInstance = MagicMock(return_value=S_OK())
 
@@ -305,7 +308,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, True)
 
   def test_get_last_access_time(self):
-    """ test for getLastAccessTime function """
+    """Test for the getLastAccessTime function."""
     self.agent.os.path.getmtime = MagicMock()
     self.agent.datetime = MagicMock()
     self.agent.datetime.now = MagicMock()
@@ -539,6 +542,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.csAPI.modifyValue.assert_has_calls([call('/Systems/Sys/Production/URLs/Serv', ",".join(tempurls)),
                                                           call('/Systems/Sys/Production/URLs/Serv', ",".join(newurls))],
                                                          any_order=False)
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestMonitorAgents)
