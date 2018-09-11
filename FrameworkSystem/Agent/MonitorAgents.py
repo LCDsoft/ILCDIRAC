@@ -192,22 +192,11 @@ class MonitorAgents(AgentModule):
     """Execute checks for agents, executors, services."""
     ok = True
 
-    for agentName, val in self.agents.iteritems():
-      res = self.checkAgent(agentName, val["PollingTime"], val["LogFileLocation"], val["PID"])
-      if not res['OK']:
-        self.logError("Failure when checking agent", "%s, %s" % (agentName, res['Message']))
-        ok = False
-
-    for executor, options in self.executors.iteritems():
-      res = self.checkExecutor(executor, options)
-      if not res['OK']:
-        self.logError("Failure when checking executor", "%s, %s" % (executor, res['Message']))
-        ok = False
-
-    for service, options in self.services.iteritems():
-      res = self.checkService(service, options)
-      if not res['OK']:
-        self.logError("Failure when checking service", "%s, %s" % (service, res['Message']))
+    for instanceType in ('executor', 'agent', 'service'):
+      for name, options in getattr(self, instanceType + 's').iteritems():
+        res = getattr(self, 'check' + instanceType.capitalize())(name, options)
+        if not res['OK']:
+          self.logError("Failure when checking %s" % instanceType, "%s, %s" % (name, res['Message']))
         ok = False
 
     res = self.componentControl()
@@ -289,8 +278,9 @@ class MonitorAgents(AgentModule):
     self.log.info("Service responded OK")
     return S_OK()
 
-  def checkAgent(self, agentName, pollingTime, currentLogLocation, pid):
+  def checkAgent(self, agentName, options):
     """Check the age of agent's log file, if it is too old then restart the agent."""
+    pollingTime, currentLogLocation, pid = options['PollingTime'], options['LogFileLocation'], options['PID']
     self.log.info("Checking Agent: %s" % agentName)
     self.log.info("Polling Time: %s" % pollingTime)
     self.log.info("Current Log File location: %s" % currentLogLocation)

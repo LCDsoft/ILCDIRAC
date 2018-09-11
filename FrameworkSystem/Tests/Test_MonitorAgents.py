@@ -29,6 +29,7 @@ class TestMonitorAgents(unittest.TestCase):
 
     self.restartAgent = MonitorAgents()
     self.restartAgent.log = gLogger
+    self.restartAgent.log.setLevel('DEBUG')
     self.restartAgent.sysAdminClient = MagicMock()
     self.restartAgent.csAPI = MagicMock()
     self.restartAgent.enabled = True
@@ -124,7 +125,11 @@ class TestMonitorAgents(unittest.TestCase):
                          'Framework': {'ErrorMessageMonitor': {'MEM': '0.3', 'Setup': True, 'PID': '2303',
                                                                'RunitStatus': 'Run', 'Module': 'ErrorMessageMonitor',
                                                                'Installed': True, 'VSZ': '380392', 'Timeup': '3380292',
-                                                               'CPU': '0.0', 'RSS': '56172'}}}}
+                                                               'CPU': '0.0', 'RSS': '56172'}},
+                         'System': {'Off': {'MEM': '0.3', 'Setup': True, 'PID': '---',
+                                            'RunitStatus': 'Down', 'Module': 'ErrorMessageMonitor',
+                                            'Installed': True, 'VSZ': '380392', 'Timeup': '3380292',
+                                            'CPU': '0.0', 'RSS': '56172'}}}}
     agents['Agents']['DataManagement']['FTSAgent'] = {'Setup': False, 'PID': 0, 'RunitStatus': 'Unknown',
                                                       'Module': 'FTSAgent', 'Installed': False, 'Timeup': 0}
 
@@ -162,16 +167,47 @@ class TestMonitorAgents(unittest.TestCase):
                                            'PID': agentTwoPID}}
 
     self.restartAgent.checkAgent = MagicMock(side_effect=[S_OK(), S_ERROR()])
+    self.restartAgent.componentControl = MagicMock(return_value=S_OK())
 
     res = self.restartAgent.execute()
-    self.assertFalse(res["OK"])
-    calls = [call(agentOne, agentOnePollingTime, agentOneLogLoc, agentOnePID),
-             call(agentTwo, agentTwoPollingTime, agentTwoLogLoc, agentTwoPID)]
 
+    self.assertFalse(res["OK"])
+
+    calls = [call(agentOne, self.restartAgent.agents[agentOne]),
+             call(agentTwo, self.restartAgent.agents[agentTwo])]
     self.restartAgent.checkAgent.assert_has_calls(calls, any_order=True)
 
     # email notification should be sent at the end of every agent cycle
     self.restartAgent.sendNotification.assert_called()
+
+  @patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock())
+  def test_execute_2(self):
+    """Test for the execute function."""
+    self.restartAgent.sendNotification = MagicMock()
+    self.restartAgent.componentControl = MagicMock(return_value=S_ERROR('Stopped does not exist'))
+    self.restartAgent.checkURLs = MagicMock(return_value=S_ERROR('SomeFailure'))
+    res = self.restartAgent.execute()
+    self.assertFalse(res["OK"])
+    # email notification should be sent at the end of every agent cycle
+    self.restartAgent.sendNotification.assert_called()
+
+    self.restartAgent.sendNotification = MagicMock()
+    self.restartAgent.componentControl = MagicMock(return_value=S_ERROR())
+    self.restartAgent.checkURLs = MagicMock()
+    res = self.restartAgent.execute()
+    self.assertFalse(res["OK"])
+    # email notification should be sent at the end of every agent cycle
+    self.restartAgent.sendNotification.assert_called()
+    self.restartAgent.checkURLs.assert_not_called()
+
+    self.restartAgent.sendNotification = MagicMock()
+    self.restartAgent.componentControl = MagicMock(return_value=S_OK())
+    self.restartAgent.checkURLs = MagicMock(return_value=S_OK())
+    res = self.restartAgent.execute()
+    self.assertTrue(res["OK"])
+    # email notification should be sent at the end of every agent cycle
+    self.restartAgent.sendNotification.assert_called()
+    self.restartAgent.checkURLs.assert_called_once()
 
   def test_check_agent(self):
     """Test for the checkAgent function."""
@@ -179,18 +215,18 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.restartInstance = MagicMock(return_value=S_OK())
 
     agentName = 'agentX'
-    pollingTime = MAA.HOUR
-    currentLogLocation = '/fake/log/file'
-    pid = '12345'
+    options = dict(PollingTime=MAA.HOUR,
+                   LogFileLocation='/fake/log/file',
+                   PID='12345')
 
     self.restartAgent.getLastAccessTime.return_value = S_ERROR()
-    res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
+    res = self.restartAgent.checkAgent(agentName, options)
     self.assertFalse(res["OK"])
 
     # agents with log file age less than max(pollingTime+Hour, 2 Hour) should not be restarted
     logAge = timedelta(hours=1)
     self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
-    res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
+    res = self.restartAgent.checkAgent(agentName, options)
     self.assertTrue(res["OK"])
     self.restartAgent.restartInstance.assert_not_called()
 
@@ -198,9 +234,9 @@ class TestMonitorAgents(unittest.TestCase):
     logAge = timedelta(hours=3)
     self.restartAgent.restartAgents = False
     self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
-    res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
+    res = self.restartAgent.checkAgent(agentName, options)
     self.assertTrue(res["OK"])
-    self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, False)
+    self.restartAgent.restartInstance.assert_called_once_with(12345, agentName, False)
 
   def test_check_executors(self):
     """Test the checkExecutor function."""
@@ -486,7 +522,6 @@ class TestMonitorAgents(unittest.TestCase):
 
   def test_checkURLs_1(self):
     """Success."""
-    self.restartAgent.log.setLevel('DEBUG')
     self.restartAgent.errors = []
     self.restartAgent.accounting.clear()
     host = socket.gethostname()
@@ -508,32 +543,15 @@ class TestMonitorAgents(unittest.TestCase):
         return urls
     gConfigMock = MagicMock()
     gConfigMock.getValue.side_effect = gVal
-
-    services = {'Services': {'Sys': {'Serv1': {'Setup': True,
-                                               'PID': '18128',
-                                               'Port': '1001',
-                                               'RunitStatus': 'Run',
-                                               'Module': 'Serv',
-                                               'Installed': True},
-                                     'Serv2': {'Setup': True,
-                                               'PID': '18128',
-                                               'Port': '1002',
-                                               'RunitStatus': 'Down',
-                                               'Module': 'Serv',
-                                               'Installed': True},
-                                     'Serv3': {'Setup': True,
-                                               'PID': '18128',
-                                               'Port': '1003',
-                                               'RunitStatus': 'Run',
-                                               'Module': 'Serv',
-                                               'Installed': True},
-                                     'SystemAdministrator': {'Setup': True,
-                                                             'PID': '18128',
-                                                             'Port': '1003',
-                                                             'RunitStatus': 'Run',
-                                                             'Module': 'Serv',
-                                                             'Installed': True},
-                                   }}}
+    services = {'Services': {'Sys': {'Serv1': {'Setup': True, 'PID': '18128', 'Port': '1001', 'RunitStatus': 'Run',
+                                               'Module': 'Serv', 'Installed': True},
+                                     'Serv2': {'Setup': True, 'PID': '18128', 'Port': '1002', 'RunitStatus': 'Down',
+                                               'Module': 'Serv', 'Installed': True},
+                                     'Serv3': {'Setup': True, 'PID': '18128', 'Port': '1003', 'RunitStatus': 'Run',
+                                               'Module': 'Serv', 'Installed': True},
+                                     'SystemAdministrator': {'Setup': True, 'PID': '18128', 'Port': '1003',
+                                                             'RunitStatus': 'Run', 'Module': 'Serv', 'Installed': True},
+                                    }}}
     self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(services)
 
     with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
@@ -542,6 +560,26 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.csAPI.modifyValue.assert_has_calls([call('/Systems/Sys/Production/URLs/Serv', ",".join(tempurls)),
                                                           call('/Systems/Sys/Production/URLs/Serv', ",".join(newurls))],
                                                          any_order=False)
+
+  def test_checkURLs_2(self):
+    """Test commit to CS."""
+    self.restartAgent.errors = []
+    self.restartAgent.accounting.clear()
+    self.restartAgent.csAPI.csModified = True
+    self.restartAgent.commitURLs = True
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(dict(Services={}))
+
+    self.restartAgent.csAPI.commit = MagicMock(return_value=S_ERROR('Nope'))
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock()):
+      res = self.restartAgent.checkURLs()
+    self.assertFalse(res['OK'])
+    self.assertIn('Failed to commit', res['Message'])
+    self.assertIn('Commit to CS failed', self.restartAgent.errors[0])
+
+    self.restartAgent.csAPI.commit = MagicMock(return_value=S_OK())
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock()):
+      res = self.restartAgent.checkURLs()
+    self.assertTrue(res['OK'])
 
 
 if __name__ == "__main__":
