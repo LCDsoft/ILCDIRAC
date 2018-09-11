@@ -524,6 +524,12 @@ class TestMonitorAgents(unittest.TestCase):
                                                'RunitStatus': 'Run',
                                                'Module': 'Serv',
                                                'Installed': True},
+                                     'SystemAdministrator': {'Setup': True,
+                                                             'PID': '18128',
+                                                             'Port': '1003',
+                                                             'RunitStatus': 'Run',
+                                                             'Module': 'Serv',
+                                                             'Installed': True},
                                    }}}
     self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(services)
 

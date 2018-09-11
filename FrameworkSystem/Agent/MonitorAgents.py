@@ -453,7 +453,10 @@ class MonitorAgents(AgentModule):
       return S_ERROR("Failure to get running services")
     self.services = res["Value"]
     for service, options in self.services.iteritems():
-      self.log.info("Checking URL for %s with options %s" % (service, options))
+      self.log.debug("Checking URL for %s with options %s" % (service, options))
+      # ignore SystemAdministrator, does not have URLs
+      if 'SystemAdministrator' in service:
+        continue
       self._checkServiceURL(service, options)
 
     if self.csAPI.csModified and self.commitURLs:
