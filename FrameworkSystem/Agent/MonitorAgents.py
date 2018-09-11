@@ -197,7 +197,7 @@ class MonitorAgents(AgentModule):
         res = getattr(self, 'check' + instanceType.capitalize())(name, options)
         if not res['OK']:
           self.logError("Failure when checking %s" % instanceType, "%s, %s" % (name, res['Message']))
-        ok = False
+          ok = False
 
     res = self.componentControl()
     if not res['OK']:
