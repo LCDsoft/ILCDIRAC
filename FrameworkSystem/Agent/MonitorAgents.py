@@ -1,5 +1,5 @@
 """
-Restarts an agent or executor in case it gets stuck
+Restarts an agent or executor in case it gets stuck.
 
 This agent is designed to supervise the Agents and Executors, and restarts them in case they get stuck.
 The agent checks the age of the log file and if it is deemed too old will kill
@@ -37,7 +37,7 @@ from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitor
 __RCSID__ = "$Id$"
 AGENT_NAME = "Framework/MonitorAgents"
 
-#Define units
+# Define units
 HOUR = 3600
 MINUTES = 60
 SECONDS = 1
@@ -49,10 +49,10 @@ NO_RESTART = 'NO_RESTART'
 
 
 class MonitorAgents(AgentModule):
-  """MonitorAgents class.
-  """
+  """MonitorAgents class."""
 
   def __init__(self, *args, **kwargs):
+    """Initialize the agent, clients, default values."""
     AgentModule.__init__(self, *args, **kwargs)
     self.name = 'MonitorAgents'
     self.setup = "Production"
@@ -79,12 +79,12 @@ class MonitorAgents(AgentModule):
     self.emailSubject = "MonitorAgents on %s" % socket.gethostname()
 
   def logError(self, errStr, varMsg=''):
-    """ appends errors in a list, which is sent in email notification """
+    """Append errors to a list, which is sent in email notification."""
     self.log.error(errStr, varMsg)
     self.errors.append(errStr + " " + varMsg)
 
   def beginExecution(self):
-    """ Reload the configurations before every cycle """
+    """Reload the configurations before every cycle."""
     self.setup = self.am_getOption("Setup", self.setup)
     self.enabled = self.am_getOption("EnableFlag", self.enabled)
     self.restartAgents = self.am_getOption("RestartAgents", self.restartAgents)
@@ -117,7 +117,7 @@ class MonitorAgents(AgentModule):
     return S_OK()
 
   def sendNotification(self):
-    """ sends email notification about stuck agents """
+    """Send email notification about changes done in the last cycle."""
     if not(self.errors or self.accounting):
       return S_OK()
 
