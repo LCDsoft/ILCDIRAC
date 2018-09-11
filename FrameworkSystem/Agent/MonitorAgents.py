@@ -371,6 +371,33 @@ class MonitorAgents(AgentModule):
        :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     # get the current status of the components
+
+    resCurrent = self._getCurrentComponentStatus()
+    if not resCurrent['OK']:
+      return resCurrent
+    currentStatus = resCurrent['Value']
+
+    resDefault = self._getDefaultComponentStatus()
+    if not resDefault['OK']:
+      return resDefault
+    defaultStatus = resDefault['Value']
+
+    # ensure instances are in the right state
+    shouldBe = {}
+    shouldBe['Run'] = defaultStatus['Run'].intersection(currentStatus['Down'])
+    shouldBe['Down'] = defaultStatus['Down'].intersection(currentStatus['Run'])
+    shouldBe['Unknown'] = defaultStatus['All'].symmetric_difference(currentStatus['All'])
+
+    self._ensureComponentRunning(shouldBe['Run'])
+    self._ensureComponentDown(shouldBe['Down'])
+
+    for instance in shouldBe['Unknown']:
+      self.logError("Unknown instance", "%r, either uninstall or add to config" % instance)
+
+    return S_OK()
+
+  def _getCurrentComponentStatus(self):
+    """Get current status for components."""
     resOverall = self.sysAdminClient.getOverallStatus()
     if not resOverall['OK']:
       return resOverall
@@ -384,7 +411,11 @@ class MonitorAgents(AgentModule):
           if runitStatus in ('Run', 'Down'):
             currentStatus[runitStatus].add(identifier)
 
-    # get the configured status of the components
+    currentStatus['All'] = currentStatus['Run'] | currentStatus['Down']
+    return S_OK(currentStatus)
+
+  def _getDefaultComponentStatus(self):
+    """Get the configured status of the components."""
     host = socket.gethostname()
     defaultStatus = {'Down': set(), 'Run': set(), 'All': set()}
     resRunning = gConfig.getOptionsDict(os.path.join('/Registry/Hosts/', host, 'Running'))
@@ -395,22 +426,17 @@ class MonitorAgents(AgentModule):
       return resStopped
     defaultStatus['Run'] = set(resRunning['Value'].keys())
     defaultStatus['Down'] = set(resStopped['Value'].keys())
+    defaultStatus['All'] = defaultStatus['Run'] | defaultStatus['Down']
 
     if defaultStatus['Run'].intersection(defaultStatus['Down']):
       self.logError("Overlap in configuration", str(defaultStatus['Run'].intersection(defaultStatus['Down'])))
       return S_ERROR("Bad host configuration")
 
-    for state in ('Down', 'Run'):
-      currentStatus['All'].update(currentStatus[state])
-      defaultStatus['All'].update(defaultStatus[state])
+    return S_OK(defaultStatus)
 
-    # ensure instances are in the right state
-    shouldBe = {}
-    shouldBe['Run'] = defaultStatus['Run'].intersection(currentStatus['Down'])
-    shouldBe['Down'] = defaultStatus['Down'].intersection(currentStatus['Run'])
-    shouldBe['Unknown'] = defaultStatus['All'].symmetric_difference(currentStatus['All'])
-
-    for instance in shouldBe['Run']:
+  def _ensureComponentRunning(self, shouldBeRunning):
+    """Ensure the correct components are running."""
+    for instance in shouldBeRunning:
       self.log.info("Starting instance %s" % instance)
       system, name = instance.split('__')
       if self.controlComponents:
@@ -422,7 +448,9 @@ class MonitorAgents(AgentModule):
       else:
         self.accounting[instance]["Treatment"] = "Instance is down, should be started"
 
-    for instance in shouldBe['Down']:
+  def _ensureComponentDown(self, shouldBeDown):
+    """Ensure the correct components are not running."""
+    for instance in shouldBeDown:
       self.log.info("Stopping instance %s" % instance)
       system, name = instance.split('__')
       if self.controlComponents:
@@ -433,11 +461,6 @@ class MonitorAgents(AgentModule):
           self.accounting[instance]["Treatment"] = "Instance was running, stopped instance"
       else:
         self.accounting[instance]["Treatment"] = "Instance is running, should be stopped"
-
-    for instance in shouldBe['Unknown']:
-      self.logError("Unknown instance", "%r, either uninstall or add to config" % instance)
-
-    return S_OK()
 
   def checkURLs(self):
     """Ensure that the running services have their URL in the Config."""
