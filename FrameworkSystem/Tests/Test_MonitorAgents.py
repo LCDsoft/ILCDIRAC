@@ -5,6 +5,7 @@ import sys
 from datetime import datetime, timedelta
 from mock import MagicMock, call, patch
 import psutil
+import socket
 
 import ILCDIRAC.FrameworkSystem.Agent.MonitorAgents as MAA
 from ILCDIRAC.FrameworkSystem.Agent.MonitorAgents import MonitorAgents
@@ -28,6 +29,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent = MonitorAgents()
     self.restartAgent.log = gLogger
     self.restartAgent.sysAdminClient = MagicMock()
+    self.restartAgent.csAPI = MagicMock()
     self.restartAgent.enabled = True
     self.restartAgent.restartAgents = True
 
@@ -134,6 +136,7 @@ class TestMonitorAgents(unittest.TestCase):
       self.assertTrue('LogFileLocation' in res["Value"][agent])
       self.assertTrue('PID' in res["Value"][agent])
 
+  @patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock())
   def test_execute(self):
     """ test for execute function """
     self.restartAgent.sendNotification = MagicMock()
@@ -155,6 +158,7 @@ class TestMonitorAgents(unittest.TestCase):
                                            'PID': agentTwoPID}}
 
     self.restartAgent.checkAgent = MagicMock(side_effect=[S_OK(), S_ERROR()])
+
 
     res = self.restartAgent.execute()
     self.assertFalse(res["OK"])
@@ -477,6 +481,58 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertFalse(res['OK'])
     self.assertIn("Bad host configuration", res['Message'])
 
+  def test_checkURLs_1(self):
+    """Success."""
+    self.restartAgent.log.setLevel('DEBUG')
+    self.restartAgent.errors = []
+    self.restartAgent.accounting.clear()
+    host = socket.gethostname()
+    urls, tempurls, newurls = [], [], []
+    for i in [1, 2]:
+      urls.append('dips://%(host)s:100%(i)s/Sys/Serv%(i)s' % dict(i=i, host=host))
+    for i in [1, 2, 3]:
+      tempurls.append('dips://%(host)s:100%(i)s/Sys/Serv%(i)s' % dict(i=i, host=host))
+    for i in [1, 3]:
+      newurls.append('dips://%(host)s:100%(i)s/Sys/Serv%(i)s' % dict(i=i, host=host))
+
+    def gVal(*args, **_kwargs):
+      """Mock getValue."""
+      if 'PollingTime' in args[0]:
+        return 365
+      if 'Port' in args[0]:
+        return '100' + args[0].rsplit('/Serv', 1)[1].split('/')[0]
+      if 'URLs' in args[0]:
+        return urls
+    gConfigMock = MagicMock()
+    gConfigMock.getValue.side_effect = gVal
+
+    services = {'Services': {'Sys': {'Serv1': {'Setup': True,
+                                               'PID': '18128',
+                                               'Port': '1001',
+                                               'RunitStatus': 'Run',
+                                               'Module': 'Serv',
+                                               'Installed': True},
+                                     'Serv2': {'Setup': True,
+                                               'PID': '18128',
+                                               'Port': '1002',
+                                               'RunitStatus': 'Down',
+                                               'Module': 'Serv',
+                                               'Installed': True},
+                                     'Serv3': {'Setup': True,
+                                               'PID': '18128',
+                                               'Port': '1003',
+                                               'RunitStatus': 'Run',
+                                               'Module': 'Serv',
+                                               'Installed': True},
+                                   }}}
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(services)
+
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
+      res = self.restartAgent.checkURLs()
+    self.assertTrue(res['OK'])
+    self.restartAgent.csAPI.setOption.assert_has_calls([call('/Systems/Sys/Production/URLs/Serv', tempurls),
+                                                        call('/Systems/Sys/Production/URLs/Serv', newurls)],
+                                                       any_order=False)
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestMonitorAgents)
