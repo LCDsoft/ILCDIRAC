@@ -14,7 +14,7 @@ stages:
 
 variables:
   LCG_BUNDLE_VERSION: "v14r2"
-  ILCDIRAC_VERSION: "v29r0-pre1"
+  ILCDIRAC_VERSION: "v29r0p1"
   DIRAC_BRANCH: "rel-v6r20"
   DIRAC_TAG: "v6r20p7"
   SETUP: "ILC-Production"
