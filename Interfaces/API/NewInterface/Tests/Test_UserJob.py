@@ -228,7 +228,7 @@ class UserJobTestCase(unittest.TestCase):
          patch('%s.LOG' % MIXIN_MODULE, new=self.log_mock):
       info_message = "Job splitting successful"
       assertDiracSucceeds(self.ujo._split(), self)
-      self.log_mock.info.assert_called_with(info_message)
+      self.log_mock.notice.assert_called_with(info_message)
       mock_parametric.assert_any_call("InputData", ["/ilc/user/u/username/data1"], True)
 
   @patch("%s.toInt" % MIXIN_MODULE, new=Mock(return_value=1))
@@ -241,7 +241,7 @@ class UserJobTestCase(unittest.TestCase):
          patch('%s.LOG' % MIXIN_MODULE, new=self.log_mock):
       info_message = "Job splitting successful"
       assertDiracSucceeds(self.ujo._split(), self)
-      self.log_mock.info.assert_called_with(info_message)
+      self.log_mock.notice.assert_called_with(info_message)
       mock_parametric.assert_any_call('NumberOfEvents', [1, 2], 'NbOfEvts')
 
   @patch("%s.toInt" % MIXIN_MODULE, new=Mock(return_value=1))
@@ -252,7 +252,7 @@ class UserJobTestCase(unittest.TestCase):
     info_message = "Job splitting successful"
     with patch('%s.LOG' % MIXIN_MODULE, new=self.log_mock):
       assertDiracSucceeds(self.ujo._split(), self)
-    self.log_mock.info.assert_called_with(info_message)
+    self.log_mock.notice.assert_called_with(info_message)
 
   @patch("%s.toInt" % MIXIN_MODULE, new=Mock(return_value=False))
   def test_split_inputparameters_failed(self):
@@ -303,8 +303,9 @@ class UserJobTestCase(unittest.TestCase):
     self.ujo._switch = {"byEvents": lambda x: x }
     self.ujo._splittingOption = "byEvents"
     with patch('%s.LOG' % MIXIN_MODULE, new=self.log_mock):
-      self.assertTrue(self.ujo._checkSplitConsistency())
-    self.log_mock.warn.assert_called_once_with( "Job: Applications should all have the same number of events" )
+      resCheck = self.ujo._checkSplitConsistency()
+      self.assertFalse(resCheck['OK'])
+    self.assertIn("have the same number", resCheck['Message'])
 
   def test_checkjobconsistency_negative_events( self ):
     app1 = Fcc()

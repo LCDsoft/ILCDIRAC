@@ -33,7 +33,7 @@ class SplitMixin(object):
     :return: The success or the failure of the consistency checking
     :rtype: bool
     """
-    LOG.info("Checking job consistency")
+    LOG.notice("Checking job consistency")
 
     if self._splittingOption and self._splittingOption not in self._switch:
       splitOptions = ",".join(self._switch.keys())
@@ -44,12 +44,12 @@ class SplitMixin(object):
     sameNumberOfEvents = next(iter(self.applicationlist)).numberOfEvents
 
     if not all(app.numberOfEvents == sameNumberOfEvents for app in self.applicationlist):
-      LOG.warn("Job: Applications should all have the same number of events")
+      return self._reportError("Job: Applications should all have the same number of events")
 
     if sameNumberOfEvents == -1 and not self._data:
-      LOG.warn("Job: Number of events is -1 without input data. Was that intentional?")
+      return self._reportError("Job: Number of events is -1 without input data. Was that intentional?")
 
-    LOG.info("Consistency check successful")
+    LOG.notice("Consistency check successful")
     return S_OK()
 
   def setSplitEvents(self, eventsPerJob=None, numberOfJobs=None, totalNumberOfEvents=None):
@@ -129,7 +129,7 @@ class SplitMixin(object):
     :return: The success or the failure of the consistency checking
     :rtype: DIRAC.S_OK, DIRAC.S_ERROR
     """
-    LOG.info("Job splitting...")
+    LOG.notice("Job splitting...")
 
     self._eventsPerJob = toInt(self._eventsPerJob, cond=lambda x: x >= 0)
     self._numberOfJobs = toInt(self._numberOfJobs, cond=lambda x: x >= 0)
@@ -145,14 +145,14 @@ class SplitMixin(object):
     sequences = self._switch.get(self._splittingOption, lambda: [])()
 
     for sequenceType, sequenceList, addToWorkflow in sequences:
-
+      LOG.debug("Adding sequence %s %s" % (sequenceType, addToWorkflow))
       self.setParameterSequence(sequenceType, sequenceList, addToWorkflow)
       self.setParameterSequence('JobIndexList',
                                 range(self._startJobIndex, len(sequenceList) + self._startJobIndex),
                                 addToWorkflow='JobIndex')
       self._addParameter(self.workflow, 'JobIndex', 'int', self._startJobIndex, 'JobIndex')
 
-    LOG.info("Job splitting successful")
+    LOG.notice("Job splitting successful")
 
     return S_OK()
 
@@ -165,7 +165,7 @@ class SplitMixin(object):
     # reset split attribute to avoid infinite loop
     self._splittingOption = None
 
-    LOG.info("Job splitting: Splitting 'byData' method...")
+    LOG.notice("Job splitting: Splitting 'byData' method...")
 
     # Ensure that data have been specified by setInputData() method
     if not self._data:
@@ -178,7 +178,7 @@ class SplitMixin(object):
 
     data = breakListIntoChunks(self._data, self._numberOfFilesPerJob)
 
-    LOG.info("Job splitting: submission consists of %d job(s)" % len(self._data))
+    LOG.notice("Job splitting: submission consists of %d job(s)" % len(self._data))
 
     return [('InputData', data, 'ParametricInputData')]
 
@@ -191,7 +191,7 @@ class SplitMixin(object):
     # reset split attribute to avoid infinite loop
     self._splittingOption = None
 
-    LOG.info("Job splitting: splitting 'byEvents' method...")
+    LOG.notice("Job splitting: splitting 'byEvents' method...")
 
     if self._eventsPerJob and self._numberOfJobs:
       # 1st case: (numberOfJobs=3, eventsPerJob=10)
@@ -239,7 +239,7 @@ class SplitMixin(object):
           mapEventJob[suplement] += 1
 
     LOG.debug("Job splitting: events over the jobs: %s" % mapEventJob)
-    LOG.info("Job splitting: submission consists of %d job(s)" % len(mapEventJob))
+    LOG.notice("Job splitting: submission consists of %d job(s)" % len(mapEventJob))
 
     return [('NumberOfEvents', mapEventJob, 'NbOfEvts')]
 
@@ -266,7 +266,7 @@ class SplitMixin(object):
 
     self._numberOfJobs = len(inputDataList)
 
-    LOG.info("Job splitting: submission consists of %d job(s)" % self._numberOfJobs)
+    LOG.notice("Job splitting: submission consists of %d job(s)" % self._numberOfJobs)
 
     return [('InputData', inputDataList, 'InputData'),
             ('startFrom', startFromList, 'startFrom'),
