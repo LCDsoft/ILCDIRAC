@@ -161,7 +161,7 @@ class MonitorAgents(AgentModule):
     """
     res = self.sysAdminClient.getOverallStatus()
     if not res["OK"]:
-      self.logError("Failure to get agents from system administrator client", res["Message"])
+      self.logError("Failure to get %s from system administrator client" % instanceType, res["Message"])
       return res
 
     val = res['Value'][instanceType]
@@ -190,33 +190,29 @@ class MonitorAgents(AgentModule):
 
   def execute(self):
     """Execute checks for agents, executors, services."""
-    ok = True
-
     for instanceType in ('executor', 'agent', 'service'):
       for name, options in getattr(self, instanceType + 's').iteritems():
+        # call checkAgent, checkExecutor, checkService
         res = getattr(self, 'check' + instanceType.capitalize())(name, options)
         if not res['OK']:
           self.logError("Failure when checking %s" % instanceType, "%s, %s" % (name, res['Message']))
-          ok = False
 
     res = self.componentControl()
     if not res['OK']:
       if "Stopped does not exist" not in res['Message'] and \
          "Running does not exist" not in res['Message']:
         self.logError("Failure to control components", res['Message'])
-        ok = False
 
-    if ok:
+    if not self.errors:
       res = self.checkURLs()
       if not res['OK']:
         self.logError("Failure to check URLs", res['Message'])
-        ok = False
     else:
       self.logError('Something was wrong before, not checking URLs this time')
 
     self.sendNotification()
 
-    if not ok:
+    if self.errors:
       return S_ERROR("Error during this cycle, check log")
 
     return S_OK()
@@ -229,7 +225,7 @@ class MonitorAgents(AgentModule):
       lastAccessTime = os.path.getmtime(logFileLocation)
       lastAccessTime = datetime.fromtimestamp(lastAccessTime)
     except OSError as e:
-      return S_ERROR(str(e))
+      return S_ERROR('Failed to access logfile %s: %r' % (logFileLocation, e))
 
     now = datetime.now()
     age = now - lastAccessTime
@@ -268,7 +264,7 @@ class MonitorAgents(AgentModule):
     self.log.info("Pinging service", url)
     pingRes = RPCClient(url).ping()
     if not pingRes['OK']:
-      self.logError('Failure pinging service: ', '%s: %s' % (url, pingRes['Message']))
+      self.log.info('Failure pinging service: %s: %s' % (url, pingRes['Message']))
       res = self.restartInstance(int(options['PID']), serviceName, self.restartServices)
       if not res["OK"]:
         return res
@@ -287,7 +283,6 @@ class MonitorAgents(AgentModule):
 
     res = self.getLastAccessTime(currentLogLocation)
     if not res["OK"]:
-      self.logError("Failed to access current log file for", "%s Message: %s" % (agentName, res["Message"]))
       return res
 
     age = res["Value"]
@@ -318,7 +313,6 @@ class MonitorAgents(AgentModule):
 
     res = self.getLastAccessTime(currentLogLocation)
     if not res["OK"]:
-      self.logError("Failed to access current log file for", "%s Message: %s" % (executor, res["Message"]))
       return res
 
     age = res["Value"]

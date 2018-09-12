@@ -181,7 +181,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.sendNotification.assert_called()
 
   @patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock())
-  def test_execute_2(self):
+  def test_execute_2a(self):
     """Test for the execute function."""
     self.restartAgent.sendNotification = MagicMock()
     self.restartAgent.componentControl = MagicMock(return_value=S_ERROR('Stopped does not exist'))
@@ -191,19 +191,27 @@ class TestMonitorAgents(unittest.TestCase):
     # email notification should be sent at the end of every agent cycle
     self.restartAgent.sendNotification.assert_called()
 
+  @patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock())
+  def test_execute_2b(self):
+    """Test for the execute function."""
     self.restartAgent.sendNotification = MagicMock()
     self.restartAgent.componentControl = MagicMock(return_value=S_ERROR())
     self.restartAgent.checkURLs = MagicMock()
     res = self.restartAgent.execute()
     self.assertFalse(res["OK"])
+    self.assertIn('Failure to control components ', self.restartAgent.errors)
     # email notification should be sent at the end of every agent cycle
     self.restartAgent.sendNotification.assert_called()
     self.restartAgent.checkURLs.assert_not_called()
 
+  @patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock())
+  def test_execute_2c(self):
+    """Test for the execute function."""
     self.restartAgent.sendNotification = MagicMock()
     self.restartAgent.componentControl = MagicMock(return_value=S_OK())
     self.restartAgent.checkURLs = MagicMock(return_value=S_OK())
     res = self.restartAgent.execute()
+    self.assertEqual([], self.restartAgent.errors)
     self.assertTrue(res["OK"])
     # email notification should be sent at the end of every agent cycle
     self.restartAgent.sendNotification.assert_called()
