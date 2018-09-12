@@ -304,7 +304,7 @@ class UserJobTestCase(unittest.TestCase):
     self.ujo._splittingOption = "byEvents"
     with patch('%s.LOG' % MIXIN_MODULE, new=self.log_mock):
       resCheck = self.ujo._checkSplitConsistency()
-      self.assertFalse(resCheck['OK'])
+    self.assertFalse(resCheck['OK'])
     self.assertIn("have the same number", resCheck['Message'])
 
   def test_checkjobconsistency_negative_events( self ):
@@ -451,3 +451,14 @@ class UserJobTestCase(unittest.TestCase):
     self.ujo.setSplitDoNotAlterOutputFilename(False)
     self.assertIsNotNone(self.ujo.workflow.parameters.find('DoNotAlterOutputData'))
     self.assertEqual(self.ujo.workflow.parameters.find('DoNotAlterOutputData').getValue(), "False")
+
+  def test_setSplitJobIndexList(self):
+    """Test the setSplitJobIndexList function."""
+    res = self.ujo.setSplitJobIndexList(range(0, 7, 3))
+    self.assertTrue(res['OK'])
+    self.assertEqual([0, 3, 6], self.ujo._jobIndexList)
+
+    res = self.ujo.setSplitJobIndexList(set(range(1, 7, 3)))
+    self.assertFalse(res['OK'])
+    self.assertIn('Invalid argument type', res['Message'])
+    self.assertEqual([0, 3, 6], self.ujo._jobIndexList)

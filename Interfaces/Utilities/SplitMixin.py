@@ -26,6 +26,7 @@ class SplitMixin(object):
     self._eventsPerFile = None
     self._numberOfFilesPerJob = 1
     self._startJobIndex = 0
+    self._jobIndexList = None
 
   def _checkSplitConsistency(self):
     """Check if splitting options are consistent.
@@ -144,13 +145,20 @@ class SplitMixin(object):
       return resCheck
 
     sequences = self._switch.get(self._splittingOption, lambda: [])()
-
+    sequenceLength = 0
     for sequenceType, sequenceList, addToWorkflow in sequences:
       LOG.debug("Adding sequence %s %s" % (sequenceType, addToWorkflow))
       self.setParameterSequence(sequenceType, sequenceList, addToWorkflow)
-      self.setParameterSequence('JobIndexList',
-                                range(self._startJobIndex, len(sequenceList) + self._startJobIndex),
-                                addToWorkflow='JobIndex')
+      sequenceLength = len(sequenceList)
+
+    if sequences:
+      LOG.debug("Adding jobIndexList")
+      if not self._jobIndexList:
+        self._jobIndexList = range(self._startJobIndex, sequenceLength + self._startJobIndex)
+      if sequenceLength != len(self._jobIndexList):
+        return self._reportError("JobIndexList (length=%s) does not have the correct length of %s" %
+                                 (len(self._jobIndexList), sequenceLength))
+      self.setParameterSequence('JobIndexList', self._jobIndexList, addToWorkflow='JobIndex')
       self._addParameter(self.workflow, 'JobIndex', 'int', self._startJobIndex, 'JobIndex')
 
     LOG.notice("Job splitting successful")
@@ -284,4 +292,21 @@ class SplitMixin(object):
     if not start:
       return self._reportError("Start Index must be positive integer")
     self._startJobIndex = start
+    return S_OK()
+
+  def setSplitJobIndexList(self, jobIndexList):
+    """Set the list of job indices to use.
+
+    Define the list of indices to use to name output files. By default numbers from *0* to *n* are used.
+    This function should be used when rerunning a select sample of input files for example.
+
+    The length of the list must be as long as the number of jobs.
+
+    See also :func:`setSplittingStartIndex`
+
+    :param list jobIndexList: list of job indices
+    """
+    if not isinstance(jobIndexList, list):
+      return self._reportError("Invalid argument type %s" % type(jobIndexList))
+    self._jobIndexList = list(jobIndexList)
     return S_OK()
