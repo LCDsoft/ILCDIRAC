@@ -464,6 +464,7 @@ class MonitorAgents(AgentModule):
 
   def checkURLs(self):
     """Ensure that the running services have their URL in the Config."""
+    self.log.info("Checking URLs")
     # get services again, in case they were started/stop in controlComponents
     gConfig.forceRefresh(fromMaster=True)
     res = self.getRunningInstances(instanceType='Services', runitStatus='All')
@@ -490,6 +491,7 @@ class MonitorAgents(AgentModule):
     url = self._getURL(serviceName, options)
     system = options['System']
     module = options['Module']
+    self.log.info("Checking URLs for %s/%s" % (system, module))
     urlsConfigPath = os.path.join('/Systems', system, self.setup, 'URLs', module)
     urls = gConfig.getValue(urlsConfigPath, [])
     self.log.debug("Found configured URLs for %s: %s" % (module, urls))
@@ -498,13 +500,13 @@ class MonitorAgents(AgentModule):
     wouldHave = 'Would have ' if not self.commitURLs else ''
     if runitStatus == 'Run' and url not in urls:
       urls.append(url)
-      message = "%sAdded URL %s to URLs: %s" % (wouldHave, url, urls)
+      message = "%sAdded URL %s to URLs for %s/%s" % (wouldHave, url, system, module)
       self.log.info(message)
       self.accounting[serviceName + "/URL"]["Treatment"] = message
       self.csAPI.modifyValue(urlsConfigPath, ",".join(urls))
     if runitStatus == 'Down' and url in urls:
       urls.remove(url)
-      message = "%sRemoved URL %s from URLs" % (wouldHave, url)
+      message = "%sRemoved URL %s from URLs for %s/%s" % (wouldHave, url, system, module)
       self.log.info(message)
       self.accounting[serviceName + "/URL"]["Treatment"] = message
       self.csAPI.modifyValue(urlsConfigPath, ",".join(urls))
