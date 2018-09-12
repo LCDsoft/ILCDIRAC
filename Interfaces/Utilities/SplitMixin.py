@@ -110,6 +110,7 @@ class SplitMixin(object):
     self._eventsPerFile = eventsPerFile
     self._eventsPerJob = eventsPerJob
     self._splittingOption = 'bySkip'
+    self._addParameter(self.workflow, 'NbOfEvts', 'JDL', -1, 'Number of Events')
 
   def setSplitDoNotAlterOutputFilename(self, value=True):
     """Disable the changing the output filename for jobs with splitting.
