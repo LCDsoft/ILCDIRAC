@@ -13,7 +13,7 @@ Welcome to the iLCDirac Documentation.
 
    DOC/Files/UserGuide/index
    DOC/Files/ProdGuide/index
-   Code Documentation <DOC/ILCDIRAC/ILCDIRAC>
+   Code Documentation <DOC/ILCDIRAC/index>
    Release Notes <releasenotes>
    DOC/Files/acknowledgements
 
@@ -27,7 +27,7 @@ the :doc:`DOC/Files/UserGuide/index`
    :maxdepth: 1
 
    DOC/Files/UserGuide/registration
-   Application Interfaces </DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/Applications>
+   Application Interfaces </DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/index>
    UserJob Interface </DOC/ILCDIRAC/Interfaces/API/NewInterface/UserJob>
    DOC/Files/UserGuide/examplejobs
    DOC/Files/UserGuide/faq
@@ -49,7 +49,7 @@ In this section are scripts and notes for production managers
 .. toctree::
    :maxdepth: 1
 
-   Production Related Scripts <DOC/ILCDIRAC/ILCTransformationSystem/scripts/scripts>
+   Production Related Scripts <DOC/ILCDIRAC/ILCTransformationSystem/scripts/index>
 
 
 Code Documentation
@@ -60,7 +60,7 @@ This is the full table of contents for the code documentation
 .. toctree::
    :maxdepth: 2
 
-   DOC/ILCDIRAC/ILCDIRAC
+   DOC/ILCDIRAC/index
 
 
 Release Notes

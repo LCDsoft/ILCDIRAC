@@ -25,18 +25,18 @@ def mkdir(folder):
     LOG.debug("Exception when creating dir %s: %r", folder, e)
 
 
-def mkRest( filename, modulename, fullmodulename, subpackages=None, modules=None ):
-  """make a rst file for filename"""
-  if modulename == "scripts":
-    modulefinal = fullmodulename.split(".")[-2]+" Scripts"
+def mkPackageRst(filename, packagename, fullmodulename, subpackages=None, modules=None):
+  """Make an rst file for a package."""
+  if packagename == "scripts":
+    packagefinal = fullmodulename.split(".")[-2] + " Scripts"
   else:
-    modulefinal = modulename
+    packagefinal = packagename
 
   lines = []
-  lines.append("%s" % modulefinal)
-  lines.append("="*len(modulefinal))
-  lines.append(".. module:: %s " % fullmodulename )
-  lines.append("" )
+  lines.append("%s" % packagefinal)
+  lines.append("=" * len(packagefinal))
+  lines.append(".. module:: %s " % fullmodulename)
+  lines.append("")
 
   if subpackages or modules:
     lines.append(".. toctree::")
@@ -45,14 +45,12 @@ def mkRest( filename, modulename, fullmodulename, subpackages=None, modules=None
 
   if subpackages:
     for package in subpackages:
-      lines.append("   %s/%s.rst" % (package,package.split("/")[-1] ) )
-      #lines.append("   %s " % (package, ) )
+      lines.append("   %s/index.rst" % package)
 
   if modules:
     for module in sorted(modules):
-      lines.append("   %s.rst" % (module.split("/")[-1],) )
-      #lines.append("   %s " % (package, ) )
-        
+      lines.append("   %s.rst" % (module.split("/")[-1],))
+
   with open(filename, 'w') as rst:
     rst.write("\n".join(lines))
 
@@ -87,8 +85,8 @@ def mkModuleRest( classname, fullclassname ):
     rst.write("\n".join(lines))
 
 
-def getsubpackages( abspath, direc):
-  """return list of subpackages with full path"""
+def getsubpackages(abspath, direc):
+  """Return list of subpackages with full path."""
   packages = []
   for dire in direc:
     if "test" in dire.lower():
@@ -98,6 +96,7 @@ def getsubpackages( abspath, direc):
        dire.lower() not in IGNORE_FOLDERS:
       packages.append( os.path.join( dire) )
   if packages:
+    packages = sorted(packages)
     LOG.info("In %r found package(s): %s", abspath, ", ".join(packages))
   return packages
 
@@ -124,18 +123,21 @@ def createDoc():
     files = [ _ for _ in files if _.endswith(".py") ]
     if "__init__.py" not in files:
       continue
-    if any( dire in root.lower() for dire in IGNORE_FOLDERS ):
+    if any("/%s" % dire in root.lower() for dire in IGNORE_FOLDERS):
+      LOG.warn("Ignoring folder %s", root)
       continue
     #print root, direc, files
     modulename = root.split("/")[-1]
     abspath = root.split(DIRACPATH)[1].strip("/")
     fullmodulename = ".".join(abspath.split("/"))
-    packages = getsubpackages(abspath,direc)
+    packages = getsubpackages(abspath, direc)
     if abspath:
       mkdir( abspath )
       os.chdir( abspath )
-    LOG.debug("Making rst: %s", modulename)
-    mkRest( modulename+".rst", modulename, fullmodulename, subpackages=packages, modules=getmodules(abspath, direc, files) )
+
+    LOG.info("Creating RST file %s/index.rst for %s", abspath, fullmodulename)
+    mkPackageRst("index.rst", modulename, fullmodulename, subpackages=packages,
+                 modules=getmodules(abspath, direc, files))
 
     for filename in files:
       if "test" in filename.lower():
