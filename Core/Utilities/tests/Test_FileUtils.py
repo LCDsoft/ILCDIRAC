@@ -197,7 +197,7 @@ class TestFileUtils( unittest.TestCase ):
 
   def test_fullcopy_getallfiles( self ):
     from ILCDIRAC.Core.Utilities.FileUtils import fullCopy
-    with patch('%s.gLogger' % MODULE_NAME, new=Mock()) as log_mock:
+    with patch('%s.LOG' % MODULE_NAME, new=Mock()) as log_mock:
       assertDiracSucceeds( fullCopy( '/my/src/directory/', '/my/destination/dir', '   ./__!@#.~/  ' ), self )
       log_mock.error.assert_called_once_with( 'You try to get all files, that cannot happen' )
 

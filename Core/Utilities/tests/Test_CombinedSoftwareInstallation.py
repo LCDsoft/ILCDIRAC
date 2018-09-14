@@ -144,7 +144,8 @@ class TestCombinedSWInstallation( unittest.TestCase ):
 
   def test_listareadir_nofail( self ):
     with patch('%s.systemCall' % MODULE_NAME, new=Mock(return_value=S_OK([ 0, 'important_message', 'my_subprocess_error_msg']))), \
-         patch('%s.DIRAC.gLogger.info' % MODULE_NAME, new=Mock(side_effect=[True, KeyError('injecting this into logger call')])) as mock_log:
+        patch('%s.LOG.info' % MODULE_NAME,
+              new=Mock(side_effect=[True, KeyError('injecting this into logger call')])) as mock_log:
       from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import listAreaDirectory
       try:
         listAreaDirectory( self.csi.sharedArea )
@@ -157,7 +158,8 @@ class TestCombinedSWInstallation( unittest.TestCase ):
 
   def test_listareadir_fail_a_bit( self ):
     with patch('%s.systemCall' % MODULE_NAME, new=Mock(return_value=S_OK([ 1, 'entry', 'my_subprocess_error_msg']))), \
-         patch('%s.DIRAC.gLogger.error' % MODULE_NAME, new=Mock(side_effect=KeyError('injecting this into logger call 2'))) as mock_log:
+        patch('%s.LOG.error' % MODULE_NAME,
+              new=Mock(side_effect=KeyError('injecting this into logger call 2'))) as mock_log:
       from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import listAreaDirectory
       try:
         listAreaDirectory( self.csi.sharedArea )
@@ -171,7 +173,8 @@ class TestCombinedSWInstallation( unittest.TestCase ):
 
   def test_listareadir_fail_completely( self ):
     with patch('%s.systemCall' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_os_listdir_error'))), \
-         patch('%s.DIRAC.gLogger.error' % MODULE_NAME, new=Mock(side_effect=KeyError('injecting this into logger call 3'))) as mock_log:
+        patch('%s.LOG.error' % MODULE_NAME,
+              new=Mock(side_effect=KeyError('injecting this into logger call 3'))) as mock_log:
       from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import listAreaDirectory
       try:
         listAreaDirectory( self.csi.sharedArea )
@@ -263,14 +266,14 @@ class TestSharedLocation( unittest.TestCase ):
 
   def test_createsharedarea_noenvvars( self ):
     with patch.dict( os.environ, {}, True ), \
-         patch( '%s.DIRAC.gLogger.info' % MODULE_NAME ) as mock_log:
+            patch('%s.LOG.info' % MODULE_NAME) as mock_log:
       result = createSharedArea()
       self.assertFalse( result )
       mock_log.assert_called_with( 'VO_ILC_SW_DIR and OSG_APP not defined.', )
 
   def test_createsharedarea_points_to_curdir( self ):
     with patch.dict( os.environ, { 'OSG_APP' : '.' }, True ), \
-         patch( '%s.DIRAC.gLogger.info' % MODULE_NAME ) as mock_log:
+            patch('%s.LOG.info' % MODULE_NAME) as mock_log:
       result = createSharedArea()
       self.assertFalse( result )
       mock_log.assert_called_with( 'VO_ILC_SW_DIR or OSG_APP points to "."', )
@@ -309,12 +312,12 @@ class TestSharedLocation( unittest.TestCase ):
 
   def test_createsharedarea_oserr( self ):
     with patch.dict( os.environ, { 'VO_ILC_SW_DIR' : '/myilc/sharedarea/cooldir', 'OSG_APP' : '/appdir/shared' }, True ), \
-         patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)) as isdir_mock, \
-         patch('%s.os.path.islink' % MODULE_NAME, new=Mock(return_value=True)) as islink_mock, \
-         patch( '%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError('some_filesys_error')) ) as remove_mock, \
-         patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
-         patch( '%s.os.makedirs' % MODULE_NAME, new=Mock(return_value=True) ) as mkdirs_mock, \
-         patch( '%s.DIRAC.gLogger.error' % MODULE_NAME ) as mock_err:
+        patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)) as isdir_mock, \
+        patch('%s.os.path.islink' % MODULE_NAME, new=Mock(return_value=True)) as islink_mock, \
+        patch('%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError('some_filesys_error'))) as remove_mock, \
+        patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
+        patch('%s.os.makedirs' % MODULE_NAME, new=Mock(return_value=True)) as mkdirs_mock, \
+            patch('%s.LOG.error' % MODULE_NAME) as mock_err:
       result = createSharedArea()
       self.assertFalse( result )
       self.assertFalse( mkdirs_mock.called )
@@ -371,11 +374,11 @@ class TestSharedLocation( unittest.TestCase ):
 
   def test_getlocalarealoc_remove_fails( self ):
     with patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(return_value='/gconfig/localarea')), \
-         patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, \
-         patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
-         patch( '%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError('some_remove_oserror'))) as remove_mock, \
-         patch( '%s.os.mkdir' % MODULE_NAME, new=Mock(return_value=True)) as mkdir_mock, \
-         patch('%s.DIRAC.gLogger.error' % MODULE_NAME) as mock_err:
+        patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, \
+        patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
+        patch('%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError('some_remove_oserror'))) as remove_mock, \
+        patch('%s.os.mkdir' % MODULE_NAME, new=Mock(return_value=True)) as mkdir_mock, \
+            patch('%s.LOG.error' % MODULE_NAME) as mock_err:
       result = getLocalAreaLocation()
       finallocalarea = '/gconfig/localarea'
       isdir_mock.assert_called_once_with( finallocalarea )
@@ -387,11 +390,11 @@ class TestSharedLocation( unittest.TestCase ):
 
   def test_getlocalarealoc_create_fails( self ):
     with patch('%s.DIRAC.gConfig.getValue' % MODULE_NAME, new=Mock(return_value='/gconfig/localarea')), \
-         patch( '%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, \
-         patch( '%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, \
-         patch( '%s.os.remove' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, \
-         patch( '%s.os.mkdir' % MODULE_NAME, new=Mock(side_effect=OSError('some_mkdir_oserror'))) as mkdir_mock, \
-         patch('%s.DIRAC.gLogger.error' % MODULE_NAME) as mock_err:
+        patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, \
+        patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, \
+        patch('%s.os.remove' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, \
+        patch('%s.os.mkdir' % MODULE_NAME, new=Mock(side_effect=OSError('some_mkdir_oserror'))) as mkdir_mock, \
+            patch('%s.LOG.error' % MODULE_NAME) as mock_err:
       result = getLocalAreaLocation()
       finallocalarea = '/gconfig/localarea'
       isdir_mock.assert_called_once_with( finallocalarea )

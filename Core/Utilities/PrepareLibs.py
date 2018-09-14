@@ -6,9 +6,9 @@ Remove any system library provided in the application tar ball
 '''
 __RCSID__ = "$Id$"
 
-from DIRAC import gLogger
 import os
-
+from DIRAC import gLogger
+LOG = gLogger.getSubLogger(__name__)
 FILES_TO_REMOVE = ["libc.so","libc-2.5","libm.so","libpthread.so","libdl.so", "libstdc++.so", "libgcc_s.so.1"]
 
 def removeLibc(libraryPath):
@@ -18,8 +18,8 @@ def removeLibc(libraryPath):
   :returns: True on Success, False in case of error
   """
 
-  gLogger.debug("RemoveLibC: Trying to remove these libraries:")
-  gLogger.debug("RemoveLibC - "+ "\nRemoveLibC - ".join(FILES_TO_REMOVE) )
+  LOG.debug("RemoveLibC: Trying to remove these libraries:")
+  LOG.debug("RemoveLibC - " + "\nRemoveLibC - ".join(FILES_TO_REMOVE))
 
   curdir = os.getcwd()
   try:
@@ -32,10 +32,10 @@ def removeLibc(libraryPath):
       if lib.count(lib_to_remove):
         try:
           libraryPath = os.getcwd() + os.sep + lib
-          gLogger.info("RemoveLibC: Trying to remove: %s" % libraryPath)
+          LOG.info("RemoveLibC: Trying to remove: %s" % libraryPath)
           os.remove(libraryPath)
         except OSError:
-          gLogger.error("RemoveLibC: Could not remove", lib)
+          LOG.error("RemoveLibC: Could not remove", lib)
           os.chdir(curdir)
           return False
   os.chdir(curdir)

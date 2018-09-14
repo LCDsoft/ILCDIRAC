@@ -21,6 +21,9 @@ try:                      #FIXME: Deprecated import?
 except ImportError:
   import md5
 
+LOG = gLogger.getSubLogger(__name__)
+
+
 def createLock(lockname):
   """ Need to lock the area to prevent 2 jobs to write in the same area
   """
@@ -28,7 +31,7 @@ def createLock(lockname):
     with open(lockname,"w") as lock:
       lock.write("Locking this directory\n")
   except IOError as e:
-    gLogger.error("Failed creating lock")
+    LOG.error("Failed creating lock")
     return S_ERROR("Not allowed to write here: IOError %s" % (str(e)))
   return S_OK()
 
@@ -41,7 +44,7 @@ def checkLockAge(lockname):
     if not os.path.exists(lockname):
       break
     count += 1
-    gLogger.warn("Will wait one minute before proceeding")
+    LOG.warn("Will wait one minute before proceeding")
     res = wasteCPUCycles(60)
     if not res['OK']:
       continue
@@ -50,17 +53,17 @@ def checkLockAge(lockname):
       stat = os.stat(lockname)
       last_touch = stat.st_atime
     except OSError as x:
-      gLogger.warn("File not available: %s %s, assume removed" % (OSError, str(x))) 
+      LOG.warn("File not available: %s %s, assume removed" % (OSError, str(x)))
       break
     loc_time = time.time()
     if loc_time-last_touch > 30*60: ##this is where I say the file is too old to still be valid (30 minutes)
-      gLogger.info("File is %s seconds old" % str(loc_time-last_touch))
+      LOG.info("File is %s seconds old" % str(loc_time - last_touch))
       overwrite = True
       res = clearLock(lockname)
       if res['OK']:
         break
     if count > 60: #We have been waiting for 60 minutes, something is wrong, kill it
-      gLogger.error("Seems file stat is wrong, assume buggy, will fail installation")
+      LOG.error("Seems file stat is wrong, assume buggy, will fail installation")
       #overwrite = True
       res = clearLock(lockname)
       return S_ERROR("Buggy lock, removed: %s" % res['OK'])
@@ -73,27 +76,27 @@ def clearLock(lockname):
   try:
     os.unlink(lockname)
   except OSError as e:
-    gLogger.error("Failed cleaning lock: OSError", "%s" % (str(e)))
+    LOG.error("Failed cleaning lock: OSError", "%s" % (str(e)))
     return S_ERROR("Failed to clear lock: %s" % (str(e)) )
   return S_OK()
 
 def deleteOld(folder_name):
   """ Remove directories
   """
-  gLogger.info("Deleting existing version %s" % folder_name)
+  LOG.info("Deleting existing version %s" % folder_name)
   if os.path.exists(folder_name):
     if os.path.isdir(folder_name):
       try:
         shutil.rmtree(folder_name)
       except OSError as x:
-        gLogger.error("Failed deleting %s because :" % (folder_name), "%s %s" % ( OSError, str(x)))
+        LOG.error("Failed deleting %s because :" % (folder_name), "%s %s" % (OSError, str(x)))
     else:
       try:
         os.remove(folder_name)
       except OSError as e:
-        gLogger.error("Failed deleting %s because :" % (folder_name),"OSError %s" % ( str(e)))
+        LOG.error("Failed deleting %s because :" % (folder_name), "OSError %s" % (str(e)))
   if os.path.exists(folder_name):
-    gLogger.error("Oh Oh, something was not right, the directory %s is still here" % folder_name) 
+    LOG.error("Oh Oh, something was not right, the directory %s is still here" % folder_name)
   return S_OK()
 
 def downloadFile(tarballURL, app_tar, folder_name):
@@ -106,18 +109,18 @@ def downloadFile(tarballURL, app_tar, folder_name):
   app_tar_base = os.path.basename(app_tar)
   if tarballURL.find("http://")>-1:
     try :
-      gLogger.debug("Downloading software", '%s' % (folder_name))
+      LOG.debug("Downloading software", '%s' % (folder_name))
       #Copy the file locally, don't try to read from remote, soooo slow
       #Use string conversion %s%s to set the address, makes the system more stable
       urllib.urlretrieve("%s%s" % (tarballURL, app_tar), app_tar_base)
     except IOError as err:
-      gLogger.exception(str(err))
+      LOG.exception(str(err))
       return S_ERROR('Exception during url retrieve: %s' % str(err))
   else:
     datMan = DataManager()
     resget = datMan.getFile("%s%s" % (tarballURL, app_tar))
     if not resget['OK']:
-      gLogger.error("File could not be downloaded from the grid")
+      LOG.error("File could not be downloaded from the grid")
       return resget
   return S_OK()
 
@@ -130,10 +133,10 @@ def tarMd5Check(app_tar_base, md5sum ):
     with open(app_tar_base) as myFile:
       tar_ball_md5 = md5.md5(myFile.read()).hexdigest()
   except IOError:
-    gLogger.warn("Failed to get tar ball md5, try without")
+    LOG.warn("Failed to get tar ball md5, try without")
     md5sum = ''
   if md5sum and md5sum != tar_ball_md5:
-    gLogger.error('Hash does not correspond, found %s, expected %s, cannot continue' % (tar_ball_md5, md5sum))
+    LOG.error('Hash does not correspond, found %s, expected %s, cannot continue' % (tar_ball_md5, md5sum))
     return S_ERROR("Hash does not correspond")
   return S_OK()
 
@@ -162,15 +165,15 @@ def installInAnyArea(areas, app, jobConfig):
 
 def installSinglePackage(app, jobConfig, area):
   """install some package somewhere, returns S_OK/S_ERROR"""
-  gLogger.notice('Attempting to install %s_%s for %s in %s' % (app[0], app[1], jobConfig, area))
+  LOG.notice('Attempting to install %s_%s for %s in %s' % (app[0], app[1], jobConfig, area))
   curdir = os.getcwd()
   res = installPackage(app, jobConfig, area, curdir)
   if not res['OK']:
-    gLogger.error('Failed to install software in %s: %s' % (area, res['Message']),
+    LOG.error('Failed to install software in %s: %s' % (area, res['Message']),
                   '%s_%s' % (app[0], app[1]))
     return S_ERROR("Failed to install here")
   else:
-    gLogger.info('%s was successfully installed for %s in %s' % (app, jobConfig, area))
+    LOG.info('%s was successfully installed for %s in %s' % (app, jobConfig, area))
     return S_OK()
 
 def getTarBallLocation(app, config, dummy_area):
@@ -183,14 +186,14 @@ def getTarBallLocation(app, config, dummy_area):
   app_tar = ops.getValue('/AvailableTarBalls/%s/%s/%s/TarBall' % (config, appName, appVersion), '')
   overwrite = ops.getValue('/AvailableTarBalls/%s/%s/%s/Overwrite' % (config, appName, appVersion), False)
   md5sum = ops.getValue('/AvailableTarBalls/%s/%s/%s/Md5Sum' % (config, appName, appVersion), '')
-  gLogger.info("Looking for application %s%s for config %s:" % (appName, appVersion, config) )
+  LOG.info("Looking for application %s%s for config %s:" % (appName, appVersion, config))
   if not app_tar:
-    gLogger.error('Could not find tar ball for %s %s'%(appName, appVersion))
+    LOG.error('Could not find tar ball for %s %s' % (appName, appVersion))
     return S_ERROR('Could not find tar ball for %s %s'%(appName, appVersion))
   
   tarballURL = ops.getValue('/AvailableTarBalls/%s/%s/TarBallURL' % (config, appName), '')
   if not tarballURL:
-    gLogger.error('Could not find tarballURL in CS for %s %s' % (appName, appVersion))
+    LOG.error('Could not find tarballURL in CS for %s %s' % (appName, appVersion))
     return S_ERROR('Could not find tarballURL in CS')
 
   return S_OK([app_tar, tarballURL, overwrite, md5sum])
@@ -218,8 +221,8 @@ def install(app, app_tar, tarballURL, overwrite, md5sum, area):
   #Make sure the lock is not too old, or wait until it's gone
   res = checkLockAge(lockname)
   if not res['OK']:
-    gLogger.error("Something uncool happened with the lock, will kill installation")
-    gLogger.error("Message: %s" % res['Message'])
+    LOG.error("Something uncool happened with the lock, will kill installation")
+    LOG.error("Message: %s" % res['Message'])
     return S_ERROR("Failed lock checks")
 
   if 'Value' in res and res['Value']: #this means the lock file was very old, meaning that the installation failed elsewhere
@@ -229,7 +232,7 @@ def install(app, app_tar, tarballURL, overwrite, md5sum, area):
   if os.path.exists(folder_name):
     appli_exists = True
     if not overwrite:
-      gLogger.info("Folder or file %s found in %s, skipping install !" % (folder_name, area))
+      LOG.info("Folder or file %s found in %s, skipping install !" % (folder_name, area))
       return S_OK([folder_name, app_tar_base])
   
   ## If we are here, it means the application was never installed OR its overwrite flag is true
@@ -237,13 +240,13 @@ def install(app, app_tar, tarballURL, overwrite, md5sum, area):
   #Now lock the area
   res = createLock(lockname)##This will fail if not allowed to write here
   if not res['OK']:
-    gLogger.error(res['Message'])
+    LOG.error(res['Message'])
     return res
   
   ## Cleanup old version in case it has to be overwritten (implies it's already here)
   ## In particular the jar file of LCSIM
   if appli_exists and overwrite:
-    gLogger.info("Overwriting %s found in %s" % (folder_name, area))
+    LOG.info("Overwriting %s found in %s" % (folder_name, area))
     res = deleteOld(folder_name) 
     if not res['OK']:#should be always OK for the time being
       clearLock(lockname)
@@ -264,7 +267,7 @@ def install(app, app_tar, tarballURL, overwrite, md5sum, area):
   
   ## Check that the tar ball is there. Should never happen as download file catches the errors
   if not os.path.exists("%s/%s" % (os.getcwd(), app_tar_base)):
-    gLogger.error('Failed to download software','%s' % (folder_name))
+    LOG.error('Failed to download software', '%s' % (folder_name))
     clearLock(lockname)
     return S_ERROR('Failed to download software')
 
@@ -278,11 +281,11 @@ def install(app, app_tar, tarballURL, overwrite, md5sum, area):
   ## Check that the downloaded file (or existing one) has the right checksum
   res = tarMd5Check(app_tar_base, md5sum)
   if not res['OK']:
-    gLogger.error("Will try getting the file again, who knows")
+    LOG.error("Will try getting the file again, who knows")
     try:#Remove tar ball that we just got
       os.unlink("%s/%s" % (os.getcwd(), app_tar_base))
     except OSError:
-      gLogger.error("Failed to clean tar ball, something bad is happening")
+      LOG.error("Failed to clean tar ball, something bad is happening")
     ## Clean up existing stuff (if any, in particular the jar file)
     res = deleteOld(folder_name)
     if not res['OK']:#should be always OK for the time being
@@ -294,7 +297,7 @@ def install(app, app_tar, tarballURL, overwrite, md5sum, area):
       return res
     res = tarMd5Check(app_tar_base, md5sum)
     if not res['OK']:
-      gLogger.error("Hash failed again, something is really wrong, cannot continue.")
+      LOG.error("Hash failed again, something is really wrong, cannot continue.")
       clearLock(lockname)
       return S_ERROR("MD5 check failed")
   
@@ -304,7 +307,7 @@ def install(app, app_tar, tarballURL, overwrite, md5sum, area):
     try:
       app_tar_to_untar.extractall()
     except TarError as e:
-      gLogger.error("Could not extract tar ball %s because of %s, cannot continue !" % (app_tar_base, str(e)))
+      LOG.error("Could not extract tar ball %s because of %s, cannot continue !" % (app_tar_base, str(e)))
       clearLock(lockname)
       return S_ERROR("Could not extract tar ball %s because of %s, cannot continue !"%(app_tar_base, str(e)))
     if folder_name.count("slic"):
@@ -315,7 +318,7 @@ def install(app, app_tar, tarballURL, overwrite, md5sum, area):
       try:
         os.rename(basefolder, slicname)
       except OSError as e:
-        gLogger.error("Failed renaming slic:", str(e))
+        LOG.error("Failed renaming slic:", str(e))
         clearLock(lockname)
         return S_ERROR("Could not rename slic directory")
   try:
@@ -360,20 +363,20 @@ def check(app, area, res_from_install):
           continue
         fin = os.path.join(basefolder, fin.replace("./",""))
         if not os.path.exists(fin):
-          gLogger.error("File missing :", fin)
+          LOG.error("File missing :", fin)
           return S_ERROR("Incomplete install: The file %s is missing" % fin)
         fmd5 = ''
         try:
           fmd5 = md5.md5(open(fin).read()).hexdigest()
         except IOError:
-          gLogger.error("Failed to compute md5 sum")
+          LOG.error("Failed to compute md5 sum")
           return S_ERROR("Failed to compute md5 sum")
         if md5sum != fmd5:
-          gLogger.error("File has wrong checksum :", fin)
-          gLogger.error("Found %s, expected %s" % ( fmd5, md5sum ))
+          LOG.error("File has wrong checksum :", fin)
+          LOG.error("Found %s, expected %s" % (fmd5, md5sum))
           return S_ERROR("Corrupted install: File %s has a wrong sum" % fin)
   else:
-    gLogger.warn("The application does not come with md5 checksum file:", app)
+    LOG.warn("The application does not come with md5 checksum file:", app)
   
   return S_OK([basefolder])
 
@@ -427,7 +430,7 @@ def clean(area, res_from_install):
       try:
         os.unlink(app_tar_base)
       except OSError as e:
-        gLogger.error("Could not remove tar ball:",str(e))
+        LOG.error("Could not remove tar ball:", str(e))
   return S_OK()
 
 def remove():
@@ -444,7 +447,7 @@ def checkJava():
     if res:
       return S_ERROR("Something is wrong with Java")
   except subprocess.CalledProcessError:
-    gLogger.error("Java was not found on this machine, cannot proceed")
+    LOG.error("Java was not found on this machine, cannot proceed")
     return S_ERROR("Java was not found on this machine, cannot proceed")
   return S_OK()
 
@@ -520,35 +523,35 @@ def installPackage(app, config, area, curdir):
   appVersion = app[1]
   res = getTarBallLocation(app, config, area)
   if not res['OK']:
-    gLogger.error("Could not install software/dependency %s %s: %s" % (appName, appVersion, res['Message']))
+    LOG.error("Could not install software/dependency %s %s: %s" % (appName, appVersion, res['Message']))
     return S_ERROR('Failed to install software')
   app_tar, tarballURL, overwrite, md5sum = res['Value']
 
   res = install(app, app_tar, tarballURL, overwrite, md5sum, area)
   os.chdir(curdir)
   if not res['OK']:
-    gLogger.error("Could not install software/dependency %s %s: %s" % (appName,appVersion, res['Message']))
+    LOG.error("Could not install software/dependency %s %s: %s" % (appName, appVersion, res['Message']))
     return S_ERROR('Failed to install software')
   res_from_install = res['Value']
 
   res = check(app, area, res_from_install)
   os.chdir(curdir)
   if not res['OK']:
-    gLogger.error("Failed to check software/dependency %s %s" % (appName,appVersion))
+    LOG.error("Failed to check software/dependency %s %s" % (appName, appVersion))
     return S_ERROR('Failed to check integrity of software')
   res_from_check = res['Value']
 
   res = configure(app, area, res_from_check)
   os.chdir(curdir)
   if not res['OK']:
-    gLogger.error("Failed to configure software/dependency %s %s" % (appName,appVersion))
+    LOG.error("Failed to configure software/dependency %s %s" % (appName, appVersion))
     return S_ERROR('Failed to configure software')
 
   res = clean(area, res_from_install)
   os.chdir(curdir)
   if not res['OK']:
-    gLogger.error("Failed to clean useless tar balls, deal with it: %s %s" % (appName,appVersion))
+    LOG.error("Failed to clean useless tar balls, deal with it: %s %s" % (appName, appVersion))
 
   os.chdir(curdir)
-  gLogger.notice("Successfully installed %s %s in %s" % (appName,appVersion, area))
+  LOG.notice("Successfully installed %s %s in %s" % (appName, appVersion, area))
   return S_OK()

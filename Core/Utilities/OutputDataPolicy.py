@@ -8,6 +8,7 @@ from DIRAC.Interfaces.API.Job                       import Job
 from ILCDIRAC.Core.Utilities.ProductionData         import constructProductionLFNs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames   import getProdFilenameFromInput
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 ILDJOBTYPES = [ 'MCGeneration_ILD',
@@ -47,14 +48,14 @@ class OutputDataPolicy(object):
 
     result = constructProductionLFNs(commons)
     if not result['OK']:
-      gLogger.error(result['Message'])
+      LOG.error(result['Message'])
       return result
 
     if commons['JobType'] in ILDJOBTYPES and commons['InputData']:
       for index, outputFile in enumerate( result['Value']['ProductionOutputData'] ):
         outputFileILD = getProdFilenameFromInput( commons['InputData'], outputFile, prodID, jobID )
         result['Value']['ProductionOutputData'][index] = outputFileILD
-        gLogger.debug( "Changed output file name from '%s' to '%s' " % ( outputFile, outputFileILD ) )
+        LOG.debug("Changed output file name from '%s' to '%s' " % (outputFile, outputFileILD))
 
 
     return result

@@ -145,9 +145,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_delete_old_file_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import deleteOld
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[True, True])) as exists_mock, \
-         patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, \
-         patch('%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError('test_remove_cannot_error'))) as remove_mock, \
-         patch('%s.gLogger.error' % MODULE_NAME) as err_mock:
+        patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=False)) as isdir_mock, \
+        patch('%s.os.remove' % MODULE_NAME, new=Mock(side_effect=OSError('test_remove_cannot_error'))) as remove_mock, \
+            patch('%s.LOG.error' % MODULE_NAME) as err_mock:
       assertDiracSucceeds( deleteOld('testFile_deleteMe2.txt'), self )
       file_to_check = 'testFile_deleteMe2.txt'
       remove_mock.assert_called_once_with( file_to_check )
@@ -171,9 +171,10 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_delete_old_dir_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import deleteOld
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[True, True])) as exists_mock, \
-         patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)) as isdir_mock, \
-         patch('%s.shutil.rmtree' % MODULE_NAME, new=Mock(side_effect=OSError('test_remove_dir_cannot_error'))) as remove_mock, \
-         patch('%s.gLogger.error' % MODULE_NAME) as err_mock:
+        patch('%s.os.path.isdir' % MODULE_NAME, new=Mock(return_value=True)) as isdir_mock, \
+        patch('%s.shutil.rmtree' % MODULE_NAME,
+              new=Mock(side_effect=OSError('test_remove_dir_cannot_error'))) as remove_mock, \
+        patch('%s.LOG.error' % MODULE_NAME) as err_mock:
       assertDiracSucceeds( deleteOld('/delete/that'), self )
       file_to_check = '/delete/that'
       remove_mock.assert_called_once_with( file_to_check )
@@ -227,7 +228,7 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_md5_check_io_err( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import tarMd5Check
     with patch('%s.open' % MODULE_NAME, new=Mock(side_effect=IOError('myerr')), create=True), \
-         patch('%s.gLogger.warn' % MODULE_NAME, new=Mock()) as log_mock:
+            patch('%s.LOG.warn' % MODULE_NAME, new=Mock()) as log_mock:
       result = tarMd5Check( '/my/app/tarball.tgz', '138974' )
       assertDiracSucceeds( result, self )
       log_mock.assert_called_once_with( 'Failed to get tar ball md5, try without' )
@@ -411,9 +412,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_check_no_checksum_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import check
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
-         patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, \
-         patch('%s.gLogger.warn' % MODULE_NAME) as warn_mock:
+        patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
+        patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, \
+            patch('%s.LOG.warn' % MODULE_NAME) as warn_mock:
       result = check( ('appname', 'version'), 'mytestarea398', ['/base/', 'res_from_install[1]'] )
       assertDiracSucceedsWith_equals( result, ['/base/'], self )
       chdir_mock.assert_called_once_with( 'mytestarea398' )
@@ -463,10 +464,10 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
     file_contents = [[]]
     handles = FileUtil.getMultipleReadHandles( file_contents )
     with patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value=True)) as chdir_mock, \
-         patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
-         patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
-         patch('%s.gLogger.warn' % MODULE_NAME) as warn_mock:
+        patch('%s.os.path.isfile' % MODULE_NAME, new=Mock(return_value=False)) as isfile_mock, \
+        patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
+        patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
+            patch('%s.LOG.warn' % MODULE_NAME) as warn_mock:
       mo.side_effect = (h for h in handles)
       result = check( ('appname', 'version'), 'mytestarea398', ['/my/basefolder', 'res_from_install[1]'] )
       expected_open_calls = [( '/my/basefolder/md5_checksum.md5', 'r' )]
@@ -735,10 +736,10 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_clean_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import clean
     with patch('%s.os.chdir' % MODULE_NAME) as chdir_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
-         patch('%s.os.unlink' % MODULE_NAME, new=Mock(side_effect=OSError('_unlink_some_err'))) as remove_mock, \
-         patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/current/dir/my')), \
-         patch('%s.gLogger.error' % MODULE_NAME) as err_mock:
+        patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
+        patch('%s.os.unlink' % MODULE_NAME, new=Mock(side_effect=OSError('_unlink_some_err'))) as remove_mock, \
+        patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/current/dir/my')), \
+            patch('%s.LOG.error' % MODULE_NAME) as err_mock:
       result = clean( 'mytestarea51', [ 'res_from_check[0]', 'myapptarball.tgz' ] )
       assertDiracSucceeds( result, self )
       chdir_mock.assert_called_once_with( 'mytestarea51' )
@@ -749,10 +750,10 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_clean_doesnt_exist( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import clean
     with patch('%s.os.chdir' % MODULE_NAME) as chdir_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, \
-         patch('%s.os.unlink' % MODULE_NAME) as remove_mock, \
-         patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/current/dir/my')), \
-         patch('%s.gLogger.error' % MODULE_NAME) as err_mock:
+        patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)) as exists_mock, \
+        patch('%s.os.unlink' % MODULE_NAME) as remove_mock, \
+        patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/current/dir/my')), \
+            patch('%s.LOG.error' % MODULE_NAME) as err_mock:
       result = clean( 'mytestarea51', [ 'res_from_check[0]', 'myapptarball.tgz' ] )
       assertDiracSucceeds( result, self )
       chdir_mock.assert_called_once_with( 'mytestarea51' )
@@ -763,10 +764,10 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_clean_dont_delete_jar( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import clean
     with patch('%s.os.chdir' % MODULE_NAME) as chdir_mock, \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
-         patch('%s.os.unlink' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, \
-         patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/current/dir/my')), \
-         patch('%s.gLogger.error' % MODULE_NAME) as err_mock:
+        patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=True)) as exists_mock, \
+        patch('%s.os.unlink' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, \
+        patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/current/dir/my')), \
+            patch('%s.LOG.error' % MODULE_NAME) as err_mock:
       result = clean( 'mytestarea51', [ 'res_from_check[0]', 'myappjarcontainer.jar' ] )
       assertDiracSucceeds( result, self )
       chdir_mock.assert_called_once_with( 'mytestarea51' )
@@ -789,12 +790,12 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_install_package( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installPackage
     with patch('%s.getTarBallLocation' % MODULE_NAME, new=Mock(return_value=S_OK(('APP_TAR', 'http://myTar.url', False, '1234MyMd5')))) as get_mock, \
-         patch('%s.os.chdir' % MODULE_NAME) as chdir_mock, \
-         patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_install_test'))) as install_mock, \
-         patch('%s.check' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_check_test'))) as check_mock, \
-         patch('%s.configure' % MODULE_NAME, new=Mock(return_value=S_OK())) as configure_mock, \
-         patch('%s.clean' % MODULE_NAME, new=Mock(return_value=S_OK())) as clean_mock, \
-         patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
+        patch('%s.os.chdir' % MODULE_NAME) as chdir_mock, \
+        patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_install_test'))) as install_mock, \
+        patch('%s.check' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_check_test'))) as check_mock, \
+        patch('%s.configure' % MODULE_NAME, new=Mock(return_value=S_OK())) as configure_mock, \
+        patch('%s.clean' % MODULE_NAME, new=Mock(return_value=S_OK())) as clean_mock, \
+            patch('%s.LOG.error' % MODULE_NAME) as log_mock:
       result = installPackage(  ('testAppLication', 'version1.01.'), 'configToTest', 'secret_area',
                                 'mycurrenttestdir' )
       assertDiracSucceeds( result, self )
@@ -813,7 +814,7 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_install_package_gettar_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installPackage
     with patch('%s.getTarBallLocation' % MODULE_NAME, new=Mock(return_value=S_ERROR('tarball_err'))), \
-         patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
+            patch('%s.LOG.error' % MODULE_NAME) as log_mock:
       result = installPackage( ('mytestappName', 'testv12'), 'configToTest', 'teAreast', 'mycurrenttestdir' )
       assertDiracFailsWith( result, 'failed to install software', self )
       log_mock.assert_called_once_with(
@@ -822,9 +823,9 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_install_package_install_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installPackage
     with patch('%s.getTarBallLocation' % MODULE_NAME, new=Mock(return_value=S_OK(('app_tar', 'tarballURL', False, 'md5sum')))), \
-         patch('%s.os.chdir' % MODULE_NAME), \
-         patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_ERROR('install_test_err'))), \
-         patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
+        patch('%s.os.chdir' % MODULE_NAME), \
+        patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_ERROR('install_test_err'))), \
+            patch('%s.LOG.error' % MODULE_NAME) as log_mock:
       result = installPackage( ('mytestappName', 'testv12'), 'configToTest', 'teAreast', 'mycurrenttestdir' )
       assertDiracFailsWith( result, 'failed to install software', self )
       log_mock.assert_called_once_with(
@@ -833,10 +834,10 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_install_package_check_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installPackage
     with patch('%s.getTarBallLocation' % MODULE_NAME, new=Mock(return_value=S_OK(('app_tar', 'tarballURL', False, 'md5sum')))), \
-         patch('%s.os.chdir' % MODULE_NAME), \
-         patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_install'))), \
-         patch('%s.check' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_check_error_test'))), \
-         patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
+        patch('%s.os.chdir' % MODULE_NAME), \
+        patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_install'))), \
+        patch('%s.check' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_check_error_test'))), \
+            patch('%s.LOG.error' % MODULE_NAME) as log_mock:
       result = installPackage( ('mytestappName', 'testv12'), 'configToTest', 'teAreast', 'mycurrenttestdir' )
       assertDiracFailsWith( result, 'failed to check integrity of software', self )
       log_mock.assert_called_with( 'Failed to check software/dependency mytestappName testv12')
@@ -844,12 +845,12 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_install_package_configure_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installPackage
     with patch('%s.getTarBallLocation' % MODULE_NAME, new=Mock(return_value=S_OK(('app_tar', 'tarballURL', False, 'md5sum')))), \
-         patch('%s.os.chdir' % MODULE_NAME), \
-         patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_install'))), \
-         patch('%s.check' % MODULE_NAME, new=Mock(return_value=S_OK('mycheckresult_test'))), \
-         patch('%s.configure' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_config_err_test'))), \
-         patch('%s.clean' % MODULE_NAME, new=Mock(return_value=S_OK())), \
-         patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
+        patch('%s.os.chdir' % MODULE_NAME), \
+        patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_install'))), \
+        patch('%s.check' % MODULE_NAME, new=Mock(return_value=S_OK('mycheckresult_test'))), \
+        patch('%s.configure' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_config_err_test'))), \
+        patch('%s.clean' % MODULE_NAME, new=Mock(return_value=S_OK())), \
+            patch('%s.LOG.error' % MODULE_NAME) as log_mock:
       result = installPackage( ('mytestappName', 'testv12'), 'configToTest', 'teAreast', 'mycurrenttestdir' )
       assertDiracFailsWith( result, 'failed to configure software', self )
       log_mock.assert_called_once_with( 'Failed to configure software/dependency mytestappName testv12')
@@ -857,12 +858,12 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_install_package_clean_fails( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import installPackage
     with patch('%s.getTarBallLocation' % MODULE_NAME, new=Mock(return_value=S_OK(('app_tar', 'tarballURL', False, 'md5sum')))), \
-         patch('%s.os.chdir' % MODULE_NAME), \
-         patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_install'))), \
-         patch('%s.check' % MODULE_NAME, new=Mock(return_value=S_OK())), \
-         patch('%s.configure' % MODULE_NAME, new=Mock(return_value=S_OK())), \
-         patch('%s.clean' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_clean_err_test'))), \
-         patch('%s.gLogger.error' % MODULE_NAME) as log_mock:
+        patch('%s.os.chdir' % MODULE_NAME), \
+        patch('%s.install' % MODULE_NAME, new=Mock(return_value=S_OK('res_from_install'))), \
+        patch('%s.check' % MODULE_NAME, new=Mock(return_value=S_OK())), \
+        patch('%s.configure' % MODULE_NAME, new=Mock(return_value=S_OK())), \
+        patch('%s.clean' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_clean_err_test'))), \
+            patch('%s.LOG.error' % MODULE_NAME) as log_mock:
       result = installPackage( ('mytestappName', 'testv12'), 'configToTest', 'teAreast', 'mycurrenttestdir' )
       assertDiracSucceeds( result, self )
       log_mock.assert_called_once_with(
@@ -966,16 +967,16 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   def test_install_md5check_cannot_remove_old_file( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import install
     with patch('%s.os.chdir' % MODULE_NAME), \
-         patch('%s.checkLockAge' % MODULE_NAME, new=Mock(return_value=S_OK(False))), \
-         patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[False, True])), \
-         patch('%s.createLock' % MODULE_NAME, new=Mock(return_value=S_OK())), \
-         patch('%s.downloadFile' % MODULE_NAME, new=Mock(return_value=S_OK(True))), \
-         patch('%s.clearLock' % MODULE_NAME, new=Mock(return_value=True)) as clearlock_mock, \
-         patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/my/cwd/test')), \
-         patch('%s.tarMd5Check' % MODULE_NAME, new=Mock(return_value=S_ERROR('test_md5check_fails'))), \
-         patch('%s.deleteOld' % MODULE_NAME, new=Mock(return_value=S_ERROR('deleteold_test_error'))), \
-         patch('%s.os.unlink' % MODULE_NAME, new=Mock(side_effect=OSError('my_os_err_test'))), \
-         patch('%s.gLogger.error' % MODULE_NAME, new=Mock(return_value=True)) as log_mock:
+        patch('%s.checkLockAge' % MODULE_NAME, new=Mock(return_value=S_OK(False))), \
+        patch('%s.os.path.exists' % MODULE_NAME, new=Mock(side_effect=[False, True])), \
+        patch('%s.createLock' % MODULE_NAME, new=Mock(return_value=S_OK())), \
+        patch('%s.downloadFile' % MODULE_NAME, new=Mock(return_value=S_OK(True))), \
+        patch('%s.clearLock' % MODULE_NAME, new=Mock(return_value=True)) as clearlock_mock, \
+        patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/my/cwd/test')), \
+        patch('%s.tarMd5Check' % MODULE_NAME, new=Mock(return_value=S_ERROR('test_md5check_fails'))), \
+        patch('%s.deleteOld' % MODULE_NAME, new=Mock(return_value=S_ERROR('deleteold_test_error'))), \
+        patch('%s.os.unlink' % MODULE_NAME, new=Mock(side_effect=OSError('my_os_err_test'))), \
+            patch('%s.LOG.error' % MODULE_NAME, new=Mock(return_value=True)) as log_mock:
       result = install(('appname', 'appvers'), 'app_tar.tar.gz', 'tarballURL', False, 'md5sum', 'area')
       assertDiracFailsWith( result, 'deleteold_test_error', self )
       log_mock.assert_called_with('Failed to clean tar ball, something bad is happening')

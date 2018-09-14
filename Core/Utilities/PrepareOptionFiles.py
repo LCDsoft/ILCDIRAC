@@ -22,7 +22,7 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFold
 from ILCDIRAC.Core.Utilities.MarlinXML                    import setOverlayFilesParameter, setOutputFileParameter
 from ILCDIRAC.Workflow.Modules.OverlayInput               import allowedBkg
 
-
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 def getNewLDLibs(platform, application, applicationVersion):
@@ -33,7 +33,7 @@ def getNewLDLibs(platform, application, applicationVersion):
   :param string applicationVersion: version of the application considered
   :return: new LD_LIBRARY_PATH
   """
-  log = gLogger.getSubLogger("GetLDLibs")
+  log = LOG.getSubLogger("GetLDLibs")
   log.verbose("Getting all lib folders")
   new_ld_lib_path = ""
   deps = resolveDeps(platform, application, applicationVersion)
@@ -69,7 +69,7 @@ def getNewPATH(platform, application, applicationVersion):
   :param string applicationVersion: version of the application considered
   :return: new PATH
   """
-  log = gLogger.getSubLogger("GetPaths")
+  log = LOG.getSubLogger("GetPaths")
   log.verbose("Getting all PATH folders")
   new_path = ""
   deps = resolveDeps(platform, application, applicationVersion)
@@ -316,7 +316,7 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   try:
     tree.parse(inputXML)
   except Exception as x:
-    gLogger.error( "Found Exception when parsing Marlin input XML", repr(x) )
+    LOG.error("Found Exception when parsing Marlin input XML", repr(x))
     return S_ERROR("Found Exception when parsing Marlin input XML")
 
   # Handle inputSLCIO being list or string

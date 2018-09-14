@@ -10,6 +10,7 @@ __RCSID__= "$Id$"
 import posixpath
 from DIRAC import gLogger
 
+LOG = gLogger.getSubLogger(__name__)
 
 def joinPathForMetaData( *args ):
   """
@@ -18,16 +19,16 @@ def joinPathForMetaData( *args ):
   """
   # if there is a lone slash in this list then the end result is only "/" so we remove them
   cleanedEntries = tuple( ent for ent in args if ent != "/")
-  gLogger.debug ( "After cleaning", cleanedEntries )
+  LOG.debug("After cleaning", cleanedEntries)
   finalPath = ""
   for entry in cleanedEntries:
-    gLogger.debug("This entry", entry)
+    LOG.debug("This entry", entry)
     finalPath = posixpath.join(finalPath, entry)
-  gLogger.debug( "After Joining", finalPath )
+  LOG.debug("After Joining", finalPath)
   finalPath = posixpath.normpath(finalPath)
-  gLogger.debug( "After norming", finalPath )
+  LOG.debug("After norming", finalPath)
   finalPath = finalPath + "/"
-  gLogger.verbose ( "Final Path ", finalPath )
+  LOG.verbose("Final Path ", finalPath)
   return finalPath
 
 
@@ -35,7 +36,7 @@ def joinPathForMetaData( *args ):
 def cleanUpLFNPath( lfn ):
   """ Normalise LFNs
   """
-  gLogger.debug("LFN before Cleanup", lfn)
+  LOG.debug("LFN before Cleanup", lfn)
   lfn = posixpath.normpath(lfn)
-  gLogger.verbose("LFN after Cleanup", lfn)
+  LOG.verbose("LFN after Cleanup", lfn)
   return lfn

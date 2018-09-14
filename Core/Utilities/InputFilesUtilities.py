@@ -12,6 +12,8 @@ import os
 
 from DIRAC import gLogger, S_OK, S_ERROR
 
+LOG = gLogger.getSubLogger(__name__)
+
 def getNumberOfEvents(inputfile):
   """ Find from the FileCatalog the number of events in a file
   """
@@ -42,7 +44,7 @@ def getNumberOfEvents(inputfile):
     if len(files) == 1:
       res = fc.getFileUserMetadata(files[0])
       if not res['OK']:
-        gLogger.warn("Failed to get Metadata from file: %s, because: %s" % (files[0], res['Message']))
+        LOG.warn("Failed to get Metadata from file: %s, because: %s" % (files[0], res['Message']))
       else:
         tags = res['Value']
         if "NumberOfEvents" in tags and not found_nbevts:
@@ -72,12 +74,12 @@ def getNumberOfEvents(inputfile):
       if found_nbevts: 
         continue
     else:
-      gLogger.warn("Failed to get Metadata from path: %s, because: %s" % (path, res['Message']))
+      LOG.warn("Failed to get Metadata from path: %s, because: %s" % (path, res['Message']))
 
     for myfile in files:
       res = fc.getFileUserMetadata(myfile)
       if not res['OK']:
-        gLogger.warn("Failed to get Metadata from file: %s, because: %s" % (myfile, res['Message']))
+        LOG.warn("Failed to get Metadata from file: %s, because: %s" % (myfile, res['Message']))
         continue
       tags = res['Value']
       if "NumberOfEvents" in tags:
@@ -97,7 +99,7 @@ def getNumberOfEvents(inputfile):
   nbevts['AdditionalMeta'] = others
 
   if completeFailure:
-    gLogger.warn("Did not obtain NumberOfEvents from FileCatalog")
+    LOG.warn("Did not obtain NumberOfEvents from FileCatalog")
     return S_ERROR("Failed to get Number of Events")
 
   return S_OK(nbevts)
