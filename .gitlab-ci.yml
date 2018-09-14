@@ -372,7 +372,7 @@ docDev:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdocDev/"
     CI_OUTPUT_DIR: "ilcdiracdoc"
   script:
-    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/
+    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/ || echo "No htmlcov"
     - deploy-eos
   before_script: []
   after_script: []
@@ -394,7 +394,7 @@ docProd:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdoc/"
     CI_OUTPUT_DIR: "ilcdiracdoc"
   script:
-    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/
+    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/ || echo "No htmlcov"
     - deploy-eos
   before_script: []
   after_script: []
