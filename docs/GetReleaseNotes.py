@@ -253,7 +253,7 @@ class GitlabInterface( object ):
   def getReleaseNotes( self ):
 
     if self.openPRs:
-      prs = getGitlabPRs( state='open')
+      prs = getGitlabPRs(state='all')
     else:
       prs = getGitlabPRs( state='merged')
     LOGGER.debug(pformat(prs))
