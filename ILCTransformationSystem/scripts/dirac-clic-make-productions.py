@@ -846,13 +846,13 @@ overlayEventType = %(overlayEventType)s
         parDict = dict(flavour='Moving',
                        targetSE=targetSE,
                        sourceSE=sourceSE,
-                       plugin='BroadcastProcessed',
+                       plugin='Broadcast%s' % ('' if dataType.lower() not in ('gen', 'sim') else 'Processed'),
                        metaKey='ProdID',
                        metaValue=prodID,
                        extraData={'Datatype': dataType},
                        tGroup=self.prodGroup,
                        groupSize=1,
-                       enable=not self._flags._dryRun,
+                       enable=not self._flags.dryRun,
                      )
         message = "Moving transformation with parameters"
         gLogger.notice("%s:\n%s" % (message, pformat(parDict, indent=len(message) + 2, width=120)))
