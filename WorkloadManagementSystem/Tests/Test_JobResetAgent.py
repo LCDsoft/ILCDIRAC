@@ -72,7 +72,6 @@ def jobResetAgent(aDate=today()):
   """Fixture for jobResetAgent."""
   agent = JRA
   agent.AgentModule = MagicMock()
-  agent.JobDB = MagicMock(spec=DIRAC.WorkloadManagementSystem.DB.JobDB.JobDB)
   agent.JobMonitoringClient = MagicMock()
   agent.DataManager = MagicMock(spec=DIRAC.DataManagementSystem.Client.DataManager.DataManager)
   agent.ReqClient = MagicMock(spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient)
@@ -87,6 +86,7 @@ def jobResetAgent(aDate=today()):
   theAgent._fcClient.removeFile = MagicMock(return_value=S_ERROR('failed'))
   theAgent.jobManagerClient = MagicMock()
   theAgent.jobStateUpdateClient = MagicMock()
+  theAgent._jobDB = MagicMock()
 
   return theAgent
 
