@@ -1,6 +1,8 @@
-""" Test MonitorAgents """
+"""Test MonitorAgents."""
 
 import unittest
+import socket
+import sys
 from datetime import datetime, timedelta
 from mock import MagicMock, call, patch
 import psutil
@@ -17,24 +19,30 @@ __RCSID__ = "$Id$"
 
 
 class TestMonitorAgents(unittest.TestCase):
-  """ TestMonitorAgents class """
+  """TestMonitorAgents class."""
 
   def setUp(self):
+    """Set up test environment."""
     self.agent = MAA
     self.agent.AgentModule = MagicMock()
     self.agent.NotificationClient = MagicMock(spec=DIRAC.FrameworkSystem.Client.NotificationClient.NotificationClient)
 
     self.restartAgent = MonitorAgents()
     self.restartAgent.log = gLogger
+    self.restartAgent.log.setLevel('DEBUG')
     self.restartAgent.sysAdminClient = MagicMock()
+    self.restartAgent.csAPI = MagicMock()
     self.restartAgent.enabled = True
     self.restartAgent.restartAgents = True
 
-  def tearDown(self):
-    pass
+  @classmethod
+  def tearDownClass(cls):
+    """Remove monitoragent module after tests to avoid side effects."""
+    sys.modules.pop('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents')
 
   @staticmethod
   def getPSMock():
+    """Mock psutil."""
     psMock = MagicMock(name="psutil")
     procMock2 = MagicMock(name="process2kill")
     psMock.wait_procs.return_value = ("gone", [procMock2])
@@ -44,6 +52,7 @@ class TestMonitorAgents(unittest.TestCase):
     return psMock
 
   def test_init(self):
+    """Test the init function."""
     self.assertIsInstance(self.restartAgent, MonitorAgents)
     self.assertIsInstance(self.restartAgent.nClient, MagicMock)
     self.assertIsInstance(self.restartAgent.sysAdminClient, MagicMock)
@@ -51,7 +60,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertEquals(self.restartAgent.addressFrom, "ilcdirac-admin@cern.ch")
 
   def test_begin_execution(self):
-    """ test for beginExecution function """
+    """Test for the beginExecution function."""
     self.restartAgent.accounting["Junk"]["Funk"] = 1
     self.restartAgent.am_getOption = MagicMock()
     getOptionCalls = [call('Setup', self.restartAgent.setup),
@@ -68,7 +77,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertEquals(self.restartAgent.accounting, {})
 
   def test_send_notification(self):
-    """ test for sendNotification function """
+    """Test for the sendNotification function."""
     self.restartAgent.errors = []
     self.restartAgent.accounting = {}
 
@@ -102,7 +111,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.assertEquals(self.restartAgent.errors, [])
 
   def test_get_running_instances(self):
-    """ test for getRunningInstances function """
+    """Test for the getRunningInstances function."""
     self.restartAgent.sysAdminClient.getOverallStatus = MagicMock()
     self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_ERROR()
 
@@ -116,7 +125,11 @@ class TestMonitorAgents(unittest.TestCase):
                          'Framework': {'ErrorMessageMonitor': {'MEM': '0.3', 'Setup': True, 'PID': '2303',
                                                                'RunitStatus': 'Run', 'Module': 'ErrorMessageMonitor',
                                                                'Installed': True, 'VSZ': '380392', 'Timeup': '3380292',
-                                                               'CPU': '0.0', 'RSS': '56172'}}}}
+                                                               'CPU': '0.0', 'RSS': '56172'}},
+                         'System': {'Off': {'MEM': '0.3', 'Setup': True, 'PID': '---',
+                                            'RunitStatus': 'Down', 'Module': 'ErrorMessageMonitor',
+                                            'Installed': True, 'VSZ': '380392', 'Timeup': '3380292',
+                                            'CPU': '0.0', 'RSS': '56172'}}}}
     agents['Agents']['DataManagement']['FTSAgent'] = {'Setup': False, 'PID': 0, 'RunitStatus': 'Unknown',
                                                       'Module': 'FTSAgent', 'Installed': False, 'Timeup': 0}
 
@@ -132,8 +145,9 @@ class TestMonitorAgents(unittest.TestCase):
       self.assertTrue('LogFileLocation' in res["Value"][agent])
       self.assertTrue('PID' in res["Value"][agent])
 
+  @patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock())
   def test_execute(self):
-    """ test for execute function """
+    """Test for the execute function."""
     self.restartAgent.sendNotification = MagicMock()
 
     agentOne = 'FTS3Agent'
@@ -153,35 +167,74 @@ class TestMonitorAgents(unittest.TestCase):
                                            'PID': agentTwoPID}}
 
     self.restartAgent.checkAgent = MagicMock(side_effect=[S_OK(), S_ERROR()])
+    self.restartAgent.componentControl = MagicMock(return_value=S_OK())
 
     res = self.restartAgent.execute()
-    self.assertFalse(res["OK"])
-    calls = [call(agentOne, agentOnePollingTime, agentOneLogLoc, agentOnePID),
-             call(agentTwo, agentTwoPollingTime, agentTwoLogLoc, agentTwoPID)]
 
+    self.assertFalse(res["OK"])
+
+    calls = [call(agentOne, self.restartAgent.agents[agentOne]),
+             call(agentTwo, self.restartAgent.agents[agentTwo])]
     self.restartAgent.checkAgent.assert_has_calls(calls, any_order=True)
 
     # email notification should be sent at the end of every agent cycle
     self.restartAgent.sendNotification.assert_called()
 
+  @patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock())
+  def test_execute_2a(self):
+    """Test for the execute function."""
+    self.restartAgent.sendNotification = MagicMock()
+    self.restartAgent.componentControl = MagicMock(return_value=S_ERROR('Stopped does not exist'))
+    self.restartAgent.checkURLs = MagicMock(return_value=S_ERROR('SomeFailure'))
+    res = self.restartAgent.execute()
+    self.assertFalse(res["OK"])
+    # email notification should be sent at the end of every agent cycle
+    self.restartAgent.sendNotification.assert_called()
+
+  @patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock())
+  def test_execute_2b(self):
+    """Test for the execute function."""
+    self.restartAgent.sendNotification = MagicMock()
+    self.restartAgent.componentControl = MagicMock(return_value=S_ERROR())
+    self.restartAgent.checkURLs = MagicMock()
+    res = self.restartAgent.execute()
+    self.assertFalse(res["OK"])
+    self.assertIn('Failure to control components ', self.restartAgent.errors)
+    # email notification should be sent at the end of every agent cycle
+    self.restartAgent.sendNotification.assert_called()
+    self.restartAgent.checkURLs.assert_not_called()
+
+  @patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock())
+  def test_execute_2c(self):
+    """Test for the execute function."""
+    self.restartAgent.sendNotification = MagicMock()
+    self.restartAgent.componentControl = MagicMock(return_value=S_OK())
+    self.restartAgent.checkURLs = MagicMock(return_value=S_OK())
+    res = self.restartAgent.execute()
+    self.assertEqual([], self.restartAgent.errors)
+    self.assertTrue(res["OK"])
+    # email notification should be sent at the end of every agent cycle
+    self.restartAgent.sendNotification.assert_called()
+    self.restartAgent.checkURLs.assert_called_once()
+
   def test_check_agent(self):
-    """ test for checkAgent function """
+    """Test for the checkAgent function."""
     self.restartAgent.getLastAccessTime = MagicMock()
     self.restartAgent.restartInstance = MagicMock(return_value=S_OK())
 
     agentName = 'agentX'
-    pollingTime = MAA.HOUR
-    currentLogLocation = '/fake/log/file'
-    pid = '12345'
+    options = dict(PollingTime=MAA.HOUR,
+                   LogFileLocation='/fake/log/file',
+                   PID='12345')
 
     self.restartAgent.getLastAccessTime.return_value = S_ERROR()
-    res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
+    res = self.restartAgent.checkAgent(agentName, options)
     self.assertFalse(res["OK"])
 
     # agents with log file age less than max(pollingTime+Hour, 2 Hour) should not be restarted
     logAge = timedelta(hours=1)
     self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
-    res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
+    res = self.restartAgent.checkAgent(agentName, options)
     self.assertTrue(res["OK"])
     self.restartAgent.restartInstance.assert_not_called()
 
@@ -189,9 +242,9 @@ class TestMonitorAgents(unittest.TestCase):
     logAge = timedelta(hours=3)
     self.restartAgent.restartAgents = False
     self.restartAgent.getLastAccessTime.return_value = S_OK(logAge)
-    res = self.restartAgent.checkAgent(agentName, pollingTime, currentLogLocation, pid)
+    res = self.restartAgent.checkAgent(agentName, options)
     self.assertTrue(res["OK"])
-    self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, False)
+    self.restartAgent.restartInstance.assert_called_once_with(12345, agentName, False)
 
   def test_check_executors(self):
     """Test the checkExecutor function."""
@@ -299,7 +352,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, True)
 
   def test_get_last_access_time(self):
-    """ test for getLastAccessTime function """
+    """Test for the getLastAccessTime function."""
     self.agent.os.path.getmtime = MagicMock()
     self.agent.datetime = MagicMock()
     self.agent.datetime.now = MagicMock()
@@ -345,6 +398,197 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.jobMonClient.getJobs.return_value = S_OK({1: 1, 2: 2})
     self.assertTrue(self.restartAgent.checkForCheckingJobs('executor')['OK'])
     self.assertEqual(self.restartAgent.checkForCheckingJobs('executor')['Value'], 'CHECKING_JOBS')
+
+  def test_componentControl_1(self):
+    """Fail to get status."""
+    self.restartAgent.controlComponents = True
+    self.restartAgent.errors = []
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_ERROR()
+    self.assertFalse(self.restartAgent.componentControl()['OK'])
+
+  def test_componentControl_2(self):
+    """Total Success."""
+    self.restartAgent.controlComponents = True
+    self.restartAgent.errors = []
+
+    def god(*args, **_kwargs):
+      """Mock getOptionsDict."""
+      if 'running' in args[0].lower():
+        return S_OK({'Framework__StartMe': '',
+                     'Framework__Running': ''})
+      if 'stopped' in args[0].lower():
+        return S_OK({'Framework__StopMe': '',
+                     'Framework__Stopped': '',
+                     'Framework__Unknown': ''})
+      return S_ERROR()
+    gConfigMock = MagicMock()
+    gConfigMock.getOptionsDict.side_effect = god
+
+    agents = {'Agents': {'Framework': {'StopMe': {'RunitStatus': 'Run'},
+                                       'StartMe': {'RunitStatus': 'Down'},
+                                       'Running': {'RunitStatus': 'Run'},
+                                       'Stopped': {'RunitStatus': 'Down'},
+                                       'Uninstalled': {'RunitStatus': 'Unknown'},
+                                       }}}
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(agents)
+    self.restartAgent.sysAdminClient.startComponent = MagicMock()
+    self.restartAgent.sysAdminClient.stopComponent = MagicMock()
+
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
+      res = self.restartAgent.componentControl()
+    self.assertTrue(res['OK'])
+    self.restartAgent.sysAdminClient.startComponent.assert_called_with('Framework', 'StartMe')
+    self.restartAgent.sysAdminClient.stopComponent.assert_called_with('Framework', 'StopMe')
+    self.assertIn('Unknown instance', self.restartAgent.errors[0])
+
+  def test_componentControl_2b(self):
+    """Total Success."""
+    self.restartAgent.controlComponents = False
+    self.restartAgent.errors = []
+
+    def god(*args, **_kwargs):
+      """Mock getOptionsDict."""
+      if 'running' in args[0].lower():
+        return S_OK({'Framework__StartMe': '',
+                     'Framework__Running': ''})
+      if 'stopped' in args[0].lower():
+        return S_OK({'Framework__StopMe': '',
+                     'Framework__Stopped': '',
+                     'Framework__Unknown': ''})
+      return S_ERROR()
+    gConfigMock = MagicMock()
+    gConfigMock.getOptionsDict.side_effect = god
+
+    agents = {'Agents': {'Framework': {'StopMe': {'RunitStatus': 'Run'},
+                                       'StartMe': {'RunitStatus': 'Down'},
+                                       'Running': {'RunitStatus': 'Run'},
+                                       'Stopped': {'RunitStatus': 'Down'},
+                                       'Uninstalled': {'RunitStatus': 'Unknown'},
+                                       }}}
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(agents)
+    self.restartAgent.sysAdminClient.startComponent = MagicMock()
+    self.restartAgent.sysAdminClient.stopComponent = MagicMock()
+
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
+      res = self.restartAgent.componentControl()
+    self.assertTrue(res['OK'])
+    self.restartAgent.sysAdminClient.startComponent.assert_not_called()
+    self.restartAgent.sysAdminClient.stopComponent.assert_not_called()
+    self.assertIn('Unknown instance', self.restartAgent.errors[0])
+    self.assertIn('should be started', self.restartAgent.accounting['Framework__StartMe']['Treatment'])
+    self.assertIn('should be stopped', self.restartAgent.accounting['Framework__StopMe']['Treatment'])
+
+  def test_componentControl_3(self):
+    """Failed to get options."""
+    self.restartAgent.controlComponents = True
+    self.restartAgent.errors = []
+
+    def god(*args, **_kwargs):
+      """Mock getOptionsDict."""
+      if 'running' in args[0].lower():
+        return S_OK({'Framework__StopMe': '',
+                     'Framework__Stopped': '',
+                     'Framework__Unknown': ''})
+      if 'stopped' in args[0].lower():
+        return S_ERROR("No Stopped")
+      return S_ERROR()
+    gConfigMock = MagicMock()
+    gConfigMock.getOptionsDict.side_effect = god
+
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK({})
+    self.restartAgent.sysAdminClient.startComponent = MagicMock()
+    self.restartAgent.sysAdminClient.stopComponent = MagicMock()
+
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
+      res = self.restartAgent.componentControl()
+    self.assertFalse(res['OK'])
+    self.assertIn("No Stopped", res['Message'])
+
+  def test_componentControl_4(self):
+    """Bad host config."""
+    self.restartAgent.controlComponents = True
+    self.restartAgent.errors = []
+
+    def god(*args, **_kwargs):
+      """Mock getOptionsDict."""
+      if 'running' in args[0].lower():
+        return S_OK({'Framework__Twice': ''})
+      if 'stopped' in args[0].lower():
+        return S_OK({'Framework__Twice': ''})
+      return S_ERROR()
+    gConfigMock = MagicMock()
+    gConfigMock.getOptionsDict.side_effect = god
+
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK({})
+    self.restartAgent.sysAdminClient.startComponent = MagicMock()
+    self.restartAgent.sysAdminClient.stopComponent = MagicMock()
+
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
+      res = self.restartAgent.componentControl()
+    self.assertFalse(res['OK'])
+    self.assertIn("Bad host configuration", res['Message'])
+
+  def test_checkURLs_1(self):
+    """Success."""
+    self.restartAgent.errors = []
+    self.restartAgent.accounting.clear()
+    host = socket.gethostname()
+    urls, tempurls, newurls = [], [], []
+    for i in [1, 2]:
+      urls.append('dips://%(host)s:100%(i)s/Sys/Serv%(i)s' % dict(i=i, host=host))
+    for i in [1, 2, 3]:
+      tempurls.append('dips://%(host)s:100%(i)s/Sys/Serv%(i)s' % dict(i=i, host=host))
+    for i in [1, 3]:
+      newurls.append('dips://%(host)s:100%(i)s/Sys/Serv%(i)s' % dict(i=i, host=host))
+
+    def gVal(*args, **_kwargs):
+      """Mock getValue."""
+      if 'PollingTime' in args[0]:
+        return 365
+      if 'Port' in args[0]:
+        return '100' + args[0].rsplit('/Serv', 1)[1].split('/')[0]
+      if 'URLs' in args[0]:
+        return urls
+    gConfigMock = MagicMock()
+    gConfigMock.getValue.side_effect = gVal
+    services = {'Services': {'Sys': {'Serv1': {'Setup': True, 'PID': '18128', 'Port': '1001', 'RunitStatus': 'Run',
+                                               'Module': 'Serv', 'Installed': True},
+                                     'Serv2': {'Setup': True, 'PID': '18128', 'Port': '1002', 'RunitStatus': 'Down',
+                                               'Module': 'Serv', 'Installed': True},
+                                     'Serv3': {'Setup': True, 'PID': '18128', 'Port': '1003', 'RunitStatus': 'Run',
+                                               'Module': 'Serv', 'Installed': True},
+                                     'SystemAdministrator': {'Setup': True, 'PID': '18128', 'Port': '1003',
+                                                             'RunitStatus': 'Run', 'Module': 'Serv', 'Installed': True},
+                                    }}}
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(services)
+
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=gConfigMock):
+      res = self.restartAgent.checkURLs()
+    self.assertTrue(res['OK'])
+    self.restartAgent.csAPI.modifyValue.assert_has_calls([call('/Systems/Sys/Production/URLs/Serv', ",".join(tempurls)),
+                                                          call('/Systems/Sys/Production/URLs/Serv', ",".join(newurls))],
+                                                         any_order=False)
+
+  def test_checkURLs_2(self):
+    """Test commit to CS."""
+    self.restartAgent.errors = []
+    self.restartAgent.accounting.clear()
+    self.restartAgent.csAPI.csModified = True
+    self.restartAgent.commitURLs = True
+    self.restartAgent.sysAdminClient.getOverallStatus.return_value = S_OK(dict(Services={}))
+
+    self.restartAgent.csAPI.commit = MagicMock(return_value=S_ERROR('Nope'))
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock()):
+      res = self.restartAgent.checkURLs()
+    self.assertFalse(res['OK'])
+    self.assertIn('Failed to commit', res['Message'])
+    self.assertIn('Commit to CS failed', self.restartAgent.errors[0])
+
+    self.restartAgent.csAPI.commit = MagicMock(return_value=S_OK())
+    with patch('ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.gConfig', new=MagicMock()):
+      res = self.restartAgent.checkURLs()
+    self.assertTrue(res['OK'])
+
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase(TestMonitorAgents)

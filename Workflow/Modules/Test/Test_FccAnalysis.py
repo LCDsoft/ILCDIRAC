@@ -26,13 +26,12 @@ class TestFccAnalysis( unittest.TestCase ):
     def replace_realpath( path ):
       return os.path.join("/test/realpath", path)
         
-    patches = [ 
-      patch("%s.os.path.realpath" % MODULE_NAME, new=Mock(side_effect=replace_realpath)),
-      patch("%s.os.path.dirname" % MODULE_NAME, new=Mock(return_value="/test/dirname")),
-      patch("%s.FccAnalysis.redirectLogOutput" % MODULE_NAME, new=Mock())
-    ]
+    self.patches = [patch("%s.os.path.realpath" % MODULE_NAME, new=Mock(side_effect=replace_realpath)),
+                    patch("%s.os.path.dirname" % MODULE_NAME, new=Mock(return_value="/test/dirname")),
+                    patch("%s.FccAnalysis.redirectLogOutput" % MODULE_NAME, new=Mock()),
+                    ]
 
-    for patcher in patches:
+    for patcher in self.patches:
       patcher.start()
 
     self.fccAna = FccAnalysis()
@@ -59,8 +58,9 @@ class TestFccAnalysis( unittest.TestCase ):
     return self.exists_dict[path]
 
   def tearDown( self ):
+    for patcher in self.patches:
+      patcher.stop()
     del self.fccAna
-    patch.stopall()
 
   def test_runit_noplatform( self ):
     self.fccAna.platform = None

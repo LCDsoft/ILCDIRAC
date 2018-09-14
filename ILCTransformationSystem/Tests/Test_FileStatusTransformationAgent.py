@@ -1,15 +1,14 @@
 """ Test FileStatusTransformationAgent """
 
 import unittest
-
-import ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent as FST
-import DIRAC.Resources.Storage.StorageElement as SeModule
-from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import FileStatusTransformationAgent
-
+import sys
 from mock import MagicMock
 
-from DIRAC import S_OK, S_ERROR
-from DIRAC import gLogger
+import ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent as FST
+from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import FileStatusTransformationAgent
+import DIRAC.Resources.Storage.StorageElement as SeModule
+
+from DIRAC import S_OK, S_ERROR, gLogger
 import DIRAC
 
 __RCSID__ = "$Id$"
@@ -55,8 +54,9 @@ class TestFSTAgent(unittest.TestCase):
     self.sourceSE = ['CERN-SRM']
     self.targetSE = ['DESY-SRM']
 
-  def tearDown(self):
-    pass
+  @classmethod
+  def tearDownClass(cls):
+    sys.modules.pop('ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent')
 
   def test_init(self):
     self.assertIsInstance(self.fstAgent, FileStatusTransformationAgent)

@@ -1,6 +1,6 @@
 #!/bin/env python
 """
-Create a production to move files from one storage elment to another
+Create a transformation to move files from one storage element to another
 
 Example::
 
@@ -12,15 +12,21 @@ Options:
    -A, --AllFor    list        Comma separated list of production IDs. For each prodID three moving productions are
                                created: ProdID/Gen, ProdID+1/SIM, ProdID+2/REC
    -S, --GroupSize <value>     Number of Files per transformation task
+   -F, --Forcemoving           Move GEN or SIM files even if they do not have descendents
+   -x, --Enable                Enable the transformation creation, otherwise dry-run
+   -R, --GroupName <value>     TransformationGroup Name, by itself the group of the prodID
 
 :since:  Dec 4, 2015
 :author: A. Sailer
 """
+from pprint import pformat
 
 from DIRAC.Core.Base import Script
-from DIRAC import gLogger, exit as dexit
+from DIRAC import gLogger as LOG, exit as dexit
+from DIRAC.TransformationSystem.Utilities.ReplicationTransformation import createDataTransformation
 
-from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import Params
+from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import Params, checkDatatype, \
+    getTransformationGroup
 
 __RCSID__ = "$Id$"
 
@@ -40,20 +46,30 @@ def _createTrafo():
   registerSwitches(clip, Script)
   Script.parseCommandLine()
   if not clip.checkSettings(Script)['OK']:
-    gLogger.error("ERROR: Missing settings")
+    LOG.error("ERROR: Missing settings")
     return 1
-  from ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation import createDataTransformation
-  for index, prodID in enumerate(clip.prodIDs):
+  for index, prodID in enumerate(clip.metaValues):
     datatype = clip.datatype if clip.datatype else ['GEN', 'SIM', 'REC'][index % 3]
-    resCreate = createDataTransformation(transformationType='Moving',
-                                         targetSE=clip.targetSE,
-                                         sourceSE=clip.sourceSE,
-                                         prodID=prodID,
-                                         datatype=datatype,
-                                         extraname=clip.extraname,
-                                         forceMoving=clip.forcemoving,
-                                         groupSize=clip.groupSize,
-                                        )
+    plugin = 'Broadcast' if clip.forcemoving or clip.flavour != 'Moving' else 'BroadcastProcessed'
+    retData = checkDatatype(prodID, datatype)
+    if not retData['OK']:
+      LOG.error("ERROR: %s" % retData['Message'])
+      return 1
+    tGroup = getTransformationGroup(prodID, clip.groupName)
+    parDict = dict(flavour='Moving',
+                   targetSE=clip.targetSE,
+                   sourceSE=clip.sourceSE,
+                   metaKey=clip.metaKey,
+                   metaValue=prodID,
+                   extraData={'Datatype': datatype},
+                   extraname=clip.extraname,
+                   plugin=plugin,
+                   groupSize=clip.groupSize,
+                   tGroup=tGroup,
+                   enable=clip.enable,
+                   )
+    LOG.debug("Parameters: %s" % pformat(parDict))
+    resCreate = createDataTransformation(**parDict)
     if not resCreate['OK']:
       return 1
 

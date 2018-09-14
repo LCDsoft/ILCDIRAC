@@ -14,7 +14,7 @@ majorVersion = 30
 minorVersion = 0
 patchLevel = 0
 preVersion = 1
-    
+
 version      = "v%sr%s" % ( majorVersion, minorVersion )
 buildVersion = "v%dr%d" % ( majorVersion, minorVersion )
 if patchLevel:

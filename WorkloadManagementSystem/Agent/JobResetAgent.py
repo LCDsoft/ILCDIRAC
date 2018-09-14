@@ -19,10 +19,12 @@ Job Reset Agent takes care of the following cases
 
 from collections import defaultdict
 from datetime import datetime, timedelta
+from pprint import pformat
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
 from DIRAC.Core.Utilities.PrettyPrint import printTable
+from DIRAC.Core.Utilities.Proxy import UserProxy
 from DIRAC.Core.DISET.RPCClient import RPCClient
 
 from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
@@ -31,7 +33,7 @@ from DIRAC.Resources.Storage.StorageElement import StorageElement
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
 from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
 from DIRAC.DataManagementSystem.Client.DataManager import DataManager
-
+from DIRAC.Resources.Catalog.FileCatalogFactory import FileCatalogFactory
 __RCSID__ = "$Id$"
 
 AGENT_NAME = 'WorkloadManagement/JobResetAgent'
@@ -55,7 +57,7 @@ class JobResetAgent(AgentModule):
     self.prodJobTypes = ['MCGeneration', 'MCSimulation', 'MCReconstruction', 'MCReconstruction_Overlay', 'Split',
                          'MCSimulation_ILD', 'MCReconstruction_ILD', 'MCReconstruction_Overlay_ILD', 'Split_ILD']
 
-    self.addressTo = ["andre.philippe.sailer@cern.ch", "hamza.zafar@cern.ch"]
+    self.addressTo = ["ilcdirac-admin@cern.ch"]
     self.addressFrom = "ilcdirac-admin@cern.ch"
     self.emailSubject = "JobResetAgent"
 
@@ -76,10 +78,24 @@ class JobResetAgent(AgentModule):
                                       useCertificates=True,
                                       timeout=10)
 
+    self._fcClient = None
+
+  @property
+  def fcClient(self):
+    """Create a FileCatalogClient on demand."""
+    if not self._fcClient:
+      fcType = "FileCatalog"
+      result = FileCatalogFactory().createCatalog(fcType)
+      if not result['OK']:
+        raise RuntimeError("Cannot instantiate FileCatalog")
+      self._fcClient = result['Value']
+
+    return self._fcClient
+
   def beginExecution(self):
     """ Reload the configurations before every cycle """
 
-    self.enabled = self.am_getOption('EnableFlag', True)
+    self.enabled = self.am_getOption('EnableFlag', False)
     self.addressTo = self.am_getOption('MailTo', self.addressTo)
     self.addressFrom = self.am_getOption('MailFrom', self.addressFrom)
     self.userJobTypes = self.am_getOption('UserJobs', self.userJobTypes)
@@ -190,6 +206,12 @@ class JobResetAgent(AgentModule):
       return S_OK()
 
     self.log.notice("Request not Done: %s " % request)
+
+    if request.Status in ("Failed",):
+      res = self._treatFailedUserRequests(jobID, request)
+    if not res['OK']:
+      return res
+
     res = self.resetRequest(request.RequestID)
     if res["OK"]:
       self.accounting["User"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Resetting request "
@@ -258,7 +280,6 @@ class JobResetAgent(AgentModule):
       self.log.notice("Request is Waiting (for FTS): %s " % request)
       return S_OK()
 
-
     for op in request:
       self.log.info("Operation for completed job: %s, %s, %s, %s" %
                     (request.RequestID, op.Type, op.Status, op.Error))
@@ -294,6 +315,41 @@ class JobResetAgent(AgentModule):
       self.accounting["Completed"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Job Marked "
                                            "Done because no associated request is found")})
     return res
+
+  def _treatFailedUserRequests(self, jobID, request):
+    """Treat failed user Requests."""
+    for op in request:
+      self.log.info('Operation for failed job: %s, %s, %s, %s\n\t%s' %
+                    (request.RequestID, op.Type, op.Status, op.Error,
+                     "\n\t".join(lfn.LFN for lfn in op)))
+      failed = False
+      if op.Type != "RegisterFile" or op.Status != 'Failed':
+        return S_OK()
+      for lfn in op:
+        if lfn.Error is None or "File already registered with alternative metadata" not in lfn.Error:
+          continue
+        self.log.info("Getting user proxy %s (%s)" % (request.OwnerDN, request.OwnerGroup))
+        with UserProxy(proxyUserGroup=request.OwnerGroup, proxyUserDN=request.OwnerDN) as res:
+          if res['OK']:
+            self.log.info('Unregistering LFN: %s' % lfn.LFN)
+            res = self.fcClient.removeFile(lfn.LFN)
+        self.log.info("Tried unregistering:\n%s" % pformat(res))
+        if not res['OK']:
+          self.logError("Failed to unregister file", "%s: %s" % (lfn.LFN, res['Message']))
+          failed = True
+          continue
+        if res['Value'].get('Failed', {}):
+          for failedLFN, reason in res['Value']['Failed'].items():
+            self.logError("Failed to unregister file", "%s: %s" % (failedLFN, reason))
+          failed = True
+          continue
+        self.accounting["User"].append({"JobID": jobID,
+                                        "JobStatus": "Completed",
+                                        "Treatment": "Unregistered LFN %s" % lfn.LFN})
+
+      if failed:
+        return S_ERROR("Failed to unregister some files")
+      return S_OK()
 
   def checkJobs(self, jobIDs, treatJobWithNoReq, treatJobWithReq):
     """ executes treatment functions for jobs with and without requests """

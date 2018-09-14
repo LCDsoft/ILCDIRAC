@@ -296,16 +296,19 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
 
   def setUp( self ):
     super( MarlinAnalysisPatchTestCase, self ).setUp()
-    patches = [ patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123'))), \
-                patch("%s.MarlinAnalysis._getInputFiles" % MODULE_NAME, new=Mock(return_value=S_OK("testinputfiles"))), \
-                patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK('testdir'))), \
-                patch("%s.os.path.exists" % MODULE_NAME, new=Mock(side_effect=[False, True, False, True, False, True, False, False])) ]
-    for patcher in patches:
+    self.patches = [patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123'))),
+                    patch("%s.MarlinAnalysis._getInputFiles" % MODULE_NAME,
+                          new=Mock(return_value=S_OK("testinputfiles"))),
+                    patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK('testdir'))),
+                    patch("%s.os.path.exists" % MODULE_NAME,
+                          new=Mock(side_effect=[False, True, False, True, False, True, False, False]))]
+    for patcher in self.patches:
       patcher.start()
-  #  self.addCleanup( patch.stopall() )
+
   def tearDown( self ):
     super( MarlinAnalysisPatchTestCase, self ).tearDown()
-    patch.stopall()
+    for patcher in self.patches:
+      patcher.stop()
 
   @patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
   @patch("%s.MarlinAnalysis.prepareMARLIN_DLL" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))

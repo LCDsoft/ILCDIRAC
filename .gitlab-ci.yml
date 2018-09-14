@@ -14,9 +14,9 @@ stages:
 
 variables:
   LCG_BUNDLE_VERSION: "v14r2"
-  ILCDIRAC_VERSION: "v29r0-pre1"
+  ILCDIRAC_VERSION: "v29r0p1"
   DIRAC_BRANCH: "integration"
-  DIRAC_TAG: "v6r21-pre1"
+  DIRAC_TAG: "v7r0-pre3"
   SETUP: "ILC-Production"
   ILCDIRAC_BRANCH: "master"
 
@@ -43,7 +43,7 @@ variables:
     - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
-    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly flake8 psutil flake8-docstrings flake8-commas
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock flake8 psutil flake8-docstrings flake8-commas
     - cd ..
   artifacts:
      paths:
@@ -245,6 +245,8 @@ jobTests:CC7Prod:
     - .gitlab-ci.d/run-setests.sh
   coverage: '/\d+\%\s*$/'
   retry: 2
+  only:
+    - schedules
 
 setests:SL6:
   <<: *seTests

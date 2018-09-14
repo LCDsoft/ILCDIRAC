@@ -29,20 +29,21 @@ class FccMixin( object ):
     def replace_realpath( path ):
       return os.path.join("/test/realpath", path)
         
-    patches = [ patch("os.getcwd",  new=Mock(return_value="/test/curdir")),
-                patch("os.path.dirname", new=Mock(return_value="/test/dirname")),
-                patch("os.path.realpath", new=Mock(side_effect=replace_realpath))
-              ]
+    self.patches = [patch("os.getcwd", new=Mock(return_value="/test/curdir")),
+                    patch("os.path.dirname", new=Mock(return_value="/test/dirname")),
+                    patch("os.path.realpath", new=Mock(side_effect=replace_realpath)),
+                    ]
 
-    for patcher in patches:
+    for patcher in self.patches:
       patcher.start()
 
     self.fcc = None
     self.log_mock = Mock()
   
   def tearDown( self ):
-    del self.fcc    
-    patch.stopall()
+    for patcher in self.patches:
+      patcher.stop()
+    del self.fcc
 
   def test_userjobmodules( self ):
     module_mock = Mock()

@@ -1,48 +1,67 @@
 """
-Command Line Parameters for Moving Transformation Script
+Command Line Parameters for Replication transformation scripts
 """
 
-from DIRAC import S_OK, S_ERROR, gLogger
-from DIRAC.Core.Security.ProxyInfo import getProxyInfo
+import os
 
+from DIRAC import S_OK, S_ERROR, gLogger
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
+from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
+from DIRAC.TransformationSystem.Utilities.ReplicationCLIParameters import Params as DParams
 
 VALIDDATATYPES = ('GEN', 'SIM', 'REC', 'DST')
 
 
-class Params(object):
-  """Parameter Object"""
+def checkDatatype(prodID, datatype):
+  """Check if the datatype makes sense for given production."""
+  # skip data type check when creating replications in development for prod productions this check doesn't work
+  if os.environ.get('SKIP_CHECK', False):
+    gLogger.warn("Skipping Datatype check!")
+    return S_OK()
+
+  tClient = TransformationClient()
+  cond = dict(TransformationID=prodID)
+  trafo = tClient.getTransformations(cond)
+  if not trafo['OK']:
+    return trafo
+  if len(trafo['Value']) != 1:
+    return S_ERROR("Did not get unique production for this prodID")
+
+  trafoType = trafo['Value'][0]['Type'].split("_")[0]
+
+  dataTypes = Operations().getOptionsDict('Production/TransformationDatatypes')
+  if not dataTypes['OK']:
+    return dataTypes
+
+  dataTypes = dataTypes['Value']
+  if trafoType not in dataTypes[datatype]:
+    return S_ERROR("Datatype %r doesn't fit production type %r for prodID %s" % (datatype, trafoType, prodID))
+
+  return S_OK()
+
+
+def getTransformationGroup(prodID, groupName):
+  """Return TransformationGroup of prodID."""
+  if groupName:
+    return groupName
+  tClient = TransformationClient()
+  res = tClient.getTransformationParameters(prodID, 'TransformationGroup')
+  if not res['OK']:
+    return None
+  return res['Value']
+
+
+class Params(DParams):
+  """Command line parameter class."""
+
   def __init__(self):
-    self.prodIDs = []
-    self.targetSE = []
-    self.sourceSE = None
+    super(Params, self).__init__()
     self.datatype = None
-    self.errorMessages = []
-    self.extraname = ''
     self.forcemoving = False
     self.allFor = []
-    self.groupSize = 1
-
-  def setProdIDs(self, prodID):
-    if isinstance(prodID, list):
-      self.prodIDs = prodID
-    elif isinstance(prodID, int):
-      self.prodIDs = [prodID]
-    else:
-      self.prodIDs = [int(pID) for pID in prodID.split(",")]
-
-    return S_OK()
 
   def setAllFor(self, allFor):
     self.allFor = allFor
-    return S_OK()
-
-  def setSourceSE(self, sourceSE):
-    self.sourceSE = sourceSE
-    return S_OK()
-
-  def setTargetSE(self, targetSE):
-    self.targetSE = [tSE.strip() for tSE in targetSE.split(",")]
-    gLogger.always("TargetSEs: %s" % str(self.targetSE))
     return S_OK()
 
   def setDatatype(self, datatype):
@@ -52,19 +71,8 @@ class Params(object):
     self.datatype = datatype.upper()
     return S_OK()
 
-  def setExtraname(self, extraname):
-    self.extraname = extraname
-    return S_OK()
-
   def setForcemoving(self, _forcemoving):
     self.forcemoving = True
-    return S_OK()
-
-  def setGroupSize(self, size):
-    try:
-      self.groupSize = int(size)
-    except ValueError:
-      return S_ERROR("Expected integer for groupsize")
     return S_OK()
 
   def registerSwitches(self, script):
@@ -72,9 +80,7 @@ class Params(object):
 
     :param script: Dirac.Core.Base Script Class
     """
-
-    script.registerSwitch("N:", "Extraname=", "String to append to transformation name", self.setExtraname)
-    script.registerSwitch("S:", "GroupSize=", "Number of Files per transformation task", self.setGroupSize)
+    super(Params, self).registerSwitches(script)
 
     useMessage = []
     useMessage.append("%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName [-F] [-S 1]"
@@ -84,30 +90,17 @@ class Params(object):
                       % script.scriptName)
     script.setUsageMessage('\n'.join(useMessage))
 
-  def checkSettings(self, script):
-    """check if all required parameters are set, print error message and return S_ERROR if not"""
+  def checkSettings(self, script, checkArguments=False):
+    """Check if all required parameters are set, print error message and return S_ERROR if not."""
+    super(Params, self).checkSettings(script, checkArguments=checkArguments)
 
     args = script.getPositionalArgs()
     if len(args) == 4:
-      self.setProdIDs(args[0])
-      self.setTargetSE(args[1])
-      self.setSourceSE(args[2])
-      self.setDatatype(args[3])
+      self.__setFourParameters(args)
     elif len(args) == 2 and self.allFor:
-      self.setProdIDs(self.allFor)
-      # place the indiviual entries as well.
-      prodTemp = list(self.prodIDs)
-      for prodID in prodTemp:
-        self.prodIDs.append(prodID + 1)
-        self.prodIDs.append(prodID + 2)
-      self.prodIDs = sorted(self.prodIDs)
-
-      self.setTargetSE(args[0])
-      self.setSourceSE(args[1])
+      self.__setAllForParameters(args)
     else:
       self.errorMessages.append("ERROR: Not enough arguments")
-
-    self.checkProxy()
 
     if not self.errorMessages:
       return S_OK()
@@ -115,20 +108,24 @@ class Params(object):
     script.showHelp()
     return S_ERROR()
 
-  def checkProxy(self):
-    """checks if the proxy belongs to ilc_prod"""
-    proxyInfo = getProxyInfo()
-    if not proxyInfo['OK']:
-      self.errorMessages.append("ERROR: No Proxy present")
-      return False
-    proxyValues = proxyInfo.get('Value', {})
-    group = proxyValues.get('group')
+  def __setFourParameters(self, args):
+    """Set parameters if four command line arguments are given."""
+    self.setMetaValues(args[0])
+    # cast the metaValues to int
+    self.metaValues = [int(val) for val in self.metaValues]
+    self.setTargetSE(args[1])
+    self.setSourceSE(args[2])
+    self.setDatatype(args[3])
 
-    if group:
-      if not group == "ilc_prod":
-        self.errorMessages.append("ERROR: Not allowed to create production, you need a ilc_prod proxy.")
-        return False
-    else:
-      self.errorMessages.append("ERROR: Could not determine group, you do not have the right proxy.")
-      return False
-    return True
+  def __setAllForParameters(self, args):
+    """Set parameters if two command line arguments are given along with allFor."""
+    self.setMetaValues(self.allFor)
+    self.metaValues = [int(val) for val in self.metaValues]
+    # place the indiviual entries as well.
+    prodTemp = list(self.metaValues)
+    for prodID in prodTemp:
+      self.metaValues.append(prodID + 1)
+      self.metaValues.append(prodID + 2)
+    self.metaValues = sorted(self.metaValues)
+    self.setTargetSE(args[0])
+    self.setSourceSE(args[1])

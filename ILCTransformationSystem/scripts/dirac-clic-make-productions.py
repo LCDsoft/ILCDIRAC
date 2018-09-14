@@ -15,6 +15,7 @@ Options:
 
 #pylint disable=wrong-import-position
 
+from pprint import pformat
 import ConfigParser
 import os
 
@@ -27,7 +28,7 @@ PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
 APPLICATION_LIST = ['Marlin', 'DDSim', 'Overlay', 'Whizard2']
 LIST_ATTRIBUTES = ['ignoreMetadata']
-STRING_ATTRIBUTES = ['configPackage', 'configVersion']
+STRING_ATTRIBUTES = ['configPackage', 'configVersion', 'overlayEventType']
 
 
 def listify(value):
@@ -150,19 +151,19 @@ class CLICDetProdChain( object ):
       return self._over
     @property
     def move( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._moves
+      return self._moves
     @property
     def moveGen( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and (self._gen or self._spl) and self._moves and self._moveGen
+      return (self._gen or self._spl) and self._moves and self._moveGen
     @property
     def moveSim( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and self._sim and self._moves and self._moveSim
+      return self._sim and self._moves and self._moveSim
     @property
     def moveRec( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and (self._rec or self._over) and self._moves and self._moveRec
+      return (self._rec or self._over) and self._moves and self._moveRec
     @property
     def moveDst( self ): #pylint: disable=missing-docstring
-      return not self._dryRun and (self._rec or self._over) and self._moves and self._moveDst
+      return (self._rec or self._over) and self._moves and self._moveDst
 
 
     def __str__( self ):
@@ -227,6 +228,10 @@ MoveTypes = %(moveTypes)s
                      'fcc_prod': 'fccee',
                      }[group]
 
+    self.overlayEventType = {'ilc_prod': 'gghad',
+                             'fcc_prod': 'pairs',
+                             }[group]
+
     self.prodGroup = 'several'
     prodPath = os.path.join('/Production', self._machine.upper())
     self.basepath = self._ops.getValue(os.path.join(prodPath, 'BasePath'))
@@ -254,7 +259,6 @@ MoveTypes = %(moveTypes)s
     self.additionalName = params.additionalName
 
     self.overlayEvents = ''
-    self._overlayEventType = None
 
     self.cliRecoOption = ''
     self.cliReco = ''
@@ -342,7 +346,7 @@ MoveTypes = %(moveTypes)s
       self.overlayEvents = self.checkOverlayParameter(config.get(PP, 'overlayEvents')) \
                            if config.has_option(PP, 'overlayEvents') else ''
 
-      self._overlayEventType = 'gghad' + self.overlayEvents.lower()
+      self.overlayEventType = self.overlayEventType + self.overlayEvents.lower()
 
       if config.has_option(PP, 'prodIDs'):
         self.prodIDs = config.get(PP, 'prodIDs').split(',')
@@ -492,6 +496,7 @@ finalOutputSE = %(finalOutputSE)s
 ## optional marlin CLI options
 # cliReco = %(cliReco)s
 
+overlayEventType = %(overlayEventType)s
 ## optional energy to use for overlay: e.g. 3TeV
 # overlayEvents = %(overlayEvents)s
 
@@ -541,21 +546,24 @@ finalOutputSE = %(finalOutputSE)s
     return plist
 
   @staticmethod
-  def overlayParameterDict():
-    """ return dictionary that sets the parameters for the overlay application
+  def setOverlayParameters(energy, machine, overlay):
+    """Set parameters for the overlay application, depending on energy and machine.
 
-    keys are float or int
-    values are lambda functions acting on an overlay application object
+    :param float energy: energy to get parameters for
+    :param overlay: overlay application
     """
-
-    return {
-      350. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay350GeV') ] ),
-      380. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.0464 ), overlay.setProcessorName( 'Overlay380GeV') ] ),
-      420. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.17 ),   overlay.setProcessorName( 'Overlay420GeV') ] ),
-      500. : ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 0.3 ),    overlay.setProcessorName( 'Overlay500GeV') ] ),
-      1400.: ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 1.3 ),    overlay.setProcessorName( 'Overlay1.4TeV') ] ),
-      3000.: ( lambda overlay: [ overlay.setBXOverlay( 30 ), overlay.setGGToHadInt( 3.2 ),    overlay.setProcessorName( 'Overlay3TeV') ] ),
-    }
+    overlay.setMachine({'clic': 'clic_opt', 'fccee': 'fccee'}[machine])
+    {'clic': {350.: (lambda o: [o.setBXOverlay(30), o.setGGToHadInt(0.0464), o.setProcessorName('Overlay350GeV')]),
+              380.: (lambda o: [o.setBXOverlay(30), o.setGGToHadInt(0.0464), o.setProcessorName('Overlay380GeV')]),
+              420.: (lambda o: [o.setBXOverlay(30), o.setGGToHadInt(0.17), o.setProcessorName('Overlay420GeV')]),
+              500.: (lambda o: [o.setBXOverlay(30), o.setGGToHadInt(0.3), o.setProcessorName('Overlay500GeV')]),
+              1400.: (lambda o: [o.setBXOverlay(30), o.setGGToHadInt(1.3), o.setProcessorName('Overlay1.4TeV')]),
+              3000.: (lambda o: [o.setBXOverlay(30), o.setGGToHadInt(3.2), o.setProcessorName('Overlay3TeV')]),
+              },
+     'fccee': {91.2: (lambda o: [o.setBXOverlay(20), o.setGGToHadInt(1.0), o.setProcessorName('Overlay91GeV')]),
+               365: (lambda o: [o.setBXOverlay(3), o.setGGToHadInt(1.0), o.setProcessorName('Overlay365GeV')]),
+               },
+     }[machine][energy](overlay)
 
   @staticmethod
   def createSplitApplication( eventsPerJob, eventsPerBaseFile, splitType='stdhep' ):
@@ -613,15 +621,14 @@ finalOutputSE = %(finalOutputSE)s
     """ create Overlay Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
     overlay = OverlayInput()
-    overlay.setMachine( 'clic_opt' )
-    overlay.setEnergy( energy )
-    overlay.setBackgroundType( self._overlayEventType )
-    overlay.setDetectorModel( self.detectorModel )
+    overlay.setEnergy(energy)
+    overlay.setBackgroundType(self.overlayEventType)
+    overlay.setDetectorModel(self.detectorModel)
     try:
       overlayEnergy = energyToInt( self.overlayEvents ) if self.overlayEvents else energy
-      self.overlayParameterDict().get( overlayEnergy ) ( overlay )
-    except TypeError:
-      raise RuntimeError( "No overlay parameters defined for %r GeV and %s " % ( energy, self._overlayEventType ) )
+      self.setOverlayParameters(overlayEnergy, self._machine, overlay)
+    except KeyError:
+      raise RuntimeError("No overlay parameters defined for %r GeV and %s " % (energy, self.overlayEventType))
 
     if self.overlayEvents:
       overlay.setUseEnergyForFileLookup( False )
@@ -832,11 +839,26 @@ finalOutputSE = %(finalOutputSE)s
       gLogger.notice( "*"*80 + "\nNot creating moving transformation for prodID: %s, %s " % (meta['ProdID'], prodType ) )
       return
 
-    from ILCDIRAC.ILCTransformationSystem.Utilities.DataTransformation import createDataTransformation
+    from DIRAC.TransformationSystem.Utilities.ReplicationTransformation import createDataTransformation
     for dataType in dataTypes:
       if getattr( self._flags, "move%s" % dataType.capitalize() ):
         gLogger.notice( "*"*80 + "\nCreating moving transformation for prodID: %s, %s, %s " % (meta['ProdID'], prodType, dataType ) )
-        createDataTransformation('Moving', targetSE, sourceSE, prodID, dataType)
+        parDict = dict(flavour='Moving',
+                       targetSE=targetSE,
+                       sourceSE=sourceSE,
+                       plugin='BroadcastProcessed',
+                       metaKey='ProdID',
+                       metaValue=prodID,
+                       extraData={'Datatype': dataType},
+                       tGroup=self.prodGroup,
+                       groupSize=1,
+                       enable=not self._flags._dryRun,
+                     )
+        message = "Moving transformation with parameters"
+        gLogger.notice("%s:\n%s" % (message, pformat(parDict, indent=len(message) + 2, width=120)))
+        res = createDataTransformation(**parDict)
+        if not res['OK']:
+          gLogger.error("Failed to create moving transformation:", res['Message'])
 
   def getProductionJob(self):
     """ return production job instance with some parameters set """
