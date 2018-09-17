@@ -1,10 +1,11 @@
-#!/usr/bin/env python
-"""
-Create a list of lfns form a repository file created during job submission
+"""Create a list of LFNs form a repository file created during job submission.
+
+The repository file is defined when creating the :class:`~ILCDIRAC.Interfaces.API.DiracILC.DiracILC` instance.
 
 Options:
 
   -r repoLocation       Path to repository file
+
 
 :since: Apr 22, 2010
 :author: Stephane Poss

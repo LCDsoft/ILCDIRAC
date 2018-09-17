@@ -1,15 +1,12 @@
-#!/usr/bin/env python
-"""
-
-Find files in the dirac file catalog based on meta data
+"""Find files in the dirac file catalog based on meta data.
 
 Usage::
 
    dirac-ilc-find-in-FC [-D] PATH Constraint1 [Constraint2 [...]]
 
-It is also possible to use any of these operators >=, <=, >, <, !=, = when using metadata constraints.
-The list of metadata options can be obtained from the `dirac-dms-filecatalog-cli <http://diracgrid.org/files/docs/UserGuide/CommandReference/dirac-dms-filecatalog-cli.html>`_
-by typing: "meta show"
+It is also possible to use any of these operators >=, <=, >, <, !=, = when using metadata constraints.  The list of
+metadata options can be obtained from the :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-filecatalog-cli`
+by typing: ``meta show``
 
 For example::
 
@@ -19,8 +16,15 @@ to list only the directories containing the files use the "-D" flag::
 
    dirac-ilc-find-in-FC -D /ilc ProdID>1234 Datatype=DST
 
+
+.. seealso::
+
+  :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-find-lfns`
+
+
 :since: Mar 20, 2013
 :author: stephane
+
 """
 
 from DIRAC.Core.Base import Script

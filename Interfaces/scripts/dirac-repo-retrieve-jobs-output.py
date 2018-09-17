@@ -1,5 +1,6 @@
-"""
-Retrieve the output sandboxes of jobs created using the API, stored in the repository file
+"""Retrieve the output sandboxes of jobs created using the API, stored in the repository file.
+
+The repository file is defined when creating the :class:`~ILCDIRAC.Interfaces.API.DiracILC.DiracILC` instance.
 
 Options:
   -r repoLocation             Path to repository file

@@ -1,5 +1,6 @@
-"""
-Download the output data for the jobs in the repository file created during job submission
+"""Download the output data for the jobs in the repository file created during job submission.
+
+The repository file is defined when creating the :class:`~ILCDIRAC.Interfaces.API.DiracILC.DiracILC` instance.
 
 Options:
 
