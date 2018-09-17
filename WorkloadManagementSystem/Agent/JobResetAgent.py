@@ -33,6 +33,9 @@ from DIRAC.Resources.Storage.StorageElement import StorageElement
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
 from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 from DIRAC.Resources.Catalog.FileCatalogFactory import FileCatalogFactory
+
+from ILCDIRAC.Core.Utilities.LFNPathUtilities import cleanUpLFNPath
+
 __RCSID__ = "$Id$"
 
 AGENT_NAME = 'WorkloadManagement/JobResetAgent'
@@ -399,13 +402,6 @@ class JobResetAgent(AgentModule):
     stagedFiles = [lfn for lfn, val in res["Value"]["Successful"].iteritems() if val["Cached"] > 0]
     return S_OK(stagedFiles)
 
-  @staticmethod
-  def cleanLFN(lfn):
-    """ remove prefix from lfn """
-    if lfn.lower().startswith('lfn'):
-      lfn = lfn[4:]
-    return lfn
-
   def getInputDataForJobs(self, jobList):
     """ returns the input data for a given list of jobIDs """
     inputData = defaultdict(list)
@@ -416,7 +412,7 @@ class JobResetAgent(AgentModule):
         continue
 
       for lfn in res['Value']:
-        lfn = self.cleanLFN(lfn)
+        lfn = cleanUpLFNPath(lfn)
         inputData[lfn].append(jobID)
 
     return S_OK(inputData)

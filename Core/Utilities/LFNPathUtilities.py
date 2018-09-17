@@ -32,11 +32,12 @@ def joinPathForMetaData( *args ):
   return finalPath
 
 
-
-def cleanUpLFNPath( lfn ):
-  """ Normalise LFNs
-  """
+def cleanUpLFNPath(lfn):
+  """Normalise LFNs and remove 'LFN:' prefix."""
   LOG.debug("LFN before Cleanup", lfn)
   lfn = posixpath.normpath(lfn)
+  if lfn.lower().startswith('lfn'):
+    LOG.debug("LFN starts with lfn:'")
+    lfn = lfn[4:]
   LOG.verbose("LFN after Cleanup", lfn)
   return lfn
