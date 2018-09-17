@@ -309,12 +309,7 @@ texinfo_documents = [
 autosummary_generate=True
 autosummary_generate_all=True
 
-#autodoc_default_flags = ['members','undoc-members','inherited-members','show-inheritance']
-autodoc_default_options = {'members': None,
-                           'undoc-members': None,
-                           'inherited-members': None,
-                           'show-inheritance': None,
-                           }
+autodoc_default_options = {}
 autodoc_member_order = 'groupwise'
 autodoc_member_order = 'bysource'
 autodoc_mock_imports = ['GSI', 'MySQLdb', 'sqlalchemy', 'lcg_util',

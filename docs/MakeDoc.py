@@ -55,8 +55,8 @@ def mkPackageRst(filename, packagename, fullmodulename, subpackages=None, module
     rst.write("\n".join(lines))
 
     
-def mkModuleRest( classname, fullclassname ):
-  """ create rst file for class"""
+def mkModuleRest(classname, fullclassname):
+  """Create the rst file for a module."""
   LOG.info("Creating RST file for %s", fullclassname)
   filename = classname+".rst"
   with open(filename, 'w') as rst:
@@ -74,12 +74,16 @@ def mkModuleRest( classname, fullclassname ):
     ## These diagrams look aweful, need to install graphiz package and enable extensions
     # lines.append(".. inheritance-diagram:: %s" % fullclassname )
     # lines.append("")
+    if '.scripts.' in fullclassname:
+      lines.append(".. automodule:: %s" % fullclassname)
+      lines.append("   :no-members:")
 
-    lines.append(".. automodule:: %s" % fullclassname )
-    lines.append("   :members:" )
-    lines.append("   :inherited-members:" )
-    lines.append("   :undoc-members:" )
-    lines.append("   :show-inheritance:" )
+    else:
+      lines.append(".. automodule:: %s" % fullclassname)
+      lines.append("   :members:")
+      lines.append("   :inherited-members:")
+      lines.append("   :undoc-members:")
+      lines.append("   :show-inheritance:")
     if classname.startswith("_") or any( name == classname for name in ('UserJob', 'Application' ) ):
       lines.append( "   :private-members:" )
     rst.write("\n".join(lines))
