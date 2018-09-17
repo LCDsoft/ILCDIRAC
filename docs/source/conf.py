@@ -312,7 +312,7 @@ autosummary_generate_all=True
 autodoc_default_options = {}
 autodoc_member_order = 'groupwise'
 autodoc_member_order = 'bysource'
-autodoc_mock_imports = ['GSI', 'MySQLdb', 'sqlalchemy', 'lcg_util',
+autodoc_mock_imports = ['GSI', 'MySQLdb', 'sqlalchemy', 'lcg_util', 'suds'
                         ]
 
 intersphinx_mapping = {'DIRAC': ('http://dirac.readthedocs.io/en/rel-v6r20', None),
