@@ -1,5 +1,45 @@
-'''
-Create productions for the DDSim/Marlin software chain
+"""Create productions for the Whizard2/DDSim/Marlin software chain.
+
+First create a config file template::
+
+  dirac-clic-make-productions -p
+
+Then modify the template to describe the productions::
+
+    [Production Parameters]
+    detectorModel = CLIC_o3_v14
+    version = 2018-08-10
+    softwareVersion = ILCSoft-%(version)s_gcc62
+    configVersion = ILCSoft-%(version)s
+    whizard2Version = 2.6.3
+    productionLogLevel = VERBOSE
+    outputSE = CERN-DST-EOS
+    finalOutputSE = CERN-SRM
+    DRC=200
+    prodGroup = %(detectorModel)s_DiJets
+    ProdTypes = Gen, Sim, Rec, RecOver
+    energies =                100, 200
+    processes =          DY_uds
+    eventsPerJobs =           100
+    MoveTypes = REC, GEN, SIM
+    move = True
+    overlayEvents = 380GeV
+    cliReco = --Config.Tracking=Conformal --MyDDMarlinPandora.D0TrackCut=%(DRC)s
+        --MyDDMarlinPandora.Z0TrackCut=%(DRC)s --MyDDMarlinPandora.MaxBarrelTrackerInnerRDistance=%(DRC)s
+    additionalName = 3
+    whizard2SinFile = dy_uds.sin
+
+Further options can be found in the created template file. Many options can contain comma separated values to submit
+multiple chains of productions in one command. The example above will create two chains of Generation, Simulation,
+Reconstruction and Reconstruction with overlay transformations, one for 100 GeV and one for 200 GeV.
+
+Then test if everything works::
+
+  dirac-clic-make-productions -f myProd
+
+And finally submit to the system::
+
+  dirac-clic-make-productions -f myProd -x
 
 Options:
 
@@ -9,9 +49,67 @@ Options:
    --additionalName       Define a string to add to the production name if the original name already exists
 
 
+Parameters in the steering file
+
+  :configPackage: Steering file package to use for simulation and reconstruction
+  :configVersion: Steering file version to use for simulation and reconstruction
+  :detectorModel: Detector Model to use in simulation and reconstruction
+  :outputSE: output SE for transformation jobs
+  :finalOutputSE: final destination for files when moving transformations are enabled
+  :prodGroup: basename of the production group the productions are part of
+  :productionLogLevel: log level to use in production jobs
+  :softwareVersion: softwareVersion to use for generation/simulation/reconstruction
+  :additionalName: additionalName to add to the transformation name in case a transformation
+     with that name already exists
+
+  :ProdTypes: Which transformations to create: Gen, Split, Sim, Rec, RecOver
+  :MoveTypes: Which output file types to move: Gen, Sim, Rec, Dst
+  :move: Whether or not to create the transformations to the output files to the finalOutputSE
+
+  :energies: energy to use for generation or meta data search for each transformation chain
+  :eventsPerJobs: number of events per job
+  :processes: name of the processes to generate or use in meta data search
+  :prodids: transformation IDs to use in meta data search for the first transformation of each chain
+
+  :whizard2SinFile: path to sindarin file to be used with
+     :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2`
+  :whizard2Version: specify which version of :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2` to use
+  :numberOfTasks: number of production jobs/task to create for Gen transformations (default is 1)
+
+  :eventsInSplitFiles: For split transformations, number of events in the input files
+
+  :cliReco: additional CLI options for reconstruction
+
+  :overlayEvents: For ``RecOver`` transformations use these events for Overlay. By default the gghad
+     events with the process energy are used for overlay. E.g.: ``380GeV``
+
+
+The individual applications can be further modified in their respective section::
+
+  [Marlin]
+  #ApplicationAttributeName=Value
+
+  [DDSim]
+  #ApplicationAttributeName=Value
+
+  [Overlay]
+  #ApplicationAttributeName=Value
+
+  [Whizard2]
+  #ApplicationAttributeName=Value
+
+All attributes with a ``set`` method can be changed. See
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Marlin`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Overlay`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim`.
+
+
+
 :since: July 14, 2017
 :author: A Sailer
-'''
+
+"""
 
 #pylint disable=wrong-import-position
 
@@ -64,28 +162,7 @@ class Params(object):
 
 
 class CLICDetProdChain( object ):
-  """ create applications and productions for clic physics studies 2017
-
-
-  :param str prodGroup: basename of the production group the productions are part of
-  :param str process: name of the process to generate or use in meta data search
-  :param str detectorModel: Detector Model to use in simulation/reconstruction
-  :param str softwareVersion: softwareVersion to use for generation/simulation/reconstruction
-  :param str configVersion: Steering file version to use for simulation/reconstruction
-  :param str configPackage: Steering file package to use for simulation/reconstruction
-  :param float energy: energy to use for generation or meta data search
-  :param in eventsPerJob: number of events per job
-  :param in numberOfTasks: number of production jobs/task to create (default is 1)
-  :param str productionLogLevel: log level to use in production jobs
-  :param str outputSE: output SE for production jobs
-  :param str finalOutputSE: final destination for files when moving transformations are enabled
-  :param str additionalName: additionalName to add to the transformation name in case a
-        transformation with that name already exists
-  :param str cliReco: additional CLI options for reconstruction, optional
-  :param str whizard2Version: specify which version of Whizard 2 to use, optional
-  :param str whizard2SinFile: path to sindarin file to be used with Whizard2
-
-  """
+  """Create applications and productions for CLIC physics studies."""
 
   class Flags( object ):
     """ flags to enable or disable productions
