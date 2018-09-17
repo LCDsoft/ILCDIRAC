@@ -20,12 +20,14 @@ def test_toint(number, expected, cond):
   assert toInt(number, cond=cond) == expected
 
 
-@pytest.mark.parametrize("string, expected",
-                         [("1", ['1']),
-                          ("1,3", ['1', '3']),
-                          ("foo, bar", ['foo', 'bar']),
-                          ([1, 3, 4], [1, 3, 4]),
+@pytest.mark.parametrize("string, cast, expected",
+                         [("1", None, ['1']),
+                          ("1,3", None, ['1', '3']),
+                          ("1,3,,,", int, [1, 3]),
+                          ("0, 1,3", int, [0, 1, 3]),
+                          ("  foo  , bar  ", None, ['foo', 'bar']),
+                          ([1, 3, 4], None, [1, 3, 4]),
                           ])
-def test_listify(string, expected):
+def test_listify(string, cast, expected):
   """Testing the to int function."""
-  assert listify(string) == expected
+  assert listify(string, cast) == expected

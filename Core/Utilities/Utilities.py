@@ -30,8 +30,17 @@ def toInt(number, cond=None):
   return number
 
 
-def listify(value):
-  """Turn a comma separate string into a list."""
+def listify(value, cast=None):
+  """Turn a comma separate string into a list.
+
+  :param str value: string to turn into a list
+  :param cast: function to apply in all values, e.g., `int`
+  :returns: list, empty elements are stripped
+  """
   if isinstance(value, list):
-    return value
-  return [val.strip() for val in value.split(',') if val.strip()]
+    thisList = value
+  else:
+    thisList = [val.strip() for val in value.split(',') if val.strip()]
+  if cast is not None:
+    thisList = [cast(val) for val in thisList]
+  return thisList

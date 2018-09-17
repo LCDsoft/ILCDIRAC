@@ -195,7 +195,7 @@ MoveTypes = %(moveTypes)s
     def __splitStringToOptions( self, config, tuples, optString, prefix='_'):
       """ split the option string into separate values and set the corresponding flag """
       prodsToCreate = config.get( PRODUCTION_PARAMETERS, optString )
-      for prodType in prodsToCreate.split(','):
+      for prodType in listify(prodsToCreate):
         if not prodType:
           continue
         found = False
@@ -307,13 +307,13 @@ MoveTypes = %(moveTypes)s
         self.whizard2Version = config.get(PP, 'whizard2Version')
 
       if config.has_option(PP, 'whizard2SinFile'):
-        self.whizard2SinFile = config.get(PP, 'whizard2SinFile').replace(' ', '').split(',')
+        self.whizard2SinFile = listify(config.get(PP, 'whizard2SinFile'))
 
-      self.processes = config.get(PP, 'processes').split(',')
-      self.energies = config.get(PP, 'energies').split(',')
-      self.eventsPerJobs = config.get(PP, 'eventsPerJobs').split(',')
+      self.processes = listify(config.get(PP, 'processes'))
+      self.energies = listify(config.get(PP, 'energies'))
+      self.eventsPerJobs = listify(config.get(PP, 'eventsPerJobs'))
       if config.has_option(PP, 'numberOfTasks'):
-        self.numberOfTasks = config.get(PP, 'numberOfTasks').split(',')
+        self.numberOfTasks = listify(config.get(PP, 'numberOfTasks'))
       else:
         self.numberOfTasks = []
 
@@ -343,12 +343,12 @@ MoveTypes = %(moveTypes)s
       self.overlayEventType = self.overlayEventType + self.overlayEvents.lower()
 
       if config.has_option(PP, 'prodIDs'):
-        self.prodIDs = config.get(PP, 'prodIDs').split(',')
+        self.prodIDs = listify(config.get(PP, 'prodIDs'))
       else:
         self.prodIDs = []
 
       ##for split only
-      self.eventsInSplitFiles = config.get(PP, 'eventsInSplitFiles').split(',')
+      self.eventsInSplitFiles = listify(config.get(PP, 'eventsInSplitFiles'))
 
       self.processes = [ process.strip() for process in self.processes if process.strip() ]
       self.energies = [ float(eng.strip()) for eng in self.energies if eng.strip() ]
@@ -385,7 +385,7 @@ MoveTypes = %(moveTypes)s
            len(self.whizard2SinFile) != len(self.energies):
           raise AttributeError("Lengths of numberOfTasks, whizard2SinFile, and Energies do not match")
 
-      self.eventsInSplitFiles = [ int( epb.strip() ) for epb in self.eventsInSplitFiles if epb.strip() ]
+      self.eventsInSplitFiles = listify(self.eventsInSplitFiles, int)
       self.eventsInSplitFiles = self.eventsInSplitFiles if self.eventsInSplitFiles else [ -1 for _ in self.energies ]
 
       if self._flags.spl and len(self.eventsInSplitFiles) != len(self.energies):
