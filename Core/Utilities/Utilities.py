@@ -28,3 +28,10 @@ def toInt(number, cond=None):
     LOG.error("Argument does not pass condition: %r" % cond)
     return False
   return number
+
+
+def listify(value):
+  """Turn a comma separate string into a list."""
+  if isinstance(value, list):
+    return value
+  return [val.strip() for val in value.split(',') if val.strip()]

@@ -23,19 +23,13 @@ from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR, gLogger
 
 from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithUnit, energyToInt
+from ILCDIRAC.Core.Utilities.Utilities import listify
 
 PRODUCTION_PARAMETERS= 'Production Parameters'
 PP= 'Production Parameters'
 APPLICATION_LIST = ['Marlin', 'DDSim', 'Overlay', 'Whizard2']
 LIST_ATTRIBUTES = ['ignoreMetadata']
 STRING_ATTRIBUTES = ['configPackage', 'configVersion', 'overlayEventType']
-
-
-def listify(value):
-  """Turn a comma separate string into a list."""
-  if isinstance(value, list):
-    return value
-  return [val.strip() for val in value.split(',') if val.strip()]
 
 
 class Params(object):

@@ -2,7 +2,7 @@
 
 import pytest
 
-from ILCDIRAC.Core.Utilities.Utilities import toInt
+from ILCDIRAC.Core.Utilities.Utilities import toInt, listify
 
 
 @pytest.mark.parametrize("number, expected, cond",
@@ -18,3 +18,14 @@ from ILCDIRAC.Core.Utilities.Utilities import toInt
 def test_toint(number, expected, cond):
   """Testing the to int function."""
   assert toInt(number, cond=cond) == expected
+
+
+@pytest.mark.parametrize("string, expected",
+                         [("1", ['1']),
+                          ("1,3", ['1', '3']),
+                          ("foo, bar", ['foo', 'bar']),
+                          ([1, 3, 4], [1, 3, 4]),
+                          ])
+def test_listify(string, expected):
+  """Testing the to int function."""
+  assert listify(string) == expected
