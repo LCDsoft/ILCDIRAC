@@ -8,7 +8,9 @@ Example::
 
 Options:
    -N, --Extraname string      String to append to transformation name in case one already exists with that name
+   -R, --GroupName <value>     TransformationGroup Name, by itself the group of the prodID
    -S, --GroupSize <value>     Number of Files per transformation task
+   -x, --Enable                Enable the transformation creation, otherwise dry-run
 
 :since:  May 18, 2015
 :author: A. Sailer

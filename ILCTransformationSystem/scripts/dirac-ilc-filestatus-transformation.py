@@ -1,11 +1,13 @@
-#!/bin/env python
-"""
-Execute the FileStatusTransformationAgent on a given Transformation ID
+"""Execute the FileStatusTransformationAgent checks on a given Transformation ID.
 
-Example: dirac-ilc-filestatus-transformation <transformationID> -x
+Check for consistency in the status of replication of moving transformation.
+
+Example::
+
+  dirac-ilc-filestatus-transformation <transformationID> -x
 
 Options:
-   -x, --enable		Perform actions on databases
+   -x, --enable		Perform actions on tasks, requests and files
 """
 
 __RCSID__ = "$Id$"

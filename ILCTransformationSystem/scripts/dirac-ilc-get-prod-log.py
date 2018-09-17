@@ -1,8 +1,6 @@
-'''
-Download the production log files from the Log storage element
-See the JDL of production jobs for the log file location
+"""Download the production log files from the Log storage element.
 
-One can also download a full directory of log files
+See the JDL of production jobs for the log file location. One can also download a full directory of log files.
 
 Example::
 
@@ -18,7 +16,8 @@ Options:
 
 :since: Mar 21, 2013
 :author: Stephane Poss
-'''
+
+"""
 __RCSID__ = "$Id$"
 
 import os

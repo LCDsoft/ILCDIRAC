@@ -1,7 +1,6 @@
-#!/bin/env python
 """Print production properties and more information for given production
 
-Example
+Example::
 
   dirac-ilc-get-info -p 5678
 

@@ -1,7 +1,11 @@
-#!/usr/bin/env python
-"""
-This program will create a tar ball suitable for running the program on the grid with ILCDIRAC
-Needs the chrpath and readelf utilities
+"""Create a tarball, upload and register a version for the ddsim application.
+
+.. warning ::
+
+  One should use CVMFS and `dirac-ilc-add-cvmfs-software` instead.
+
+The script takes ``ddsim`` from the current environment.
+
 """
 
 import sys
