@@ -1,3 +1,5 @@
+.. _support-request:
+
 Support Requests
 ================
 

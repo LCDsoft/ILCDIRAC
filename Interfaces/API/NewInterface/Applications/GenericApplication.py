@@ -7,10 +7,13 @@ See here for more information about running your own executable: https://twiki.c
 
 """
 __RCSID__ = "$Id$"
-from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
-import types, os
+import types
+import os
+
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Workflow.Parameter import Parameter
+
+from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 
 class GenericApplication(LCApplication):
   """ Run a script (python or shell) in an application environment.

@@ -1,15 +1,12 @@
-#!/usr/bin/env python
-"""
-
-Find files in the dirac file catalog based on meta data
+"""Find files in the dirac file catalog based on meta data.
 
 Usage::
 
    dirac-ilc-find-in-FC [-D] PATH Constraint1 [Constraint2 [...]]
 
-It is also possible to use any of these operators >=, <=, >, <, !=, = when using metadata constraints.
-The list of metadata options can be obtained from the `dirac-dms-filecatalog-cli <http://diracgrid.org/files/docs/UserGuide/CommandReference/dirac-dms-filecatalog-cli.html>`_
-by typing: "meta show"
+It is also possible to use any of these operators >=, <=, >, <, !=, = when using metadata constraints.  The list of
+metadata options can be obtained from the :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-filecatalog-cli`
+by typing: ``meta show``
 
 For example::
 
@@ -19,14 +16,23 @@ to list only the directories containing the files use the "-D" flag::
 
    dirac-ilc-find-in-FC -D /ilc ProdID>1234 Datatype=DST
 
+
+.. seealso::
+
+  :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-find-lfns`
+
+
 :since: Mar 20, 2013
 :author: stephane
+
 """
 
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK
 from DIRAC.Core.Utilities.List import uniqueElements
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+
+LOG = gLogger.getSubLogger('')
 
 __RCSID__ = "$Id$"
 
@@ -57,10 +63,10 @@ def _createQueryDict(argss):
   result = fileCatClient.getMetadataFields()
 
   if not result['OK']:
-    gLogger.error("Failed checking for metadata fields")
+    LOG.error("Failed checking for metadata fields")
     return None
   if not result['Value']:
-    gLogger.error('No meta data fields available')
+    LOG.error('No meta data fields available')
     return None
   typeDict = result['Value']['FileMetaFields']
   typeDict.update(result['Value']['DirectoryMetaFields'])
@@ -74,12 +80,12 @@ def _createQueryDict(argss):
           operation = op
           break
       if not operation:
-        gLogger.error("Error: operation is not found in the query")
+        LOG.error("Error: operation is not found in the query")
         return None
         
       name,value = arg.split(operation)
       if name not in typeDict:
-        gLogger.error("Error: metadata field %s not defined" % name)
+        LOG.error("Error: metadata field %s not defined" % name)
         return None
       mtype = typeDict[name]
     else:
@@ -170,7 +176,7 @@ def _findInFC():
   args = Script.getPositionalArgs()
   if len(args)<2:
     Script.showHelp('ERROR: Not enough arguments')
-    gLogger.error("Run %s --help" % SCRIPTNAME )
+    LOG.error("Run %s --help" % SCRIPTNAME)
     dexit(1)
     
   path = args[0]
@@ -179,25 +185,25 @@ def _findInFC():
 
   ## Check that the first argument is not a MetaQuery
   if any( op in path for op in OPLIST ):
-    gLogger.error("ERROR: Path '%s' is not a valid path! The first argument must be a path" % path)
-    gLogger.error("Run %s --help" % SCRIPTNAME )
+    LOG.error("ERROR: Path '%s' is not a valid path! The first argument must be a path" % path)
+    LOG.error("Run %s --help" % SCRIPTNAME)
     dexit(1)
 
-  gLogger.verbose("Path:", path)
+  LOG.verbose("Path:", path)
   metaQuery = args[1:]
   metaDataDict = _createQueryDict(metaQuery)
-  gLogger.verbose("Query:",str(metaDataDict))
+  LOG.verbose("Query:", str(metaDataDict))
   if not metaDataDict:
-    gLogger.info("No query")
+    LOG.info("No query")
     dexit(1)
   
   fc = FileCatalogClient()
   res = fc.findFilesByMetadata(metaDataDict, path)
   if not res['OK']:
-    gLogger.error(res['Message'])
+    LOG.error(res['Message'])
     dexit(1)
   if not res['Value']:
-    gLogger.notice("No files found")
+    LOG.notice("No files found")
 
   listToPrint = None
 

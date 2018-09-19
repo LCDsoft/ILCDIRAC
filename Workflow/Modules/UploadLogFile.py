@@ -20,7 +20,9 @@ from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from ILCDIRAC.Core.Utilities.ProductionData import getLogPath, getExperimentFromPath
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 class UploadLogFile(ModuleBase):
   """ Handle log file uploads in the production jobs
@@ -31,7 +33,6 @@ class UploadLogFile(ModuleBase):
     """
     super(UploadLogFile, self).__init__()
     self.version = __RCSID__
-    self.log = gLogger.getSubLogger('UploadLogFile')
     self.productionID = None
     self.jobID = None
     self.workflow_commons = None
@@ -54,27 +55,27 @@ class UploadLogFile(ModuleBase):
 
     self.enable = self.step_commons.get('Enable', self.enable)
     if not isinstance(self.enable, bool):
-      self.log.warn('Enable flag set to non-boolean value %s, setting to False' %self.enable)
+      LOG.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
       self.enable = False
 
     if not isinstance(self.failoverTest, bool):
-      self.log.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
+      LOG.warn('Test failover flag set to non-boolean value %s, setting to False' % self.failoverTest)
       self.failoverTest = False
 
     self.jobID = os.environ.get('JOBID', self.jobID)
     if self.jobID != 0:
-      self.log.verbose('Found WMS JobID = %s' % self.jobID)
+      LOG.verbose('Found WMS JobID = %s' % self.jobID)
     else:
-      self.log.info('No WMS JobID found, disabling module via control flag')
+      LOG.info('No WMS JobID found, disabling module via control flag')
       self.enable = False
 
     self.logFilePath = self.workflow_commons.get('LogFilePath', self.logFilePath)
     self.logLFNPath = self.workflow_commons.get('LogTargetPath', self.logLFNPath)
     if not (self.logFilePath and self.logLFNPath):
-      self.log.info('LogFilePath parameter not found, creating on the fly')
+      LOG.info('LogFilePath parameter not found, creating on the fly')
       result = getLogPath(self.workflow_commons)
       if not result['OK']:
-        self.log.error('Could not create LogFilePath', result['Message'])
+        LOG.error('Could not create LogFilePath', result['Message'])
         return result
       self.logFilePath = result['Value']['LogFilePath'][0]
       self.logLFNPath = result['Value']['LogTargetPath'][0]
@@ -84,7 +85,7 @@ class UploadLogFile(ModuleBase):
     if not isinstance(self.logLFNPath, basestring):
       self.logLFNPath = self.logLFNPath[0]
 
-    self.experiment = getExperimentFromPath(self.log, self.logFilePath, self.experiment)
+    self.experiment = getExperimentFromPath(LOG, self.logFilePath, self.experiment)
 
     return S_OK('Parameters resolved')
 
@@ -92,17 +93,17 @@ class UploadLogFile(ModuleBase):
   def execute(self):
     """ Main execution method
     """
-    self.log.info('Initializing %s' % self.version)
+    LOG.info('Initializing %s' % self.version)
     # Add global reporting tool
     res = self.resolveInputVariables()
     if not res['OK']:
-      self.log.error("Failed to resolve input parameters:", res['Message'])
+      LOG.error("Failed to resolve input parameters:", res['Message'])
       
     self.logWorkingDirectory()
-    self.log.info('Job root is found to be %s' % (self.root))
-    self.log.info('PRODUCTION_ID = %s, JOB_ID = %s '  % (self.productionID, self.jobID))
+    LOG.info('Job root is found to be %s' % (self.root))
+    LOG.info('PRODUCTION_ID = %s, JOB_ID = %s ' % (self.productionID, self.jobID))
     self.logdir = os.path.realpath('./job/log/%s/%s' % (self.productionID, self.jobID))
-    self.log.info('Selected log files will be temporarily stored in %s' % self.logdir)
+    LOG.info('Selected log files will be temporarily stored in %s' % self.logdir)
 
     res = self.finalize()
     return res
@@ -113,45 +114,45 @@ class UploadLogFile(ModuleBase):
         steps were executed. Only production jobs are treated.
     """
     
-    self.log.verbose('Starting UploadLogFile finalize')
-    self.log.debug("LogFilePath: %s" % self.logFilePath)
-    self.log.debug("LogLFNPath:  %s" % self.logLFNPath)
+    LOG.verbose('Starting UploadLogFile finalize')
+    LOG.debug("LogFilePath: %s" % self.logFilePath)
+    LOG.debug("LogLFNPath:  %s" % self.logLFNPath)
 
     ##########################################
     # First determine the files which should be saved
-    self.log.info('Determining the files to be saved in the logs.')
+    LOG.info('Determining the files to be saved in the logs.')
     resRelevantFiles = self._determineRelevantFiles()
     if not resRelevantFiles['OK']:
-      self.log.error('Completely failed to select relevant log files.', resRelevantFiles['Message'])
+      LOG.error('Completely failed to select relevant log files.', resRelevantFiles['Message'])
       return S_OK()#because if the logs are lost, it's not the end of the world.
 
     selectedFiles = resRelevantFiles['Value']
     if not selectedFiles:
-      self.log.info("No log files selected")
+      LOG.info("No log files selected")
       return S_OK()
 
-    self.log.info('The following %s files were selected to be saved:\n%s' % (len(selectedFiles),
+    LOG.info('The following %s files were selected to be saved:\n%s' % (len(selectedFiles),
                                                                              "\n".join(selectedFiles)))
 
     #########################################
     # Create a temporary directory containing these files
-    self.log.info('Populating a temporary directory for selected files.')
+    LOG.info('Populating a temporary directory for selected files.')
     resLogDir = self._populateLogDirectory(selectedFiles)
     if not resLogDir['OK']:
-      self.log.error('Completely failed to populate temporary log file directory.', resLogDir['Message'])
+      LOG.error('Completely failed to populate temporary log file directory.', resLogDir['Message'])
       self.setApplicationStatus('Failed To Populate Log Dir')
       return S_OK()#because if the logs are lost, it's not the end of the world.
-    self.log.info('%s populated with log files.' % self.logdir)
+    LOG.info('%s populated with log files.' % self.logdir)
 
     if not self.enable:
-      self.log.info('Module is disabled by control flag')
+      LOG.info('Module is disabled by control flag')
       return S_OK('Module is disabled by control flag')
 
     #########################################
     #Make sure all the files in the log directory have the correct permissions
     result = self._setLogFilePermissions(self.logdir)
     if not result['OK']:
-      self.log.error('Could not set permissions of log files to 0755 with message:\n%s' % (result['Message']))
+      LOG.error('Could not set permissions of log files to 0755 with message:\n%s' % (result['Message']))
 
     #########################################
     #Tar all the files
@@ -162,24 +163,24 @@ class UploadLogFile(ModuleBase):
 
     #########################################
     # Attempt to upload log tar ball to the LogSE
-    self.log.info('Transferring log tarball to the %s' % self.logSE.name)
+    LOG.info('Transferring log tarball to the %s' % self.logSE.name)
     resTransfer = S_ERROR("Skipping log upload, because failoverTest")
     tarFileLFN = '%s/%s' % (self.logFilePath, tarFileName)
     tarFileLocal = os.path.realpath(os.path.join(self.logdir, tarFileName))
     if not self.failoverTest:
-      self.log.info('PutFile %s %s %s' % (tarFileLFN, tarFileLocal, self.logSE.name))
+      LOG.info('PutFile %s %s %s' % (tarFileLFN, tarFileLocal, self.logSE.name))
       resTransfer = self.logSE.putFile({ tarFileLFN : tarFileLocal })
-      self.log.debug("putFile result: %s" % resTransfer)
+      LOG.debug("putFile result: %s" % resTransfer)
       if not resTransfer['OK']:
-        self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
+        LOG.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
                        resTransfer['Message'])
       elif resTransfer['OK'] and len(resTransfer['Value']['Failed']) == 0:
-        self.log.info('Successfully upload log tarball to %s' % self.logSE.name)
+        LOG.info('Successfully upload log tarball to %s' % self.logSE.name)
         self.setJobParameter('Log LFN', tarFileLFN)
-        self.log.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % tarFileLFN)
+        LOG.info('Logs for this job may be retrieved with dirac-ilc-get-prod-log -F %s' % tarFileLFN)
         return S_OK()
       else:
-        self.log.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
+        LOG.error('Completely failed to upload log files to %s, will attempt upload to failover SE' % self.logSE.name,
                        resTransfer['Value'])
 
     #########################################
@@ -187,7 +188,7 @@ class UploadLogFile(ModuleBase):
 
     
     #if res['Value'][0]: #i.e. non-zero status
-    #  self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir,res['Value']))
+    #  LOG.error('Failed to create tar file from directory','%s %s' % (self.logdir,res['Value']))
     #  self.setApplicationStatus('Failed To Create Log Tar Dir')
     #  return S_OK()#because if the logs are lost, it's not the end of the world.
 
@@ -201,11 +202,11 @@ class UploadLogFile(ModuleBase):
     uploadedSE = resFailover['Value']['uploadedSE']
     res = self._createLogUploadRequest(self.logSE.name, self.logLFNPath, uploadedSE)
     if not res['OK']:
-      self.log.error('Failed to create failover request', res['Message'])
+      LOG.error('Failed to create failover request', res['Message'])
       self.setApplicationStatus('Failed To Upload Logs To Failover')
     else:
-      self.log.info('Successfully created failover request')
-      self.log.info("Request %s" % self._getRequestContainer())
+      LOG.info('Successfully created failover request')
+      LOG.info("Request %s" % self._getRequestContainer())
     return S_OK()
 
   #############################################################################
@@ -217,18 +218,18 @@ class UploadLogFile(ModuleBase):
     self.logExtensions = self.ops.getValue('/LogFiles/%s/Extensions' % self.experiment, [])
 
     if self.logExtensions:
-      self.log.info('Using list of log extensions from CS:\n%s' % (', '.join(self.logExtensions)))
+      LOG.info('Using list of log extensions from CS:\n%s' % (', '.join(self.logExtensions)))
       logFileExtensions = self.logExtensions
     else:
-      self.log.info('Using default list of log extensions:\n%s' % (', '.join(logFileExtensions)))
+      LOG.info('Using default list of log extensions:\n%s' % (', '.join(logFileExtensions)))
 
     candidateFiles = []
     for ext in logFileExtensions:
-      self.log.debug('Looking at log file wildcard: %s' % ext)
+      LOG.debug('Looking at log file wildcard: %s' % ext)
       globList = glob.glob(ext)
       for check in globList:
         if os.path.isfile(check):
-          self.log.debug('Found locally existing log file: %s' % check)
+          LOG.debug('Found locally existing log file: %s' % check)
           candidateFiles.append(check)
 
     selectedFiles = []
@@ -238,10 +239,10 @@ class UploadLogFile(ModuleBase):
         if fileSize < self.logSizeLimit:
           selectedFiles.append(candidate)
         else:
-          self.log.error('Log file found to be greater than maximum of %s bytes' % self.logSizeLimit, candidate)
+          LOG.error('Log file found to be greater than maximum of %s bytes' % self.logSizeLimit, candidate)
       return S_OK(selectedFiles)
     except OSError as x:
-      self.log.exception('Exception while determining files to save.', '', str(x))
+      LOG.exception('Exception while determining files to save.', '', str(x))
       return S_ERROR('Could not determine log files')
 
   #############################################################################
@@ -254,31 +255,31 @@ class UploadLogFile(ModuleBase):
       if not os.path.exists(self.logdir):
         os.makedirs(self.logdir)
     except OSError as x:
-      self.log.exception('PopulateLogDir: Exception while trying to create directory.', self.logdir, str(x))
+      LOG.exception('PopulateLogDir: Exception while trying to create directory.', self.logdir, str(x))
       return S_ERROR()
     # Set proper permissions
-    self.log.info('PopulateLogDir: Changing log directory %s permissions to 0755' % self.logdir )
+    LOG.info('PopulateLogDir: Changing log directory %s permissions to 0755' % self.logdir)
     try:
       os.chmod(self.logdir, 0755)
     except OSError as x:
-      self.log.error('PopulateLogDir: Could not set logdir permissions to 0755:', '%s (%s)' % ( self.logdir, str(x) ) )
+      LOG.error('PopulateLogDir: Could not set logdir permissions to 0755:', '%s (%s)' % (self.logdir, str(x)))
     # Populate the temporary directory
     try:
       for myfile in selectedFiles:
         destinationFile = '%s/%s' % (self.logdir, os.path.basename(myfile))
         shutil.copy(myfile, destinationFile)
     except OSError as x:
-      self.log.exception('PopulateLogDir: Exception while trying to copy file.', myfile, str(x))
-      self.log.info('PopulateLogDir: File %s will be skipped and can be considered lost.' % myfile)
+      LOG.exception('PopulateLogDir: Exception while trying to copy file.', myfile, str(x))
+      LOG.info('PopulateLogDir: File %s will be skipped and can be considered lost.' % myfile)
 
     # Now verify the contents of our target log dir
     successfulFiles = os.listdir(self.logdir)
-    self.log.info("PopulateLogDir: successfulFiles %s" % successfulFiles)
+    LOG.info("PopulateLogDir: successfulFiles %s" % successfulFiles)
     if len(successfulFiles) == 0:
-      self.log.info('PopulateLogDir: Failed to copy any files to the target directory.')
+      LOG.info('PopulateLogDir: Failed to copy any files to the target directory.')
       return S_ERROR()
     else:
-      self.log.info('PopulateLogDir: Prepared %s files in the temporary directory.' % len(successfulFiles))
+      LOG.info('PopulateLogDir: Prepared %s files in the temporary directory.' % len(successfulFiles))
       return S_OK()
     
   #############################################################################
@@ -287,7 +288,7 @@ class UploadLogFile(ModuleBase):
         Changed to be similar to LHCb createLogUploadRequest
         using LHCb LogUpload Request and Removal Request
     """
-    self.log.info('Setting log upload request for %s at %s' %(targetSE, logFileLFN))
+    LOG.info('Setting log upload request for %s at %s' % (targetSE, logFileLFN))
     request = self._getRequestContainer()
 
     logUpload = Operation()
@@ -318,10 +319,10 @@ class UploadLogFile(ModuleBase):
     try:
       for toChange in os.listdir(logDir):
         if not os.path.islink('%s/%s' % (logDir, toChange)):
-          self.log.debug('Changing permissions of %s/%s to 0755' % (logDir, toChange))
+          LOG.debug('Changing permissions of %s/%s to 0755' % (logDir, toChange))
           os.chmod('%s/%s' % (logDir, toChange), 0755)
     except OSError as x:
-      self.log.error('Problem changing shared area permissions', str(x))
+      LOG.error('Problem changing shared area permissions', str(x))
       return S_ERROR(x)
 
     return S_OK()
@@ -335,13 +336,13 @@ class UploadLogFile(ModuleBase):
     catalogs = self.ops.getValue('Production/%s/Catalogs' % self.experiment, ['FileCatalog', 'LcgFileCatalog'])
 
     random.shuffle(self.failoverSEs)
-    self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName,
+    LOG.info("Attempting to store file %s to the following SE(s):\n%s" % (tarFileName,
                                                                                ', '.join(self.failoverSEs )))
     result = failoverTransfer.transferAndRegisterFile(tarFileName, '%s/%s' % (tarFileDir, tarFileName), self.logLFNPath,
                                                       self.failoverSEs, fileMetaDict = { "GUID": None },
                                                       fileCatalog = catalogs )
     if not result['OK']:
-      self.log.error('Failed to upload logs to all destinations')
+      LOG.error('Failed to upload logs to all destinations')
       self.setApplicationStatus('Failed To Upload Logs')
       return S_OK() #because if the logs are lost, it's not the end of the world.
 
@@ -353,25 +354,25 @@ class UploadLogFile(ModuleBase):
     self.logLFNPath = '%s.gz' % self.logLFNPath
     tarFileName = os.path.basename(self.logLFNPath)
 
-    self.log.debug("Log Directory: %s" % self.logdir )
-    self.log.debug("Log LFNPath:   %s" % self.logLFNPath )
-    self.log.debug("TarFileName:   %s" % tarFileName )
+    LOG.debug("Log Directory: %s" % self.logdir)
+    LOG.debug("Log LFNPath:   %s" % self.logLFNPath)
+    LOG.debug("TarFileName:   %s" % tarFileName)
     start = os.getcwd()
     os.chdir(self.logdir)
     logTarFiles = os.listdir(self.logdir)
     #comm = 'tar czvf %s %s' % (tarFileName,string.join(logTarFiles,' '))
     tfile = tarfile.open(tarFileName, "w:gz")
     for item in logTarFiles:
-      self.log.info("Adding file %s to tarfile %s" %(item, tarFileName))
+      LOG.info("Adding file %s to tarfile %s" % (item, tarFileName))
       tfile.add(item)
     tfile.close()
     resExists = S_OK() if os.path.exists(tarFileName) else S_ERROR("File was not created")
     os.chdir(start)
-    self.log.debug("TarFileName: %s" %(tarFileName,))
+    LOG.debug("TarFileName: %s" % (tarFileName,))
     if resExists['OK']:
       return S_OK(dict(fileName=tarFileName))
     else:
-      self.log.error('Failed to create tar file from directory','%s %s' % (self.logdir, resExists['Message']))
+      LOG.error('Failed to create tar file from directory', '%s %s' % (self.logdir, resExists['Message']))
       self.setApplicationStatus('Failed To Create Log Tar Dir')
       return S_ERROR()
 

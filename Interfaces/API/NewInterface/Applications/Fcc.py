@@ -17,9 +17,10 @@ import types
 
 # DIRAC libraries
 from ILCDIRAC.Interfaces.API.NewInterface.Application import Application
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 
@@ -152,18 +153,18 @@ class Fcc(Application):
       "Application general consistency :"
       " _checkConsistency() on '%(name)s'..." % {'name':self.appname}
     )
-    self._log.info(infoMessage)
+    LOG.info(infoMessage)
 
     if not self.version:
       errorMessage = 'Version not set!'
-      self._log.error(errorMessage)
+      LOG.error(errorMessage)
       return S_ERROR(errorMessage)
 
     infoMessage = (
       "Consistency : Version of the application set to :"
       "\nversion : %(version)s" % {'version':self.version}
     )
-    self._log.info(infoMessage) 
+    LOG.info(infoMessage)
 
     # The executable is mandatory and also the configuration file except if the
     # input is taken from an other app hence the use of '_inputapp'
@@ -173,7 +174,7 @@ class Fcc(Application):
         "You have to provide at least an executable"
         " and a configuration file for each application" % {'name':self.appname}
       )
-      self._log.error(errorMessage)
+      LOG.error(errorMessage)
       return S_ERROR(errorMessage)
 
     if not isinstance(self.steeringFile, str):
@@ -183,7 +184,7 @@ class Fcc(Application):
         "Create an new application with the other configuration\n"
         "You can also use the 'getInputFromApp' method to link applications" % {'name':self.appname}
       )
-      self._log.error(errorMessage)
+      LOG.error(errorMessage)
       return S_ERROR(errorMessage)
 
     debugMessage = (
@@ -191,7 +192,7 @@ class Fcc(Application):
       "\nexecutable : %(exec)s"
       "\nconfiguration : %(conf)s" % {'exec':self.fccExecutable, 'conf':self.steeringFile}
     )
-    self._log.debug(debugMessage)
+    LOG.debug(debugMessage)
 
     # All input files are put in the FCC temporary sandbox for a
     # pre-checking before being added to the FCC final sandbox
@@ -201,15 +202,15 @@ class Fcc(Application):
       if not self.read and "Pythia" in self.randomGenerator:
         self.randomGenerator["Pythia"].append(os.path.basename(self.steeringFile))
 
-    self._log.info("Sandboxing : Sandboxing in progress...")
+    LOG.info("Sandboxing : Sandboxing in progress...")
 
     # We update the sandbox with files/folders required by the application
     if not self._importToSandbox():
       errorMessage = "_importToSandbox() failed"
-      self._log.error(errorMessage)
+      LOG.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    self._log.info("Sandboxing : Sandboxing successfull")
+    LOG.info("Sandboxing : Sandboxing successfull")
     
     # setOutputFile() method informs the job that this application has an output file
     # This output can be used as input for another application.
@@ -235,7 +236,7 @@ class Fcc(Application):
       "Application general consistency : _checkConsistency()"
       " on '%(name)s' successfull" % {'name':self.appname}
     )
-    self._log.info(infoMessage)
+    LOG.info(infoMessage)
 
     return S_OK(infoMessage)
 
@@ -261,7 +262,7 @@ class Fcc(Application):
       "You plan to submit this application with its corresponding log :\n"
       "%(name)s --> %(log)s" % {'name':self.appname, 'log':self.logFile}
     )
-    self._log.info(infoMessage)
+    LOG.info(infoMessage)
 
 
     if self._inputSandbox:
@@ -269,18 +270,18 @@ class Fcc(Application):
         "\nHere is the content of its input sandbox :\n%(input)s"
         % {'input':'\n'.join(self._inputSandbox)}
       )
-      self._log.info(infoMessage)
+      LOG.info(infoMessage)
 
     if self._outputSandbox:
       infoMessage = (
         "\nHere are the output files :\n%(output)s"
         % {'output':'\n'.join(self._outputSandbox)}
       )
-      self._log.info(infoMessage)
+      LOG.info(infoMessage)
 
 
     infoMessage = "\n********************************FCC SUMMARY******************************"
-    self._log.info(infoMessage)
+    LOG.info(infoMessage)
 
     return super(Fcc, self)._checkFinalConsistency()
 
@@ -347,7 +348,7 @@ class Fcc(Application):
 
     if not self._tempInputSandbox:
       warnMessage = "Sandboxing : Your application has an empty input sandbox"
-      self._log.warn(warnMessage)
+      LOG.warn(warnMessage)
       return True
 
     for path in self._tempInputSandbox:
@@ -361,7 +362,7 @@ class Fcc(Application):
           "Please ensure that your path exists in an accessible file system "
           "(AFS or CVMFS)" % {'path':path}
         )
-        self._log.error(errorMessage)
+        LOG.error(errorMessage)
         return False
 
       if path.startswith('/afs/'):
@@ -372,7 +373,7 @@ class Fcc(Application):
         )
 
         # We log the message into the warning level
-        self._log.warn(warnMessage)
+        LOG.warn(warnMessage)
 
       # cvmfs paths do not need to be uploaded, they can be accessed remotely.
       # but for the moment do not be smart about it, add also cvmfs files,
@@ -385,14 +386,14 @@ class Fcc(Application):
         "Sandboxing : The path '%(path)s' required by the application"
         " has been added to te sandbox" % {'path':path}
       )
-      self._log.debug(debugMessage)
+      LOG.debug(debugMessage)
 
     debugMessage = (
       "Sandboxing : Files required by FCC application"
       " verified and added successfully to the sandbox"
     )
 
-    self._log.debug(debugMessage)
+    LOG.debug(debugMessage)
     return True
 
   def _importToSandbox(self):
@@ -404,17 +405,17 @@ class Fcc(Application):
 
     """
 
-    self._log.debug("Sandboxing : Importation of user files/folders...")
+    LOG.debug("Sandboxing : Importation of user files/folders...")
 
     # Import files required by the application
     # If import process fails for some reasons (see functions above for more details)
     # then consistency fails
     if not self._importFiles():
-      self._log.error("Sandboxing : _importFiles() failed")
+      LOG.error("Sandboxing : _importFiles() failed")
       return False
       # Do not continue remaining checks
 
-    self._log.debug("Sandboxing : Importation of user files/folders successfull")
+    LOG.debug("Sandboxing : Importation of user files/folders successfull")
 
     return True
 
@@ -472,21 +473,21 @@ class FccSw(Fcc):
 
     """
 
-    self._log.debug("FCCSW specific consistency : _checkConsistency()...")
+    LOG.debug("FCCSW specific consistency : _checkConsistency()...")
 
     if not self.fccSwPath or not os.path.exists(self.fccSwPath):
       errorMessage = (
         "FCCSW specific consistency : Error in parsing FCCSW application :\n"
         "You have to provide a valid path of the FCCSW installation"
       )
-      self._log.error(errorMessage)
+      LOG.error(errorMessage)
       return S_ERROR(errorMessage)
 
     debugMessage = (
       "FCCSW specific consistency : Creation of a temporary folder 'temp_fcc_dirac'"
       " in the current working directory..."
     )
-    self._log.debug(debugMessage)
+    LOG.debug(debugMessage)
 
     # First, it creates a temporary local directory for folders whose
     # the content does not have to be sandboxed entirely
@@ -496,12 +497,12 @@ class FccSw(Fcc):
         os.makedirs(self._tempCwd)
       except OSError as e:
         errorMessage = "FCCSW specific consistency : Creation of 'temp_fcc_dirac' folder failed\n%s" % e
-        self._log.error(errorMessage)
+        LOG.error(errorMessage)
         return S_ERROR(errorMessage)
 
-      self._log.debug("FCCSW specific consistency : Creation of 'temp_fcc_dirac' folder successfull")
+      LOG.debug("FCCSW specific consistency : Creation of 'temp_fcc_dirac' folder successfull")
     else:
-      self._log.debug("FCCSW specific consistency : The temporary folder 'temp_fcc_dirac' already exists")
+      LOG.debug("FCCSW specific consistency : The temporary folder 'temp_fcc_dirac' already exists")
 
     # InstallArea folder is present on CVMFS so nothing to do
     # else if local FCCSW installation is used
@@ -533,10 +534,10 @@ class FccSw(Fcc):
         executableContent, message = self._readFromFile(executablePath)
 
         if not executableContent:
-          self._log.warn(message)
-          self._log.debug('FCCSW specific consistency : Using by default the command of the 0.8.1 release !')
+          LOG.warn(message)
+          LOG.debug('FCCSW specific consistency : Using by default the command of the 0.8.1 release !')
         else:
-          self._log.debug(message)
+          LOG.debug(message)
 
           # Separate shebang (0) and command of the executable (1)
           executableCommand = executableContent.split('\n')[1]
@@ -564,7 +565,7 @@ class FccSw(Fcc):
     # FCCSW release made after 31/08/2017 will put a complete installation of FCCSW
     # And all examples of Examples/options should run successfully
 
-    self._log.debug("FCCSW specific consistency : _checkConsistency() successfull")
+    LOG.debug("FCCSW specific consistency : _checkConsistency() successfull")
 
     return super(FccSw, self)._checkConsistency()
 
@@ -593,7 +594,7 @@ class FccSw(Fcc):
 
     if not super(FccSw, self)._importToSandbox():
       errorMessage = "Sandboxing : _importToSandbox() failed"
-      self._log.error(errorMessage)
+      LOG.error(errorMessage)
       return False
 
     if not self._importFccswFiles():
@@ -603,7 +604,7 @@ class FccSw(Fcc):
     # and we import the filtered folders to the sandbox.
     if not self._setFilterToFolders():
       errorMessage = "_setFilterToFolders() failed"
-      self._log.error(errorMessage)
+      LOG.error(errorMessage)
       return False
 
     return True
@@ -630,7 +631,7 @@ class FccSw(Fcc):
         " it is not present in the FCCSW installation"
         "\nThen you should have added it manually to the input sandbox !"
       )
-      self._log.warn(warnMessage)
+      LOG.warn(warnMessage)
     else:
       # We do not need all the content of these folders hence the filtering
       self._foldersToFilter.append(detectorFolder)
@@ -641,16 +642,16 @@ class FccSw(Fcc):
       self._filteredExtensions += ['.xml']
       self._excludesOrIncludes += [False]
 
-    self._log.debug("Sandboxing : FCC configuration file reading...")
+    LOG.debug("Sandboxing : FCC configuration file reading...")
 
     content, message = self._readFromFile(self.steeringFile)
 
     # If the configuration file is not valid then consistency fails
     if not content:
-      self._log.error(message)
+      LOG.error(message)
       return False
 
-    self._log.debug(message)
+    LOG.debug(message)
 
     # Find all additional files specified in the fccsw configuration file
     #xml_files = re.findall(r'file:(.*.xml)',content)
@@ -678,7 +679,7 @@ class FccSw(Fcc):
     # e.g. Generation/data/foo.xml
     
     if not self._resolveTreeOfFiles(txtFiles, '.txt'):
-      self._log.error("Sandboxing : _resolveTreeOfFiles() failed")
+      LOG.error("Sandboxing : _resolveTreeOfFiles() failed")
       return False
       # Do not continue remaining checks
 
@@ -718,7 +719,7 @@ class FccSw(Fcc):
         "Sandboxing : FCCSW configuration file"
         " does not seem to need any additional '%(ext)s' files" % {'ext':extension}
       )
-      self._log.warn(warnMessage)
+      LOG.warn(warnMessage)
       return True
 
     for afile in files:
@@ -732,7 +733,7 @@ class FccSw(Fcc):
           " it is not present in the FCCSW installation"
           "\nThen you should have added it manually to the input sandbox !" % {'source' : source}
         )
-        self._log.warn(warnMessage)
+        LOG.warn(warnMessage)
         continue
 
       # We save the relative path of the file
@@ -746,7 +747,7 @@ class FccSw(Fcc):
         "Sandboxing : Tree '%(tree)s' of additionnal"
         " '%(ext)s' files creation..." % {'tree':treeFullPath, 'ext':extension}
       )
-      self._log.debug(debugMessage)
+      LOG.debug(debugMessage)
 
       # We create the tree locally in the temporary folder
       if not os.path.exists(treeFullPath):
@@ -757,18 +758,18 @@ class FccSw(Fcc):
             "Sandboxing : Tree '%(tree)s' of additionnal"
             " '%(ext)s' files creation failed\n%(error)s" % {'tree':treeFullPath, 'ext':extension, 'error' : e}
           )
-          self._log.error(errorMessage)
+          LOG.error(errorMessage)
           return False
 
         debugMessage = (
           "Sandboxing : Tree '%(tree)s' of additionnal"
           " '%(ext)s' files creation successfull" % {'tree':treeFullPath, 'ext':extension}
         )
-        self._log.debug(debugMessage)
+        LOG.debug(debugMessage)
 
       else:
         debugMessage = "Sandboxing : Tree '%s' already exists" % treeFullPath
-        self._log.debug(debugMessage)
+        LOG.debug(debugMessage)
 
       # We take the first directory of the tree
       # We add this root directory to the 'final' sandbox
@@ -781,10 +782,10 @@ class FccSw(Fcc):
       # go to the next file  
       if os.path.exists(destination):
         debugMessage = "Sandboxing : The file '%s' already exists" % destination
-        self._log.debug(debugMessage)
+        LOG.debug(debugMessage)
       else:  
         debugMessage = "Sandboxing : Additional file '%s' copy..." % source
-        self._log.debug(debugMessage)
+        LOG.debug(debugMessage)
 
         try:
           shutil.copyfile(source, destination)
@@ -793,14 +794,14 @@ class FccSw(Fcc):
             "Sandboxing : Additionnal files"
             " '%(src)s' copy failed\n%(error)s" % {'src':source, 'error':e}
           )
-          self._log.error(errorMessage)
+          LOG.error(errorMessage)
           return False
 
         debugMessage = (
           "Sandboxing : Additionnal files"
           " '%(src)s' copy successfull to '%(dst)s'" % {'src':source, 'dst':destination}
         )
-        self._log.debug(debugMessage)
+        LOG.debug(debugMessage)
 
     return True
 
@@ -820,7 +821,7 @@ class FccSw(Fcc):
 
     if not self._foldersToFilter:
       debugMessage = "Sandboxing : No filtering required"
-      self._log.debug(debugMessage)
+      LOG.debug(debugMessage)
       return True
 
     copiedFolders = []
@@ -833,7 +834,7 @@ class FccSw(Fcc):
           "The folder '%(actual)s' does not exist\n"
           "Check if you're FCCSW installation is complete" % {'actual':actualFolder}
         )
-        self._log.error(errorMessage)
+        LOG.error(errorMessage)
         return False
 
       if idx < len(self._filteredExtensions):
@@ -848,13 +849,13 @@ class FccSw(Fcc):
       # DIRAC already compress the sandbox before submitting the job
       # do not compress folders
 
-      self._log.debug("Sandboxing : Folders filtering...")
+      LOG.debug("Sandboxing : Folders filtering...")
 
       if not self._filterFolders(tempFolder, actualFolder, filteredExtension, excludeOrInclude):
-        self._log.error("Sandboxing : _filterFolders() failed")
+        LOG.error("Sandboxing : _filterFolders() failed")
         return False
 
-      self._log.debug("Sandboxing : Folders filtering successfull")
+      LOG.debug("Sandboxing : Folders filtering successfull")
 
       copiedFolders.append(tempFolder)
 
@@ -899,11 +900,11 @@ class FccSw(Fcc):
     """
     
     debugMessage = "Sandboxing : Checking of the filtered folder '%s'..." % tempFolder
-    self._log.debug(debugMessage)
+    LOG.debug(debugMessage)
 
     if not os.path.exists(tempFolder):
       debugMessage = "Sandboxing : Creation of the filtered folder '%s'..." % tempFolder
-      self._log.debug(debugMessage)
+      LOG.debug(debugMessage)
 
       try:
         os.makedirs(tempFolder)
@@ -912,14 +913,14 @@ class FccSw(Fcc):
           "Sandboxing : Creation of the filtered folder"
           " '%(temp)s' failed\n%(error)s" % {'temp':tempFolder, 'error':e}
         )
-        self._log.error(errorMessage)
+        LOG.error(errorMessage)
         return False
 
       debugMessage = (
         "Sandboxing : Creation of the filtered folder"
         " '%(temp)s' successfull" % {'temp':tempFolder}
       )
-      self._log.debug(debugMessage)
+      LOG.debug(debugMessage)
 
     for path in os.listdir(actualFolder):
       source = os.path.realpath(os.path.join(actualFolder, path))
@@ -928,18 +929,18 @@ class FccSw(Fcc):
       # If file then check existence
       if not os.path.exists(source):
         errorMessage = "Sandboxing : The file '%s' does not exist" % source
-        self._log.error(errorMessage)
+        LOG.error(errorMessage)
         return False
         
       if not os.path.isfile(source):
         # Recursive call for folders
         if not self._filterFolders(destination, source, filteredExtension, excludeOrInclude):
-          self._log.error("Sandboxing : _filterFolders() failed")
+          LOG.error("Sandboxing : _filterFolders() failed")
           return False
       else:
         if os.path.exists(destination):
           debugMessage = "Sandboxing : The file '%s' already exists" % source
-          self._log.debug(debugMessage)
+          LOG.debug(debugMessage)
         else:
 
           if ((excludeOrInclude and not path.endswith(filteredExtension))
@@ -948,14 +949,14 @@ class FccSw(Fcc):
 
             warn = False
             debugMessage = "Sandboxing : File '%s' copy..." % source
-            self._log.debug(debugMessage)
+            LOG.debug(debugMessage)
 
             # Copy considering filters to apply
             try:
               shutil.copyfile(source, destination)
             except (IOError, shutil.Error) as e:
               warnMessage = "Sandboxing : The copy of the file '%s' failed\n%s" % (destination, e)
-              self._log.warn(warnMessage)
+              LOG.warn(warnMessage)
               warn = True
               #return False
 
@@ -964,10 +965,10 @@ class FccSw(Fcc):
                 "Sandboxing : Copy of the file"
                 " '%(src)s' successfull to '%(dst)s'" % {'src':source, 'dst':destination}
               )
-              self._log.debug(debugMessage)
+              LOG.debug(debugMessage)
 
     debugMessage = "Sandboxing : Folder '%s' filtering successfull" % tempFolder
-    self._log.debug(debugMessage)
+    LOG.debug(debugMessage)
 
     return True
 

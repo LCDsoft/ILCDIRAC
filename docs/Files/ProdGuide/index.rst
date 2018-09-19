@@ -23,4 +23,4 @@ an **production** proxy.
 .. toctree::
    :maxdepth: 2
 
-   /DOC/ILCDIRAC/ILCTransformationSystem/scripts/scripts.rst
+   /DOC/ILCDIRAC/ILCTransformationSystem/scripts/index

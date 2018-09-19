@@ -17,6 +17,8 @@ from ILCDIRAC.Core.Utilities.DetectOS  import NativeMachine
 from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
 from ILCDIRAC.Core.Utilities.TARsoft   import installInAnyArea, installDependencies
 
+LOG = DIRAC.gLogger.getSubLogger(__name__)
+
 __RCSID__ = "$Id$"
 
 natOS = NativeMachine()
@@ -58,7 +60,7 @@ class CombinedSoftwareInstallation(object):
     
     self.apps = []
     for app in apps:
-      DIRAC.gLogger.verbose( 'Requested Package %s' % app )
+      LOG.verbose('Requested Package %s' % app)
       app = tuple(app.split('.'))
       if len(app) > 2:
         tempapp = app
@@ -84,9 +86,9 @@ class CombinedSoftwareInstallation(object):
     self.ceConfigs = natOS.CMTSupportedConfig()
     
     self.sharedArea = getSharedAreaLocation()
-    DIRAC.gLogger.info("SharedArea is %s" % self.sharedArea)
+    LOG.info("SharedArea is %s" % self.sharedArea)
     self.localArea  = getLocalAreaLocation()
-    DIRAC.gLogger.info("LocalArea is %s" % self.localArea)
+    LOG.info("LocalArea is %s" % self.localArea)
     
   def execute(self):
     """ Main method of the class executed by DIRAC jobAgent
@@ -101,12 +103,12 @@ class CombinedSoftwareInstallation(object):
       # There is nothing to do
       return DIRAC.S_OK()
     if not self.jobConfig:
-      DIRAC.gLogger.error( 'No architecture requested' )
+      LOG.error('No architecture requested')
       return DIRAC.S_ERROR( 'No architecture requested' )
 
     found_config = False
         
-    DIRAC.gLogger.info("Found CE Configs %s, compatible with system reqs %s" % (",".join(self.ceConfigs), 
+    LOG.info("Found CE Configs %s, compatible with system reqs %s" % (",".join(self.ceConfigs),
                                                                                 self.jobConfig))
     res = self.ops.getSections('/AvailableTarBalls')
     if not res['OK']:
@@ -122,10 +124,10 @@ class CombinedSoftwareInstallation(object):
             break
     if not found_config:
       if self.ceConfigs:  # redundant check as this is done in the job agent, if locally running option might not be defined
-        DIRAC.gLogger.error( 'Requested architecture not supported by CE' )
+        LOG.error('Requested architecture not supported by CE')
         return DIRAC.S_ERROR( 'Requested architecture not supported by CE' )
       else:
-        DIRAC.gLogger.info( 'Assume locally running job, will install software in ' )
+        LOG.info('Assume locally running job, will install software in ')
           
     areas = []
     ###Deal with shared/local area: first try to see if the Shared area exists and if not create it (try to). If it fails, fall back to local area
@@ -134,7 +136,7 @@ class CombinedSoftwareInstallation(object):
         self.sharedArea = getSharedAreaLocation()
         if self.sharedArea:
           areas.append(self.sharedArea)
-          DIRAC.gLogger.info("Will attempt to install in shared area")
+          LOG.info("Will attempt to install in shared area")
     else:
       areas.append(self.sharedArea)
     areas.append(self.localArea)       
@@ -145,7 +147,7 @@ class CombinedSoftwareInstallation(object):
     for app in self.apps:
       res = checkCVMFS(self.jobConfig, app)
       if res['OK']:
-        DIRAC.gLogger.notice('Software %s is available on CVMFS, skipping' % ", ".join(app) )
+        LOG.notice('Software %s is available on CVMFS, skipping' % ", ".join(app))
         continue
 
       ## First install the original package in any of the areas
@@ -156,7 +158,7 @@ class CombinedSoftwareInstallation(object):
       ## Then install the dependencies, which can be in a different area
       resDeps = installDependencies(app, self.jobConfig, areas)
       if not resDeps['OK']:
-        DIRAC.gLogger.error("Failed to install dependencies: ", resDeps['Message'])
+        LOG.error("Failed to install dependencies: ", resDeps['Message'])
         return S_ERROR("Failed to install dependencies")
 
     if self.sharedArea:  
@@ -168,20 +170,20 @@ class CombinedSoftwareInstallation(object):
 def listAreaDirectory(area):
   """ List the content of the given area
   """
-  DIRAC.gLogger.info("Listing content of area %s :" % (area))
+  LOG.info("Listing content of area %s :" % (area))
   res = systemCall( 5, ['ls', '-al', area] )
   if not res['OK']:
-    DIRAC.gLogger.error( 'Failed to list the area directory', res['Message'] )
+    LOG.error('Failed to list the area directory', res['Message'])
   elif res['Value'][0]:
-    DIRAC.gLogger.error( 'Failed to list the area directory', res['Value'][2] )
+    LOG.error('Failed to list the area directory', res['Value'][2])
   else:
     # no timeout and exit code is 0
-    DIRAC.gLogger.info( res['Value'][1] )
+    LOG.info(res['Value'][1])
   
 def log( n, line ):
   """ print line
   """
-  DIRAC.gLogger.info( line )
+  LOG.info(line)
 
 def getSharedAreaLocation():
   """
@@ -202,10 +204,10 @@ def getSharedAreaLocation():
                                              ] )  
   if not isinstance( listOfSharedAreas , list ):
     listOfSharedAreas = [ listOfSharedAreas ]
-  DIRAC.gLogger.debug( "ListOfSharedAreas: %s " % ", ".join(listOfSharedAreas) )
+  LOG.debug("ListOfSharedAreas: %s " % ", ".join(listOfSharedAreas))
   sharedArea = ''
   for area in listOfSharedAreas:
-    DIRAC.gLogger.debug( "Checking SharedArea %s " % area )
+    LOG.debug("Checking SharedArea %s " % area)
     if area.startswith( "$" ): ## is an environment variable
       envVar = area[1:]
       if envVar in os.environ:
@@ -214,17 +216,17 @@ def getSharedAreaLocation():
       sharedArea = area
     
     if os.path.exists( sharedArea ):
-      DIRAC.gLogger.info( "Using shared area %s based on %s " %( sharedArea, area ) )
+      LOG.info("Using shared area %s based on %s " % (sharedArea, area))
       break
 
   if DIRAC.gConfig.getValue('/LocalSite/SharedArea',''):
     sharedArea = DIRAC.gConfig.getValue('/LocalSite/SharedArea')
-    DIRAC.gLogger.debug( 'Using CE SharedArea at "%s"' % sharedArea )
+    LOG.debug('Using CE SharedArea at "%s"' % sharedArea)
   
   if len(sharedArea):
     # if defined, check that it really exists
     if not os.path.isdir( sharedArea ):
-      DIRAC.gLogger.warn( 'Missing Shared Area Directory:', sharedArea )
+      LOG.warn('Missing Shared Area Directory:', sharedArea)
       sharedArea = ''
   
   return sharedArea
@@ -235,7 +237,7 @@ def createSharedArea():
    if it does not exists
   """
   if 'VO_ILC_SW_DIR' not in os.environ and "OSG_APP" not in os.environ:
-    DIRAC.gLogger.info( 'VO_ILC_SW_DIR and OSG_APP not defined.' )
+    LOG.info('VO_ILC_SW_DIR and OSG_APP not defined.')
     return False
   sharedArea = '.'
   if 'VO_ILC_SW_DIR' in os.environ:
@@ -243,11 +245,11 @@ def createSharedArea():
   elif "OSG_APP" in os.environ:
     sharedArea = os.environ["OSG_APP"]
   if sharedArea == '.':
-    DIRAC.gLogger.info( 'VO_ILC_SW_DIR or OSG_APP points to "."' )
+    LOG.info('VO_ILC_SW_DIR or OSG_APP points to "."')
     return False
 
   #if not os.path.isdir( sharedArea ):
-  #  DIRAC.gLogger.error( 'VO_ILC_SW_DIR="%s" is not a directory' % sharedArea )
+  #  LOG.error( 'VO_ILC_SW_DIR="%s" is not a directory' % sharedArea )
   #  return False
 
   sharedArea = os.path.join( sharedArea, 'clic' )
@@ -261,7 +263,7 @@ def createSharedArea():
     os.makedirs( sharedArea )
     return True
   except OSError as x:
-    DIRAC.gLogger.error('Problem trying to create shared area', str(x))
+    LOG.error('Problem trying to create shared area', str(x))
     return False
 
 def getLocalAreaLocation():
@@ -283,13 +285,13 @@ def getLocalAreaLocation():
       try:
         os.remove( localArea )
       except OSError as err:
-        DIRAC.gLogger.error( 'Cannot remove:', localArea + " because " + str(err) )
+        LOG.error('Cannot remove:', localArea + " because " + str(err))
         localArea = ''
     else:
       try:
         os.mkdir( localArea )
       except OSError as err:
-        DIRAC.gLogger.error( 'Cannot create:', localArea + " because " + str(err) )
+        LOG.error('Cannot create:', localArea + " because " + str(err))
         localArea = ''
   return localArea
 
@@ -343,7 +345,7 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
   res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
     cvmfsenv = res['Value'][1]
-    DIRAC.gLogger.info("SoftwareInstallation: CVMFS Script found: %s" % cvmfsenv)
+    LOG.info("SoftwareInstallation: CVMFS Script found: %s" % cvmfsenv)
     if cvmfsenv:
       return S_OK( cvmfsenv )
 
@@ -368,7 +370,7 @@ def checkCVMFS(platform, app):
   if cvmfspath and os.path.exists(cvmfspath):
     return S_OK((cvmfspath, envScript))
   message = "Package %s version %s not found natively on cvmfs," % ( name, version )
-  DIRAC.gLogger.info( message + " will try to use shared area instead: " + str( Operations().getOptionsDict(csPath) ) )
+  LOG.info(message + " will try to use shared area instead: " + str(Operations().getOptionsDict(csPath)))
   return S_ERROR('Missing CVMFS!')
 
 def unzip_file_into_dir(myfile, mydir):

@@ -8,8 +8,6 @@ Called by Job Agent.
 :author: S. Poss
 '''
 
-__RCSID__ = "$Id$"
-
 from DIRAC.Core.Utilities.Subprocess                       import shellCall
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation  import getSoftwareFolder
@@ -27,6 +25,10 @@ from DIRAC import gLogger, S_OK, S_ERROR
 
 import os, shutil, glob
 
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
+
 class WhizardAnalysis(ModuleBase):
   """
   Specific Module to run a Whizard job.
@@ -36,7 +38,6 @@ class WhizardAnalysis(ModuleBase):
     self.enable = True
     self.STEP_NUMBER = ''
     self.debug = True
-    self.log = gLogger.getSubLogger( "WhizardAnalysis" )
     self.SteeringFile = ''
     self.OutputFile = ''
     self.NumberOfEvents = 1
@@ -80,7 +81,7 @@ class WhizardAnalysis(ModuleBase):
     if not os.path.exists(os.path.basename(processlistloc)):
       res = self.datMan.getFile(processlistloc)
       if not res['OK']:
-        self.log.error('Could not get processlist: %s' % res['Message'])
+        LOG.error('Could not get processlist: %s' % res['Message'])
         return res
     self.processlist = ProcessList(os.path.basename(processlistloc))
     return S_OK()
@@ -118,7 +119,7 @@ class WhizardAnalysis(ModuleBase):
         self.parameters[param.split("=")[0]] = param.split("=")[1]
  
     if self.OptionsDictStr:
-      self.log.info("Will use whizard.in definition from WhizardOptions.")
+      LOG.info("Will use whizard.in definition from WhizardOptions.")
       try:
         self.optionsdict = eval(self.OptionsDictStr)
         if 'integration_input' not in self.optionsdict:
@@ -132,7 +133,7 @@ class WhizardAnalysis(ModuleBase):
         return S_ERROR("Could not convert string to dictionary for optionsdict")
     
     if self.GenLevelCutDictStr:
-      self.log.info("Found generator level cuts")
+      LOG.info("Found generator level cuts")
       try:
         self.genlevelcuts = eval(self.GenLevelCutDictStr)
       except:
@@ -191,11 +192,11 @@ class WhizardAnalysis(ModuleBase):
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result["Message"])
+      LOG.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('Whizard should not proceed as previous step did not end properly')
 
     #if self.debug:
@@ -203,7 +204,7 @@ class WhizardAnalysis(ModuleBase):
 
     res = getSoftwareFolder(self.platform, self.applicationName, self.applicationVersion)
     if not res['OK']:
-      self.log.error("Failed getting software folder", res['Message'])
+      LOG.error("Failed getting software folder", res['Message'])
       self.setApplicationStatus('Failed finding software')
       return res
     mySoftDir = res['Value']
@@ -222,7 +223,7 @@ class WhizardAnalysis(ModuleBase):
     for dep in deps:
       res = getSoftwareFolder(self.platform, dep[ "app" ], dep['version'])
       if not res['OK']:
-        self.log.error("Failed getting software folder", res['Message'])
+        LOG.error("Failed getting software folder", res['Message'])
         self.setApplicationStatus('Failed finding software')
         return res
       depfolder = res['Value']
@@ -253,10 +254,10 @@ class WhizardAnalysis(ModuleBase):
           #Here look for a sub directory for the energy related grid files
           list_of_gridfiles = [os.path.join(path, item) for item in os.listdir(path)]
           gridfilesfound = True
-          self.log.info('Found grid files specific for energy %s' % self.energy)
+          LOG.info('Found grid files specific for energy %s' % self.energy)
           break
       if not gridfilesfound:
-        self.log.info("Will use generic grid files found, hope the energy is set right")
+        LOG.info("Will use generic grid files found, hope the energy is set right")
         list_of_gridfiles = [item for item in glob.glob(os.path.join(path_to_gridfiles, "*.grb")) + glob.glob(os.path.join(path_to_gridfiles, "*.grc"))]
          
     template = False
@@ -267,12 +268,12 @@ class WhizardAnalysis(ModuleBase):
       whizardin = ""
       res = self.obtainProcessList()
       if not res['OK']:
-        self.log.error("Could not obtain process list")
+        LOG.error("Could not obtain process list")
         self.setApplicationStatus('Failed getting processlist')
         return res
       whizardin = self.processlist.getInFile(self.evttype)
       if not whizardin:
-        self.log.error("Whizard input file was not found in process list, cannot proceed")
+        LOG.error("Whizard input file was not found in process list, cannot proceed")
         self.setApplicationStatus('Whizard input file was not found')
         return S_ERROR("Error while resolving whizard input file")
       if whizardin.count("template"):
@@ -281,7 +282,7 @@ class WhizardAnalysis(ModuleBase):
         shutil.copy("%s/%s" % (mySoftDir, whizardin), "./whizardnew.in")
         self.SteeringFile = "whizardnew.in"
       except EnvironmentError:
-        self.log.error("Could not copy %s from %s" % (whizardin, mySoftDir))
+        LOG.error("Could not copy %s from %s" % (whizardin, mySoftDir))
         self.setApplicationStatus('Failed getting whizard.in file')
         return S_ERROR("Failed to obtain %s" % whizardin)
 
@@ -301,13 +302,13 @@ class WhizardAnalysis(ModuleBase):
             if os.path.exists("%s/%s" % (mySoftDir, self.genmodel.getFile(self.Model)['Value'])):
               leshouchesfiles = "%s/%s" % (mySoftDir, self.genmodel.getFile(self.Model)['Value'])
             else:
-              self.log.error("Request LesHouches file is missing, cannot proceed")
+              LOG.error("Request LesHouches file is missing, cannot proceed")
               self.setApplicationStatus("LesHouches file missing")
               return S_ERROR("The LesHouches file was not found. Probably you are using a wrong version of whizard.") 
           else:
-            self.log.warn("No file found attached to model %s" % self.Model)
+            LOG.warn("No file found attached to model %s" % self.Model)
         else:
-          self.log.error("Model undefined:", self.Model)
+          LOG.error("Model undefined:", self.Model)
           self.setApplicationStatus("Model undefined")
           return S_ERROR("No Model %s defined" % self.Model)
     else:
@@ -317,7 +318,7 @@ class WhizardAnalysis(ModuleBase):
     
           
     if self.optionsdict:
-      self.log.info("Using: %s" % self.optionsdict)
+      LOG.info("Using: %s" % self.optionsdict)
       self.options = WhizardOptions(self.Model)
       res = self.options.changeAndReturn(self.optionsdict)
       if not res['OK']:
@@ -331,7 +332,7 @@ class WhizardAnalysis(ModuleBase):
       res = prepareWhizardFileTemplate(self.SteeringFile, outputfilename,
                                        self.parameters, "whizard.in")
     if not res['OK']:
-      self.log.error('Something went wrong with input file generation')
+      LOG.error('Something went wrong with input file generation')
       self.setApplicationStatus('Whizard: something went wrong with input file generation')
       return S_ERROR('Something went wrong with whizard.in file generation')
     foundproceesinwhizardin = res['Value']
@@ -364,7 +365,7 @@ class WhizardAnalysis(ModuleBase):
       res = self.makeWhizardDotCut1()
       if not res['OK']:
         script.close()
-        self.log.error("Could not create the cut1 file")
+        LOG.error("Could not create the cut1 file")
         return S_ERROR("Could not create the cut1 file")
     script.write('echo =============================\n')
     script.write('echo Printing content of whizard.prc \n')
@@ -381,7 +382,7 @@ class WhizardAnalysis(ModuleBase):
       comm = 'whizard --process_input \'process_id =\"%s\"\' --simulation_input \'write_events_file = \"%s\"\' ' % (self.evttype, 
                                                                                                                     outputfilename)
     comm = "%s %s %s\n" % (comm, self.extraCLIarguments, extracmd)
-    self.log.info("Will run %s" % comm)
+    LOG.info("Will run %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
     script.write('exit $appstatus\n')
@@ -396,9 +397,9 @@ class WhizardAnalysis(ModuleBase):
     self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit=209715200)
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     if not self.result['OK']:
-      self.log.error("Failed with error %s" % self.result['Message'])
+      LOG.error("Failed with error %s" % self.result['Message'])
     if not os.path.exists(self.applicationLog):
-      self.log.error("Something went terribly wrong, the log file is not present")
+      LOG.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
       if not self.ignoreapperrors:
         return S_ERROR('%s did not produce the expected log' % (self.applicationName))
@@ -435,7 +436,7 @@ class WhizardAnalysis(ModuleBase):
       status = 0
     else:
       status = 1
-    self.log.info('The sample generated has an equivalent luminosity of %s' % lumi)
+    LOG.info('The sample generated has an equivalent luminosity of %s' % lumi)
     if lumi:
       self.workflow_commons['Luminosity'] = float(lumi)
     else:
@@ -472,19 +473,19 @@ class WhizardAnalysis(ModuleBase):
       else:
         self.workflow_commons['Info'].update(info)
 
-    self.log.info( "Status after the application execution is %s" % str( status ) )
+    LOG.info("Status after the application execution is %s" % str(status))
 
     messageout = 'Whizard %s Successful' % (self.applicationVersion)
     failed = False
     if status != 0:
-      self.log.error( "Whizard execution completed with errors:" )
+      LOG.error("Whizard execution completed with errors:")
       failed = True
     else:
-      self.log.info( "Whizard execution completed successfully")
+      LOG.info("Whizard execution completed successfully")
       ###Deal with output file
       if len(self.OutputFile):
         if os.path.exists(outputfilename + ".001.stdhep"):
-          self.log.notice("Looking for output files")
+          LOG.notice("Looking for output files")
           ofnames = glob.glob(outputfilename+'*.stdhep')
           if len(ofnames) > 1:
             basename = self.OutputFile.split(".stdhep")[0]
@@ -496,17 +497,17 @@ class WhizardAnalysis(ModuleBase):
           else:
             os.rename(outputfilename + ".001.stdhep", self.OutputFile)    
         else:
-          self.log.error( "Whizard execution did not produce a stdhep file" )
+          LOG.error("Whizard execution did not produce a stdhep file")
           self.setApplicationStatus('Whizard %s Failed to produce STDHEP file' % (self.applicationVersion))
           messageout = 'Whizard Failed to produce STDHEP file'
           if not self.ignoreapperrors:
             return S_ERROR(messageout)
 
     if failed is True:
-      self.log.error( "==================================\n StdError:\n" )
-      self.log.error( message )
+      LOG.error("==================================\n StdError:\n")
+      LOG.error(message)
       self.setApplicationStatus('%s Exited With Status %s' % (self.applicationName, status))
-      self.log.error('Whizard Exited With Status %s' % (status))
+      LOG.error('Whizard Exited With Status %s' % (status))
       messageout = 'Whizard Exited With Status %s' % (status)
       if not self.ignoreapperrors:
         return S_ERROR(messageout)
@@ -526,4 +527,3 @@ class WhizardAnalysis(ModuleBase):
         cutf.write("  %s\n" % val)
     cutf.close()
     return S_OK()
-    

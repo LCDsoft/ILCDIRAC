@@ -1,13 +1,11 @@
-#!/bin/env python
-'''
-Define a new WHIZARD version: update the process list, create the new tar ball, upload it, upload the new processlist
+"""Define a new WHIZARD version.
 
-Created on Sep 21, 2010
+Update the process list, create the new tar ball, upload it, upload the new processlist.
 
-:author: sposs
-:author: sailer
-:author: strube
-'''
+:since: Sep 21, 2010
+
+:author: sposs, sailer, strube
+"""
 
 __RCSID__ = "$Id$"
 

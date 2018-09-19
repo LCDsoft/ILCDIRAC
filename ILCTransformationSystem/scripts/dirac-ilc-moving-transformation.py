@@ -8,13 +8,13 @@ Example::
   dirac-ilc-moving-transformation --AllFor="<prodID1>, <prodID2>, ..." <TargetSEs> <SourceSEs> -NExtraName [-F]
 
 Options:
-   -N, --Extraname string      String to append to transformation name in case one already exists with that name
    -A, --AllFor    list        Comma separated list of production IDs. For each prodID three moving productions are
                                created: ProdID/Gen, ProdID+1/SIM, ProdID+2/REC
-   -S, --GroupSize <value>     Number of Files per transformation task
    -F, --Forcemoving           Move GEN or SIM files even if they do not have descendents
-   -x, --Enable                Enable the transformation creation, otherwise dry-run
+   -N, --Extraname string      String to append to transformation name in case one already exists with that name
    -R, --GroupName <value>     TransformationGroup Name, by itself the group of the prodID
+   -S, --GroupSize <value>     Number of Files per transformation task
+   -x, --Enable                Enable the transformation creation, otherwise dry-run
 
 :since:  Dec 4, 2015
 :author: A. Sailer

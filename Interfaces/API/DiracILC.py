@@ -31,6 +31,7 @@ __RCSID__ = "$Id$"
 #pylint: disable=protected-access
 
 COMPONENT_NAME = 'DiracILC'
+LOG = gLogger.getSubLogger(__name__)
 
 class DiracILC(Dirac):
   """DiracILC is VO specific API Dirac
@@ -43,7 +44,6 @@ class DiracILC(Dirac):
     #self.dirac = Dirac(WithRepo=WithRepo, RepoLocation=RepoLocation)
     super(DiracILC, self).__init__(withRepo, repoLocation )
     #Dirac.__init__(self, withRepo = withRepo, repoLocation = repoLocation)
-    self.log = gLogger
     self.software_versions = {}
     self.checked = False
     self.processList = None
@@ -57,11 +57,11 @@ class DiracILC(Dirac):
     """
     processlistpath = gConfig.getValue("/LocalSite/ProcessListPath", "")
     if not processlistpath:
-      gLogger.info('Will download the process list locally. To gain time, please put it somewhere and add to \
+      LOG.info('Will download the process list locally. To gain time, please put it somewhere and add to \
       your dirac.cfg the entry /LocalSite/ProcessListPath pointing to the file')
       pathtofile = self.ops.getValue("/ProcessList/Location", "")
       if not pathtofile:
-        gLogger.error("Could not get path to process list")
+        LOG.error("Could not get path to process list")
         processlist = ""
       else:
         datMan = DataManager()
@@ -85,7 +85,7 @@ class DiracILC(Dirac):
     """
     
     if not job.oktosubmit:
-      self.log.error('You should use job.submit(dirac)')
+      LOG.error('You should use job.submit(dirac)')
       return S_ERROR("You should use job.submit(dirac)")
     res = self._do_check(job)
     if not res['OK']:
@@ -112,7 +112,7 @@ class DiracILC(Dirac):
 
     if formulationErrors:
       for method, errorList in formulationErrors.items():
-        self.log.error( '>>>> Error in %s() <<<<\n%s' % ( method, string.join( errorList, '\n' ) ) )
+        LOG.error('>>>> Error in %s() <<<<\n%s' % (method, string.join(errorList, '\n')))
       return S_ERROR( formulationErrors )
     return self.preSubmissionChecks(job, mode = '')
 
@@ -134,7 +134,7 @@ class DiracILC(Dirac):
       requestedStates = ['Done']
     llist = []
     if not self.jobRepo:
-      gLogger.warn( "No repository is initialised" )
+      LOG.warn("No repository is initialised")
       return S_OK()
     jobs = self.jobRepo.readRepository()['Value']
     for jobID in sorted( jobs.keys() ):
@@ -168,7 +168,7 @@ class DiracILC(Dirac):
           job.inputsandbox.remove(items)
       resolvedFiles = job._resolveInputSandbox( job.inputsandbox )
       if found_list:
-        self.log.warn("Input Sandbox contains list of lists. Please avoid that.")
+        LOG.warn("Input Sandbox contains list of lists. Please avoid that.")
       fileList = string.join( resolvedFiles, ";" )
       description = 'Input sandbox file list'
       job._addParameter( job.workflow, 'InputSandbox', 'JDL', fileList, description )
@@ -214,14 +214,14 @@ class DiracILC(Dirac):
     csPathTarBall = "/AvailableTarBalls/%s/%s/%s/TarBall" %(platform, appName, appVersion)
     csPathCVMFS   ="/AvailableTarBalls/%s/%s/%s/CVMFSPath"%(platform, appName, appVersion)
 
-    self.log.debug("Checking for software version in " + csPathTarBall)
+    LOG.debug("Checking for software version in " + csPathTarBall)
     app_version = self.ops.getValue(csPathTarBall,'')
 
-    self.log.debug("Checking for software version in " + csPathCVMFS)
+    LOG.debug("Checking for software version in " + csPathCVMFS)
     app_version_cvmfs = self.ops.getValue(csPathCVMFS,'')
 
     if not app_version and not app_version_cvmfs:
-      self.log.error("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, platform))
+      LOG.error("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, platform))
       return S_ERROR("Could not find the specified software %s_%s for %s, check in CS" % (appName, appVersion, platform))
     return S_OK()
   
@@ -232,11 +232,11 @@ class DiracILC(Dirac):
     :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     if path.find("//") > -1 or path.find("/./") > -1 or path.find("/../") > -1:
-      self.log.error("OutputPath of setOutputData() contains invalid characters, please remove any //, /./, or /../")
+      LOG.error("OutputPath of setOutputData() contains invalid characters, please remove any //, /./, or /../")
       return S_ERROR("Invalid path")
     path = path.rstrip()
     if path[-1] == "/":
-      self.log.error("Please strip trailing / from outputPath in setOutputData()")
+      LOG.error("Please strip trailing / from outputPath in setOutputData()")
       return S_ERROR("Invalid path")
     return S_OK()
   
@@ -251,10 +251,10 @@ class DiracILC(Dirac):
     for data in useroutputdata:
       for item in useroutputsandbox:
         if data == item:
-          self.log.error("Output data and sandbox should not contain the same things.")
+          LOG.error("Output data and sandbox should not contain the same things.")
           return S_ERROR("Output data and sandbox should not contain the same things.")
       if data.find("*") > -1:
-        self.log.error("Remove wildcard characters from output data definition: must be exact files")
+        LOG.error("Remove wildcard characters from output data definition: must be exact files")
         return S_ERROR("Wildcard character in OutputData definition")
     return S_OK()
 
@@ -282,10 +282,10 @@ class DiracILC(Dirac):
       return S_ERROR('Could not get replicas')
     failed = res['Value']['Failed']
     if failed:
-      self.log.error('Failed to find replicas for the following files %s' % string.join(failed, ', '))
+      LOG.error('Failed to find replicas for the following files %s' % string.join(failed, ', '))
       return S_ERROR('Failed to find replicas')
 
-    self.log.info('All LFN files have replicas available')
+    LOG.info('All LFN files have replicas available')
     singleReplicaSEs = set(self.ops.getValue("/UserJobs/InputSandbox/SingleReplicaSEs", []))
     preferredSEs = set(self.ops.getValue("/UserJobs/InputSandbox/PreferredSEs", []))
     minimumNumberOfReplicas = self.ops.getValue("/UserJobs/InputSandbox/MinimumNumberOfReplicas", 2)
@@ -295,13 +295,13 @@ class DiracILC(Dirac):
       if singleReplicaSEs.intersection(sites):
         continue
       if len(replicas) < minimumNumberOfReplicas:
-        self.log.error("ERROR: File %r has less than %s replicas,"
+        LOG.error("ERROR: File %r has less than %s replicas,"
                        "please use dirac-dms-replicate-lfn to replicate to e.g.,:%s"
                        % (lfn, minimumNumberOfReplicas, ", ".join(preferredSEs - set(replicas.keys()))))
         failSubmission.append(lfn)
         for site in set((preferredSEs - set(replicas.keys()))):
-          self.log.error("  dirac-dms-replicate-lfn %s %s" % (lfn, site))
-        self.log.error("Or use job.setInputData for data files")
+          LOG.error("  dirac-dms-replicate-lfn %s %s" % (lfn, site))
+        LOG.error("Or use job.setInputData for data files")
     if failSubmission:
       return S_ERROR("Not enough replicas for %s" % ",".join(failSubmission))
 
@@ -333,249 +333,5 @@ class DiracILC(Dirac):
        :type mode: str
        :returns: S_OK,S_ERROR
     """
-    self.log.debug( "Submitting job" )
+    LOG.debug("Submitting job")
     return super(DiracILC, self).submitJob(job, mode)
-
-  def runLocal(self, job):
-    """Run job locally.
-
-    Internal function. This method is called by DIRAC API function
-        submitJob(job,mode='Local').  All output files are written to the local
-        directory.
-
-    :param job: a job object
-    :type job: ~DIRAC.Interfaces.API.Job.Job
-    """
-    self.log.notice('Executing workflow locally')
-    curDir = os.getcwd()
-    self.log.info('Executing from %s' % curDir)
-
-    jobDir = tempfile.mkdtemp(suffix='_JobDir', prefix='Local_', dir=curDir)
-    os.chdir(jobDir)
-    self.log.info('Executing job at temp directory %s' % jobDir)
-
-    tmpdir = tempfile.mkdtemp(prefix='DIRAC_')
-    self.log.verbose('Created temporary directory for submission %s' % (tmpdir))
-    jobXMLFile = tmpdir + '/jobDescription.xml'
-    self.log.verbose('Job XML file description is: %s' % jobXMLFile)
-    with open(jobXMLFile, 'w+') as fd:
-      fd.write(job._toXML())  # pylint: disable=protected-access
-
-    shutil.copy(jobXMLFile, '%s/%s' % (os.getcwd(), os.path.basename(jobXMLFile)))
-
-    res = self._Dirac__getJDLParameters(job)  # pylint: disable=no-member
-    if not res['OK']:
-      self.log.error("Could not extract job parameters from job")
-      return res
-    parameters = res['Value']
-
-    self.log.verbose("Job parameters: %s" % pformat(parameters))
-    inputDataRes = self._getLocalInputData(parameters)
-    if not inputDataRes['OK']:
-      return inputDataRes
-    inputData = inputDataRes['Value']
-
-    if inputData:
-      self.log.verbose("Job has input data: %s" % inputData)
-      localSEList = gConfig.getValue('/LocalSite/LocalSE', '')
-      if not localSEList:
-        return self._errorReport('LocalSite/LocalSE should be defined in your config file')
-      localSEList = localSEList.replace(' ', '').split(',')
-      self.log.debug("List of local SEs: %s" % localSEList)
-      inputDataPolicy = self._Dirac__getVOPolicyModule('InputDataModule')  # pylint: disable=no-member
-      if not inputDataPolicy:
-        return self._errorReport('Could not retrieve DIRAC/VOPolicy/InputDataModule for VO')
-
-      self.log.info('Job has input data requirement, will attempt to resolve data for %s' % DIRAC.siteName())
-      self.log.verbose('\n'.join(inputData if isinstance(inputData, (list, tuple)) else [inputData]))
-      replicaDict = self.getReplicasForJobs(inputData)
-      if not replicaDict['OK']:
-        return replicaDict
-      guidDict = self.getMetadata(inputData)
-      if not guidDict['OK']:
-        return guidDict
-      for lfn, reps in replicaDict['Value']['Successful'].iteritems():
-        guidDict['Value']['Successful'][lfn].update(reps)
-      resolvedData = guidDict
-      diskSE = gConfig.getValue(self.section + '/DiskSE', ['-disk', '-DST', '-USER', '-FREEZER'])
-      tapeSE = gConfig.getValue(self.section + '/TapeSE', ['-tape', '-RDST', '-RAW'])
-      configDict = {'JobID': None,
-                    'LocalSEList': localSEList,
-                    'DiskSEList': diskSE,
-                    'TapeSEList': tapeSE}
-      self.log.verbose(configDict)
-      argumentsDict = {'FileCatalog': resolvedData,
-                       'Configuration': configDict,
-                       'InputData': inputData,
-                       'Job': parameters}
-      self.log.verbose(argumentsDict)
-      moduleFactory = ModuleFactory()
-      moduleInstance = moduleFactory.getModule(inputDataPolicy, argumentsDict)
-      if not moduleInstance['OK']:
-        self.log.warn('Could not create InputDataModule')
-        return moduleInstance
-
-      module = moduleInstance['Value']
-      result = module.execute()
-      if not result['OK']:
-        self.log.warn('Input data resolution failed')
-        return result
-
-    softwarePolicy = self._Dirac__getVOPolicyModule('SoftwareDistModule')  # pylint: disable=no-member
-    if softwarePolicy:
-      moduleFactory = ModuleFactory()
-      moduleInstance = moduleFactory.getModule(softwarePolicy, {'Job': parameters})
-      if not moduleInstance['OK']:
-        self.log.warn('Could not create SoftwareDistModule')
-        return moduleInstance
-
-      module = moduleInstance['Value']
-      result = module.execute()
-      if not result['OK']:
-        self.log.warn('Software installation failed with result:\n%s' % (result))
-        return result
-    else:
-      self.log.verbose('Could not retrieve DIRAC/VOPolicy/SoftwareDistModule for VO')
-
-    sandbox = parameters.get('InputSandbox')
-    if sandbox:
-      self.log.verbose("Input Sandbox is %s" % sandbox)
-      if isinstance(sandbox, basestring):
-        sandbox = [isFile.strip() for isFile in sandbox.split(',')]
-      for isFile in sandbox:
-        self.log.debug("Resolving Input Sandbox %s" % isFile)
-        if isFile.lower().startswith("lfn:"):  # isFile is an LFN
-          isFile = isFile[4:]
-        # Attempt to copy into job working directory, unless it is already there
-        if os.path.exists(os.path.join(os.getcwd(), os.path.basename(isFile))):
-          self.log.debug("Input Sandbox %s found in the job directory, no need to copy it" % isFile)
-        else:
-          if os.path.isabs(isFile) and os.path.exists(isFile):
-            self.log.debug("Input Sandbox %s is a file with absolute path, copying it" % isFile)
-            shutil.copy(isFile, os.getcwd())
-          elif os.path.isdir(isFile):
-            self.log.debug("Input Sandbox %s is a directory, found in the user working directory, copying it" % isFile)
-            shutil.copytree(isFile, os.path.basename(isFile), symlinks=True)
-          elif os.path.exists(os.path.join(curDir, os.path.basename(isFile))):
-            self.log.debug("Input Sandbox %s found in the submission directory, copying it" % isFile)
-            shutil.copy(os.path.join(curDir, os.path.basename(isFile)), os.getcwd())
-          elif os.path.exists(os.path.join(tmpdir, isFile)):  # if it is in the tmp dir
-            self.log.debug("Input Sandbox %s is a file, found in the tmp directory, copying it" % isFile)
-            shutil.copy(os.path.join(tmpdir, isFile), os.getcwd())
-          else:
-            self.log.verbose("perhaps the file %s is in an LFN, so we attempt to download it." % isFile)
-            getFile = self.getFile(isFile)
-            if not getFile['OK']:
-              self.log.warn('Failed to download %s with error: %s' % (isFile, getFile['Message']))
-              return S_ERROR('Can not copy InputSandbox file %s' % isFile)
-
-        isFileInCWD = os.getcwd() + os.path.sep + isFile
-
-        basefname = os.path.basename(isFileInCWD)
-        if tarfile.is_tarfile(basefname):
-          try:
-            with tarfile.open(basefname, 'r') as tf:
-              for member in tf.getmembers():
-                tf.extract(member, os.getcwd())
-          except (tarfile.ReadError, tarfile.CompressionError, tarfile.ExtractError) as x:
-            return S_ERROR('Could not untar or extract %s with exception %s' % (basefname, repr(x)))
-
-    self.log.info('Attempting to submit job to local site: %s' % DIRAC.siteName())
-
-    if 'Executable' in parameters:
-      executable = os.path.expandvars(parameters['Executable'])
-    else:
-      return self._errorReport('Missing job "Executable"')
-
-    arguments = parameters.get('Arguments', '')
-
-    # Replace argument placeholders for parametric jobs
-    # if we have Parameters then we have a parametric job
-    if 'Parameters' in parameters:
-      for par, value in parameters.iteritems():
-        if par.startswith('Parameters.'):
-          # we just use the first entry in all lists to run one job
-          parameters[par[len('Parameters.'):]] = value[0]
-      arguments = arguments % parameters
-
-    command = '%s %s' % (executable, arguments)
-    # If not set differently in the CS use the root from the current DIRAC installation
-    siteRoot = gConfig.getValue('/LocalSite/Root', DIRAC.rootPath)
-
-    os.environ['DIRACROOT'] = siteRoot
-    self.log.verbose('DIRACROOT = %s' % (siteRoot))
-    os.environ['DIRACPYTHON'] = sys.executable
-    self.log.verbose('DIRACPYTHON = %s' % (sys.executable))
-
-    self.log.info('Executing: %s' % command)
-    executionEnv = dict(os.environ)
-    variableList = parameters.get('ExecutionEnvironment')
-    if variableList:
-      self.log.verbose('Adding variables to execution environment')
-      if isinstance(variableList, basestring):
-        variableList = [variableList]
-      for var in variableList:
-        nameEnv = var.split('=')[0]
-        valEnv = urllib.unquote(var.split('=')[1])  # this is needed to make the value contain strange things
-        executionEnv[nameEnv] = valEnv
-        self.log.verbose('%s = %s' % (nameEnv, valEnv))
-
-    cbFunction = self._Dirac__printOutput  # pylint: disable=no-member
-
-    result = shellCall(0, command, env=executionEnv, callbackFunction=cbFunction)
-    if not result['OK']:
-      return result
-
-    status = result['Value'][0]
-    self.log.verbose('Status after execution is %s' % (status))
-
-    # FIXME: if there is an callbackFunction, StdOutput and StdError will be empty soon
-    outputFileName = parameters.get('StdOutput')
-    errorFileName = parameters.get('StdError')
-
-    if outputFileName:
-      stdout = result['Value'][1]
-      if os.path.exists(outputFileName):
-        os.remove(outputFileName)
-      self.log.info('Standard output written to %s' % (outputFileName))
-      with open(outputFileName, 'w') as outputFile:
-        print >> outputFile, stdout
-    else:
-      self.log.warn('Job JDL has no StdOutput file parameter defined')
-
-    if errorFileName:
-      stderr = result['Value'][2]
-      if os.path.exists(errorFileName):
-        os.remove(errorFileName)
-      self.log.verbose('Standard error written to %s' % (errorFileName))
-      with open(errorFileName, 'w') as errorFile:
-        print >> errorFile, stderr
-      sandbox = None
-    else:
-      self.log.warn('Job JDL has no StdError file parameter defined')
-      sandbox = parameters.get('OutputSandbox')
-
-    if sandbox:
-      if isinstance(sandbox, basestring):
-        sandbox = [osFile.strip() for osFile in sandbox.split(',')]
-      for i in sandbox:
-        globList = glob.glob(i)
-        for osFile in globList:
-          if os.path.isabs(osFile):
-            # if a relative path, it is relative to the user working directory
-            osFile = os.path.basename(osFile)
-          # Attempt to copy back from job working directory
-          if os.path.isdir(osFile):
-            shutil.copytree(osFile, curDir, symlinks=True)
-          elif os.path.exists(osFile):
-            shutil.copy(osFile, curDir)
-          else:
-            return S_ERROR('Can not copy OutputSandbox file %s' % osFile)
-
-    self.log.verbose('Cleaning up %s...' % tmpdir)
-    self._Dirac__cleanTmp(tmpdir)  # pylint: disable=no-member
-    os.chdir(curDir)
-
-    if status:
-      return S_ERROR('Execution completed with non-zero status %s' % (status))
-    return S_OK('Execution completed successfully')

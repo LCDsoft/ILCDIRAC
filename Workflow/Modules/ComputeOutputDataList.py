@@ -6,11 +6,12 @@ Compute the outputdata list for production jobs
 :author: sposs
 '''
 
-__RCSID__ = "$Id$"
-
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 
 from DIRAC import gLogger, S_OK
+
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
 class ComputeOutputDataList(ModuleBase):
   """ In case the previous module executed properly, add the output to the listoutput. 
@@ -22,7 +23,6 @@ class ComputeOutputDataList(ModuleBase):
     """
     super(ComputeOutputDataList, self).__init__()
     self.version = __RCSID__
-    self.log = gLogger.getSubLogger( "ComputeOutputData" )
     self.listoutput = []
 
   def applicationSpecificInputs(self):
@@ -43,6 +43,6 @@ class ComputeOutputDataList(ModuleBase):
     """
     res = self.resolveInputVariables()
     if not res['OK']:
-      self.log.error("Failed to resolve input variables:", res['Message'])
+      LOG.error("Failed to resolve input variables:", res['Message'])
       return res
     return S_OK()

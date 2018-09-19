@@ -19,6 +19,8 @@ __RCSID__ = "$Id$"
 
 #pylint: disable=protected-access
 
+LOG = gLogger.getSubLogger(__name__)
+
 class Job(DiracJob):
   """ ILCDIRAC job class
   
@@ -27,7 +29,6 @@ class Job(DiracJob):
   def __init__(self, script = None):
     super(Job, self).__init__(script)
     #DiracJob.__init__(self, script)
-    self.log = gLogger.getSubLogger("ILCJob")
     self.applicationlist = []
     self.inputsandbox = []
     self.outputsandbox = []
@@ -47,7 +48,7 @@ class Job(DiracJob):
     use :func:`setPlatform`
 
     """
-    self.log.error("""WARNING: setSystemConfig has been deprecated! use
+    LOG.error("""WARNING: setSystemConfig has been deprecated! use
 
                   setPlatform(platform)
 
@@ -118,10 +119,10 @@ class Job(DiracJob):
     if not self.check:
       return S_OK()
     for app in self.applicationlist:
-      self.log.notice(app)
+      LOG.notice(app)
       app.listAttributes()
-      self.log.notice("\n")
-    res = promptUser('Proceed and submit job(s)?', logger = self.log)
+      LOG.notice("\n")
+    res = promptUser('Proceed and submit job(s)?', logger=LOG)
     if not res['OK']:
       return S_ERROR("User did not validate")
     if res['Value'] == 'n':
@@ -145,17 +146,17 @@ class Job(DiracJob):
 
     res = application._checkConsistency( self )
     if not res['OK']:
-      self.log.error("%s failed to check its consistency:" % application, "%s" % (res['Message']))
+      LOG.error("%s failed to check its consistency:" % application, "%s" % (res['Message']))
       return S_ERROR("%s failed to check its consistency: %s" % (application, res['Message']))
     
     res = self._jobSpecificParams(application)
     if not res['OK']:
-      self.log.error("%s failed job specific checks:" % application, "%s" % (res['Message']))
+      LOG.error("%s failed job specific checks:" % application, "%s" % (res['Message']))
       return S_ERROR("%s failed job specific checks: %s" % (application, res['Message']))
 
     res = application._checkFinalConsistency()
     if not res['OK']:
-      self.log.error("%s failed to check its consistency:" % application, "%s" % (res['Message']))
+      LOG.error("%s failed to check its consistency:" % application, "%s" % (res['Message']))
       return S_ERROR("%s failed to check its consistency: %s" % (application, res['Message']))
     
     ### Once the consistency has been checked, we can add the application to the list of apps.
@@ -175,13 +176,13 @@ class Job(DiracJob):
     ##Set the modules needed by the application
 #    res = self._jobSpecificModules(application,stepdefinition)
 #    if not res['OK']:
-#      self.log.error("Failed to add modules: %s"%res['Message'])
+#      LOG.error("Failed to add modules: %s"%res['Message'])
 #      return S_ERROR("Failed to add modules: %s"%res['Message'])
 #  
 #    ### add the parameters to  the step
 #    res = application._addParametersToStep(stepdefinition)
 #    if not res['OK']:
-#      self.log.error("Failed to add parameters: %s"%res['Message'])   
+#      LOG.error("Failed to add parameters: %s"%res['Message'])
 #      return S_ERROR("Failed to add parameters: %s"%res['Message'])   
 #      
 #    ##Now the step is defined, let's add it to the workflow
@@ -193,12 +194,12 @@ class Job(DiracJob):
 #    ##Set the parameters values to the step instance
 #    res = application._setStepParametersValues(stepInstance)
 #    if not res['OK']:
-#      self.log.error("Failed to resolve parameters values: %s"%res['Message']) 
+#      LOG.error("Failed to resolve parameters values: %s"%res['Message'])
 #      return S_ERROR("Failed to resolve parameters values: %s"%res['Message'])   
 #    
 #    res = application._resolveLinkedStepParameters(stepInstance)
 #    if not res['OK']:
-#      self.log.error("Failed to resolve linked parameters: %s"%res['Message'])
+#      LOG.error("Failed to resolve linked parameters: %s"%res['Message'])
 #      return S_ERROR("Failed to resolve linked parameters: %s"%res['Message'])
 #    #Now prevent overwriting of parameter values.
 #    application._addedtojob()
@@ -230,7 +231,7 @@ class Job(DiracJob):
     
       res = application._checkWorkflowConsistency()
       if not res['OK']:
-        self.log.error("%s failed to check its consistency:" % application, "%s" % res['Message'])
+        LOG.error("%s failed to check its consistency:" % application, "%s" % res['Message'])
         return S_ERROR("%s failed to check its consistency: %s" % (application, res['Message']))
       
       ##Now we can create the step and add it to the workflow
@@ -242,13 +243,13 @@ class Job(DiracJob):
       ##Set the modules needed by the application
       res = self._jobSpecificModules(application, stepdefinition)
       if not res['OK']:
-        self.log.error("Failed to add modules:", "%s" % res['Message'])
+        LOG.error("Failed to add modules:", "%s" % res['Message'])
         return S_ERROR("Failed to add modules: %s" % res['Message'])
   
       ### add the parameters to  the step
       res = application._addParametersToStep(stepdefinition)
       if not res['OK']:
-        self.log.error("Failed to add parameters:", "%s" % res['Message'])   
+        LOG.error("Failed to add parameters:", "%s" % res['Message'])
         return S_ERROR("Failed to add parameters: %s" % res['Message'])   
       
       ##Now the step is defined, let's add it to the workflow
@@ -260,12 +261,12 @@ class Job(DiracJob):
       ##Set the parameters values to the step instance
       res = application._setStepParametersValues(stepInstance)
       if not res['OK']:
-        self.log.error("Failed to resolve parameters values:", "%s" % res['Message']) 
+        LOG.error("Failed to resolve parameters values:", "%s" % res['Message'])
         return S_ERROR("Failed to resolve parameters values: %s" % res['Message'])   
     
       res = application._resolveLinkedStepParameters(stepInstance)
       if not res['OK']:
-        self.log.error("Failed to resolve linked parameters:", "%s" % res['Message'])
+        LOG.error("Failed to resolve linked parameters:", "%s" % res['Message'])
         return S_ERROR("Failed to resolve linked parameters: %s" % res['Message'])
       #Now prevent overwriting of parameter values.
       application._addedtojob()
@@ -300,7 +301,7 @@ class Job(DiracJob):
       if application.energy:
         self.energy = application.energy
       else:
-        self.log.warn("Energy not set for this step")
+        LOG.warn("Energy not set for this step")
       #  return S_ERROR("Energy must be set somewhere.")
      
     if self.energy:

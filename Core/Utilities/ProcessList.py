@@ -12,6 +12,8 @@ from DIRAC.Core.Utilities.CFG import CFG
 from pprint                   import pprint
 import os, tempfile, shutil, subprocess
 
+LOG = gLogger.getSubLogger(__name__)
+
 class ProcessList(object):
   """ The ProcessList uses internally the CFG utility to store the processes and their properties.
   """
@@ -37,13 +39,13 @@ class ProcessList(object):
         os.remove(tmpName)
       return written
     if os.path.exists(path):
-      gLogger.debug("Replacing %s" % path)
+      LOG.debug("Replacing %s" % path)
     try:
       shutil.move(tmpName, path)
       return True
     except OSError, err:
-      gLogger.error("Failed to overwrite process list.", err)
-      gLogger.info("If your process list is corrupted a backup can be found %s" % tmpName)
+      LOG.error("Failed to overwrite process list.", err)
+      LOG.info("If your process list is corrupted a backup can be found %s" % tmpName)
       return False
     
   def isOK(self):
@@ -56,17 +58,17 @@ class ProcessList(object):
 
     :param dict processes: dictionary of processes to treat
     """
-    gLogger.verbose("Updating process list:")
+    LOG.verbose("Updating process list:")
     for process, mydict in processes.items():
       if not self._existsProcess(process):
         self._addEntry(process, mydict)
         #return res
       else:
-        gLogger.warn("Process %s already defined in ProcessList, will replace it" % process)
+        LOG.warn("Process %s already defined in ProcessList, will replace it" % process)
         self.cfg.deleteKey("Processes/%s" % process)
         self._addEntry(process, mydict)
         #return res
-    gLogger.verbose("Done Updating process list")
+    LOG.verbose("Done Updating process list")
     return S_OK()
     
   def _addEntry(self, process, processdic):
@@ -148,19 +150,19 @@ class ProcessList(object):
     from DIRAC import gConfig, exit as dexit
 
     datMan = DataManager()
-    gLogger.notice("Removing process list from file catalog" + path_to_process_list)
+    LOG.notice("Removing process list from file catalog" + path_to_process_list)
     res = datMan.removeFile(path_to_process_list)
     if not res['OK']:
-      gLogger.error("Could not remove process list from file catalog, do it by hand")
+      LOG.error("Could not remove process list from file catalog, do it by hand")
       dexit(2)
-    gLogger.notice("Done removing process list from file catalog")
+    LOG.notice("Done removing process list from file catalog")
 
     res = upload(os.path.dirname(path_to_process_list) + "/", self.location )
     if not res['OK']:
-      gLogger.error("something went wrong in the copy")
+      LOG.error("something went wrong in the copy")
       dexit(2)
 
-    gLogger.notice("Putting process list to local processlist directory")
+    LOG.notice("Putting process list to local processlist directory")
     localprocesslistpath = gConfig.getOption("/LocalSite/ProcessListPath", "")
     if localprocesslistpath['Value']:
 
@@ -168,16 +170,16 @@ class ProcessList(object):
         localSvnRepo = "/afs/cern.ch/eng/clic/software/whizard/whizard_195/"
         shutil.copy(self.location, localSvnRepo) ## because it does not make a difference if we hardcode it here or in ${DIRAC}/etc/dirac.cfg, yours truly APS, JFS
       except OSError, err:
-        gLogger.error("Copy of process list to %s failed with error %s!" % (localSvnRepo, str(err)))
+        LOG.error("Copy of process list to %s failed with error %s!" % (localSvnRepo, str(err)))
 
       try:
         subprocess.call( ["svn","ci", os.path.join( localSvnRepo, os.path.basename(localprocesslistpath['Value'] )), "-m'Process list for whizard version %s'" % appVersion ], shell=False )
       except OSError, err:
-        gLogger.error("Commit failed! Error: %s" % str(err))
+        LOG.error("Commit failed! Error: %s" % str(err))
 
       try:
         shutil.copy(self.location, localprocesslistpath['Value'])
       except OSError, err:
-        gLogger.error("Copy of process list to %s failed!" % localprocesslistpath['Value'])
+        LOG.error("Copy of process list to %s failed!" % localprocesslistpath['Value'])
 
-    gLogger.notice("Done")
+    LOG.notice("Done")

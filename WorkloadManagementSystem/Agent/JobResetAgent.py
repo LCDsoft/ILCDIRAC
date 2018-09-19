@@ -31,9 +31,11 @@ from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
 from DIRAC.Resources.Storage.StorageElement import StorageElement
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
-from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
 from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 from DIRAC.Resources.Catalog.FileCatalogFactory import FileCatalogFactory
+
+from ILCDIRAC.Core.Utilities.LFNPathUtilities import cleanUpLFNPath
+
 __RCSID__ = "$Id$"
 
 AGENT_NAME = 'WorkloadManagement/JobResetAgent'
@@ -68,7 +70,7 @@ class JobResetAgent(AgentModule):
     self.reqClient = ReqClient()
     self.jobMonClient = JobMonitoringClient()
     self.dataManager = DataManager()
-    self.jobDB = JobDB()
+    self._jobDB = None
 
     self.jobStateUpdateClient = RPCClient('WorkloadManagement/JobStateUpdate',
                                           useCertificates=True,
@@ -79,6 +81,17 @@ class JobResetAgent(AgentModule):
                                       timeout=10)
 
     self._fcClient = None
+
+  @property
+  def jobDB(self):
+    """Create JobDB on demand.
+
+    Avoid importing JobDB at importing of this agent, which gives some errors for the documentation
+    """
+    if not self._jobDB:
+      from DIRAC.WorkloadManagementSystem.DB.JobDB import JobDB
+      self._jobDB = JobDB()
+    return self._jobDB
 
   @property
   def fcClient(self):
@@ -389,13 +402,6 @@ class JobResetAgent(AgentModule):
     stagedFiles = [lfn for lfn, val in res["Value"]["Successful"].iteritems() if val["Cached"] > 0]
     return S_OK(stagedFiles)
 
-  @staticmethod
-  def cleanLFN(lfn):
-    """ remove prefix from lfn """
-    if lfn.lower().startswith('lfn'):
-      lfn = lfn[4:]
-    return lfn
-
   def getInputDataForJobs(self, jobList):
     """ returns the input data for a given list of jobIDs """
     inputData = defaultdict(list)
@@ -406,7 +412,7 @@ class JobResetAgent(AgentModule):
         continue
 
       for lfn in res['Value']:
-        lfn = self.cleanLFN(lfn)
+        lfn = cleanUpLFNPath(lfn)
         inputData[lfn].append(jobID)
 
     return S_OK(inputData)

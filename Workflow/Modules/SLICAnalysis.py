@@ -6,20 +6,23 @@ Run SLIC
 :author: Stephane Poss
 '''
 
-__RCSID__ = "$Id$"
-
 
 import os
+
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
-#from DIRAC.Core.DISET.RPCClient                           import RPCClient
+from DIRAC import S_OK, S_ERROR, gLogger
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Workflow.Utilities.CompactMixin             import CompactMixin
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import prepareMacFile, getNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
-from DIRAC                                                import S_OK, S_ERROR, gLogger
-      
+
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
+
 class SLICAnalysis(CompactMixin, ModuleBase):
   """
   Specific Module to run a SLIC job.
@@ -28,7 +31,6 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     super(SLICAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
-    self.log = gLogger.getSubLogger( "SLICAnalysis" )
     self.result = S_ERROR()
     self.applicationName = 'SLIC'
     self.startFrom = 0
@@ -84,16 +86,16 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result['Message'])
+      LOG.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
     
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('SLIC should not proceed as previous step did not end properly')
     
     res = getEnvironmentScript(self.platform, self.applicationName, self.applicationVersion, self.getEnvScript)
     if not res['OK']:
-      self.log.error("Could not obtain the environment script: ", res["Message"])
+      LOG.error("Could not obtain the environment script: ", res["Message"])
       return res
     env_script_path = res["Value"]
     
@@ -105,7 +107,7 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     if len(self.InputFile):
       res = resolveIFpaths(self.InputFile)
       if not res['OK']:
-        self.log.error("Generator file not found")
+        LOG.error("Generator file not found")
         return res
       self.InputFile = res['Value']
     
@@ -114,13 +116,13 @@ class SLICAnalysis(CompactMixin, ModuleBase):
       if not os.path.exists(self.SteeringFile):
         res = getSteeringFileDirName(self.platform, self.applicationName, self.applicationVersion)
         if not res['OK']:
-          self.log.error("Could not find where the steering files are")
+          LOG.error("Could not find where the steering files are")
           return res
         steeringfiledirname = res['Value']
         if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
           self.SteeringFile = os.path.join(steeringfiledirname, self.SteeringFile)
       if not os.path.exists(self.SteeringFile):
-        self.log.error("Missing steering file")
+        LOG.error("Missing steering file")
         return S_ERROR("Could not find mac file")    
     ##Same as for mokka: using ParticleGun does not imply InputFile
     if not len(self.InputFile):
@@ -129,7 +131,7 @@ class SLICAnalysis(CompactMixin, ModuleBase):
                            self.NumberOfEvents, self.startFrom, self.detectorModel,
                            self.RandomSeed, self.OutputFile, self.debug)
     if not macok['OK']:
-      self.log.error('Failed to create SLIC mac file')
+      LOG.error('Failed to create SLIC mac file')
       return S_ERROR('Error when creating SLIC mac file')
     
     scriptName = 'SLIC_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
@@ -155,7 +157,7 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     script.write("which slic\n")
     script.write('echo =========\n')
     comm = 'slic -P $PARTICLE_TBL -m %s %s\n' % (slicmac, self.extraCLIarguments)
-    self.log.info("Command:", comm)
+    LOG.info("Command:", comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')
@@ -171,14 +173,14 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
-      self.log.error("Something went terribly wrong, the log file is not present")
+      LOG.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
       if not self.ignoreapperrors:
         return S_ERROR('%s did not produce the expected log' % (self.applicationName))
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
-    self.log.info( "Status after the application execution is %s" % str( status ) )
+    LOG.info("Status after the application execution is %s" % str(status))
 
     return self.finalStatusReport(status)
 
@@ -186,16 +188,16 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     """ This is called in case CVMFS is not there.
     """
     if 'SLIC_DIR' not in os.environ:
-      self.log.error('SLIC_DIR not found, probably the software installation failed')
+      LOG.error('SLIC_DIR not found, probably the software installation failed')
       return S_ERROR('SLIC_DIR not found, probably the software installation failed')
     if 'SLIC_VERSION' not in os.environ:
-      self.log.error('SLIC_VERSION not found, probably the software installation failed')
+      LOG.error('SLIC_VERSION not found, probably the software installation failed')
       return S_ERROR('SLIC_VERSION not found, probably the software installation failed')
     if 'LCDD_VERSION' not in os.environ:
-      self.log.error('LCDD_VERSION not found, probably the software installation failed')
+      LOG.error('LCDD_VERSION not found, probably the software installation failed')
       return S_ERROR('LCDD_VERSION not found, probably the software installation failed')
     #if 'XERCES_VERSION' not in os.environ:
-    #  self.log.error('XERCES_VERSION not found, probably the software installation failed')
+    #  LOG.error('XERCES_VERSION not found, probably the software installation failed')
     #  return S_ERROR('XERCES_VERSION not found, probably the software installation failed')
 
 
@@ -203,7 +205,7 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     new_ld_lib_path = getNewLDLibs(sysconfig, appname, appversion)
     #res = getSoftwareFolder(sysconfig, appname, appversion)
     #if not res['OK']:
-    #  self.log.error('Directory %s was not found in either the local area or shared area' % (slicDir))
+    #  LOG.error('Directory %s was not found in either the local area or shared area' % (slicDir))
     #  return res
     mySoftwareRoot = os.environ['SLIC_DIR']
     env_name = "SLICEnv.sh"
@@ -236,4 +238,3 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     script.close()
     os.chmod(env_name, 0755)
     return S_OK(os.path.abspath(env_name))
-  

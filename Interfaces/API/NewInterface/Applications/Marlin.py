@@ -8,10 +8,11 @@ from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.CheckXMLValidity         import checkXMLValidity
 from ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin import DDInterfaceMixin
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class Marlin( DDInterfaceMixin, LCApplication ):
@@ -176,7 +177,7 @@ class Marlin( DDInterfaceMixin, LCApplication ):
           return S_ERROR("Supplied steering file cannot be read with xml parser: %s" % (res['Message']) )
 
     if not self.gearFile :
-      self._log.info('GEAR file not given, will not use any gear file')
+      LOG.info('GEAR file not given, will not use any gear file')
     #FIXME: delete dead code
     #if self.gearFile:
       #if not os.path.exists(self.gearFile) and not self.gearFile.lower().count("lfn:"):

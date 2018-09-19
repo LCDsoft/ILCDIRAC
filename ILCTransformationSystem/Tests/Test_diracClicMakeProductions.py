@@ -328,7 +328,7 @@ class TestMaking( unittest.TestCase ):
       parDict = dict(flavour='Moving',
                      targetSE='Target',
                      sourceSE='Source',
-                     plugin='BroadcastProcessed',
+                     plugin='Broadcast',
                      metaKey='ProdID',
                      metaValue=666,
                      extraData={'Datatype': 'DST'},

@@ -7,6 +7,7 @@ from math import modf
 
 from DIRAC import gLogger
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 def getOverlayFiles(evttype = 'gghad'):
@@ -21,7 +22,7 @@ def getOverlayFiles(evttype = 'gghad'):
   ovdir = os.path.join(os.getcwd() , "overlayinput_"+evttype )
 
   if not os.path.exists( ovdir ):
-    gLogger.error( 'overlay directory does not exists', "overlayinput_"+evttype )
+    LOG.error('overlay directory does not exists', "overlayinput_" + evttype)
     return localfiles
   listdir = os.listdir( ovdir )
   for item in listdir:

@@ -3,10 +3,11 @@ SLCIOConcatenate : Helper to concatenate SLCIO files
 """
 
 from DIRAC.Core.Workflow.Parameter import Parameter
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class SLCIOConcatenate(LCUtilityApplication):
@@ -56,7 +57,7 @@ class SLCIOConcatenate(LCUtilityApplication):
 
     if not self.outputFile and self._jobtype =='User' :
       self.setOutputFile('LCIOFileConcatenated.slcio')
-      self._log.notice('No output file name specified. Output file : LCIOFileConcatenated.slcio')
+      LOG.notice('No output file name specified. Output file : LCIOFileConcatenated.slcio')
 
     if self._jobtype != 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",

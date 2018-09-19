@@ -25,8 +25,11 @@ class UploadLogFileTestCase( unittest.TestCase ):
     """set up the objects"""
     # Mock out modules that spawn other threads
     mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : Mock() }
-    self.module_patcher = patch.dict( sys.modules, mocked_modules )
-    self.module_patcher.start()
+    self.log_mock = Mock()
+    self.patches = [patch('%s.LOG' % MODULE_NAME, new=self.log_mock),
+                    patch.dict(sys.modules, mocked_modules)]
+    for patcher in self.patches:
+      patcher.start()
 
     from ILCDIRAC.Workflow.Modules.UploadLogFile import UploadLogFile
     self.ulf = UploadLogFile()
@@ -36,14 +39,14 @@ class UploadLogFileTestCase( unittest.TestCase ):
     ops_mock.getValue.side_effect = lambda key, _ : UploadLogFileTestCase.ops_dict[key]
     self.ulf.ops = ops_mock
 
-  def tearDown( self ):
-    self.module_patcher.stop()
+  def tearDown(self):
+    """Clean up test resources."""
+    for patcher in self.patches:
+      patcher.stop()
 
   def test_execute( self ):
     stat_list = [ ('','','','','','',148), ('','','','','','',2984828952984), OSError('mock_oserr') ]
     glob_list = [ [ 'ignore_me', 'file_1', 'file_2', 'file_3' ], [], [], [], [], [], [], [], [], [] ]
-    log_mock = Mock()
-    self.ulf.log = log_mock
     UploadLogFileTestCase.ops_dict[ '/LogFiles/CLIC/Extensions' ] = []
     with patch.object(self.ulf, 'resolveInputVariables', new=Mock(return_value=S_ERROR('my_testerr'))), \
          patch('%s.os.stat' % MODULE_NAME, new=Mock(side_effect=stat_list)), \
@@ -58,30 +61,24 @@ class UploadLogFileTestCase( unittest.TestCase ):
       #  call('Completely failed to select relevant log files.', 'Could not determine log files') ], self )
 
   def test_execute_nologs( self ):
-    log_mock = Mock()
-    self.ulf.log = log_mock
     with patch.object(self.ulf, 'resolveInputVariables', new=Mock(return_value=S_OK())), \
          patch.object(self.ulf, '_determineRelevantFiles', new=Mock(return_value=S_OK([ 'first_selected_file', 'other_files' ]))), \
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)), \
          patch('%s.os.makedirs' % MODULE_NAME, new=Mock(side_effect=OSError('os_mkdir_failed_testerr_populate'))), \
          patch('%s.UploadLogFile.logWorkingDirectory' % MODULE_NAME, new=Mock()):
       assertDiracSucceeds( self.ulf.execute(), self )
-      log_mock.error.assert_called_once_with( 'Completely failed to populate temporary log file directory.', '' )
+      self.log_mock.error.assert_called_once_with('Completely failed to populate temporary log file directory.', '')
 
   def test_execute_disabled( self ):
-    log_mock = Mock()
-    self.ulf.log = log_mock
     self.ulf.enable = False
     with patch.object(self.ulf, 'resolveInputVariables', new=Mock(return_value=S_OK())), \
          patch.object(self.ulf, '_determineRelevantFiles', new=Mock(return_value=S_OK([ 'first_selected_file', 'other_files' ]))), \
          patch.object(self.ulf, '_populateLogDirectory', new=Mock(return_value=S_OK())), \
          patch('%s.UploadLogFile.logWorkingDirectory' % MODULE_NAME, new=Mock()):
       assertDiracSucceedsWith_equals( self.ulf.execute(), 'Module is disabled by control flag', self )
-      self.assertFalse( log_mock.error.called )
+      self.assertFalse(self.log_mock.error.called)
 
   def test_execute_tarfails( self ):
-    log_mock = Mock()
-    self.ulf.log = log_mock
     with patch.object(self.ulf, 'resolveInputVariables', new=Mock(return_value=S_OK())), \
          patch.object(self.ulf, '_determineRelevantFiles', new=Mock(return_value=S_OK([ 'first_selected_file', 'other_files' ]))), \
          patch.object(self.ulf, '_populateLogDirectory', new=Mock(return_value=S_OK())), \
@@ -96,14 +93,12 @@ class UploadLogFileTestCase( unittest.TestCase ):
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)), \
          patch('%s.UploadLogFile.logWorkingDirectory' % MODULE_NAME, new=Mock()):
       assertDiracSucceeds( self.ulf.execute(), self )
-      assertMockCalls( log_mock.error, [
+      assertMockCalls(self.log_mock.error, [
         'Could not set permissions of log files to 0755 with message:\nchmod_mock_testerr',
         ( 'Failed to create tar file from directory', './job/log/prodID/jobID File was not created' ),
         ( 'Problem changing shared area permissions', 'chmod_mock_testerr' ) ], self )
 
   def test_execute_all_works( self ):
-    log_mock = Mock()
-    self.ulf.log = log_mock
     self.ulf.failoverTest = False
     se_mock = Mock()
     self.ulf.logSE = se_mock
@@ -115,11 +110,9 @@ class UploadLogFileTestCase( unittest.TestCase ):
          patch.object(self.ulf, '_tarTheLogFiles', new=Mock(return_value=S_OK( { 'fileName' : 'some_name'} ))), \
          patch('%s.UploadLogFile.logWorkingDirectory' % MODULE_NAME, new=Mock()):
       assertDiracSucceeds( self.ulf.execute(), self )
-      self.assertFalse( log_mock.error.called )
+      self.assertFalse(self.log_mock.error.called)
 
   def test_execute_failover_fails( self ):
-    log_mock = Mock()
-    self.ulf.log = log_mock
     self.ulf.failoverTest = False
     se_mock = Mock()
     se_mock.name = 'mySEMOCK'
@@ -133,13 +126,11 @@ class UploadLogFileTestCase( unittest.TestCase ):
          patch.object(self.ulf, '_tryFailoverTransfer', new=Mock(return_value=S_OK())), \
          patch('%s.UploadLogFile.logWorkingDirectory' % MODULE_NAME, new=Mock()):
       assertDiracSucceeds( self.ulf.execute(), self )
-      log_mock.error.assert_called_once_with(
+      self.log_mock.error.assert_called_once_with(
         "Completely failed to upload log files to mySEMOCK, will attempt upload to failover SE",
         { 'Successful' : [], 'Failed' : [ 'some_file_failed' ] } )
 
   def test_execute_failover_works( self ):
-    log_mock = Mock()
-    self.ulf.log = log_mock
     self.ulf.failoverTest = False
     se_mock = Mock()
     se_mock.name = 'mySEMOCK'
@@ -156,14 +147,12 @@ class UploadLogFileTestCase( unittest.TestCase ):
          patch.object(self.ulf, '_createLogUploadRequest', new=Mock(return_value=S_OK())) as uploadreq_mock, \
          patch('%s.UploadLogFile.logWorkingDirectory' % MODULE_NAME, new=Mock()):
       assertDiracSucceeds( self.ulf.execute(), self )
-      log_mock.error.assert_called_once_with(
+      self.log_mock.error.assert_called_once_with(
         "Completely failed to upload log files to mySEMOCK, will attempt upload to failover SE",
         { 'Successful' : [], 'Failed' : [ 'some_file_failed' ] } )
       uploadreq_mock.assert_called_once_with( 'mySEMOCK', '', 'mock_se' )
 
   def test_execute_logupload_fails( self ):
-    log_mock = Mock()
-    self.ulf.log = log_mock
     self.ulf.failoverTest = False
     se_mock = Mock()
     se_mock.name = 'mySEMOCK'
@@ -180,15 +169,13 @@ class UploadLogFileTestCase( unittest.TestCase ):
          patch.object(self.ulf, '_createLogUploadRequest', new=Mock(return_value=S_ERROR( 'upload_mock_err' ))) as uploadreq_mock, \
          patch('%s.UploadLogFile.logWorkingDirectory' % MODULE_NAME, new=Mock()):
       assertDiracSucceeds( self.ulf.execute(), self )
-      assertMockCalls( log_mock.error, [
+      assertMockCalls(self.log_mock.error, [
         ( 'Completely failed to upload log files to mySEMOCK, will attempt upload to failover SE',
           { 'Successful' : [], 'Failed' : [ 'some_file_failed' ] } ),
         ( 'Failed to create failover request', 'upload_mock_err' ) ], self )
       uploadreq_mock.assert_called_once_with( 'mySEMOCK', '', 'mock_se' )
 
   def test_populatelogdir_nopermissions( self ):
-    log_mock = Mock()
-    self.ulf.log = log_mock
     with patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value=False)), \
          patch('%s.os.makedirs' % MODULE_NAME, new=Mock(return_value=True)), \
          patch('%s.os.chmod' % MODULE_NAME, new=Mock(side_effect=OSError('permission_denied_testerr'))), \
@@ -196,8 +183,10 @@ class UploadLogFileTestCase( unittest.TestCase ):
          patch('%s.os.listdir' % MODULE_NAME, new=Mock(return_value=[])), \
          patch('%s.UploadLogFile.logWorkingDirectory' % MODULE_NAME, new=Mock()):
       assertDiracFails( self.ulf._populateLogDirectory( [ 'some_file' ] ), self )
-      log_mock.error.assert_called_once_with( 'PopulateLogDir: Could not set logdir permissions to 0755:', ' (permission_denied_testerr)')
-      log_mock.exception.assert_called_once_with( 'PopulateLogDir: Exception while trying to copy file.', 'some_file', 'shutil_mockerr')
+      self.log_mock.error.assert_called_once_with(
+          'PopulateLogDir: Could not set logdir permissions to 0755:', ' (permission_denied_testerr)')
+      self.log_mock.exception.assert_called_once_with(
+          'PopulateLogDir: Exception while trying to copy file.', 'some_file', 'shutil_mockerr')
 
 if __name__ == '__main__':
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( UploadLogFileTestCase )

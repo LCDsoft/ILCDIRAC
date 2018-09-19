@@ -24,7 +24,7 @@ the :mod:`~ILCDIRAC.Interfaces.API.DiracILC` class.
 .. toctree::
    :maxdepth: 1
 
-   Application Interfaces </DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/Applications>
+   Application Interfaces </DOC/ILCDIRAC/Interfaces/API/NewInterface/Applications/index>
    UserJob Interface </DOC/ILCDIRAC/Interfaces/API/NewInterface/UserJob>
    DiracILC Interface </DOC/ILCDIRAC/Interfaces/API/DiracILC>
    Examples for job submission <examplejobs>
@@ -37,7 +37,7 @@ Scripts of interest to the casual user are part of the :mod:`Interfaces <ILCDIRA
 .. toctree::
    :maxdepth: 2
 
-   /DOC/ILCDIRAC/Interfaces/scripts/scripts
+   /DOC/ILCDIRAC/Interfaces/scripts/index
 
 
 

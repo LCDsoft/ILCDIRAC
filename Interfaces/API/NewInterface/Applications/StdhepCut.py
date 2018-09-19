@@ -4,10 +4,11 @@ StdhepCut: apply generator level cuts after pythia or whizard
 import types
 
 from DIRAC.Core.Workflow.Parameter import Parameter
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class StdhepCut(LCApplication):
@@ -100,7 +101,7 @@ class StdhepCut(LCApplication):
     if not self.steeringFile and not self.inlineCuts:
       return S_ERROR("Cuts not specified")
     if self.steeringFile and self.inlineCuts:
-      self._log.notice("You specifed a cuts file and InlineCuts. InlineCuts has precedence.")
+      LOG.notice("You specifed a cuts file and InlineCuts. InlineCuts has precedence.")
     #elif not self.SteeringFile.lower().count("lfn:") and not os.path.exists(self.SteeringFile):
     # res = Exists(self.SteeringFile)
     # if not res['OK']:

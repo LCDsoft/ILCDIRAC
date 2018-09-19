@@ -13,6 +13,7 @@ __RCSID__ = "$Id$"
 
 from DIRAC                                                 import S_OK, S_ERROR, gLogger
 
+LOG = gLogger.getSubLogger(__name__)
 COMPONENT_NAME = 'ILCJobPathResolution'
 
 class JobPathResolution(object):
@@ -23,7 +24,6 @@ class JobPathResolution(object):
     """
     self.arguments = argumentsDict
     self.name = COMPONENT_NAME
-    self.log = gLogger.getSubLogger(self.name)
 
   #############################################################################
   def execute(self):
@@ -33,21 +33,20 @@ class JobPathResolution(object):
     ilcPath = ''
 
     if 'ConfigPath' not in self.arguments:
-      self.log.warn('No CS ConfigPath defined')
+      LOG.warn('No CS ConfigPath defined')
       return S_ERROR('JobPathResoulution Failure')
 
-    self.log.verbose('Attempting to resolve job path for ILC')
+    LOG.verbose('Attempting to resolve job path for ILC')
     job = self.arguments['JobID']
     classadJob = self.arguments['ClassAd']
 
     inputData = classadJob.get_expression('InputData').replace('"', '').replace('Unknown', '')
     if inputData:
-      self.log.info('Job %s has input data requirement' % (job))
+      LOG.info('Job %s has input data requirement' % (job))
       ilcPath += 'InputData'
 
-
     if not ilcPath:
-      self.log.info('No ILC specific optimizers to be added')
+      LOG.info('No ILC specific optimizers to be added')
 
     return S_OK(ilcPath)
 

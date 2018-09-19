@@ -155,7 +155,7 @@ class Whizard2TestCase( unittest.TestCase ):
 
   def test_checkconsistency_nouserjob_2(self):
     self.whiz.version = '2.3.1'
-    self.whiz.whizard2SinFile = '  sqrts  =   350   GeV\n model=SM \ndecay_proc'
+    self.whiz.whizard2SinFile = '  sqrts  =   350.232   GeV\n model=SM \ndecay_proc'
     self.whiz.eventType = 'ee -> ff'
     self.whiz._jobtype = 'notUser'
     self.whiz.numberOfEvents = 100

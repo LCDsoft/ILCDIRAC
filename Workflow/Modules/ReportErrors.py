@@ -10,7 +10,8 @@ Depends on the 'ErrorDict' of the workflow_commons
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from DIRAC import S_OK, gLogger
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
 
 class ReportErrors(ModuleBase):
@@ -20,7 +21,6 @@ class ReportErrors(ModuleBase):
     """Constructor, no arguments."""
     super(ReportErrors, self).__init__()
     self.result = S_OK()
-    self.log = gLogger.getSubLogger("ReportErrors")
 
   def execute(self):
     """Print out the errors from all applications.
@@ -29,9 +29,9 @@ class ReportErrors(ModuleBase):
     """
     errorDict = self.workflow_commons.get('ErrorDict', {})
     if not errorDict:
-      self.log.info("No errors encountered")
+      LOG.info("No errors encountered")
 
     for app, errorMessages in errorDict.iteritems():
       for message in errorMessages:
-        self.log.error(app, message)
+        LOG.error(app, message)
     return S_OK()

@@ -1,5 +1,13 @@
-#!/bin/env python
-""" List the VO members
+"""List the VO members.
+
+Accesses the VOMS server to print members of given VO
+
+Options:
+  -u, --UserName <value>      Family name of the user
+  -v, --VO <value>            VO to print or search: [ilc|calice]
+  -A, --addUser               print output as input for dirac-ilc-add-user
+
+
 """
 
 __RCSID__ = "$Id$"

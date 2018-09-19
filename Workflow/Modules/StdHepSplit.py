@@ -15,7 +15,8 @@ from ILCDIRAC.Core.Utilities.PrepareOptionFiles           import getNewLDLibs
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename, resolveIFpaths
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
 
 class StdHepSplit(ModuleBase):
@@ -26,7 +27,6 @@ class StdHepSplit(ModuleBase):
     super(StdHepSplit, self).__init__()
 
     self.STEP_NUMBER = ''
-    self.log         = gLogger.getSubLogger( "StdHepSplit" )
     self.result      = S_ERROR()
     self.nbEventsPerSlice = 0
     self.InputFile = []
@@ -35,7 +35,7 @@ class StdHepSplit(ModuleBase):
     #
     self.listoutput = {}
     self.OutputFile = []
-    self.log.info("%s initialized" % ( self.__str__() ))
+    LOG.info("%s initialized" % (self.__str__()))
     self.maxRead = 0
 
   def applicationSpecificInputs(self):
@@ -79,19 +79,19 @@ class StdHepSplit(ModuleBase):
       self.result = S_ERROR( 'No ILC platform selected' )
 
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result["Message"])
+      LOG.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
 
     
     if len(self.InputFile):
       res = resolveIFpaths(self.InputFile)
       if not res['OK']:
-        self.log.error("Cannot find input file")
+        LOG.error("Cannot find input file")
         self.setApplicationStatus('StdHepSplit: missing input stdhep file')
         return S_ERROR('Missing stdhep file!')
       runonstdhep = res['Value'][0]
     else:
-      self.log.warn("No files found to split")
+      LOG.warn("No files found to split")
       return S_OK("No files found to process")
 
     prefix = ''
@@ -103,12 +103,12 @@ class StdHepSplit(ModuleBase):
     #because we need to make sure the files end up in the base directory at the end
     self.OutputFile = prefix
     
-    self.log.info("Will rename all files using '%s' as base." % prefix)
+    LOG.info("Will rename all files using '%s' as base." % prefix)
 
     # Setting up script
     res = getSoftwareFolder(self.platform, "stdhepsplit", self.applicationVersion)
     if not res['OK']:
-      self.log.error("Failed to find the software")
+      LOG.error("Failed to find the software")
       self.setApplicationStatus('StdHepSplit: Could not find neither local area not shared area install')
       return res
     
@@ -180,7 +180,7 @@ exit $?
     status      = resultTuple[0]
 
     if not os.path.exists(self.applicationLog):
-      self.log.error("Cannot access log file, cannot proceed")
+      LOG.error("Cannot access log file, cannot proceed")
       return S_ERROR("Failed reading the log file")
 
     with open(self.applicationLog, "r") as logf:
@@ -197,7 +197,7 @@ exit $?
           if val != '0':
             numberofeventsdict[fname] = int(val)
 
-    self.log.verbose("numberofeventsdict dict: %s" % numberofeventsdict)   
+    LOG.verbose("numberofeventsdict dict: %s" % numberofeventsdict)
 
     ##Now update the workflow_commons dict with the relation between filename and number of events: 
     #needed for the registerOutputData
@@ -227,9 +227,9 @@ exit $?
         finalproddata.append(os.path.join(path, of))
       self.workflow_commons['ProductionOutputData'] = ";".join(finalproddata)  
     
-    self.log.info( "Status after the application execution is %s" % str( status ) )
+    LOG.info("Status after the application execution is %s" % str(status))
     if status == 2:
-      self.log.info("Reached end of input file")
+      LOG.info("Reached end of input file")
       status = 0
       
     self.listDir()  

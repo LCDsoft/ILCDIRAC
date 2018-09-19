@@ -35,7 +35,9 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFold
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDir
 from ILCDIRAC.Core.Utilities.InputFilesUtilities          import getNumberOfEvents
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 def generateRandomString(length=8, chars = string.letters + string.digits):
   """Return random string of 8 chars, used by :mod:`~ILCDIRAC.Workflow.Modules.PythiaAnalysis` and :mod:`~ILCDIRAC.Workflow.Modules.MokkaAnalysis`
@@ -52,13 +54,12 @@ class ModuleBase(object):
     """ Initialization of module base.
     """
     super(ModuleBase, self).__init__()
-    self.log = gLogger.getSubLogger(__name__)
     # FIXME: do we need to do this for every module?
     result = getProxyInfoAsString()
     if not result['OK']:
-      self.log.error('Could not obtain proxy information in module environment with message:\n', result['Message'])
+      LOG.error('Could not obtain proxy information in module environment with message:\n', result['Message'])
     else:
-      self.log.info('Payload proxy information:\n', result['Value'])
+      LOG.info('Payload proxy information:\n', result['Value'])
 
     self.ops = Operations()
 
@@ -104,7 +105,7 @@ class ModuleBase(object):
     if not self.jobID:
       return S_OK('JobID not defined') # e.g. running locally prior to submission
 
-    self.log.verbose('setJobApplicationStatus(%s,%s)' %(self.jobID, status))
+    LOG.verbose('setJobApplicationStatus(%s,%s)' % (self.jobID, status))
 
     self.jobReport = self.workflow_commons.get('JobReport', self.jobReport)
 
@@ -112,7 +113,7 @@ class ModuleBase(object):
       return S_OK('No reporting tool given')
     jobStatus = self.jobReport.setApplicationStatus(status, sendFlag)
     if not jobStatus['OK']:
-      self.log.warn(jobStatus['Message'])
+      LOG.warn(jobStatus['Message'])
 
     return jobStatus
 
@@ -130,7 +131,7 @@ class ModuleBase(object):
 
     sendStatus = self.jobReport.sendStoredStatusInfo()
     if not sendStatus['OK']:
-      self.log.error(sendStatus['Message'])
+      LOG.error(sendStatus['Message'])
 
     return sendStatus
 
@@ -146,7 +147,7 @@ class ModuleBase(object):
     if not self.jobID:
       return S_OK('JobID not defined') # e.g. running locally prior to submission
 
-    self.log.verbose('setJobParameter(%s,%s,%s)' % (self.jobID, name, value))
+    LOG.verbose('setJobParameter(%s,%s,%s)' % (self.jobID, name, value))
 
     self.jobReport = self.workflow_commons.get('JobReport', self.jobReport)
 
@@ -154,7 +155,7 @@ class ModuleBase(object):
       return S_OK('No reporting tool given')
     jobParam = self.jobReport.setJobParameter(str(name), str(value), sendFlag)
     if not jobParam['OK']:
-      self.log.warn(jobParam['Message'])
+      LOG.warn(jobParam['Message'])
 
     return jobParam
 
@@ -172,7 +173,7 @@ class ModuleBase(object):
 
     sendStatus = self.jobReport.sendStoredJobParameters()
     if not sendStatus['OK']:
-      self.log.error(sendStatus['Message'])
+      LOG.error(sendStatus['Message'])
 
     return sendStatus
 
@@ -185,12 +186,12 @@ class ModuleBase(object):
     :param string status: status to set
     :return: S_OK(), S_ERROR()
     """
-    self.log.verbose('setFileStatus(%s,%s,%s)' %(production, lfn, status))
+    LOG.verbose('setFileStatus(%s,%s,%s)' % (production, lfn, status))
 
     fileReport = self.workflow_commons.setdefault('FileReport', FileReport('Transformation/TransformationManager') )
     result = fileReport.setFileStatus(production, lfn, status)
     if not result['OK']:
-      self.log.warn(result['Message'])
+      LOG.warn(result['Message'])
 
     self.workflow_commons['FileReport'] = fileReport
 
@@ -240,24 +241,25 @@ class ModuleBase(object):
         filePath = outputFile['outputPath']
         fileInfo[fname] = {'path' : filePath, 'workflowSE' : fileSE}
       else:
-        self.log.error('Ignoring malformed output data specification', str(outputFile))
+        LOG.error('Ignoring malformed output data specification', str(outputFile))
 
     for lfn in outputLFNs:
-      self.log.debug("Checking LFN: %s" % lfn)
+      LOG.debug("Checking LFN: %s" % lfn)
       if os.path.basename(lfn) in fileInfo.keys():
         fileInfo[os.path.basename(lfn)]['lfn']=lfn
-        self.log.verbose('Found LFN %s for file %s' %(lfn, os.path.basename(lfn)))
+        LOG.verbose('Found LFN %s for file %s' % (lfn, os.path.basename(lfn)))
         if len(os.path.basename(lfn))>127:
-          self.log.error('Your file name is WAAAY too long for the FileCatalog. Cannot proceed to upload. Filename:', os.path.basename(lfn))
+          LOG.error('Your file name is WAAAY too long for the FileCatalog. Cannot proceed to upload. Filename:',
+                    os.path.basename(lfn))
           return S_ERROR('Filename too long')
         if len(lfn)>256+127:
-          self.log.error('Your LFN is WAAAAY too long for the FileCatalog. Cannot proceed to upload. LFN:', lfn)
+          LOG.error('Your LFN is WAAAAY too long for the FileCatalog. Cannot proceed to upload. LFN:', lfn)
           return S_ERROR('LFN too long')
 
     #Check that the list of output files were produced
     for fileName, metadata in fileInfo.items():
       if not os.path.exists(fileName):
-        self.log.error('Output data file %s does not exist locally' % fileName)
+        LOG.error('Output data file %s does not exist locally' % fileName)
         if not self.ignoreapperrors:
           return S_ERROR('Output Data Not Found')
         del fileInfo[fileName]
@@ -269,7 +271,7 @@ class ModuleBase(object):
       #  if metadata['type'].lower() in fileMask or fileName.split('.')[-1] in fileMask:
       #    candidateFiles[fileName]=metadata
       #  else:
-      #    self.log.info('Output file %s was produced but will not be treated (outputDataFileMask is %s)' %(fileName,
+      #    LOG.info('Output file %s was produced but will not be treated (outputDataFileMask is %s)' %(fileName,
       #                                                                    string.join(self.outputDataFileMask,', ')))
 
       #if not candidateFiles.keys():
@@ -296,7 +298,7 @@ class ModuleBase(object):
     :return: S_OK with File Metadata, S_ERROR
     """
     #Retrieve the POOL File GUID(s) for any final output files
-    self.log.info('Will search for POOL GUIDs for: %s' %(', '.join(candidateFiles.keys())))
+    LOG.info('Will search for POOL GUIDs for: %s' % (', '.join(candidateFiles.keys())))
     pfnGUIDs = {}
     generated = []
     for fname in candidateFiles.keys():
@@ -307,14 +309,14 @@ class ModuleBase(object):
     pfnGUID['generated'] = generated
     #pfnGUID = getGUID(candidateFiles.keys())
     #if not pfnGUID['OK']:
-    #  self.log.error('PoolXMLFile failed to determine POOL GUID(s) for output file list, these will be generated by \
+    #  LOG.error('PoolXMLFile failed to determine POOL GUID(s) for output file list, these will be generated by \
     #                   the DataManager',pfnGUID['Message'])
     #  for fileName in candidateFiles.keys():
     #    candidateFiles[fileName]['guid']=''
     #if pfnGUID['generated']:
-    self.log.debug('Generated GUID(s) for the following files ', ', '.join(pfnGUID['generated']))
+    LOG.debug('Generated GUID(s) for the following files ', ', '.join(pfnGUID['generated']))
     #else:
-    #  self.log.info('GUIDs found for all specified POOL files: %s' %(string.join(candidateFiles.keys(),', ')))
+    #  LOG.info('GUIDs found for all specified POOL files: %s' %(string.join(candidateFiles.keys(),', ')))
 
     for pfn, guid in pfnGUID['Value'].items():
       candidateFiles[pfn]['GUID'] = guid
@@ -370,10 +372,10 @@ class ModuleBase(object):
     """ Common utility for all sub classes, resolve the workflow parameters
     for the current step. Module parameters are resolved directly.
     """
-    self.log.info("Calling module:", self.__class__ )
-    self.log.info("Workflow commons:", pformat(self.workflow_commons))
-    self.log.info("Request:", pformat(self.workflow_commons.get('Request')))
-    self.log.info("Step commons:", pformat(self.step_commons))
+    LOG.info("Calling module:", self.__class__)
+    LOG.info("Workflow commons:", pformat(self.workflow_commons))
+    LOG.info("Request:", pformat(self.workflow_commons.get('Request')))
+    LOG.info("Step commons:", pformat(self.step_commons))
     
     self.jobReport = self._getJobReporter()
 
@@ -448,7 +450,7 @@ class ModuleBase(object):
     #Next is also a module parameter, should be already set
     self.debug = self.step_commons.get('debug', self.debug)
 
-    if self.InputData:
+    if self.InputData and not self.NumberOfEvents:
       resNE = getNumberOfEvents(self.InputData)
       #NumberOfEvents == 0 does not necessarily mean things went wrong... This
       #is really almost(?)  impossible to solve, sometimes NumberOfEvents can
@@ -458,14 +460,14 @@ class ModuleBase(object):
       if not resNE['OK'] and self.NumberOfEvents == 0 and self.isProdJob:
         return S_ERROR("Failed to get NumberOfEvents from FileCatalog")
       if not resNE['OK'] and self.NumberOfEvents == 0 and not self.isProdJob:
-        self.log.warn("Failed to get NumberOfEvents from FileCatalog, but this is not a production job")
+        LOG.warn("Failed to get NumberOfEvents from FileCatalog, but this is not a production job")
       if resNE['OK']:
         eventsMeta = resNE['Value']
         self.inputdataMeta.update(eventsMeta['AdditionalMeta'])
         if eventsMeta["nbevts"]:
           if self.NumberOfEvents > eventsMeta['nbevts'] or self.NumberOfEvents == 0:
             self.NumberOfEvents = eventsMeta['nbevts']
-      self.log.info("NumberOfEvents = %s" %  str(self.NumberOfEvents))
+      LOG.info("NumberOfEvents = %s" % str(self.NumberOfEvents))
 
     res = self.applicationSpecificInputs()
     if not res['OK']:
@@ -484,7 +486,7 @@ class ModuleBase(object):
 
     result = self.resolveInputVariables()
     if not result['OK']:
-      self.log.error("Failed to resolve input variables:", result['Message'])
+      LOG.error("Failed to resolve input variables:", result['Message'])
       return result
 
     # because we need to make sure this does not overwrite steering files provided  by the user
@@ -500,11 +502,11 @@ class ModuleBase(object):
 
     if self.SteeringFile:
       if os.path.exists(os.path.basename(self.SteeringFile)):
-        self.log.verbose("Found local copy of %s" % self.SteeringFile)
+        LOG.verbose("Found local copy of %s" % self.SteeringFile)
 
     appres = self.runIt()
     if not appres["OK"]:
-      self.log.error("Somehow the application did not exit properly")
+      LOG.error("Somehow the application did not exit properly")
 
     self.listDir()
 
@@ -514,7 +516,7 @@ class ModuleBase(object):
     """ List the current directories content
     """
     ldir = os.listdir(os.getcwd())
-    self.log.verbose("Base directory content:", "\n".join(ldir))
+    LOG.verbose("Base directory content:", "\n".join(ldir))
 
   def runIt(self):
     """ Dummy call, needs to be overwritten by the actual applications
@@ -526,11 +528,11 @@ class ModuleBase(object):
     """
     message = '%s %s Successful' % (self.applicationName, self.applicationVersion)
     if status:
-      self.log.error( "==================================\n StdError:\n" )
-      self.log.error( self.stdError )
+      LOG.error("==================================\n StdError:\n")
+      LOG.error(self.stdError)
       message = '%s exited With Status %s' % (self.applicationName, status)
       self.setApplicationStatus(message)
-      self.log.error(message)
+      LOG.error(message)
       errorKey = "%s_%s" % (self.applicationName, self.applicationVersion)
       self.workflow_commons.setdefault('ErrorDict', defaultdict(list))[errorKey].extend([message, self.stdError])
       if not self.ignoreapperrors:
@@ -545,33 +547,33 @@ class ModuleBase(object):
     """ Retrieve the accumulated reporting request, and produce a JSON file that is consumed by the JobWrapper
     """
     request = self._getRequestContainer()
-    self.log.notice("Request Before: %s" % pformat(request))
+    LOG.notice("Request Before: %s" % pformat(request))
     reportRequest = None
     resultJR = self.jobReport.generateForwardDISET()
     if not resultJR['OK']:
-      self.log.warn( "Could not generate Operation for job report with result:\n%s" % ( resultJR ) )
+      LOG.warn("Could not generate Operation for job report with result:\n%s" % (resultJR))
     else:
       reportRequest = resultJR['Value']
     if reportRequest:
-      self.log.info( "Populating request with job report information" )
+      LOG.info("Populating request with job report information")
       request.addOperation( reportRequest )
 
     accountingReport = self.workflow_commons.get( 'AccountingReport', None)
     if accountingReport:
       resultAR = accountingReport.commit()
       if not resultAR['OK']:
-        self.log.error( "!!! Both Accounting and RequestDB are down? !!!" )
+        LOG.error("!!! Both Accounting and RequestDB are down? !!!")
         return resultAR
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
       if 'ProductionOutputData' in self.workflow_commons:
         prodOutputLFNs = self.workflow_commons['ProductionOutputData'].split(";")
-        self.log.info("There was some kind of error, cleaning up outputData: %s" % prodOutputLFNs)
+        LOG.info("There was some kind of error, cleaning up outputData: %s" % prodOutputLFNs)
         self.setApplicationStatus("Creating Removal Requests")
         self._cleanUp(prodOutputLFNs)
 
     if not len(request): #pylint: disable=len-as-condition
-      self.log.info("No Requests to process ")
+      LOG.info("No Requests to process ")
       return S_OK()
 
     isValid = RequestValidator().validate( request )
@@ -582,21 +584,21 @@ class ModuleBase(object):
     if not requestJSON['OK']:
       raise RuntimeError( requestJSON['Message'] )
 
-    self.log.info( "Creating failover request for deferred operations for job %d" % int(self.jobID) )
+    LOG.info("Creating failover request for deferred operations for job %d" % int(self.jobID))
     request_string = str( requestJSON['Value'] )
-    self.log.debug( request_string )
+    LOG.debug(request_string)
     # Write out the request string
     fname = '%s_%s_request.json' % ( self.productionID, self.prod_job_id )
     with open( fname, 'w' ) as jsonFile:
       jsonFile.write( request_string )
-    self.log.info( "Created file containing failover request %s" % fname )
+    LOG.info("Created file containing failover request %s" % fname)
     resultDigest = request.getDigest()
     if resultDigest['OK']:
-      self.log.info( "Digest of the request: %s" % resultDigest['Value'] )
+      LOG.info("Digest of the request: %s" % resultDigest['Value'])
     else:
-      self.log.error( "No digest? That's not sooo important, anyway: %s" % resultDigest['Message'] )
+      LOG.error("No digest? That's not sooo important, anyway: %s" % resultDigest['Message'])
 
-    self.log.notice("Request After: %s" % pformat(request))
+    LOG.notice("Request After: %s" % pformat(request))
     return S_OK()
 
   def redirectLogOutput(self, fd, message):
@@ -630,7 +632,7 @@ class ModuleBase(object):
           break
 
     if not self.applicationLog:
-      self.log.error("Application Log file not defined")
+      LOG.error("Application Log file not defined")
       return
 
     with open(self.applicationLog, 'a') as log:
@@ -644,7 +646,7 @@ class ModuleBase(object):
 
   def addRemovalRequests(self, lfnList):
     """Create removalRequests for lfns in lfnList and add it to the common request"""
-    self.log.info("Adding removal request")
+    LOG.info("Adding removal request")
     request = self._getRequestContainer()
     remove = Operation()
     remove.Type = "RemoveFile"
@@ -661,10 +663,10 @@ class ModuleBase(object):
     """log the content of the working directory"""
     res = shellCall(0,'ls -laR')
     if res['OK'] and res['Value'][0] == 0:
-      self.log.info('The contents of the working directory...')
-      self.log.info(str(res['Value'][1]))
+      LOG.info('The contents of the working directory...')
+      LOG.info(str(res['Value'][1]))
     else:
-      self.log.error('Failed to list the working directory', str(res['Value'][2]))
+      LOG.error('Failed to list the working directory', str(res['Value'][2]))
 
     #############################################################################
   def _cleanUp(self, lfnList):
@@ -687,17 +689,17 @@ class ModuleBase(object):
   def treatSteeringFiles(self):
     """treat steeringfiles"""
     steeringfilevers = self.step_commons["SteeringFileVers"]
-    self.log.verbose("Will get all the files from the steeringfiles%s" % steeringfilevers)
+    LOG.verbose("Will get all the files from the steeringfiles%s" % steeringfilevers)
     res = getSteeringFileDir(self.platform, steeringfilevers)
     if not res['OK']:
-      self.log.error("Cannot find the steering file directory: %s" % steeringfilevers,
+      LOG.error("Cannot find the steering file directory: %s" % steeringfilevers,
                      res['Message'])
       return S_ERROR("Failed to locate steering files %s" % steeringfilevers)
     path = res['Value']
     list_f = os.listdir(path)
     for localFile in list_f:
       if os.path.exists("./"+localFile):
-        self.log.verbose("Found local file, don't overwrite")
+        LOG.verbose("Found local file, don't overwrite")
         #Do not overwrite local files with the same name
         continue
       try:
@@ -706,7 +708,7 @@ class ModuleBase(object):
         else:
           shutil.copy2(os.path.join(path, localFile), "./"+localFile)
       except EnvironmentError as why:
-        self.log.error('Could not copy %s here because :' % localFile, str(why) )
+        LOG.error('Could not copy %s here because :' % localFile, str(why))
     return S_OK()
 
   def treatConfigPackage( self ):
@@ -725,7 +727,7 @@ class ModuleBase(object):
         configName = key
         break
     if configName is None:
-      self.log.verbose( "No ConfigPackage set" )
+      LOG.verbose("No ConfigPackage set")
       return S_OK()
 
     configType = configName.split('ConfigPackage')[0]
@@ -736,20 +738,20 @@ class ModuleBase(object):
     if resCVMFS['OK']:
       configPath = resCVMFS['Value'][0]
     else:
-      self.log.error("Cannot find %sConfig on CVMFS" % configType, ("Version: "+config_dir, resCVMFS['Message']) )
+      LOG.error("Cannot find %sConfig on CVMFS" % configType, ("Version: " + config_dir, resCVMFS['Message']))
       resLoc = getSoftwareFolder(self.platform, packageName, configVersion)
       if resLoc['OK']:
         configPath = resLoc['Value']
       else:
-        self.log.error("Cannot find %s" % config_dir, resLoc['Message'])
+        LOG.error("Cannot find %s" % config_dir, resLoc['Message'])
         return S_ERROR('Failed to locate %s as config dir' % config_dir)
 
-    self.log.info("Found %sConfig here:" %configType, configPath)
+    LOG.info("Found %sConfig here:" % configType, configPath)
 
     list_f = os.listdir(configPath)
     for localFile in list_f:
       if os.path.exists("./"+localFile):
-        self.log.verbose("Found local file, don't overwrite:", localFile)
+        LOG.verbose("Found local file, don't overwrite:", localFile)
         #Do not overwrite local files with the same name
         continue
       try:
@@ -758,5 +760,5 @@ class ModuleBase(object):
         else:
           shutil.copy2(os.path.join(configPath, localFile), "./"+localFile)
       except EnvironmentError as why:
-        self.log.error('Could not copy %s here because %s!' % (localFile, str(why)))
+        LOG.error('Could not copy %s here because %s!' % (localFile, str(why)))
     return S_OK()

@@ -8,7 +8,9 @@ Example::
 
 Options:
    -N, --Extraname string      String to append to transformation name in case one already exists with that name
+   -R, --GroupName <value>     TransformationGroup Name, by itself the group of the prodID
    -S, --GroupSize <value>     Number of Files per transformation task
+   -x, --Enable                Enable the transformation creation, otherwise dry-run
 
 :since:  May 18, 2015
 :author: A. Sailer
@@ -16,13 +18,14 @@ Options:
 from pprint import pformat
 
 from DIRAC.Core.Base import Script
-from DIRAC import gLogger as LOG, exit as dexit
+from DIRAC import gLogger, exit as dexit
 from DIRAC.TransformationSystem.Utilities.ReplicationTransformation import createDataTransformation
 
 from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import Params, getTransformationGroup
 
 __RCSID__ = "$Id$"
 
+LOG = gLogger.getSubLogger("ReplTrans")
 
 def registerSwitches(script):
   """ register additional switches for replication transformation """

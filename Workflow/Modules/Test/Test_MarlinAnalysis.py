@@ -25,10 +25,17 @@ class MarlinAnalysisFixture( object ):
     self.marAna = MarlinAnalysis()
     self.marAna.OutputFile = ""
     self.marAna.ignoremissingInput = False
+    self.log_mock = Mock()
+    self.patches = [patch('%s.LOG' % MODULE_NAME, new=self.log_mock)]
+
+    for patcher in self.patches:
+      patcher.start()
 
   def tearDown( self ):
     """Clean up test objects"""
     del self.marAna
+    for patcher in self.patches:
+      patcher.stop()
 
 # TODO: add case for undefined steering file
 #pylint: disable=too-many-public-methods
@@ -192,8 +199,6 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.detectorModel = None
     self.marAna.inputGEAR = '/my/secret/path/testGear.input'
     self.marAna.SteeringFile = ''
-    log_mock = Mock()
-    self.marAna.log = log_mock
     with patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=S_OK('envscript_path.test'))), \
          patch('%s.MarlinAnalysis._getInputFiles' % MODULE_NAME, new=Mock(return_value=S_OK(['testslcioList']))), \
          patch('%s.getSteeringFileDirName' % MODULE_NAME, new=Mock(return_value=S_OK('/steeringdir'))), \
@@ -202,8 +207,8 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/test/curdir')):
       result = self.marAna.runIt()
       assertDiracFailsWith( result, 'could not find steering file', self )
-      log_mock.warn.assert_called_once_with( 'Could not copy PandoraSettings.xml, exception: shutil_test_fail' )
-      log_mock.error.assert_called_once_with( "Steering file not defined, shouldn't happen!" )
+      self.log_mock.warn.assert_called_once_with('Could not copy PandoraSettings.xml, exception: shutil_test_fail')
+      self.log_mock.error.assert_called_once_with("Steering file not defined, shouldn't happen!")
       copy_mock.assert_called_once_with( '/steeringdir/PandoraSettings.xml',
                                          '/test/curdir/PandoraSettings.xml' )
 
@@ -219,8 +224,6 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
     self.marAna.detectorModel = None
     self.marAna.inputGEAR = '/my/secret/path/testGear.input'
     self.marAna.SteeringFile = ''
-    log_mock = Mock()
-    self.marAna.log = log_mock
     with patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value=S_OK('envscript_path.test'))), \
          patch('%s.MarlinAnalysis._getInputFiles' % MODULE_NAME, new=Mock(return_value=S_OK(['testslcioList']))), \
          patch('%s.getSteeringFileDirName' % MODULE_NAME, new=Mock(return_value=S_ERROR('mytesterr'))), \
@@ -229,8 +232,8 @@ class MarlinAnalysisTestCase( MarlinAnalysisFixture, unittest.TestCase ):
          patch('%s.os.getcwd' % MODULE_NAME, new=Mock(return_value='/test/curdir')):
       result = self.marAna.runIt()
       assertDiracFailsWith( result, 'could not find steering file', self )
-      log_mock.warn.assert_called_once_with( 'Could not find the steering file directory', 'mytesterr' )
-      log_mock.error.assert_called_once_with( "Steering file not defined, shouldn't happen!" )
+      self.log_mock.warn.assert_called_once_with('Could not find the steering file directory', 'mytesterr')
+      self.log_mock.error.assert_called_once_with("Steering file not defined, shouldn't happen!")
       self.assertFalse( copy_mock.called )
 
   @patch("%s.getSoftwareFolder" % MODULE_NAME, new=Mock(return_value=S_ERROR('')))
@@ -296,19 +299,15 @@ class MarlinAnalysisPatchTestCase( MarlinAnalysisFixture, unittest.TestCase ):
 
   def setUp( self ):
     super( MarlinAnalysisPatchTestCase, self ).setUp()
-    self.patches = [patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123'))),
+    thesePatches = [patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK('Testpath123'))),
                     patch("%s.MarlinAnalysis._getInputFiles" % MODULE_NAME,
                           new=Mock(return_value=S_OK("testinputfiles"))),
                     patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK('testdir'))),
                     patch("%s.os.path.exists" % MODULE_NAME,
                           new=Mock(side_effect=[False, True, False, True, False, True, False, False]))]
-    for patcher in self.patches:
+    self.patches.extend(thesePatches)
+    for patcher in thesePatches:
       patcher.start()
-
-  def tearDown( self ):
-    super( MarlinAnalysisPatchTestCase, self ).tearDown()
-    for patcher in self.patches:
-      patcher.stop()
 
   @patch("%s.prepareXMLFile" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))
   @patch("%s.MarlinAnalysis.prepareMARLIN_DLL" % MODULE_NAME, new=Mock(return_value=S_OK('testdir')))

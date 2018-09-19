@@ -18,7 +18,7 @@ class RemoveSoft(object):
   def __init__(self):
     self.softs = ''
     self.apps = []
-    self.log = gLogger.getSubLogger( "RemoveSoft" )
+    self.log = gLogger.getSubLogger(__name__)
     self.platform = ''
     self.step_commons = {}
     self.workflow_commons = {}

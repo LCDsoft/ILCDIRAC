@@ -2,6 +2,7 @@
 """ Test the ILCDIRAC Application module
 """
 
+import inspect
 import unittest
 from mock import MagicMock as Mock, patch
 
@@ -81,8 +82,8 @@ class AppTestCase( unittest.TestCase ):
 
   def test_setparams_nonexistant_attribute( self ):
     log_mock = Mock()
-    self.app._log = log_mock
-    assertDiracSucceeds( self.app._setparams( { 'ThisAttributeIsntPartOfApplication' : 'someStuff' } ), self )
+    with patch.object(inspect.getmodule(Application), 'LOG', new=log_mock):
+      assertDiracSucceeds(self.app._setparams({'ThisAttributeIsntPartOfApplication': 'someStuff'}), self)
     self.assertTrue( log_mock.error.called )
 
   def test_getparamsdict( self ):
@@ -102,10 +103,10 @@ class AppTestCase( unittest.TestCase ):
 
   def test_listattributes( self ):
     log_mock = Mock()
-    self.app._log = log_mock
-    self.app.setDebug( False )
-    self.app.setExtraCLIArguments( 'my_custom_option other_option cl_argument' )
-    self.app.listAttributes()
+    with patch.object(inspect.getmodule(Application), 'LOG', new=log_mock):
+      self.app.setDebug(False)
+      self.app.setExtraCLIArguments('my_custom_option other_option cl_argument')
+      self.app.listAttributes()
     log_mock.notice.assert_any_call( '  debug: Not defined')
     log_mock.notice.assert_any_call( '  extraCLIArguments: my_custom_option other_option cl_argument' )
 

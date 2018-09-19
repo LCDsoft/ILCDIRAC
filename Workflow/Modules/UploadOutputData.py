@@ -21,7 +21,9 @@ from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import getProdFilenam
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from ILCDIRAC.Core.Utilities.ProductionData import getExperimentFromPath
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 class UploadOutputData(ModuleBase):
   """ As name suggest: upload output data. For Production only: See :mod:`~ILCDIRAC.Workflow.Modules.UserJobFinalization` for User job upload.
@@ -32,7 +34,6 @@ class UploadOutputData(ModuleBase):
     """
     super(UploadOutputData, self).__init__()
     self.version = __RCSID__
-    self.log = gLogger.getSubLogger( "UploadOutputData" )
     self.commandTimeOut = 10*60
     self.enable = True
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])
@@ -50,20 +51,20 @@ class UploadOutputData(ModuleBase):
   def applicationSpecificInputs(self):
     """ By convention the module parameters are resolved here.
     """
-    self.log.debug("Workflow commons: %s" % pformat(self.workflow_commons))
+    LOG.debug("Workflow commons: %s" % pformat(self.workflow_commons))
 
     self.enable = self.step_commons.get('Enable', self.enable)
     if not isinstance( self.enable, bool ):
-      self.log.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
+      LOG.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
       self.enable = False
 
     self.productionID = self.workflow_commons.get("PRODUCTION_ID", self.productionID)
 
     self.jobID = os.environ.get('JOBID', self.jobID)
     if self.jobID:
-      self.log.verbose('Found WMS JobID = %s' % self.jobID)
+      LOG.verbose('Found WMS JobID = %s' % self.jobID)
     else:
-      self.log.info('No WMS JobID found, disabling module via control flag')
+      LOG.info('No WMS JobID found, disabling module via control flag')
       self.enable = False
 
     ##This is the thing that is used to establish the list of outpufiles to treat:
@@ -74,10 +75,10 @@ class UploadOutputData(ModuleBase):
     if self.outputList:
       if 'ProductionOutputData' in self.workflow_commons:
         productionData = self.workflow_commons['ProductionOutputData'].split(";")
-        self.log.verbose("prod data : %s" % productionData )
+        LOG.verbose("prod data : %s" % productionData)
         treatedOutputlist = {}
         for expectedOutputfile in self.outputList:
-          self.log.debug("Treating file: %s" % expectedOutputfile['outputFile'])
+          LOG.debug("Treating file: %s" % expectedOutputfile['outputFile'])
           self.getTreatedOutputlistNew(productionData, treatedOutputlist, expectedOutputfile)
         self.outputList = treatedOutputlist.values()
       else:
@@ -90,7 +91,7 @@ class UploadOutputData(ModuleBase):
           olist.append(appdict)
         self.outputList = olist
 
-      self.log.verbose("OutputList : %s" % self.outputList)
+      LOG.verbose("OutputList : %s" % self.outputList)
 
     self.outputMode = self.workflow_commons.get('outputMode', self.outputMode)
 
@@ -100,7 +101,7 @@ class UploadOutputData(ModuleBase):
 
     #result = constructProductionLFNs(self.workflow_commons)
     #if not result['OK']:
-    #  self.log.error('Could not create production LFNs',result['Message'])
+    #  LOG.error('Could not create production LFNs',result['Message'])
     #  return result
     #self.prodOutputLFNs=result['Value']['ProductionOutputData']
 
@@ -116,35 +117,35 @@ class UploadOutputData(ModuleBase):
   def execute(self):
     """ Main execution function.
     """
-    self.log.info('Initializing %s' % self.version)
+    LOG.info('Initializing %s' % self.version)
     result = self.resolveInputVariables()
     if not result['OK']:
-      self.log.error("Failed to resolve input parameters:", result['Message'])
+      LOG.error("Failed to resolve input parameters:", result['Message'])
       return result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('No output data upload attempted')
 
-    self.experiment = getExperimentFromPath(self.log, self.prodOutputLFNs[0], self.experiment)
+    self.experiment = getExperimentFromPath(LOG, self.prodOutputLFNs[0], self.experiment)
 
     #Determine the final list of possible output files for the
     #workflow and all the parameters needed to upload them.
     result = self.getCandidateFiles(self.outputList, self.prodOutputLFNs, self.outputDataFileMask)
     if not result['OK']:
-      self.log.error(result['Message'])
+      LOG.error(result['Message'])
       self.setApplicationStatus(result['Message'])
       return result
     
     fileDict = result['Value']      
     result = self.getFileMetadata(fileDict)
     if not result['OK']:
-      self.log.error(result['Message'])
+      LOG.error(result['Message'])
       self.setApplicationStatus(result['Message'])
       return result
 
     if not result['Value']:
-      self.log.info('No output data files were determined to be uploaded for this workflow')
+      LOG.info('No output data files were determined to be uploaded for this workflow')
       return S_OK()
 
     fileMetadata = result['Value']
@@ -154,7 +155,7 @@ class UploadOutputData(ModuleBase):
     for fileName, metadata in fileMetadata.items():
       result = getDestinationSEList(metadata['workflowSE'], DIRAC.siteName(), self.outputMode)
       if not result['OK']:
-        self.log.error('Could not resolve output data SE', result['Message'])
+        LOG.error('Could not resolve output data SE', result['Message'])
         self.setApplicationStatus('Failed To Resolve OutputSE')
         return result
       
@@ -162,20 +163,20 @@ class UploadOutputData(ModuleBase):
       final[fileName] = metadata
       final[fileName]['resolvedSE'] = resolvedSE
 
-    self.log.info('The following files will be uploaded: %s' % (', '.join(final.keys() )))
+    LOG.info('The following files will be uploaded: %s' % (', '.join(final.keys())))
     for fileName, metadata in final.items():
-      self.log.info('--------%s--------' % fileName)
+      LOG.info('--------%s--------' % fileName)
       for metaName, metaValue in metadata.items():
-        self.log.info('%s = %s' % (metaName, metaValue))
+        LOG.info('%s = %s' % (metaName, metaValue))
 
     #At this point can exit and see exactly what the module would have uploaded
     if not self.enable:
-      self.log.info('Module is disabled by control flag, would have attempted to upload the \
+      LOG.info('Module is disabled by control flag, would have attempted to upload the \
       following files %s' % ', '.join(final.keys()))
       return S_OK('Module is disabled by control flag')
 
     #Disable the watchdog check in case the file uploading takes a long time
-    self.log.info('Creating DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK in order to disable the Watchdog prior to upload')
+    LOG.info('Creating DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK in order to disable the Watchdog prior to upload')
     fopen = open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK','w')
     fopen.write('%s' % time.asctime())
     fopen.close()
@@ -191,7 +192,7 @@ class UploadOutputData(ModuleBase):
     #One by one upload the files with failover if necessary
     cleanUp = False
     for fileName, metadata in final.iteritems():
-      self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName,
+      LOG.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName,
                                                                                  ', '.join(metadata['resolvedSE'])))
       resultPrimary = failoverTransfer.transferAndRegisterFile(fileName,
                                                                metadata['localpath'],
@@ -201,11 +202,11 @@ class UploadOutputData(ModuleBase):
                                                                fileCatalog=catalogs)
 
       if resultPrimary['OK']:
-        self.log.info("Successfully uploaded %s to %s" % (fileName, ', '.join(metadata['resolvedSE'])))
+        LOG.info("Successfully uploaded %s to %s" % (fileName, ', '.join(metadata['resolvedSE'])))
         continue
 
       # do the failover transfer
-      self.log.error('Could not transfer and register %s with metadata:\n %s' %
+      LOG.error('Could not transfer and register %s with metadata:\n %s' %
                      (fileName, pformat(metadata['filedict'])))
       failovers = self.failoverSEs
       targetSE = metadata['resolvedSE'][0]
@@ -223,7 +224,7 @@ class UploadOutputData(ModuleBase):
                                                                         fileMetaDict=metadata['filedict'],
                                                                         fileCatalog=catalogs)
       if not resultFailover['OK']:
-        self.log.error('Could not transfer and register %s with metadata:\n %s' %
+        LOG.error('Could not transfer and register %s with metadata:\n %s' %
                        (fileName, pformat(metadata['filedict'])))
         cleanUp = True
         break  # no point continuing if one completely fails
@@ -247,13 +248,13 @@ class UploadOutputData(ModuleBase):
     """return the expected extension based on the production type hinted in the filename"""
     extension = ''
     if any( ext in filename for ext in ('_sim', '_dst', '_rec') ):
-      self.log.debug("expecting slcio file")
+      LOG.debug("expecting slcio file")
       extension = ".slcio"
     elif any( ext in filename for ext in ('_gen',) ):
-      self.log.debug("expecting stdhep file")
+      LOG.debug("expecting stdhep file")
       extension = ".stdhep"
     else:
-      self.log.warn("Unknown production file type: %s" % filename)
+      LOG.warn("Unknown production file type: %s" % filename)
 
     return extension
 
@@ -261,9 +262,9 @@ class UploadOutputData(ModuleBase):
     """returns properly formated outputList"""
     expectedOutputFile, dummy_ext = self.getBasenameAndExtension(outputfileObject['outputFile'].lower())
     for productionFile in producedData:
-      self.log.debug("Prodfile %s; outFile %s" %(productionFile, expectedOutputFile))
+      LOG.debug("Prodfile %s; outFile %s" % (productionFile, expectedOutputFile))
       productionFile, extension = self.getBasenameAndExtension(productionFile)
-      self.log.debug("Removed extension: %s" % productionFile)
+      LOG.debug("Removed extension: %s" % productionFile)
       if productionFile in treatedOutputlist:
         ## This has already been treated, no need to come back to it.
         continue

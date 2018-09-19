@@ -2,13 +2,17 @@
 :since: Mar 12, 2013
 :author: sposs
 '''
-__RCSID__ = "$Id$"
+
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 from DIRAC.DataManagementSystem.Client.DataManager         import DataManager
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames          import resolveIFpaths
 
 from DIRAC import gLogger, S_OK, S_ERROR
 import os, shutil
+
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 class MoveInFC(ModuleBase):
   '''
@@ -21,7 +25,6 @@ class MoveInFC(ModuleBase):
     super(MoveInFC, self).__init__()
     self.enable = False
     self.STEP_NUMBER = ''
-    self.log = gLogger.getSubLogger( "MoveInFC" )
     self.applicationName = 'MoveInFC'
     self.repMan = DataManager()
     self.listoutput = {}
@@ -57,7 +60,7 @@ class MoveInFC(ModuleBase):
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly'% self.applicationName)
 
     ### Now remove the files in the FC
@@ -66,7 +69,7 @@ class MoveInFC(ModuleBase):
     ##Check that all the files are here:
     res = resolveIFpaths(lfns)
     if not res['OK']:
-      self.log.error(res['Message'])
+      LOG.error(res['Message'])
       return S_ERROR("Failed to find a file locally")
     
     #All files are here and available
@@ -79,13 +82,13 @@ class MoveInFC(ModuleBase):
         try:
           shutil.copy(inputfile, locname)
         except shutil.Error:
-          self.log.error("Failed to copy file locally, will have to stop")
+          LOG.error("Failed to copy file locally, will have to stop")
           return S_ERROR("Failed copy to local directory")
       localpaths.append(locname)
       try:
         os.unlink(inputfile)
       except OSError:
-        self.log.warn("Failed to remove initial file, increased \
+        LOG.warn("Failed to remove initial file, increased \
         disk space usage")
         
     #all the files are in the run directory 
@@ -104,7 +107,7 @@ class MoveInFC(ModuleBase):
       if self.enable:
         self.step_commons['listoutput'] = outputlist
       else:
-        self.log.info("listoutput would have been ",outputlist)
+        LOG.info("listoutput would have been ", outputlist)
 
     ## Make sure the path contains / at the end as we are going to 
     ## concatenate final path and local files
@@ -116,17 +119,17 @@ class MoveInFC(ModuleBase):
       if self.enable:
         self.workflow_commons['ProductionOutputData'] = file_list
       else:
-        self.log.info("ProductionOutputData would have been", file_list)
+        LOG.info("ProductionOutputData would have been", file_list)
       
     #Now remove them
     if self.enable:
       res = self.repMan.removeFile(lfns, force=True)
       if not res['OK']:
-        self.log.error("Failed to remove the files")
+        LOG.error("Failed to remove the files")
         self.setApplicationStatus("Failed to remove the file")
         #return S_ERROR("Failed to remove the files")
     else:
-      self.log.info("Would have removed: ","%s" % str(lfns))
+      LOG.info("Would have removed: ", "%s" % str(lfns))
     
     ## Now the files are not on the storage anymore, they exist only locally. We can hope 
     ## that the job will not be killed between now and the time the UploadOutputData module

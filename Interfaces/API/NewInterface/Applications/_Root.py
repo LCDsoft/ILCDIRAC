@@ -4,11 +4,12 @@
 
 import types
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id"
 
 class _Root(LCApplication):
@@ -24,14 +25,14 @@ class _Root(LCApplication):
   def setScript(self, script):
     """ Base method, overloaded in :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootScript`
     """
-    self._log.error("Don't use this!")
+    LOG.error("Don't use this!")
     return S_ERROR("Not allowed here")
 
 
   def setMacro(self, macro):
     """ Base method, overloaded in :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.RootMacro`
     """
-    self._log.error("Don't use this!")
+    LOG.error("Don't use this!")
     return S_ERROR("Not allowed here")
 
 

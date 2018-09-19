@@ -22,7 +22,8 @@ from ILCDIRAC.Core.Utilities.ProductionData               import constructUserLF
 from ILCDIRAC.Core.Utilities.ResolveSE                    import getDestinationSEList
 from ILCDIRAC.Core.Utilities.Splitting                    import addJobIndexToFilename
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
 
 class UserJobFinalization(ModuleBase):
@@ -35,7 +36,6 @@ class UserJobFinalization(ModuleBase):
     """
     super(UserJobFinalization, self).__init__()
     self.version = __RCSID__
-    self.log = gLogger.getSubLogger( "UserJobFinalization" )
     self.enable = True
     self.defaultOutputSE = gConfig.getValue( '/Resources/StorageElementGroups/Tier1-USER', [])
     self.failoverSEs = gConfig.getValue('/Resources/StorageElementGroups/Tier1-Failover', [])
@@ -58,14 +58,14 @@ class UserJobFinalization(ModuleBase):
 
     self.enable = self.step_commons.get('Enable', self.enable)
     if not isinstance( self.enable, bool ):
-      self.log.warn('Enable flag set to non-boolean value %s, setting to False' %self.enable)
+      LOG.warn('Enable flag set to non-boolean value %s, setting to False' % self.enable)
       self.enable = False
 
     self.jobID = os.environ.get('JOBID', self.jobID)
     if self.jobID != 0:
-      self.log.verbose('Found WMS JobID = %s' % self.jobID)
+      LOG.verbose('Found WMS JobID = %s' % self.jobID)
     else:
-      self.log.info('No WMS JobID found, disabling module via control flag')
+      LOG.info('No WMS JobID found, disabling module via control flag')
       self.enable = False
 
     #Use LHCb utility for local running via dirac-jobexec
@@ -76,9 +76,9 @@ class UserJobFinalization(ModuleBase):
     specifiedSE = self.workflow_commons.get('UserOutputSE', '')
     if not isinstance( specifiedSE, list ) and specifiedSE:
       self.userOutputSE = [i.strip() for i in specifiedSE.split(';')]
-      self.log.debug("userOutputSE is: " + str(self.userOutputSE) )
+      LOG.debug("userOutputSE is: " + str(self.userOutputSE))
     else:
-      self.log.verbose('No UserOutputSE specified, using default value: %s' % (', '.join(self.defaultOutputSE)))
+      LOG.verbose('No UserOutputSE specified, using default value: %s' % (', '.join(self.defaultOutputSE)))
       self.userOutputSE = self.defaultOutputSE
 
     self.userOutputPath = self.workflow_commons.get('UserOutputPath', self.userOutputPath)
@@ -100,17 +100,17 @@ class UserJobFinalization(ModuleBase):
 
     resultIV = self.resolveInputVariables()
     if not resultIV['OK']:
-      self.log.error("Failed to resolve input parameters:", resultIV['Message'])
+      LOG.error("Failed to resolve input parameters:", resultIV['Message'])
       return resultIV
 
-    self.log.info('Initializing %s' % self.version)
+    LOG.info('Initializing %s' % self.version)
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'],
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'],
                                                                    self.stepStatus['OK']))
       return S_OK('No output data upload attempted')
 
     if not self.userOutputData:
-      self.log.info('No user output data is specified for this job, nothing to do')
+      LOG.info('No user output data is specified for this job, nothing to do')
       return S_OK('No output data to upload')
 
     #Determine the final list of possible output files for the
@@ -121,16 +121,16 @@ class UserJobFinalization(ModuleBase):
     if self.userOutputData:
       resultOLfn = self.constructOutputLFNs()
       if not resultOLfn['OK']:
-        self.log.error('Could not create user LFNs', resultOLfn['Message'])
+        LOG.error('Could not create user LFNs', resultOLfn['Message'])
         return resultOLfn
       userOutputLFNs = resultOLfn['Value']
 
-    self.log.verbose('Calling getCandidateFiles( %s, %s, %s)' % (outputList, userOutputLFNs, self.outputDataFileMask))
-    self.log.debug("IgnoreAppErrors? '%s' " % self.ignoreapperrors)
+    LOG.verbose('Calling getCandidateFiles( %s, %s, %s)' % (outputList, userOutputLFNs, self.outputDataFileMask))
+    LOG.debug("IgnoreAppErrors? '%s' " % self.ignoreapperrors)
     resultCF = self.getCandidateFiles(outputList, userOutputLFNs, self.outputDataFileMask)
     if not resultCF['OK']:
       if not self.ignoreapperrors:
-        self.log.error(resultCF['Message'])
+        LOG.error(resultCF['Message'])
         self.setApplicationStatus(resultCF['Message'])
         return S_OK()
     fileDict = resultCF['Value']
@@ -138,13 +138,13 @@ class UserJobFinalization(ModuleBase):
     resultFMD = self.getFileMetadata(fileDict)
     if not resultFMD['OK']:
       if not self.ignoreapperrors:
-        self.log.error(resultFMD['Message'])
+        LOG.error(resultFMD['Message'])
         self.setApplicationStatus(resultFMD['Message'])
         return S_OK()
 
     if not resultFMD['Value']:
       if not self.ignoreapperrors:
-        self.log.info('No output data files were determined to be uploaded for this workflow')
+        LOG.info('No output data files were determined to be uploaded for this workflow')
         self.setApplicationStatus('No Output Data Files To Upload')
         return S_OK()
 
@@ -153,7 +153,7 @@ class UserJobFinalization(ModuleBase):
     #First get the local (or assigned) SE to try first for upload and others in random fashion
     resultSEL = getDestinationSEList('Tier1-USER', DIRAC.siteName(), outputmode='local')
     if not resultSEL['OK']:
-      self.log.error('Could not resolve output data SE', resultSEL['Message'])
+      LOG.error('Could not resolve output data SE', resultSEL['Message'])
       self.setApplicationStatus('Failed To Resolve OutputSE')
       return resultSEL
     localSE = resultSEL['Value']
@@ -168,7 +168,7 @@ class UserJobFinalization(ModuleBase):
           prependSEs.append(userSE)
       orderedSEs = prependSEs + orderedSEs
 
-    self.log.info('Ordered list of output SEs is: %s' % (', '.join(orderedSEs)))
+    LOG.info('Ordered list of output SEs is: %s' % (', '.join(orderedSEs)))
     final = {}
     for fileName, metadata in fileMetadata.iteritems():
       final[fileName] = metadata
@@ -209,12 +209,12 @@ class UserJobFinalization(ModuleBase):
 
     #If there is now at least one replica for uploaded files can trigger replication
     datMan = DataManager( catalogs = self.userFileCatalog )
-    self.log.info('Sleeping for 10 seconds before attempting replication of recently uploaded files')
+    LOG.info('Sleeping for 10 seconds before attempting replication of recently uploaded files')
     time.sleep(10)
     for lfn, repSE in filesToReplicate.items():
       resultRAR = datMan.replicateAndRegister(lfn, repSE)
       if not resultRAR['OK']:
-        self.log.info('Replication failed with below error but file already exists in Grid storage with \
+        LOG.info('Replication failed with below error but file already exists in Grid storage with \
         at least one replica:\n%s' % (resultRAR))
 
     self.generateFailoverFile()
@@ -255,14 +255,14 @@ class UserJobFinalization(ModuleBase):
 
   def constructOutputLFNs(self):
     """Returns a list of the outputDataLFNs"""
-    self.log.info('Constructing user output LFN(s) for %s' % (', '.join(self.userOutputData)))
+    LOG.info('Constructing user output LFN(s) for %s' % (', '.join(self.userOutputData)))
     if not self.jobID:
       self.jobID = 12345
     owner = self.workflow_commons.get('Owner', '')
     if not owner:
       res = self.getCurrentOwner()
       if not res['OK']:
-        self.log.error('Could not find proxy')
+        LOG.error('Could not find proxy')
         return S_ERROR('Could not obtain owner from proxy')
       owner = res['Value']
 
@@ -270,13 +270,13 @@ class UserJobFinalization(ModuleBase):
     if not vo:
       res = self.getCurrentVO()
       if not res['OK']:
-        self.log.error('Failed finding the VO')
+        LOG.error('Failed finding the VO')
         return S_ERROR('Could not obtain VO from proxy')
       vo = res['Value']
 
     result = constructUserLFNs(int(self.jobID), vo, owner, self.userOutputData, self.userOutputPath)
     if not result['OK']:
-      self.log.error('Could not create user LFNs', result['Message'])
+      LOG.error('Could not create user LFNs', result['Message'])
       return result
 
     return result
@@ -287,10 +287,10 @@ class UserJobFinalization(ModuleBase):
     currentStep = int(self.step_commons['STEP_NUMBER'])
     totalSteps = int(self.workflow_commons['TotalSteps'])
     if currentStep == totalSteps:
-      self.log.verbose("This is the last step, let's finalize this userjob")
+      LOG.verbose("This is the last step, let's finalize this userjob")
       return S_OK()
     else:
-      self.log.verbose('Current step = %s, total steps of workflow = %s, UserJobFinalization will enable itself only \
+      LOG.verbose('Current step = %s, total steps of workflow = %s, UserJobFinalization will enable itself only \
       at the last workflow step.' % (currentStep, totalSteps))
       return S_ERROR("Not the last step")
 
@@ -306,19 +306,19 @@ class UserJobFinalization(ModuleBase):
       outputList.append({'outputPath' : filename.split('.')[-1].upper(),
                          'outputDataSE' : self.userOutputSE,
                          'outputFile' : os.path.basename(filename)})
-    self.log.debug("OutputList: %s" % outputList)
+    LOG.debug("OutputList: %s" % outputList)
     return outputList
 
   def printOutputInfo(self, final):
     """print some information about what would be uploaded"""
     if not self.enable:
-      self.log.info('Module is disabled by control flag, would have attempted to upload the following files')
+      LOG.info('Module is disabled by control flag, would have attempted to upload the following files')
     else:
-      self.log.info('Attempt to upload the following files')
+      LOG.info('Attempt to upload the following files')
     for fileName, metadata in final.items():
-      self.log.info('--------%s--------' % fileName)
+      LOG.info('--------%s--------' % fileName)
       for metaName, metaValue in metadata.iteritems():
-        self.log.info('%s = %s' %(metaName, metaValue))
+        LOG.info('%s = %s' % (metaName, metaValue))
 
   def injectJobIndex(self, final):
     """ add the jobIndex to the output file name """
@@ -331,7 +331,7 @@ class UserJobFinalization(ModuleBase):
     for _, metaInfo in final.iteritems():
       orgLFN = metaInfo['lfn']
       metaInfo['lfn'] = addJobIndexToFilename( orgLFN, jobIndex )
-      self.log.info( "Changing '%s' to '%s'" % ( orgLFN, metaInfo['lfn'] ) )
+      LOG.info("Changing '%s' to '%s'" % (orgLFN, metaInfo['lfn']))
 
   def transferAndRegisterFiles(self, final, failoverTransfer, filesToFailover, filesUploaded, filesToReplicate):
     """transfer and register files to storage elements
@@ -340,7 +340,7 @@ class UserJobFinalization(ModuleBase):
     """
 
     for fileName, metadata in final.items():
-      self.log.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName,
+      LOG.info("Attempting to store file %s to the following SE(s):\n%s" % (fileName,
                                                                                  ', '.join(metadata['resolvedSE'])))
       resultFT = failoverTransfer.transferAndRegisterFile(fileName,
                                                           metadata['localpath'],
@@ -349,7 +349,7 @@ class UserJobFinalization(ModuleBase):
                                                           fileMetaDict = metadata['filedict'],
                                                           fileCatalog = self.userFileCatalog)
       if not resultFT['OK']:
-        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
+        LOG.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
         filesToFailover[fileName] = metadata
       else:
         # Only attempt replication after successful upload and if there is more than one userOutputSE
@@ -365,7 +365,7 @@ class UserJobFinalization(ModuleBase):
               break
 
         if replicateSE and lfn:
-          self.log.info('Will attempt to replicate %s to %s' % (lfn, replicateSE))
+          LOG.info('Will attempt to replicate %s to %s' % (lfn, replicateSE))
           filesToReplicate[lfn] = replicateSE
 
 
@@ -381,11 +381,11 @@ class UserJobFinalization(ModuleBase):
       if targetSE in failoverSEs:
         failoverSEs.remove(targetSE)
         if not failoverSEs:
-          self.log.error("No more failoverSEs to consider, skipping file: %s" % fileName)
-          self.log.error("TargetSE: %s, All FailoverSEs: %s" %( targetSE, self.failoverSEs))
+          LOG.error("No more failoverSEs to consider, skipping file: %s" % fileName)
+          LOG.error("TargetSE: %s, All FailoverSEs: %s" % (targetSE, self.failoverSEs))
           cleanUp = True
           continue
-      self.log.verbose("TargetSE: %s, All FailoverSEs: %s, Cleaned FailoverSEs: %s"
+      LOG.verbose("TargetSE: %s, All FailoverSEs: %s, Cleaned FailoverSEs: %s"
                        % ( targetSE, self.failoverSEs, failoverSEs))
 
       metadata['resolvedSE'] = failoverSEs
@@ -397,7 +397,7 @@ class UserJobFinalization(ModuleBase):
                                                                   fileMetaDict = metadata['filedict'],
                                                                   fileCatalog = self.userFileCatalog)
       if not resultFT['OK']:
-        self.log.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
+        LOG.error('Could not transfer and register %s with metadata:\n %s' % (fileName, metadata))
         cleanUp = True
         continue #for users can continue even if one completely fails
       else:

@@ -1,5 +1,4 @@
-"""
-Prints all applications and their versions registered in the configuration service
+"""Print all applications and their versions registered in the configuration service.
 
 Options:
 

@@ -3,13 +3,19 @@
 
 :author: sposs
 '''
-__RCSID__ = "$Id$"
+
+import os
+import socket
+
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSharedAreaLocation
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from DIRAC.Core.Utilities.Os import getDiskSpace, getDirectorySize
 
 from DIRAC import S_OK, S_ERROR, gLogger
-import os, socket
+
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 class AnalyseWN(ModuleBase):
   '''
@@ -22,18 +28,17 @@ class AnalyseWN(ModuleBase):
     Constructor
     '''
     super(AnalyseWN, self).__init__()
-    self.log = gLogger.getSubLogger('AnalyseWN')
-    
+
   def execute(self):
     """ Run the module
     """
     result = self.resolveInputVariables()
     if not result['OK']:
-      self.log.error("Failed to get the input parameters:", result['Message'])
+      LOG.error("Failed to get the input parameters:", result['Message'])
       return result
 
     if not self.applicationLog:
-      self.log.warn("Log file name missing, reverting to default")
+      LOG.warn("Log file name missing, reverting to default")
       self.applicationLog = "AnalyseWN.log"
 
     info = []
@@ -111,8 +116,7 @@ class AnalyseWN(ModuleBase):
       of.write("\n".join(info))
       of.close()
     except OSError:
-      self.log.error("Could not create the log file")
+      LOG.error("Could not create the log file")
       return S_ERROR("Failed saving the site info")
     
     return S_OK()
-  

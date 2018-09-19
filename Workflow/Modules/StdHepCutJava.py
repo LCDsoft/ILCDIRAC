@@ -7,19 +7,21 @@ Apply a set of cuts on input stdhep files
 
 :author: Stephane Poss
 '''
-__RCSID__ = "$Id$"
+
+import os
 
 from DIRAC                                                import gLogger
 from ILCDIRAC.Workflow.Modules.StdHepCut                  import StdHepCut
 
-import os
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 class StdHepCutJava(StdHepCut):
   """ Apply cuts on stdhep files, based on L. Weuste utility, rewritten in java by C. Grefe.
   """
   def __init__(self):
     super(StdHepCutJava, self).__init__()
-    self.log = gLogger.getSubLogger( "StdhepCutJava" )
     self.applicationName = 'stdhepcutjava'
         
   def prepareScript(self, mySoftDir):
@@ -45,9 +47,8 @@ class StdHepCutJava(StdHepCut):
       extraopts = '-m %s' % self.MaxNbEvts
     comm = "java -Xmx1536m -Xms256m -jar %s %s -o %s -c %s  *.stdhep\n" % (mySoftDir, extraopts, 
                                                                            self.OutputFile, self.SteeringFile)
-    self.log.info("Running %s" % comm)
+    LOG.info("Running %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
     script.write('exit $appstatus\n')
     script.close()
-    

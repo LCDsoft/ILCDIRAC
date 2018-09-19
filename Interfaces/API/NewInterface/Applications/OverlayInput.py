@@ -9,8 +9,9 @@ from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithLowerCaseUnit
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
 from DIRAC.Core.Workflow.Parameter import Parameter
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class OverlayInput(LCUtilityApplication):
@@ -268,8 +269,8 @@ class OverlayInput(LCUtilityApplication):
       res = FileCatalogClient().findFilesByMetadata({}, self.pathToOverlayFiles)
       if not res['OK']:
         return res
-      self._log.notice("Found %i files in path %s" %( len(res['Value']), self.pathToOverlayFiles))
-      if len(res['Value']) == 0 :
+      LOG.notice("Found %i files in path %s" % (len(res['Value']), self.pathToOverlayFiles))
+      if not res['Value']:
         return S_ERROR("OverlayInput: PathToFiles is specified, but there are no files in that path")
 
     if not self.bxToOverlay :

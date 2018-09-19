@@ -24,9 +24,9 @@ from ILCDIRAC.Core.Utilities.PrepareLibs                  import removeLibc
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir          import getSteeringFileDirName
 from ILCDIRAC.Workflow.Utilities.DD4hepMixin              import DD4hepMixin
 
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
-
-__RCSID__ = "$Id$"
 
 class MarlinAnalysis(DD4hepMixin, ModuleBase):
   """Define the Marlin analysis part of the workflow
@@ -35,7 +35,6 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     super(MarlinAnalysis, self).__init__( )
     self.enable = True
     self.STEP_NUMBER = ''
-    self.log = gLogger.getSubLogger( "MarlinAnalysis" )
     self.result = S_ERROR()
     self.inputGEAR = ''
     self.outputREC = ''
@@ -122,11 +121,11 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result["Message"])
+      LOG.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
     #get the path to the detector model, either local or from the software
@@ -134,19 +133,19 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     if self.detectorModel:
       resXML = self._getDetectorXML()
       if not resXML['OK']:
-        self.log.error("Could not obtain the detector XML file: ", resXML["Message"])
+        LOG.error("Could not obtain the detector XML file: ", resXML["Message"])
         return resXML
       compactFile = resXML['Value']
 
     res = getEnvironmentScript(self.platform, "marlin", self.applicationVersion, self.getEnvScript)
     if not res['OK']:
-      self.log.error("Failed to get the env script")
+      LOG.error("Failed to get the env script")
       return res
     env_script_path = res["Value"]
 
     res = self._getInputFiles()
     if not res['OK']:
-      self.log.error("Failed getting input files:", res['Message'])
+      LOG.error("Failed getting input files:", res['Message'])
       return res
     listofslcio = res['Value']
 
@@ -158,7 +157,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     if res['OK']:
       steeringfiledirname = res['Value']
     else:
-      self.log.warn('Could not find the steering file directory', res['Message'])
+      LOG.warn('Could not find the steering file directory', res['Message'])
       
     ##Handle PandoraSettings.xml
     pandorasettings = 'PandoraSettings.xml'
@@ -168,7 +167,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
           shutil.copy(os.path.join(steeringfiledirname, pandorasettings), 
                       os.path.join(os.getcwd(), pandorasettings))
         except EnvironmentError, x:
-          self.log.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
+          LOG.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
 
     if self.inputGEAR:
       self.inputGEAR = os.path.basename(self.inputGEAR)
@@ -182,7 +181,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
         if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
           self.SteeringFile = os.path.join(steeringfiledirname, self.SteeringFile)
     if not self.SteeringFile:
-      self.log.error("Steering file not defined, shouldn't happen!")
+      LOG.error("Steering file not defined, shouldn't happen!")
       return S_ERROR("Could not find steering file")
 
 
@@ -199,27 +198,27 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
                          overlayParam=overlayParam,
                         )
     if not res['OK']:
-      self.log.error('Something went wrong with XML generation because %s' % res['Message'])
+      LOG.error('Something went wrong with XML generation because %s' % res['Message'])
       self.setApplicationStatus('Marlin: something went wrong with XML generation')
       return res
 
     res = self.prepareMARLIN_DLL(env_script_path)
     if not res['OK']:
-      self.log.error('Failed building MARLIN_DLL:', res['Message'])
+      LOG.error('Failed building MARLIN_DLL:', res['Message'])
       self.setApplicationStatus('Failed to setup MARLIN_DLL')
       return S_ERROR('Something wrong with software installation')
     marlin_dll = res["Value"]
     
     self.result = self.runMarlin(finalXML, env_script_path, marlin_dll)
     if not self.result['OK']:
-      self.log.error('Something wrong during running:', self.result['Message'])
+      LOG.error('Something wrong during running:', self.result['Message'])
       self.setApplicationStatus('Error during running %s' % self.applicationName)
       return S_ERROR('Failed to run %s' % self.applicationName)
 
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
-      self.log.error("Something went terribly wrong, the log file is not present")
+      LOG.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
       if not self.ignoreapperrors:
         return S_ERROR('%s did not produce the expected log' % (self.applicationName))
@@ -227,7 +226,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
-    self.log.info( "Status after the application execution is:", str( status ) )
+    LOG.info("Status after the application execution is:", str(status))
 
     return self.finalStatusReport(status) 
 
@@ -244,14 +243,14 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
     os.chmod("temp.sh", 0755)
     res = shellCall(0, "./temp.sh")
     if not res['OK']:
-      self.log.error("Could not get the MARLIN_DLL env")
+      LOG.error("Could not get the MARLIN_DLL env")
       return S_ERROR("Failed getting the MARLIN_DLL")
     marlindll = res["Value"][1].rstrip()
     marlindll = marlindll.rstrip(":")
     try:
       os.remove('temp.sh')
     except EnvironmentError, e:
-      self.log.warn("Failed to delete the temp file", str(e))
+      LOG.warn("Failed to delete the temp file", str(e))
 
     if not marlindll:
       return S_ERROR("Empty MARLIN_DLL env variable!")
@@ -275,7 +274,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
 
     for lib1, path1 in lib1d.items():
       if lib1 in libuser:
-        self.log.verbose("Duplicated lib found, removing %s" % path1)
+        LOG.verbose("Duplicated lib found, removing %s" % path1)
         try:
           temp.remove(path1)
         except ValueError:
@@ -316,7 +315,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
       finallist[plusPos], finallist[lcfiPos] = finallist[lcfiPos], finallist[plusPos]
 
     marlindll = ":".join(finallist)
-    self.log.verbose("Final MARLIN_DLL is:", marlindll)
+    LOG.verbose("Final MARLIN_DLL is:", marlindll)
     
     return S_OK(marlindll)
 
@@ -375,7 +374,7 @@ fi
       script.write('Marlin %s %s\n' % (inputxml, self.extraCLIarguments))
     else:
       script.close()
-      self.log.error("Steering file missing")
+      LOG.error("Steering file missing")
       return S_ERROR("SteeringFile is missing")
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')
@@ -416,8 +415,8 @@ fi
         eventsPerBackgroundFile = self.workflow_commons.get("OI_%i_eventsPerBackgroundFile" % stepNumber)
         backgroundType = self.workflow_commons.get("OI_%i_eventType" % stepNumber )
         processorName = self.workflow_commons.get("OI_%i_processorName" % stepNumber, None )
-        self.log.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
-        self.log.info( "Background type: %s " % backgroundType )
+        LOG.info("Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile)
+        LOG.info("Background type: %s " % backgroundType)
         overlayParam.append( (backgroundType, eventsPerBackgroundFile, processorName) )
 
     return S_OK( overlayParam )
@@ -445,7 +444,7 @@ fi
         marlindll = marlindll + "%s/MARLIN_DLL/%s" % (myMarlinDir, library) + ":"
       marlindll = "%s" % (marlindll)
     else:
-      self.log.error('MARLIN_DLL folder not found, cannot proceed')
+      LOG.error('MARLIN_DLL folder not found, cannot proceed')
       return S_ERROR('MARLIN_DLL folder not found in %s' % myMarlinDir)
 
     env_script_name = "MarlinEnv.sh"

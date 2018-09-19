@@ -116,20 +116,19 @@ class TestOverlayUnittests( unittest.TestCase ):
       result = self.over.applicationSpecificInputs()
       assertDiracSucceedsWith_equals( result, TestOverlayUnittests.GOOD_EXIT, self )
       # Assert nothing has been changed, except the values in setUp (and DataManager/FileCatalogClient since theyre created anew for every object)
-      assertEqualsImproved( (
-        self.over.enable, self.over.STEP_NUMBER, self.over.log, self.over.applicationName,
-        self.over.curdir, self.over.applicationLog, self.over.printoutflag,
-        self.over.prodid, self.over.detector, self.over.energy, self.over.nbofeventsperfile,
-        self.over.lfns, self.over.nbfilestoget, self.over.BkgEvtType, self.over.ggtohadint,
-        self.over.nbsigeventsperfile, self.over.nbinputsigfile, self.over.site,
-        self.over.useEnergyForFileLookup, self.over.machine, self.over.pathToOverlayFiles
-      ), ( reference.enable, reference.STEP_NUMBER, reference.log, reference.applicationName,
-           reference.curdir, reference.applicationLog, reference.printoutflag, reference.prodid,
-           reference.detector, reference.energy, reference.nbofeventsperfile, reference.lfns,
-           reference.nbfilestoget, reference.BkgEvtType, reference.ggtohadint,
-           reference.nbsigeventsperfile, reference.nbinputsigfile, reference.site,
-           reference.useEnergyForFileLookup, reference.machine, reference.pathToOverlayFiles
-         ), self )
+      assertEqualsImproved((self.over.enable, self.over.STEP_NUMBER, self.over.applicationName,
+                            self.over.curdir, self.over.applicationLog, self.over.printoutflag,
+                            self.over.prodid, self.over.detector, self.over.energy, self.over.nbofeventsperfile,
+                            self.over.lfns, self.over.nbfilestoget, self.over.BkgEvtType, self.over.ggtohadint,
+                            self.over.nbsigeventsperfile, self.over.nbinputsigfile, self.over.site,
+                            self.over.useEnergyForFileLookup, self.over.machine, self.over.pathToOverlayFiles,
+                            ), (reference.enable, reference.STEP_NUMBER, reference.applicationName,
+                                reference.curdir, reference.applicationLog, reference.printoutflag, reference.prodid,
+                                reference.detector, reference.energy, reference.nbofeventsperfile, reference.lfns,
+                                reference.nbfilestoget, reference.BkgEvtType, reference.ggtohadint,
+                                reference.nbsigeventsperfile, reference.nbinputsigfile, reference.site,
+                                reference.useEnergyForFileLookup, reference.machine, reference.pathToOverlayFiles,
+                                ), self)
       if self.over.fcc is None:
         self.fail('FCC not initialized')
       if self.over.datMan is None:

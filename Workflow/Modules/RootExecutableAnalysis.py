@@ -4,7 +4,6 @@ Module to run root executables
 :since:  Apr 29, 2010
 :author: Stephane Poss
 """
-__RCSID__ = "$Id$"
 
 import os
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
@@ -12,6 +11,9 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
 from ILCDIRAC.Workflow.Utilities.RootMixin                import RootMixin
 from DIRAC                                                import S_OK, S_ERROR, gLogger
+
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
 
 class RootExecutableAnalysis(RootMixin, ModuleBase):
@@ -22,7 +24,6 @@ class RootExecutableAnalysis(RootMixin, ModuleBase):
     super(RootExecutableAnalysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
-    self.log = gLogger.getSubLogger( "RootExecutableAnalysis" )
     self.applicationName = 'ROOT'
     # from the interface
     self.script = ''
@@ -54,22 +55,22 @@ class RootExecutableAnalysis(RootMixin, ModuleBase):
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result['Message'])
+      LOG.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
 
     res = getEnvironmentScript(self.platform, "root", self.applicationVersion, self.getRootEnvScript)
-    self.log.notice("Got the environment script: %s" % res )
+    LOG.notice("Got the environment script: %s" % res)
     if not res['OK']:
-      self.log.error("Error getting the env script: ", res['Message'])
+      LOG.error("Error getting the env script: ", res['Message'])
       return res
     envScriptPath = res['Value']
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('ROOT should not proceed as previous step did not end properly')
 
     if len(self.script) < 1:
-      self.log.error('Executable file not defined, should not happen!')
+      LOG.error('Executable file not defined, should not happen!')
       return S_ERROR("Executable file not defined")
      
     self.script = os.path.basename(self.script)
@@ -103,7 +104,7 @@ class RootExecutableAnalysis(RootMixin, ModuleBase):
     if os.path.exists(self.script):
       script.write("chmod u+x %s\n" % self.script)
       comm = "./" + comm
-    self.log.info("Will run %s" % (comm))
+    LOG.info("Will run %s" % (comm))
     script.write(comm)
     
     script.write('declare -x appstatus=$?\n')
@@ -124,12 +125,12 @@ class RootExecutableAnalysis(RootMixin, ModuleBase):
     #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
-      self.log.error("Something went terribly wrong, the log file is not present")
+      LOG.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('root failed terribly, you are doomed!')
       return S_ERROR('root did not produce the expected log' )
     status = resultTuple[0]
     # stdOutput = resultTuple[1]
     # stdError = resultTuple[2]
-    self.log.info( "Status after the application execution is %s" % str( status ) )
+    LOG.info("Status after the application execution is %s" % str(status))
 
     return self.finalStatusReport(status)

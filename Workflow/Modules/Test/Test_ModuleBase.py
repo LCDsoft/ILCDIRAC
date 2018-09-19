@@ -4,7 +4,7 @@
 from StringIO import StringIO
 import sys
 import unittest
-from mock import patch, call, mock_open, MagicMock as Mock
+from mock import patch, mock_open, MagicMock as Mock
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase, generateRandomString
@@ -22,12 +22,24 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
   def setUp( self ):
     # Mock out modules that spawn other threads
     mocked_modules = { 'DIRAC.DataManagementSystem.Client.DataManager' : Mock() }
-    self.module_patcher = patch.dict( sys.modules, mocked_modules )
-    self.module_patcher.start()
+
+    self.log_mock = Mock()
+
+    self.patches = [
+        patch.dict(sys.modules, mocked_modules),
+        patch('%s.LOG' % MODULE_NAME, new=self.log_mock),
+        ]
+
+    for patcher in self.patches:
+      patcher.start()
+
     self.moba = ModuleBase()
+    # clear logging from constructor
+    self.log_mock.reset_mock()
 
   def tearDown( self ):
-    self.module_patcher.stop()
+    for patcher in self.patches:
+      patcher.stop()
 
   def test_randomstring( self ):
     random_string_1 = generateRandomString()
@@ -37,17 +49,18 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     assert isinstance( random_string_1, basestring )
     assert isinstance( random_string_2, basestring )
 
-  def test_constructor( self ):
-    log_mock_noproxy = Mock()
-    log_mock_withproxy = Mock()
-    with patch('%s.getProxyInfoAsString' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_error_testme'))), \
-         patch('%s.gLogger.getSubLogger' % MODULE_NAME, new=Mock(return_value=log_mock_noproxy)):
+  def test_constructor_fail(self):
+    """Test constructor when failing."""
+    with patch('%s.getProxyInfoAsString' % MODULE_NAME, new=Mock(return_value=S_ERROR('some_error_testme'))):
       ModuleBase()
-    with patch('%s.getProxyInfoAsString' % MODULE_NAME, new=Mock(return_value=S_OK('some_proxy_infos'))), \
-         patch('%s.gLogger.getSubLogger' % MODULE_NAME, new=Mock(return_value=log_mock_withproxy)):
+    self.log_mock.error.assert_called_once_with(
+        'Could not obtain proxy information in module environment with message:\n', 'some_error_testme')
+
+  def test_constructor_sucess(self):
+    """Test constructor when succeeding."""
+    with patch('%s.getProxyInfoAsString' % MODULE_NAME, new=Mock(return_value=S_OK('some_proxy_infos'))):
       ModuleBase()
-    log_mock_noproxy.error.assert_called_once_with( 'Could not obtain proxy information in module environment with message:\n', 'some_error_testme' )
-    self.assertFalse( log_mock_withproxy.error.called )
+    self.assertFalse(self.log_mock.error.called)
 
   def test_execute_basic( self ):
     result = self.moba.execute()
@@ -159,27 +172,23 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_setappstat_setting_fails( self ):
     self.moba.jobID = 24986
-    log_mock = Mock()
-    self.moba.log = log_mock
     report_mock = Mock()
     report_mock.setApplicationStatus.return_value = S_ERROR('failed setting appstat_testme')
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracFailsWith( self.moba.setApplicationStatus( 'my_test_status' ),
                           'failed setting appstat_testme', self )
     report_mock.setApplicationStatus.assert_called_once_with( 'my_test_status', True )
-    log_mock.warn.assert_called_once_with( 'failed setting appstat_testme' )
+    self.log_mock.warn.assert_called_once_with('failed setting appstat_testme')
 
   def test_sendstoredstatinfo( self ):
     self.moba.jobID = 24986
-    log_mock = Mock()
-    self.moba.log = log_mock
     report_mock = Mock()
     report_mock.sendStoredStatusInfo.return_value = S_OK('mytest_success!!!')
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracSucceedsWith_equals( self.moba.sendStoredStatusInfo(), 'mytest_success!!!', self )
-    self.assertFalse( log_mock.called )
-    self.assertFalse( log_mock.warn.called )
-    self.assertFalse( log_mock.err.called )
+    self.assertFalse(self.log_mock.called)
+    self.assertFalse(self.log_mock.warn.called)
+    self.assertFalse(self.log_mock.error.called)
     report_mock.sendStoredStatusInfo.assert_called_once_with()
 
   def test_sendstoredstatinfo_local( self ):
@@ -194,27 +203,23 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_sendstoredstatinfo_setting_fails( self ):
     self.moba.jobID = 24986
-    log_mock = Mock()
-    self.moba.log = log_mock
     report_mock = Mock()
     report_mock.sendStoredStatusInfo.return_value = S_ERROR('failed setting appstat_testme')
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracFailsWith( self.moba.sendStoredStatusInfo(), 'failed setting appstat_testme', self )
     report_mock.sendStoredStatusInfo.assert_called_once_with()
-    log_mock.error.assert_called_once_with( 'failed setting appstat_testme' )
+    self.log_mock.error.assert_called_once_with('failed setting appstat_testme')
 
   def test_setjobparameter( self ):
     self.moba.jobID = 24986
-    log_mock = Mock()
-    self.moba.log = log_mock
     report_mock = Mock()
     report_mock.setJobParameter.return_value = S_OK('mytest_success!!!')
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracSucceedsWith_equals( self.moba.setJobParameter( 'mytestName', 135 ),
                                     'mytest_success!!!', self )
-    self.assertFalse( log_mock.called )
-    self.assertFalse( log_mock.warn.called )
-    self.assertFalse( log_mock.err.called )
+    self.assertFalse(self.log_mock.called)
+    self.assertFalse(self.log_mock.warn.called)
+    self.assertFalse(self.log_mock.error.called)
     report_mock.setJobParameter.assert_called_once_with( 'mytestName', '135', True )
 
   def test_setjobparameter_local( self ):
@@ -229,28 +234,24 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_setjobparameter_setting_fails( self ):
     self.moba.jobID = 24986
-    log_mock = Mock()
-    self.moba.log = log_mock
     report_mock = Mock()
     report_mock.setJobParameter.return_value = S_ERROR('failed setting appstat_testme')
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracFailsWith( self.moba.setJobParameter( 'parameterTestName', 984 ),
                           'failed setting appstat_testme', self )
     report_mock.setJobParameter.assert_called_once_with( 'parameterTestName', '984', True )
-    log_mock.warn.assert_called_once_with( 'failed setting appstat_testme' )
+    self.log_mock.warn.assert_called_once_with('failed setting appstat_testme')
 
   def test_sendstoredjobparameters( self ):
     self.moba.jobID = 24986
-    log_mock = Mock()
-    self.moba.log = log_mock
     report_mock = Mock()
     report_mock.sendStoredJobParameters.return_value = S_OK('mytest_success!!!')
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracSucceedsWith_equals( self.moba.sendStoredJobParameters(),
                                     'mytest_success!!!', self )
-    self.assertFalse( log_mock.called )
-    self.assertFalse( log_mock.warn.called )
-    self.assertFalse( log_mock.err.called )
+    self.assertFalse(self.log_mock.called)
+    self.assertFalse(self.log_mock.warn.called)
+    self.assertFalse(self.log_mock.error.called)
     report_mock.sendStoredJobParameters.assert_called_once_with()
 
   def test_sendstoredjobparameters_local( self ):
@@ -265,15 +266,13 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_sendstoredjobparameters_setting_fails( self ):
     self.moba.jobID = 24986
-    log_mock = Mock()
-    self.moba.log = log_mock
     report_mock = Mock()
     report_mock.sendStoredJobParameters.return_value = S_ERROR('failed setting appstat_testme')
     self.moba.workflow_commons['JobReport'] = report_mock
     assertDiracFailsWith( self.moba.sendStoredJobParameters(),
                           'failed setting appstat_testme', self )
     report_mock.sendStoredJobParameters.assert_called_once_with()
-    log_mock.error.assert_called_once_with( 'failed setting appstat_testme' )
+    self.log_mock.error.assert_called_once_with('failed setting appstat_testme')
 
   def test_setfilestatus_useexistingfilereport( self ):
     report_mock = Mock()
@@ -295,28 +294,22 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     report_mock = Mock()
     report_mock.setFileStatus.return_value = S_ERROR('test_setfilestat_err')
     self.moba.workflow_commons['FileReport'] = report_mock
-    log_mock = Mock()
-    self.moba.log = log_mock
     assertDiracFailsWith( self.moba.setFileStatus( 'production', 'lfn', 'status' ),
                           'test_setfilestat_err', self )
     assertEqualsImproved( self.moba.workflow_commons['FileReport'], report_mock, self )
-    log_mock.warn.assert_called_once_with('test_setfilestat_err')
+    self.log_mock.warn.assert_called_once_with('test_setfilestat_err')
 
   def test_setfilestatus_fails( self ):
     report_mock = Mock()
     report_mock.setFileStatus.return_value = S_ERROR('test_setfile_staterr')
-    log_mock = Mock()
-    self.moba.log = log_mock
     with patch('%s.FileReport' % MODULE_NAME, new=Mock(return_value=report_mock)):
       assertDiracFailsWith( self.moba.setFileStatus( 'production', 'lfn', 'status' ),
                             'test_setfile_staterr', self )
       assertEqualsImproved( self.moba.workflow_commons['FileReport'], report_mock, self )
-      log_mock.warn.assert_called_once_with('test_setfile_staterr')
+      self.log_mock.warn.assert_called_once_with('test_setfile_staterr')
 
   def test_getcandidatefiles( self ):
     exists_dict = { 'testfile_allworks.stdhep' : True, 'testfile_notlocal.txt' : False }
-    log_mock = Mock()
-    self.moba.log = log_mock
     self.moba.ignoreapperrors = True
     mytest_outputlist = [ {
       'outputFile' : 'testfile_allworks.stdhep', 'outputDataSE' : 'testSE_dip4_allgood',
@@ -332,8 +325,6 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
         'workflowSE': 'testSE_dip4_allgood' } }, self )
 
   def test_getcandidatefiles_filenametoolong( self ):
-    log_mock = Mock()
-    self.moba.log = log_mock
     mytest_outputlist = [ {
       'outputFile' : 'eruighnegjmneroiljger89igujmnerjhvreikvnmer9fig8erjg89iuerjhguie5hgieu7hg893j4tf4iufnugfyrhbgyukbfruwjfhwiefjhuiewfjwenfiuewnfieuwhuifrweuijfiuwerjhuiwer', 'outputDataSE' : 'testSE_dip4_allgood', 'outputPath' : '/test/clic/ilc/mytestfile.txt'
     }, { 'outputFile' : 'failhere', 'outputDataSE' : '' } ]
@@ -343,8 +334,6 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
       mytest_outputlist, mylfns, 'dummy_file_mask'), 'filename too long', self )
 
   def test_getcandidatefiles_lfntoolong( self ):
-    log_mock = Mock()
-    self.moba.log = log_mock
     mytest_outputlist = [ {
       'outputFile' : 'testfile_dirstoolong.stdhep', 'outputDataSE' : 'testSE_dip4_allgood',
       'outputPath' : '/test/clic/ilc/mytestfile.txt' }, {
@@ -356,8 +345,6 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_getcandidatefiles_missinglocally( self ):
     exists_dict = { 'dir/testfile_allworks.stdhep' : True, 'testfile_notlocal.txt' : False }
-    log_mock = Mock()
-    self.moba.log = log_mock
     self.moba.ignoreapperrors = False
     mytest_outputlist = [
       { 'outputFile' : 'dir/testfile_allworks.stdhep',
@@ -504,8 +491,6 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_resolveinputvars_getnbevts_fails( self ):
     mb = self.moba
-    log_mock = Mock()
-    mb.log = log_mock
     mb.workflow_commons['PRODUCTION_ID'] = 13412
     mb.workflow_commons['SystemConfig'] = 'myTestPlatform'
     mb.workflow_commons['StartFrom'] = 94
@@ -519,8 +504,9 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
          patch('%s.ModuleBase.applicationSpecificInputs' % MODULE_NAME, new=Mock(return_value=S_OK('bla'))):
       result = mb.resolveInputVariables()
       assertDiracSucceedsWith_equals( result, 'Parameters resolved', self )
-      print log_mock.mock_calls
-      log_mock.warn.assert_called_once_with('Failed to get NumberOfEvents from FileCatalog, but this is not a production job')
+      print self.log_mock.mock_calls
+      self.log_mock.warn.assert_called_once_with(
+          'Failed to get NumberOfEvents from FileCatalog, but this is not a production job')
 
   def test_resolveinputvars_getnbevts_zero( self ):
     mb = self.moba
@@ -540,31 +526,25 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
       assertDiracSucceedsWith_equals( result, 'Parameters resolved', self )
 
   def test_finalstatusreport( self ):
-    log_mock = Mock()
-    self.moba.log = log_mock
     self.moba.ignoreapperrors = False
     with patch('%s.ModuleBase.setApplicationStatus' % MODULE_NAME) as appstat_mock:
       assertDiracSucceedsWith( self.moba.finalStatusReport( 0 ), ' Successful', self )
       appstat_mock.assert_called_once_with( '  Successful' )
-      self.assertFalse( log_mock.error.called )
+      self.assertFalse(self.log_mock.error.called)
 
   def test_finalstatusreport_appfailed( self ):
-    log_mock = Mock()
-    self.moba.log = log_mock
     self.moba.ignoreapperrors = False
     with patch('%s.ModuleBase.setApplicationStatus' % MODULE_NAME) as appstat_mock:
       assertDiracFailsWith( self.moba.finalStatusReport( 1 ), '', self )
       appstat_mock.assert_called_once_with( ' exited With Status 1' )
-      self.assertTrue( log_mock.error.called )
+      self.assertTrue(self.log_mock.error.called)
 
   def test_finalstatusreport_ignorefail( self ):
-    log_mock = Mock()
-    self.moba.log = log_mock
     self.moba.ignoreapperrors = True
     with patch('%s.ModuleBase.setApplicationStatus' % MODULE_NAME) as appstat_mock:
       assertDiracSucceedsWith( self.moba.finalStatusReport( 1 ), ' exited With Status 1', self )
       appstat_mock.assert_called_once_with( ' exited With Status 1' )
-      self.assertTrue( log_mock.error.called )
+      self.assertTrue(self.log_mock.error.called)
 
   def test_generatefailover( self ):
     container_mock = Mock()
@@ -654,12 +634,10 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
     report_mock.generateForwardDISET.return_value = S_OK(request_mock)
     report_mock.getJSONData.return_value = True
     self.moba.jobReport = report_mock
-    log_mock = Mock()
-    self.moba.log = log_mock
     with patch('%s.ModuleBase._getRequestContainer' % MODULE_NAME, new=Mock(return_value=container_mock)):
       result = self.moba.generateFailoverFile()
       assertDiracSucceeds( result, self )
-      log_mock.info.assert_any_call( 'No Requests to process ')
+      self.log_mock.info.assert_any_call('No Requests to process ')
 
   def test_generatefailover_validatefails( self ):
     container_mock = Mock()
@@ -702,8 +680,6 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 #TODO Fix this/remove tests?
   def test_redirectlogoutput( self ):
     self.moba.eventstring = None
-    log_mock = Mock()
-    self.moba.log = log_mock
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
       self.assertIsNone( self.moba.redirectLogOutput( 1, 'mytestmessage' ) )
@@ -718,8 +694,6 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_redirectlogoutput_default( self ):
     self.moba.eventstring = 'testevent123'
-    log_mock = Mock()
-    self.moba.log = log_mock
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
          patch('%s.open' % MODULE_NAME, mock_open()) as open_mock:
       self.assertIsNone( self.moba.redirectLogOutput(
@@ -732,8 +706,6 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_redirectlogoutput_writetofile( self ):
     self.moba.eventstring = None
-    log_mock = Mock()
-    self.moba.log = log_mock
     self.moba.applicationLog = 'appLog.txt'
     self.moba.excludeAllButEventString = False
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
@@ -748,8 +720,6 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_redirectlogoutput_writetofile_2( self ):
     self.moba.eventstring = ''
-    log_mock = Mock()
-    self.moba.log = log_mock
     self.moba.applicationLog = 'appLog.txt'
     self.moba.excludeAllButEventString = True
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
@@ -761,8 +731,6 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_redirectlogoutput_writetofile_3( self ):
     self.moba.eventstring = [ 'somepattern' , 'otherpattern' ]
-    log_mock = Mock()
-    self.moba.log = log_mock
     self.moba.applicationLog = 'appLog.txt'
     self.moba.excludeAllButEventString = True
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
@@ -775,8 +743,6 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
 
   def test_redirectlogoutput_writetofile_4( self ):
     self.moba.eventstring = [ 'ignorethis', 'deletethis', 'specialTestEvent']
-    log_mock = Mock()
-    self.moba.log = log_mock
     self.moba.applicationLog = 'appLog.txt'
     self.moba.excludeAllButEventString = True
     with patch('sys.stdout', new_callable=StringIO) as print_mock, \
@@ -797,29 +763,23 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
       self.assertIsNotNone( self.moba.workflow_commons[ 'Request' ] )
 
   def test_logworkingdirectory( self ):
-    log_mock = Mock()
-    self.moba.log = log_mock
     with patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK( [ 0, 'balblabal', '' ] ))):
       self.moba.logWorkingDirectory()
-      log_mock.info.assert_any_call( 'balblabal' )
-      self.assertFalse( log_mock.error.called )
+      self.log_mock.info.assert_any_call('balblabal')
+      self.assertFalse(self.log_mock.error.called)
 
   def test_logworkingdirectory_fails_1( self ):
-    log_mock = Mock()
-    self.moba.log = log_mock
     with patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK( [ 1, 'balblabal', 'test_err' ] ))):
       self.moba.logWorkingDirectory()
-      self.assertTrue( log_mock.error.called )
-      self.assertFalse( log_mock.info.called )
+      self.assertTrue(self.log_mock.error.called)
+      self.assertFalse(self.log_mock.info.called)
 
   def test_logworkingdirectory_fails_2( self ):
-    log_mock = Mock()
-    self.moba.log = log_mock
     error = S_ERROR( [ 0, 'balblabal', 'myerrormsg' ] )
     error['Value'] = 'efopikif'
     with patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=error)):
       self.moba.logWorkingDirectory()
-      self.assertTrue( log_mock.error.called )
-      self.assertFalse( log_mock.info.called )
+      self.assertTrue(self.log_mock.error.called)
+      self.assertFalse(self.log_mock.info.called)
 
 # TODO Check for appropriately set values

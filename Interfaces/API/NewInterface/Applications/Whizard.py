@@ -5,13 +5,14 @@ Whizard: First Generator application
 import types
 import os
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.WhizardOptions import WhizardOptions, getDict
 from ILCDIRAC.Core.Utilities.GeneratorModels import GeneratorModels
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class Whizard(LCApplication):
@@ -72,7 +73,7 @@ class Whizard(LCApplication):
     """
     self._checkArgs( { 'evttype' : types.StringTypes } )
     if self.addedtojob:
-      self._log.error("Cannot modify this attribute once application has been added to Job")
+      LOG.error("Cannot modify this attribute once application has been added to Job")
       return S_ERROR("Cannot modify")
     self.eventType = evttype
 
@@ -253,7 +254,7 @@ class Whizard(LCApplication):
     if self.generatorLevelCuts:
       for process in self.generatorLevelCuts.keys():
         if process not in self.eventType.split():
-          self._log.info("You want to cut on %s but that process is not to be generated" % process)
+          LOG.info("You want to cut on %s but that process is not to be generated" % process)
       for values in self.generatorLevelCuts.values():
         if not isinstance( values, list ):
           return S_ERROR('Type of %s is not a list, cannot proceed' % values)
@@ -267,7 +268,7 @@ class Whizard(LCApplication):
         self.eventType = self.globalEventType
       for process in processes:
         if not self._processlist.existsProcess(process)['Value']:
-          self._log.notice("Available processes are:")
+          LOG.notice("Available processes are:")
           self._processlist.printProcesses()
           return S_ERROR('Process %s does not exists'%process)
         else:
@@ -279,7 +280,7 @@ class Whizard(LCApplication):
               return S_ERROR("All processes to consider are not available in the same WHIZARD version")
           else:
             self.version = version
-          self._log.info("Found the process %s in whizard %s"%(process, self.version))
+          LOG.info("Found the process %s in whizard %s" % (process, self.version))
 
     if not self.version:
       return S_ERROR('No version found')
@@ -386,7 +387,7 @@ class Whizard(LCApplication):
 
   def setParameter(self, parameter, defaultValue, docString):
     if parameter not in self.parameterDict:
-      self._log.info(docString)
+      LOG.info(docString)
       self.parameters.append( "%s=%s" % (parameter, defaultValue) )
     else:
       self.parameters.append( "%s=%s" % (parameter, self.parameterDict[parameter]) )

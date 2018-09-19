@@ -174,7 +174,7 @@ class Whizard2( LCApplication ):
         self.prodparameters['Energy'] = sqrtMatches[0].replace("sqrts=", "").replace("GeV", "")
         self.energy = float(self.prodparameters['Energy'])
       else:
-        self.whizard2SinFile = re.sub(r"sqrts *= *[0-9]* *GeV", "sqrts = %s GeV" %
+        self.whizard2SinFile = re.sub(r"sqrts *= *[0-9.]* *GeV", "sqrts = %s GeV" %
                                       self.energy,
                                       self.whizard2SinFile)
         self.prodparameters['Energy'] = str(self.energy)

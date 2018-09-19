@@ -227,8 +227,10 @@ a larger number of jobs that each simulate a given number of events. The random
 seed for each job is based on the iLCDIRAC jobID, the output filenames are
 injected with the job index, 0 to 9 in this example.
 
-There is also the option to automatically split jobs over inputfiles, see
-:func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitInputData`.
+There is also the option to automatically split:
+
+  - a list of files across many jobs, see :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitInputData`.
+  - a file across many jobs, see :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitFilesAcrossJobs`.
 
 .. code:: python
 

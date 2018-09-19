@@ -1,40 +1,29 @@
-"""Test the LFNPathUtilities"""
+"""Test the LFNPathUtilities."""
 __RCSID__ = "$Id$"
 
-import unittest
+import pytest
 
 from ILCDIRAC.Core.Utilities.LFNPathUtilities import joinPathForMetaData, cleanUpLFNPath
 
-class LFNPathUtilitiesTests( unittest.TestCase ):
-  """Test the LFNPathUtilities"""
-
-  def setUp ( self ):
-    self.logPath = "/ilc/prod/ilc/mc-dbd/ild/"
-    self.jobID = 12
-
-  def tearDown ( self ):
-    pass
+LOG_PATH = "/ilc/prod/ilc/mc-dbd/ild/"
+JOB_ID = 12
 
 
-class TestJoinPathForMetaData( LFNPathUtilitiesTests ):
-  """Test joinPathForMetaData"""
-  def test_success( self ):
-    """test for joinPathForMetaData................................................................."""
-    self.assertEqual ( joinPathForMetaData ( "/ilc" , "grid" , "softwareVersion", "/" ) , "/ilc/grid/softwareVersion/" )
-    self.assertEqual ( joinPathForMetaData ( "/ilc//grid","/" , "softwareVersion", "/" ) , "/ilc/grid/softwareVersion/" )
-    self.assertEqual ( joinPathForMetaData ( "/ilc//grid","/" , "softwareVersion/", "/" ) , "/ilc/grid/softwareVersion/" )
-    return True
+@pytest.mark.parametrize('paths, expectedPath',
+                         [(("/ilc", "grid", "softwareVersion", "/"), "/ilc/grid/softwareVersion/"),
+                          (("/ilc//grid", "/", "softwareVersion", "/"), "/ilc/grid/softwareVersion/"),
+                          (("/ilc//grid", "/", "softwareVersion/", "/"), "/ilc/grid/softwareVersion/"),
+                          ])
+def test_joinPathForMetaData(paths, expectedPath):
+  """Test for joinPathForMetaData."""
+  assert joinPathForMetaData(*paths) == expectedPath
 
-class TestCleanLFNPath( LFNPathUtilitiesTests ):
-  """Test cleanUpLFNPath"""
-  def test_succes( self ):
-    """Test cleanUpLFNPath.........................................................................."""
-    return self.assertEqual ( cleanUpLFNPath ('%s/%s' % (self.logPath, str(int(self.jobID)/1000).zfill(3))),
-                              "/ilc/prod/ilc/mc-dbd/ild/000")
 
-if __name__ == "__main__":
-  SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( LFNPathUtilitiesTests )
-  SUITE.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestCleanLFNPath ) )
-  SUITE.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestJoinPathForMetaData ) )
-  TESTRESULT = unittest.TextTestRunner( verbosity = 2 ).run( SUITE )
-
+@pytest.mark.parametrize('lfn, expectedPath',
+                         [('%s/%s' % (LOG_PATH, str(int(JOB_ID) / 1000).zfill(3)), '/ilc/prod/ilc/mc-dbd/ild/000'),
+                          ('LFN:/some/path/to/some/where', '/some/path/to/some/where'),
+                          ('lFn:/some/path/to/some/where', '/some/path/to/some/where'),
+                          ])
+def test_lfnCleanup(lfn, expectedPath):
+  """Test for cleanUpLFNPath."""
+  assert cleanUpLFNPath(lfn) == expectedPath

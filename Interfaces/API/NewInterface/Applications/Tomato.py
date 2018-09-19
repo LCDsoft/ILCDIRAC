@@ -4,11 +4,12 @@ Tomato : Helper to filter generator selection
 
 import types
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class Tomato(LCApplication):
@@ -77,7 +78,7 @@ class Tomato(LCApplication):
       return S_ERROR("You need to specify which version of Marlin to use.")
 
     if not self.libTomato :
-      self._log.info('Tomato library not given. It will run without it')
+      LOG.info('Tomato library not given. It will run without it')
 
     return S_OK()
 

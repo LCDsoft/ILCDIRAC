@@ -13,7 +13,9 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
+
 
 class Whizard2Analysis(ModuleBase):
   """
@@ -23,7 +25,6 @@ class Whizard2Analysis(ModuleBase):
     super(Whizard2Analysis, self).__init__()
     self.enable = True
     self.STEP_NUMBER = ''
-    self.log = gLogger.getSubLogger( "Whizard2Analysis" )
     self.result = S_ERROR()
     self.applicationName = 'whizard2'
     self.startFrom = 0
@@ -65,17 +66,17 @@ class Whizard2Analysis(ModuleBase):
     elif not self.applicationLog:
       self.result = S_ERROR( 'No Log file provided' )
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result['Message'])
+      LOG.error("Failed to resolve input parameters:", self.result['Message'])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' %(self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('Whizard2 should not proceed as previous step did not end properly')
 
     # get the enviroment script
     res = getEnvironmentScript(self.platform, self.applicationName, self.applicationVersion, S_ERROR("No init script provided in CVMFS!"))
     if not res['OK']:
-      self.log.error("Could not obtain the environment script: ", res["Message"])
+      LOG.error("Could not obtain the environment script: ", res["Message"])
       return res
     envScriptPath = res["Value"]
 
@@ -139,13 +140,13 @@ class Whizard2Analysis(ModuleBase):
     self.result = shellCall(0, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
     resultTuple = self.result['Value']
     if not os.path.exists(self.applicationLog):
-      self.log.error("Something went terribly wrong, the log file is not present")
+      LOG.error("Something went terribly wrong, the log file is not present")
       self.setApplicationStatus('%s failed to produce log file' % (self.applicationName))
       if not self.ignoreapperrors:
         return S_ERROR('%s did not produce the expected log %s' % (self.applicationName, self.applicationLog))
     status = resultTuple[0]
 
-    self.log.info( "Status after the application execution is %s" % status )
+    LOG.info("Status after the application execution is %s" % status)
 
     return self.finalStatusReport(status)
 

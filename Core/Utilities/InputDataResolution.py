@@ -23,6 +23,7 @@ import DIRAC
 
 import string, types
 
+LOG = gLogger.getSubLogger(__name__)
 COMPONENT_NAME = 'ILCInputDataResolution'
 
 class InputDataResolution(object):
@@ -34,7 +35,6 @@ class InputDataResolution(object):
     """
     self.arguments = argumentsDict
     self.name = COMPONENT_NAME
-    self.log = gLogger.getSubLogger(self.name)
     self.ops = Operations()
   #############################################################################
   def execute(self):
@@ -43,7 +43,7 @@ class InputDataResolution(object):
     """
     result = self.__resolveInputData()
     if not result['OK']:
-      self.log.error('InputData resolution failed with result:\n%s' % (result))
+      LOG.error('InputData resolution failed with result:\n%s' % (result))
 
     #For local running of this module we can expose an option to ignore missing files
     ignoreMissing = False
@@ -55,7 +55,7 @@ class InputDataResolution(object):
     if 'Failed' in result:
       failedReplicas = result['Failed']
       if failedReplicas and not ignoreMissing:
-        self.log.error('Failed to obtain access to the following files:\n%s' % (string.join(failedReplicas, '\n')))
+        LOG.error('Failed to obtain access to the following files:\n%s' % (string.join(failedReplicas, '\n')))
         return S_ERROR('Failed to access all of requested input data')
 
     if 'Successful' not in result:
@@ -85,9 +85,9 @@ class InputDataResolution(object):
       #In principle this can be a list of modules with the first taking precedence
       if type(policy) in types.StringTypes:
         policy = [policy]
-      self.log.info('Job has a specific policy setting: %s' % (string.join(policy, ', ')))
+      LOG.info('Job has a specific policy setting: %s' % (string.join(policy, ', ')))
     else:
-      self.log.verbose('Attempting to resolve input data policy for site %s' % site)
+      LOG.verbose('Attempting to resolve input data policy for site %s' % site)
       inputDataPolicy = self.ops.getOptionsDict('/InputDataPolicy')
       if not inputDataPolicy:
         return S_ERROR('Could not resolve InputDataPolicy from /InputDataPolicy')
@@ -96,11 +96,11 @@ class InputDataResolution(object):
       if site in options:
         policy = options[site]
         policy = [x.strip() for x in string.split(policy, ',')]
-        self.log.info('Found specific input data policy for site %s:\n%s' % (site, string.join(policy, ',\n')))
+        LOG.info('Found specific input data policy for site %s:\n%s' % (site, string.join(policy, ',\n')))
       elif 'Default' in options:
         policy = options['Default']
         policy = [x.strip() for x in string.split(policy, ',')]
-        self.log.info('Applying default input data policy for site %s:\n%s' % (site, string.join(policy, ',\n')))
+        LOG.info('Applying default input data policy for site %s:\n%s' % (site, string.join(policy, ',\n')))
 
     dataToResolve = None #if none, all supplied input data is resolved
     allDataResolved = False
@@ -110,21 +110,21 @@ class InputDataResolution(object):
       if not allDataResolved:
         result = self.__runModule(modulePath, dataToResolve)
         if not result['OK']:
-          self.log.warn('Problem during %s execution' % modulePath)
+          LOG.warn('Problem during %s execution' % modulePath)
           return result
 
         if 'Failed' in result:
           failedReplicas = result['Failed']
 
         if failedReplicas:
-          self.log.info('%s failed for the following files:\n%s' % (modulePath, string.join(failedReplicas, '\n')))
+          LOG.info('%s failed for the following files:\n%s' % (modulePath, string.join(failedReplicas, '\n')))
           dataToResolve = failedReplicas
         else:
-          self.log.info('All replicas resolved after %s execution' % (modulePath))
+          LOG.info('All replicas resolved after %s execution' % (modulePath))
           allDataResolved = True
 
         successful.update(result['Successful'])
-        self.log.verbose(successful)
+        LOG.verbose(successful)
 
     result = S_OK()
     result['Successful'] = successful
@@ -137,7 +137,7 @@ class InputDataResolution(object):
        govern the input data access policy for the current site.  For LHCb the
        standard WMS modules are applied in a different order depending on the site.
     """
-    self.log.info('Attempting to run %s' % (modulePath))
+    LOG.info('Attempting to run %s' % (modulePath))
     moduleFactory = ModuleFactory()
     moduleInstance = moduleFactory.getModule(modulePath, self.arguments)
     if not moduleInstance['OK']:

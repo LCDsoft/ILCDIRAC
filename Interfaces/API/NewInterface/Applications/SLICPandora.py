@@ -5,12 +5,13 @@ SLICPandora : Run Pandora in the SID context
 import os
 import types
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
 from ILCDIRAC.Core.Utilities.InstalledFiles import Exists
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class SLICPandora(LCApplication):
@@ -104,7 +105,7 @@ class SLICPandora(LCApplication):
     #  return res
 
     if not self.startFrom :
-      self._log.info('No startFrom defined for SlicPandora : start from the begining')
+      LOG.info('No startFrom defined for SlicPandora : start from the begining')
 
     if self._jobtype != 'User':
       self.prodparameters['slicpandora_steeringfile'] = self.steeringFile

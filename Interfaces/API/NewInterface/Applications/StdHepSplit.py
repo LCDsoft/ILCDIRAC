@@ -5,9 +5,11 @@ StdHepSplit : Helper to split Stdhep files
 import types
 
 from DIRAC.Core.Workflow.Parameter import Parameter
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCUtilityApplication import LCUtilityApplication
+
+LOG = gLogger.getSubLogger(__name__)
 
 __RCSID__ = "$Id$"
 
@@ -109,7 +111,7 @@ class StdHepSplit(LCUtilityApplication):
     self.numberOfEvents = self.numberOfEventsPerFile
 
     if not self.outputFile and self._jobtype =='User' :
-      self._log.notice('No output file name specified.')
+      LOG.notice('No output file name specified.')
 
     if self._jobtype != 'User':
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",

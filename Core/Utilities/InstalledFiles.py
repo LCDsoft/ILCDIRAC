@@ -9,6 +9,9 @@ import os
 
 from DIRAC import S_OK, S_ERROR, gLogger
 
+LOG = gLogger.getSubLogger(__name__)
+
+
 def Exists(myfile, platform=None, configversion=None):
   """check if the file exists in the tarball
   First based on a list of files
@@ -85,12 +88,12 @@ def _checkInCVMFS( cFile, platform, configversion ):
 
   # check if cvmfs exists on this machine, if not we guess the person knows what they are doing
   if not os.path.exists( "/cvmfs" ):
-    gLogger.warn( "CMVFS does not exist on this machine, cannot check for file existance." )
+    LOG.warn("CMVFS does not exist on this machine, cannot check for file existance.")
     return S_OK()
 
   if os.path.exists( os.path.join( configPath, cFile ) ):
-    gLogger.info( "Found file on CVMFS %s/%s" %( configPath, cFile) )
+    LOG.info("Found file on CVMFS %s/%s" % (configPath, cFile))
     return S_OK()
   else:
-    gLogger.error( "Cannot find file %s in cvmfs folder: %s  " % ( cFile, configPath ) )
+    LOG.error("Cannot find file %s in cvmfs folder: %s  " % (cFile, configPath))
     return S_ERROR( "Cannot find file on cvmfs" )
