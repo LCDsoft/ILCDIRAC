@@ -96,6 +96,8 @@ codequality:
 
 .unittest_template: &unittest
   stage: unittest
+  variables:
+    GIT_STRATEGY: none
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -146,6 +148,8 @@ checkFormat:
 
 .pylint_template: &pylint
   stage: integration
+  variables:
+    GIT_STRATEGY: none
   except:
     - tags
   script:
@@ -171,6 +175,8 @@ pylint:CC7:
 
 .jobTests_template: &jobTests
   stage: integration
+  variables:
+    GIT_STRATEGY: none
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -235,6 +241,8 @@ jobTests:CC7Prod:
 
 .seTests_template: &seTests
   stage: integration
+  variables:
+    GIT_STRATEGY: none
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -271,6 +279,8 @@ setests:CC7Prod:
 compiledoc:
   <<: *sl6docker
   stage: unittest
+  variables:
+    GIT_STRATEGY: none
   dependencies:
     - install:SL6
   script:
