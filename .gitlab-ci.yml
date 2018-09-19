@@ -72,22 +72,26 @@ install:CC7:
   except:
     - tags
 
-codequality:
+code_quality:
   stage: integration
   except:
     - tags
   tags:
     - overlay
-  image: docker:latest
+  image: docker:stable
   variables:
     DOCKER_DRIVER: overlay
   services:
-    - docker:dind
+    - docker:stable-dind
   script:
-    - docker pull codeclimate/codeclimate
-    - docker run --env CODECLIMATE_CODE="$PWD" --volume "$PWD":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate analyze -f json > codeclimate.json
+    - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
+    - docker run
+        --env SOURCE_CODE="$PWD"
+        --volume "$PWD":/code
+        --volume /var/run/docker.sock:/var/run/docker.sock
+        "registry.gitlab.com/gitlab-org/security-products/codequality:$SP_VERSION" /code
   artifacts:
-    paths: [codeclimate.json]
+    paths: [gl-code-quality-report.json]
   allow_failure: true
   before_script: []
   after_script: []
