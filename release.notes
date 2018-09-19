@@ -1,6 +1,12 @@
 [v29r0p2]
 
-Release date: 2018-09-14
+Release date: 2018-09-19
+
+*Core
+
+CHANGE: (!241) The names of the loggers have changed for all Core.Utilities, this makes it easier to see where messages are coming from, and will allow better silencing of individual modules in the future
+NEW: (!241) New function :func:`ILCDIRAC.Core.Utilities.Utilities.listify` to turn a comma separated string into a list
+NEW: Based on Dirac v6r20p13
 
 *WorkloadManagementSystem
 
@@ -20,7 +26,7 @@ CHANGE: (!238) The overview pages for packages has change to _index_
 NEW: (!238) New automatic job splitting function to split one file across multiple jobs :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.setSplitFilesAcrossJobs`
 NEW: (!238) New function to set the job indices to use for automatic job splitting: :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.setSplitJobIndexList`
 CHANGE: (!238) The name of the loggers has changed, the output will be more hierarchical
-CHANGE: (!238) :func:`ILCDIRAC.Interfaces.DiracILC.runLocal` is used from DIRAC interfaces again, as the patches to run with LFNs in inputsand boxes have been ported to upstream
+CHANGE: (!238) :func:`ILCDIRAC.Interfaces.DiracILC.runLocal` is used from DIRAC interfaces again, as the patches to run locally with LFNs in input sandboxes have been ported to upstream
 FIX: (!239) :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2`: fix to be able to parse and replace non-integer sqrts values
 
 *FrameworkSystem
