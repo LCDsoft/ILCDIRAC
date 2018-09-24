@@ -10,16 +10,16 @@ NEW: Based on Dirac v6r20p13
 
 *WorkloadManagementSystem
 
-CHANGE: (!232) :class:`~ILCDIRAC.WorkloadManagementSystem.Agents.JobResetAgent.JobResetAgent`: Treat Failed RegisterFile requests. Existing files are unregistered so that the RegisterFile request can succeed, solves ILCDIRAC-860
+CHANGE: (!232) :class:`~ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent.JobResetAgent`: Treat Failed RegisterFile requests. Existing files are unregistered so that the RegisterFile request can succeed, solves ILCDIRAC-860
 
 *Workflow
 
-CHANGE: (!238) The number of events to process is no longer always taken from the FileCatalog when defined, only when it is not set explicitly, this change is necessary when trying to split production files, which have the _NumberOfEvents_ metadata defined
+CHANGE: (!238) The number of events to process is no longer always taken from the FileCatalog when defined, only when it is not set explicitly, this change is necessary when trying to split production files, which have the *NumberOfEvents* metadata defined
 CHANGE: (!238) The name of the loggers has changed, the output will be more hierarchical
 
 *Docs
 
-CHANGE: (!238) The overview pages for packages has change to _index_
+CHANGE: (!238) The overview pages for packages has changed to *index*
 
 *Interfaces
 
