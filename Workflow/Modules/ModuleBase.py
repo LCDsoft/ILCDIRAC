@@ -197,34 +197,6 @@ class ModuleBase(object):
 
     return result
 
-  #############################################################################
-#  def setReplicaProblematic(self, lfn, se, pfn = '', reason = 'Access failure'):
-#    """ Set replica status to Problematic in the File Catalog
-#    :param lfn: lfn of the problematic file
-#    :param se: storage element
-#    :param pfn: physical file name
-#    :param reason: as name suggests...
-#    :return: S_OK()
-#    """
-#
-#    dm = DataManager()
-#    source = "Job %d at %s" % (self.jobID, DIRAC.siteName())
-#    result = rm.setReplicaProblematic((lfn, pfn, se, reason), source)
-#    if not result['OK'] or result['Value']['Failed']:
-#      # We have failed the report, let's attempt the Integrity DB faiover
-#      integrityDB = RPCClient('DataManagement/DataIntegrity', timeout=120)
-#      fileMetadata = { 'Prognosis' : reason, 'LFN' : lfn, 'PFN' : pfn, 'StorageElement' : se }
-#      result = integrityDB.insertProblematic(source, fileMetadata)
-#      if not result['OK']:
-#        # Add it to the request
-#        if 'Request' in self.workflow_commons:
-#          request  = self.workflow_commons['Request']
-#          subrequest = DISETSubRequest(result['rpcStub']).getDictionary()
-#          request.addSubRequest(subrequest, 'integrity')
-#
-#    return S_OK()
-
-  #############################################################################
   def getCandidateFiles(self, outputList, outputLFNs, dummy_fileMask):
     """ Returns list of candidate files to upload, check if some outputs are missing.
 
