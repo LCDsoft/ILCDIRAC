@@ -9,7 +9,7 @@ import psutil
 
 import ILCDIRAC.FrameworkSystem.Agent.MonitorAgents as MAA
 from ILCDIRAC.FrameworkSystem.Agent.MonitorAgents import MonitorAgents
-from ILCDIRAC.Tests.Utilities.Mocks import rpcMock
+from ILCDIRAC.Tests.Utilities.Mocks import clientMock
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC import gLogger
@@ -322,13 +322,13 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.restartServices = False
 
     # service responds ok
-    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.RPCClient", new=rpcMock(S_OK())):
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.Client", new=clientMock(S_OK())):
       res = self.restartAgent.checkService(agentName, options)
     self.assertTrue(res["OK"])
     self.restartAgent.restartInstance.assert_not_called()
 
     # service responds not ok
-    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.RPCClient", new=rpcMock(S_ERROR())):
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.Client", new=clientMock(S_ERROR())):
       res = self.restartAgent.checkService(agentName, options)
     self.assertTrue(res["OK"])
     self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, False)
@@ -337,7 +337,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.restartInstance.reset_mock()
     self.restartAgent.restartInstance.return_value = S_OK('NO_RESTART')
     self.restartAgent.restartServices = False
-    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.RPCClient", new=rpcMock(S_ERROR())):
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.Client", new=clientMock(S_ERROR())):
       res = self.restartAgent.checkService(agentName, options)
     self.assertTrue(res["OK"])
     self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, False)
@@ -346,7 +346,7 @@ class TestMonitorAgents(unittest.TestCase):
     self.restartAgent.restartInstance.reset_mock()
     self.restartAgent.restartServices = True
     self.restartAgent.restartInstance.return_value = S_ERROR()
-    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.RPCClient", new=rpcMock(S_ERROR())):
+    with patch("ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.Client", new=clientMock(S_ERROR())):
       res = self.restartAgent.checkService(agentName, options)
     self.assertFalse(res["OK"])
     self.restartAgent.restartInstance.assert_called_once_with(int(pid), agentName, True)
