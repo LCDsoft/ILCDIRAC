@@ -17,7 +17,6 @@ from math import ceil
 import DIRAC
 from DIRAC.DataManagementSystem.Client.DataManager           import DataManager
 from DIRAC.Resources.Catalog.FileCatalogClient               import FileCatalogClient
-from DIRAC.Core.DISET.RPCClient                              import RPCClient
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations
 from DIRAC                                                   import S_OK, S_ERROR, gLogger
@@ -26,6 +25,7 @@ from ILCDIRAC.Workflow.Modules.ModuleBase                    import ModuleBase
 from ILCDIRAC.Core.Utilities.WasteCPU                        import wasteCPUCycles
 from ILCDIRAC.Core.Utilities.OverlayFiles                    import energyWithLowerCaseUnit
 from ILCDIRAC.Core.Utilities.Configuration import getOptionValue
+from ILCDIRAC.OverlaySystem.Client.OverlaySystemClient import OverlaySystemClient
 
 __RCSID__ = '$Id$'
 LOG = gLogger.getSubLogger(__name__)
@@ -294,7 +294,7 @@ class OverlayInput (ModuleBase):
       totnboffilestoget = maxNbFilesToGet
 
     self.__disableWatchDog()
-    overlaymon = RPCClient('Overlay/Overlay', timeout=60)
+    overlaymon = OverlaySystemClient()
     ##Now need to check that there are not that many concurrent jobs getting the overlay at the same time
     error_count = 0
     count = 0
