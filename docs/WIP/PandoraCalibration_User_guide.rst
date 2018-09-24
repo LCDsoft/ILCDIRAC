@@ -38,9 +38,10 @@ This will run your calibration jobs on the grid until they converge. Once the co
 
 .. code-block:: python
 
-    from DIRAC.Core.DISET.RPCClient import RPCClient
-    calibrationService = RPCClient( 'Calibration/Calibration' )
-    result = calibrationService.getResult( calibrationID )
+    from DIRAC.Core.Base.Client import Client
+    calibrationService = Client()
+    calibrationService.setServer('Calibration/Calibration')
+    result = calibrationService.getResult(calibrationID)
 
 This assumes the ID of the calibration you started is still stored in ``calibrationID``.
 
