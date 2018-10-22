@@ -8,7 +8,9 @@ from mock import MagicMock as Mock, patch
 
 from DIRAC import S_OK, S_ERROR
 
-#pylint: disable=protected-access, invalid-name
+from ILCDIRAC.ILCTransformationSystem.Utilities.Utilities import Task
+
+# pylint: disable=protected-access, invalid-name, missing-docstring
 THE_SCRIPT = "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions"
 theScript = importlib.import_module(THE_SCRIPT)
 SCP = "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.ConfigParser.SafeConfigParser"
@@ -22,11 +24,11 @@ class TestMaking( unittest.TestCase ):
   def setUp ( self ):
     self.tClientMock = Mock()
     self.tClientMock.createTransformationInputDataQuery.return_value = S_OK()
-    self.tMock = Mock( return_value=self.tClientMock )
-    self.opsMock = Mock()
-    self.opsMock.getConfig = self.mockOpsConfig
+    self.tMock = Mock(return_value=self.tClientMock)
+    self.opsMock = Mock(name='OpsMock')
+    self.opsMock.getValue = self.mockOpsConfig
     params = Mock()
-    params.additionalName = None
+    params.additionalName = ''
     params.dryRun = True
     with patch( "ILCDIRAC.ILCTransformationSystem.scripts.dirac-clic-make-productions.CLICDetProdChain.loadParameters",
                 new=Mock() ), \
@@ -84,17 +86,21 @@ class TestMaking( unittest.TestCase ):
     """Mock the configparser.has_option function."""
     return self.configDict.get(args[1])
 
-  def mockOpsConfig( self, *args, **kwargs ): #pylint: disable=unused-argument
-    """ mock the operations getConfig calls """
+  def mockOpsConfig(self, *args, **kwargs):  # pylint: disable=unused-argument
+    """Mock the operations getValue calls."""
     opsDict={
       'DefaultDetectorModel': 'detModel',
       'DefaultConfigVersion': 'Config',
+      'DefaultConfigPackage': 'Click',
       'DefaultSoftwareVersion': 'Software',
       'FailOverSE': 'FAIL=SRM',
-    }
-    self.assertIn( args[0], opsDict )
-    return opsDict[ args[0] ]
-
+      'DefaultWhizard2Version': '1.9.5',
+      'BasePath': '',
+      }
+    for opName, value in opsDict.items():
+      if args[0].endswith(opName):
+        return value
+    assert args[0] == opsDict
 
   def test_meta( self ):
     ret = self.chain.meta( 123, 'process', 555.5 )
@@ -177,23 +183,23 @@ class TestMaking( unittest.TestCase ):
     with patch(SCP, new=Mock(return_value=self.cpMock)):
       self.chain.loadParameters( parameter )
 
-    ret = self.chain.createMarlinApplication(300.0, over=True)
+    ret = self.chain.createMarlinApplication(300.0, '', over=True)
     self.assertIsInstance( ret, Marlin )
     self.assertEqual( ret.detectortype, 'myDetectorModel' )
     self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
     self.assertEqual(self.chain.cliRecoOption, '--Config.Tracking=Tracked')
-    self.assertEqual(ret.extraCLIArguments, '--Config.Tracking=Tracked  --Config.Overlay=300GeV ')
+    self.assertEqual(ret.extraCLIArguments, '--Config.Tracking=Tracked  --Config.Overlay=300GeV')
 
     with patch(SCP, new=Mock(return_value=self.cpMock)):
       self.chain.loadParameters( parameter )
     self.chain._flags._over = False
 
-    ret = self.chain.createMarlinApplication(300.0, over=False)
+    ret = self.chain.createMarlinApplication(300.0, '', over=False)
     self.assertIsInstance( ret, Marlin )
     self.assertEqual( ret.detectortype, 'myDetectorModel' )
     self.assertEqual( ret.steeringFile, 'clicReconstruction.xml' )
     self.assertEqual(self.chain.cliRecoOption, '--Config.Tracking=Tracked')
-    self.assertEqual(ret.extraCLIArguments, '--Config.Tracking=Tracked ')
+    self.assertEqual(ret.extraCLIArguments, '--Config.Tracking=Tracked')
 
   def test_createWhizard2Application(self):
 
@@ -264,17 +270,14 @@ class TestMaking( unittest.TestCase ):
     with self.assertRaisesRegexp( RuntimeError, 'No overlay parameters'):
       ret = self.chain.createOverlayApplication( 355 )
 
-
-  def test_createSplitProduction( self ):
-
-    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod ):
-      retMeta = self.chain.createSplitProduction(
-        meta = { 'ProdID':23, 'Energy':350 },
-        prodName = "prodJamesProd",
-        parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
-        eventsPerJob = 007,
-        eventsPerBaseFile = 700,
-      )
+  def test_createSplitProduction(self):
+    task = Task(metaInput={'ProdID': '23', 'Energy': '350'},
+                parameterDict=self.chain.getParameterDictionary('MI6')[0],
+                eventsPerJob=007,
+                eventsPerBaseFile=700,
+                )
+    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod):
+      retMeta = self.chain.createSplitProduction(task)
 
     self.assertEqual( retMeta, {} )
 
@@ -283,34 +286,32 @@ class TestMaking( unittest.TestCase ):
     self.chain._flags._over = True
     self.assertTrue( self.chain._flags.over )
     self.chain.overlayEvents = '1.4TeV'
-    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod ):
-      retMeta = self.chain.createReconstructionProduction(
-        meta = { 'ProdID':23, 'Energy':350 },
-        prodName = "prodJamesProd",
-        parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
-        over=False,
-      )
+    task = Task(metaInput={'ProdID': '23', 'Energy': '350'},
+                parameterDict=self.chain.getParameterDictionary('MI6')[0],
+                eventsPerJob=321,
+                )
+    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod):
+      retMeta = self.chain.createReconstructionProduction(task, over=False)
     self.assertEqual( retMeta, {} )
     self.assertEqual(self.chain.cliRecoOption, '')
 
-  def test_createSimProduction( self ):
-    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod ):
-      retMeta = self.chain.createSimulationProduction(
-        meta = { 'ProdID':23, 'Energy':350 },
-        prodName = "prodJamesProd",
-        parameterDict = self.chain.getParameterDictionary( 'MI6' )[0],
-      )
-    self.assertEqual( retMeta, {} )
+  def test_createSimProduction(self):
+    task = Task(metaInput={'ProdID': '23', 'Energy': '350'},
+                parameterDict=self.chain.getParameterDictionary('MI6')[0],
+                eventsPerJob=333,
+                )
+    with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod):
+      retMeta = self.chain.createSimulationProduction(task)
+    self.assertEqual(retMeta, {})
 
   def test_createGenProduction(self):
     with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=self.pMockMod):
-      retMeta = self.chain.createGenerationProduction(meta={'ProdID': 23, 'Energy': 350, 'EvtType': 'ttBond'},
-                                                      prodName="prodJamesProd",
-                                                      parameterDict=self.chain.getParameterDictionary('MI6')[0],
-                                                      eventsPerJob=10,
-                                                      nbTasks='10',
-                                                      sinFile='myWhizardSinFile'
-                                                     )
+      task = Task(metaInput={'ProdID': '23', 'Energy': '350', 'EvtType': 'ttBond'},
+                  parameterDict=self.chain.getParameterDictionary('MI6')[0],
+                  eventsPerJob=10,
+                  nbTasks='10',
+                  sinFile='myWhizardSinFile')
+      retMeta = self.chain.createGenerationProduction(task)
     self.assertEqual(retMeta, {})
 
   def test_createMovingTransformation( self ):
@@ -366,13 +367,13 @@ class TestMaking( unittest.TestCase ):
   def test_setApplicationOptions(self):
     application = Mock()
     application.setSomeParameter = Mock()
-    self.chain.applicationOptions['AppName'] = [('SomeParameter', 'SomeValue')]
+    self.chain.applicationOptions['AppName'] = {'SomeParameter': 'SomeValue'}
     self.chain._setApplicationOptions('AppName', application)
     application.setSomeParameter.assert_called_once_with('SomeValue')
 
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
     application = Marlin()
-    self.chain.applicationOptions['AppName'] = [('SomeOtherParameter', 'SomeValue')]
+    self.chain.applicationOptions['AppName'] = {'SomeOtherParameter': 'SomeValue'}
     with self.assertRaisesRegexp(AttributeError, 'Cannot set'):
       self.chain._setApplicationOptions('AppName', application)
 
@@ -528,8 +529,8 @@ class TestMakingParams( unittest.TestCase ):
   def test_init( self ):
     self.assertIsNone( self.params.prodConfigFilename )
     self.assertFalse( self.params.dumpConfigFile )
-    self.assertTrue( self.params.dryRun )
-    self.assertIsNone( self.params.additionalName )
+    self.assertTrue(self.params.dryRun)
+    assert self.params.additionalName == ''
 
   def test_settters( self ):
     with patch( "%s.os.path.exists" % THE_SCRIPT, new=Mock(return_value=True)):
