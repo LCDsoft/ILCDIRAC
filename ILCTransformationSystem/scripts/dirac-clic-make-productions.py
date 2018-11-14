@@ -989,15 +989,12 @@ overlayEventType = %(overlayEventType)s
 
   def createTransformations(self, taskDict):
     """Create all the transformations we want to create."""
-    for task in taskDict.get('GEN', []):
-      genMeta = self.createGenerationProduction(task)
-      self.addSimTask(taskDict, genMeta, originalTask=task)
-      taskDict['MOVE_GEN'].append(dict(genMeta))
 
-    for task in taskDict.get('SPLIT', []):
-      splitMeta = self.createSplitProduction(task)
-      self.addSimTask(taskDict, splitMeta, originalTask=task)
-      taskDict['MOVE_SPLIT'].append(dict(splitMeta))
+    for pType in ('GEN', 'SPLIT'):
+      for task in taskDict.get(pType, []):
+        meta = self.createGenerationProduction(task)
+        self.addSimTask(taskDict, meta, originalTask=task)
+        taskDict['MOVE_' + pType].append(dict(meta))
 
     for task in taskDict.get('SIM', []):
       if not self._flags.sim:
@@ -1008,27 +1005,19 @@ overlayEventType = %(overlayEventType)s
       taskDict['MOVE_SIM'].append(dict(simMeta))
 
     for task in taskDict.get('REC', []):
-      if self._flags.rec:
-        recMeta = self.createReconstructionProduction(task, over=False)
-        taskDict['MOVE_REC'].append(dict(recMeta))
-      if self._flags.over:
-        overMeta = self.createReconstructionProduction(task, over=True)
-        taskDict['MOVE_OVER'].append(dict(overMeta))
+      for name, over, enabled in [('REC', False, self._flags.rec),
+                                  ('OVER', True, self._flags.over)]:
+        if enabled:
+          recMeta = self.createReconstructionProduction(task, over=over)
+          taskDict['MOVE_' + name].append(dict(recMeta))
 
-    for meta in taskDict.get('MOVE_GEN', []):
-      self.createMovingTransformation(meta, 'MCGeneration')
-
-    for meta in taskDict.get('MOVE_SPLIT', []):
-      self.createMovingTransformation(meta, 'MCGeneration')
-
-    for meta in taskDict.get('MOVE_SIM', []):
-      self.createMovingTransformation(meta, 'MCSimulation')
-
-    for meta in taskDict.get('MOVE_REC', []):
-      self.createMovingTransformation(meta, 'MCReconstruction')
-
-    for meta in taskDict.get('MOVE_OVER', []):
-      self.createMovingTransformation(meta, 'MCReconstruction_Overlay')
+    for name, pType in [('GEN', 'MCGeneration'),
+                        ('SPLIT', 'MCGeneration'),
+                        ('SIM', 'MCSimulation'),
+                        ('REC', 'MCReconstruction'),
+                        ('OVER', 'MCReconstruction_Overlay')]:
+      for meta in taskDict.get('MOVE_' + name, []):
+        self.createMovingTransformation(meta, pType)
 
   def createTaskDict(self, prodID, process, energy, eventsPerJob, sinFile, nbTasks,
                      eventsPerBaseFile):
