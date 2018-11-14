@@ -22,6 +22,7 @@ Then modify the template to describe the productions::
     processes =          DY_uds
     eventsPerJobs =           100
     MoveTypes = REC, GEN, SIM
+    MoveStatus = Active
     move = True
     overlayEvents = 380GeV
     cliReco = --Config.Tracking=Conformal --MyDDMarlinPandora.D0TrackCut=%(DRC)s
@@ -64,6 +65,7 @@ Parameters in the steering file
 
   :ProdTypes: Which transformations to create: Gen, Split, Sim, Rec, RecOver
   :MoveTypes: Which output file types to move: Gen, Sim, Rec, Dst
+  :MoveStatus: The status of the Replication transformations: Active or Stopped
   :move: Whether or not to create the transformations to the output files to the finalOutputSE
 
   :energies: energy to use for generation or meta data search for each transformation chain
@@ -317,6 +319,7 @@ MoveTypes = %(moveTypes)s
     self.configPackage = self._ops.getValue(os.path.join(prodPath, 'DefaultConfigPackage'))
     self.productionLogLevel = 'VERBOSE'
     self.outputSE = 'CERN-DST-EOS'
+    self.moveStatus = 'Stopped'
 
     self.ddsimSteeringFile = 'clic_steer.py'
     self.marlinSteeringFile = 'clicReconstruction.xml'
@@ -382,6 +385,11 @@ MoveTypes = %(moveTypes)s
       self.softwareVersion = config.get(PP, 'softwareVersion')
       if config.has_option(PP, 'clicConfig'):
         self.configVersion = config.get(PP, 'clicConfig')
+
+      if config.has_option(PP, 'MoveStatus'):
+        self.moveStatus = config.get(PP, 'MoveStatus')
+        if self.moveStatus not in ('Active', 'Stopped'):
+          raise AttributeError("MoveStatus can only be 'Active' or 'Stopped' not %r" % self.moveStatus)
 
       # Check if Whizard version is set, otherwise use default from CS
       if config.has_option(PP, 'whizard2Version'):
@@ -554,6 +562,7 @@ productionLogLevel = %(productionLogLevel)s
 outputSE = %(outputSE)s
 
 finalOutputSE = %(finalOutputSE)s
+MoveStatus = %(moveStatus)s
 
 ## optional additional name
 # additionalName = %(additionalName)s
@@ -565,9 +574,7 @@ overlayEventType = %(overlayEventType)s
 ## optional energy to use for overlay: e.g. 3TeV
 # overlayEvents = %(overlayEvents)s
 
-
 %(_flags)s
-
 
 """ %( pDict )
 
@@ -948,7 +955,7 @@ overlayEventType = %(overlayEventType)s
 
         elif isinstance(res['Value'], Transformation):
           newTrans = res['Value']
-          newTrans.setStatus('Stopped')
+          newTrans.setStatus(self.moveStatus)
 
   def getProductionJob(self):
     """ return production job instance with some parameters set """
