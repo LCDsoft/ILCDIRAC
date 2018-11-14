@@ -1072,18 +1072,7 @@ overlayEventType = %(overlayEventType)s
 
     taskList = [deepcopy(theTask) for _ in xrange(nTasks)]
     taskDict['SIM'].extend(taskList)
-    for optionName, values in options.items():
-      if optionName.startswith('Query'):
-        queryParameter = optionName[len('Query'):]
-        for index, value in enumerate(values):
-          taskList[index].meta[queryParameter] = value
-      elif optionName == 'additionalName':
-        for index, value in enumerate(values):
-          taskList[index].taskName = value
-      else:
-        for index, value in enumerate(values):
-          taskList[index].applicationOptions[optionName] = value
-
+    self.addTaskOptions(options, taskList)
     return
 
   def addRecTask(self, taskDict, metaInput, originalTask):
@@ -1110,6 +1099,12 @@ overlayEventType = %(overlayEventType)s
 
     taskList = [deepcopy(theTask) for _ in xrange(nTasks)]
     taskDict['REC'].extend(taskList)
+    self.addTaskOptions(options, taskList)
+    return
+
+  @staticmethod
+  def addTaskOptions(options, taskList):
+    """Add the options to each task in the taskList."""
     for optionName, values in options.items():
       if optionName.startswith('Query'):
         queryParameter = optionName[len('Query'):]
@@ -1118,14 +1113,13 @@ overlayEventType = %(overlayEventType)s
       elif optionName == 'additionalName':
         for index, value in enumerate(values):
           taskList[index].taskName = value
+      # cliReco only makes sense for REC application, but it is otherwise ignored
       elif optionName == 'cliReco':
         for index, value in enumerate(values):
           taskList[index].cliReco = value
       else:
         for index, value in enumerate(values):
           taskList[index].applicationOptions[optionName] = value
-
-    return
 
   def createAllTransformations(self):
     """Loop over the list of processes, energies and possibly prodIDs to create all the productions."""
