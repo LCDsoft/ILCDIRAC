@@ -3,6 +3,7 @@
 import unittest
 import importlib
 import ConfigParser
+from collections import defaultdict
 
 from mock import MagicMock as Mock, patch
 
@@ -421,6 +422,85 @@ class TestMaking( unittest.TestCase ):
          self.assertRaisesRegexp(AttributeError, 'Could not find file'):
       self.chain._getProdInfoFromIDs()
 
+  def test_createTransformations(self):
+    """Test replcation transformation creation."""
+    self.chain.createMovingTransformation = Mock(name='MovingTrafo')
+    taskDict = dict(MOVE_GEN=[{'move': 'gen'}],
+                    MOVE_SPLIT=[{'move': 'split'}],
+                    MOVE_SIM=[{'move': 'sim'}],
+                    MOVE_REC=[{'move': 'rec'}],
+                    MOVE_OVER=[{'move': 'over'}],
+                  )
+    self.chain.createTransformations(taskDict)
+    self.chain.createMovingTransformation.assert_any_call({'move': 'gen'}, 'MCGeneration')
+    self.chain.createMovingTransformation.assert_any_call({'move': 'split'}, 'MCGeneration')
+    self.chain.createMovingTransformation.assert_any_call({'move': 'sim'}, 'MCSimulation')
+    self.chain.createMovingTransformation.assert_any_call({'move': 'rec'}, 'MCReconstruction')
+    self.chain.createMovingTransformation.assert_any_call({'move': 'over'}, 'MCReconstruction_Overlay')
+
+  def test_createTransformations_2(self):
+    """Test workflow transformation creation."""
+    self.chain.createMovingTransformation = Mock(name='MovingTrafo')
+    self.chain.createGenerationProduction = Mock(name='GenTrafo', return_value={'ret': 'gen'})
+    self.chain.createSimulationProduction = Mock(name='SimTrafo', return_value={'ret': 'sim'})
+    self.chain.createReconstructionProduction = Mock(name='RecTrafo', return_value={'ret': 'rec'})
+    self.chain.addSimTask = Mock(name='AddSim')
+    self.chain.addRecTask = Mock(name='AddRec')
+
+    task = Task(metaInput={'ProdID': '23', 'Energy': '350'},
+                parameterDict=self.chain.getParameterDictionary('MI6')[0],
+                eventsPerJob=007,
+                eventsPerBaseFile=700,
+                )
+    taskDict = defaultdict(list)
+    taskDict['GEN'].append(task)
+    self.chain.createTransformations(taskDict)
+    self.chain.createGenerationProduction.assert_any_call(task)
+    self.chain.addSimTask.assert_called_with(taskDict, {'ret': 'gen'}, originalTask=task)
+
+    # SIM transformation, off
+    self.chain.createMovingTransformation.reset_mock()
+    self.chain.createGenerationProduction.reset_mock()
+    self.chain.addSimTask.reset_mock()
+
+    taskDict = defaultdict(list)
+    taskDict['SIM'].append(task)
+    self.chain._flags._sim = False
+    self.chain.createTransformations(taskDict)
+    self.chain.createSimulationProduction.assert_not_called()
+    self.chain.addRecTask.assert_not_called()
+
+    # SIM transformation, on
+    self.chain.createMovingTransformation.reset_mock()
+    self.chain.createGenerationProduction.reset_mock()
+    self.chain.addRecTask.reset_mock()
+
+    taskDict = defaultdict(list)
+    taskDict['SIM'].append(task)
+    self.chain._flags._sim = True
+    self.chain.createTransformations(taskDict)
+    self.chain.createSimulationProduction.assert_called_with(task)
+    self.chain.addRecTask.assert_called_with(taskDict, {'ret': 'sim'}, originalTask=task)
+
+    # REC transformation, no over
+    taskDict = defaultdict(list)
+    taskDict['REC'].append(task)
+    self.chain._flags._rec = True
+    self.chain._flags._over = False
+    self.chain.createTransformations(taskDict)
+    self.chain.createReconstructionProduction.assert_called_once_with(task, over=False)
+
+    # REC transformation, over
+    self.chain.createReconstructionProduction.reset_mock()
+    taskDict = defaultdict(list)
+    taskDict['REC'].append(task)
+    self.chain._flags._rec = False
+    self.chain._flags._over = True
+    self.chain.createTransformations(taskDict)
+    self.chain.createReconstructionProduction.assert_called_once_with(task, over=True)
+
+
+
 
 class TestMakingFlags( unittest.TestCase ):
   """ Test the flags used in CLICDetProdChain """
@@ -542,8 +622,6 @@ class TestMakingParams( unittest.TestCase ):
     self.assertFalse( self.params.dryRun )
     self.assertTrue( self.params.setAddName( 'addName')['OK'] )
     self.assertEqual( self.params.additionalName, 'addName')
-
-
 
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestMaking )

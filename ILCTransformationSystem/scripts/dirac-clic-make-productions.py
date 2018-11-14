@@ -1000,6 +1000,8 @@ overlayEventType = %(overlayEventType)s
       taskDict['MOVE_SPLIT'].append(dict(splitMeta))
 
     for task in taskDict.get('SIM', []):
+      if not self._flags.sim:
+        continue
       gLogger.notice("Creating task %s" % task)
       simMeta = self.createSimulationProduction(task)
       self.addRecTask(taskDict, simMeta, originalTask=task)
