@@ -40,8 +40,6 @@ class Task(object):
     Fake the input dataquery result in dryRun mode.
     """
     if not self.dryRun:
-      outputDict.clear()
-      outputDict.update(inputDict)
       return
 
     for key, value in inputDict.iteritems():

@@ -989,10 +989,10 @@ overlayEventType = %(overlayEventType)s
 
   def createTransformations(self, taskDict):
     """Create all the transformations we want to create."""
-
-    for pType in ('GEN', 'SPLIT'):
+    for pType, createProduction in [('GEN', self.createGenerationProduction),
+                                    ('SPLIT', self.createSplitProduction)]:
       for task in taskDict.get(pType, []):
-        meta = self.createGenerationProduction(task)
+        meta = createProduction(task)
         self.addSimTask(taskDict, meta, originalTask=task)
         taskDict['MOVE_' + pType].append(dict(meta))
 
@@ -1067,7 +1067,7 @@ overlayEventType = %(overlayEventType)s
     theTask = Task(metaInput, parameterDict, eventsPerJob, metaPrev=sourceMetaDict, dryRun=dryRun)
     theTask.sourceName = originalTask.sourceName
     if not nTasks:
-      taskDict['REC'].append(theTask)
+      taskDict['SIM'].append(theTask)
       return
 
     taskList = [deepcopy(theTask) for _ in xrange(nTasks)]
