@@ -869,7 +869,7 @@ overlayEventType = %(overlayEventType)s
   def createSplitProduction(self, task, limited=False):
     """Create splitting transformation for splitting files."""
     meta = task.meta
-    prodName = task.getProdName('split', self.additionalName)
+    prodName = task.getProdName('split', task.meta['ProdID'], self.additionalName)
     parameterDict = task.parameterDict
     eventsPerJob = task.eventsPerJob
     eventsPerBaseFile = task.eventsPerBaseFile
