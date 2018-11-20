@@ -72,22 +72,26 @@ install:CC7:
   except:
     - tags
 
-codequality:
+code_quality:
   stage: integration
   except:
     - tags
   tags:
     - overlay
-  image: docker:latest
+  image: docker:stable
   variables:
     DOCKER_DRIVER: overlay
   services:
-    - docker:dind
+    - docker:stable-dind
   script:
-    - docker pull codeclimate/codeclimate
-    - docker run --env CODECLIMATE_CODE="$PWD" --volume "$PWD":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate analyze -f json > codeclimate.json
+    - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
+    - docker run
+        --env SOURCE_CODE="$PWD"
+        --volume "$PWD":/code
+        --volume /var/run/docker.sock:/var/run/docker.sock
+        "registry.gitlab.com/gitlab-org/security-products/codequality:$SP_VERSION" /code
   artifacts:
-    paths: [codeclimate.json]
+    paths: [gl-code-quality-report.json]
   allow_failure: true
   before_script: []
   after_script: []
@@ -96,6 +100,8 @@ codequality:
 
 .unittest_template: &unittest
   stage: unittest
+  variables:
+    GIT_STRATEGY: none
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -146,6 +152,8 @@ checkFormat:
 
 .pylint_template: &pylint
   stage: integration
+  variables:
+    GIT_STRATEGY: none
   except:
     - tags
   script:
@@ -171,6 +179,8 @@ pylint:CC7:
 
 .jobTests_template: &jobTests
   stage: integration
+  variables:
+    GIT_STRATEGY: none
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -235,6 +245,8 @@ jobTests:CC7Prod:
 
 .seTests_template: &seTests
   stage: integration
+  variables:
+    GIT_STRATEGY: none
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -271,6 +283,8 @@ setests:CC7Prod:
 compiledoc:
   <<: *sl6docker
   stage: unittest
+  variables:
+    GIT_STRATEGY: none
   dependencies:
     - install:SL6
   script:
@@ -372,7 +386,7 @@ docDev:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdocDev/"
     CI_OUTPUT_DIR: "ilcdiracdoc"
   script:
-    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/
+    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/ || echo "No htmlcov"
     - deploy-eos
   before_script: []
   after_script: []
@@ -394,7 +408,7 @@ docProd:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdoc/"
     CI_OUTPUT_DIR: "ilcdiracdoc"
   script:
-    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/
+    - mv installation/ILCDIRAC/htmlcov ilcdiracdoc/ || echo "No htmlcov"
     - deploy-eos
   before_script: []
   after_script: []

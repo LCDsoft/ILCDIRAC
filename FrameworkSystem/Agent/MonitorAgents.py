@@ -28,7 +28,7 @@ import psutil
 # from DIRAC
 from DIRAC import S_OK, S_ERROR, gConfig
 from DIRAC.Core.Base.AgentModule import AgentModule
-from DIRAC.Core.DISET.RPCClient import RPCClient
+from DIRAC.Core.Base.Client import Client
 from DIRAC.Core.Utilities.PrettyPrint import printTable
 from DIRAC.FrameworkSystem.Client.SystemAdministratorClient import SystemAdministratorClient
 from DIRAC.ConfigurationSystem.Client.CSAPI import CSAPI
@@ -262,7 +262,7 @@ class MonitorAgents(AgentModule):
     """Ping the service, restart if the ping does not respond."""
     url = self._getURL(serviceName, options)
     self.log.info("Pinging service", url)
-    pingRes = RPCClient(url).ping()
+    pingRes = Client().ping(url=url)
     if not pingRes['OK']:
       self.log.info('Failure pinging service: %s: %s' % (url, pingRes['Message']))
       res = self.restartInstance(int(options['PID']), serviceName, self.restartServices)

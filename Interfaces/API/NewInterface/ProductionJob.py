@@ -20,7 +20,6 @@ from decimal import Decimal
 
 from DIRAC                                                  import S_OK, S_ERROR, gLogger
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
-from DIRAC.Core.DISET.RPCClient                             import RPCClient
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 from DIRAC.Core.Workflow.Module                             import ModuleDefinition
 from DIRAC.Core.Workflow.Step                               import StepDefinition
@@ -397,12 +396,9 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     if not name:
       name = workflowName
 
-
     res = self.trc.getTransformationStats(name)
     if res['OK']:
       return self._reportError("Transformation with name %s already exists! Cannot proceed." % name)
-
-    
     
     ###Create Tranformation
     Trans = Transformation()
@@ -481,9 +477,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     if metadata:
       self.inputBKSelection = metadata
 
-    client = TransformationClient()
     if not self.dryrun:
-      res = client.createTransformationInputDataQuery(self.transfid, self.inputBKSelection)
+      res = self.trc.createTransformationInputDataQuery(self.transfid, self.inputBKSelection)
       if not res['OK']:
         return res
     else:
@@ -676,11 +671,10 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     if isinstance( pvalue, list ):
       pvalue = '\n'.join(pvalue)
 
-    prodClient = RPCClient('Transformation/TransformationManager', timeout=120)
     if isinstance( pvalue, (int, long) ):
       pvalue = str(pvalue)
     if not self.dryrun:  
-      result = prodClient.setTransformationParameter(int(prodID), str(pname), str(pvalue))
+      result = self.trc.setTransformationParameter(int(prodID), str(pname), str(pvalue))
       if not result['OK']:
         LOG.error('Problem setting parameter %s for production %s and value:\n%s' % (prodID, pname, pvalue))
     else:

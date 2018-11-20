@@ -13,7 +13,7 @@ import tempfile
 import random
 
 from DIRAC                                                          import S_OK, S_ERROR, gLogger
-from DIRAC.Core.DISET.RPCClient                                     import RPCClient
+from DIRAC.Core.Base.Client import Client
 from DIRAC.Resources.Storage.StorageElement                         import StorageElement
 from DIRAC.Core.Utilities.Os                                        import getDiskSpace
 from DIRAC.DataManagementSystem.Utilities.DMSHelpers                import DMSHelpers
@@ -348,17 +348,16 @@ class DownloadInputData( object ):
       return S_ERROR( 'OK download result but file missing in current directory' )
 
   #############################################################################
-  def __setJobParam( self, name, value ):
-    """Wraps around setJobParameter of state update client
-    """
+  def __setJobParam(self, name, value):
+    """Wrap around setJobParameter of state update client."""
     if not self.jobID:
-      return S_ERROR( 'JobID not defined' )
+      return S_ERROR('JobID not defined')
 
-    jobReport = RPCClient( 'WorkloadManagement/JobStateUpdate', timeout = 120 )
-    jobParam = jobReport.setJobParameter( int( self.jobID ), str( name ), str( value ) )
-    self.log.verbose( 'setJobParameter(%s,%s,%s)' % ( self.jobID, name, value ) )
+    jobParam = Client(timeout=120).setJobParameter(int(self.jobID), str(name), str(value),
+                                                   url='WorkloadManagement/JobStateUpdate')
+    self.log.verbose('setJobParameter(%s,%s,%s)' % (self.jobID, name, value))
     if not jobParam['OK']:
-      self.log.warn( jobParam['Message'] )
+      self.log.warn(jobParam['Message'])
 
     return jobParam
 

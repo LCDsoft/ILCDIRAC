@@ -25,12 +25,13 @@ from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
 from DIRAC.Core.Utilities.PrettyPrint import printTable
 from DIRAC.Core.Utilities.Proxy import UserProxy
-from DIRAC.Core.DISET.RPCClient import RPCClient
+from DIRAC.Core.Base.Client import Client
 
 from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
 from DIRAC.Resources.Storage.StorageElement import StorageElement
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
+from DIRAC.WorkloadManagementSystem.Client.JobManagerClient import JobManagerClient
 from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 from DIRAC.Resources.Catalog.FileCatalogFactory import FileCatalogFactory
 
@@ -72,13 +73,10 @@ class JobResetAgent(AgentModule):
     self.dataManager = DataManager()
     self._jobDB = None
 
-    self.jobStateUpdateClient = RPCClient('WorkloadManagement/JobStateUpdate',
-                                          useCertificates=True,
-                                          timeout=10)
+    self.jobStateUpdateClient = Client(useCertificates=True, timeout=10)
+    self.jobStateUpdateClient.setServer('WorkloadManagement/JobStateUpdate')
+    self.jobManagerClient = JobManagerClient(useCertificates=True, timeout=10)
 
-    self.jobManagerClient = RPCClient('WorkloadManagement/JobManager',
-                                      useCertificates=True,
-                                      timeout=10)
 
     self._fcClient = None
 

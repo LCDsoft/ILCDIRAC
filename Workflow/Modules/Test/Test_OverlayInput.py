@@ -40,7 +40,6 @@ def createFile( *_args, **_kwargs ):
 @patch("DIRAC.Core.Security.ProxyInfo.getProxyInfoAsString", new=Mock(return_value=S_OK()))
 @patch("%s.FileCatalogClient" % MODULE_NAME, new=Mock(return_value=S_OK()))
 @patch("%s.Operations" % MODULE_NAME, new=Mock(return_value=S_OK()))
-@patch("%s.RPCClient" % MODULE_NAME, new=Mock(return_value=S_OK()))
 @patch("%s.DataManager" % MODULE_NAME, new=Mock(return_value=S_OK()))
 class TestOverlayEos( unittest.TestCase ):
   """ test Getting Overlay files from CERN EOS
@@ -382,7 +381,7 @@ class TestOverlayExecute( unittest.TestCase ):
          patch('%s.os.path.exists' % MODULE_NAME, new=Mock(return_value = True)), \
          patch('%s.os.remove' % MODULE_NAME, new=Mock(return_value=True)) as remove_mock, \
          patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
-         patch('%s.RPCClient' % MODULE_NAME, new=Mock(return_value=rpc_mock)), \
+         patch("%s.OverlaySystemClient" % MODULE_NAME, new=Mock(return_value=rpc_mock)), \
          patch('%s.os.mkdir' % MODULE_NAME, new=Mock(return_value = True)), \
          patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value = True)), \
          patch('%s.DataManager.getFile' % MODULE_NAME, new=Mock(return_value=S_OK('Nothing'))), \

@@ -9,9 +9,9 @@ import os
 import tempfile
 import time
 
-from DIRAC.Core.DISET.RPCClient                            import RPCClient
-from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
 from DIRAC import S_OK, S_ERROR, gLogger
+from DIRAC.Resources.Storage.StorageElement import StorageElementItem as StorageElement
+from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
 
 from ILCDIRAC.Workflow.Modules.ModuleBase                  import ModuleBase
 
@@ -64,7 +64,7 @@ class GetSRMFile(ModuleBase):
       if error_count > 10 :
         LOG.error('JobDB Content does not return expected dictionary')
         return S_ERROR('Failed to get number of concurrent overlay jobs')
-      jobMonitor = RPCClient('WorkloadManagement/JobMonitoring', timeout = 60)
+      jobMonitor = JobMonitoringClient()
       res = jobMonitor.getCurrentJobCounters({'ApplicationStatus':'Downloading SRM files'})
       if not res['OK']:
         error_count += 1 

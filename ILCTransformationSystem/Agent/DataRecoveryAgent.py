@@ -1,23 +1,32 @@
-"""
-Data recovery agent: sets as unused files that are really undone. 
+"""An agent so ensure consistency for transformation jobs, tasks and files.
 
-In general for data processing productions we need to completely abandon the 'by hand'
-reschedule operation such that accidental reschedulings don't result in data being processed twice.
+Depending on what is the status of a job and its input and outputfiles different actions are performed
 
-For all above cases the following procedure should be used to achieve 100%:
+- obtain list of transformation
+- get a list of all 'Failed' and 'Done' jobs, make sure no job has pending requests
+- get input files for all jobs, get the transformation file status associacted for the file (Unused, Assigned,
+  MaxReset, Processed), check if the input file exists
+- get the output files for each job, check if the output files exist
+- perform changes for Jobs, files and tasks, cleanup incomplete output files to obtain consistent state for jobs,
+  tasks, input and output files
 
-  - getTransformations
-  - getFailed/DoneJobsOfTheTransformation
-      - makeSureNoPendingRequests
-  - getInputFilesForthejobs (if not MCGeneration)
-      - checkIfInputFile Assigned or MaxReset
-  - getOutputFilesForTheJobs
-      - Make Sure no Descendents of the outputfiles?
-      - Check if _all_ or _no_ outputfiles exist
+  - MCGeneration: output file missing --> Job 'Failed'
+  - MCGeneration: output file exists --> Job 'Done'
+  - Output Missing --> File Cleanup, Job 'Failed', Input 'Unused'
+  - Max ErrorCount --> Input 'MaxReset'
+  - Output Exists --> Job Done, Input 'Processed'
+  - Input Deleted --> Job 'Failed, File Cleanup
+  - Input Missing --> Job 'Failed, Input 'Deleted', Cleanup
+  - Other Task processed the File --> File Cleanup, Job Failed
+  - Other Task, but this is the latest --> Keep File
 
-Depending on what is the status of the job, input and outputfiles we do different things.
+- Send email about performed actions
 
-Send notification about changes
+.. literalinclude:: ../ConfigTemplate.cfg
+  :start-after: ##BEGIN DataRecoveryAgent
+  :end-before: ##END
+  :dedent: 2
+  :caption: DataRecoveryAgent options
 
 """
 
@@ -52,14 +61,13 @@ class DataRecoveryAgent( AgentModule ):
     self.name = 'DataRecoveryAgent'
     self.enabled = False
 
-    self.productionsToIgnore = self.am_getOption( "ProductionsToIgnore", [] )
+    self.productionsToIgnore = self.am_getOption("TransformationsToIgnore", [])
     self.transformationTypes = self.am_getOption( "TransformationTypes",
                                                   ['MCReconstruction',
                                                    'MCSimulation',
                                                    'MCReconstruction_Overlay',
                                                    'MCGeneration'] )
     self.transformationStatus = self.am_getOption( "TransformationStatus", ['Active', 'Completing'] )
-    self.shifterProxy = self.am_setOption( 'shifterProxy', 'DataManager' )
 
     self.jobStatus = ['Failed','Done'] ##This needs to be both otherwise we cannot account for all cases
 
@@ -250,7 +258,7 @@ class DataRecoveryAgent( AgentModule ):
     """Resets defaults after one cycle
     """
     self.enabled = self.am_getOption('EnableFlag', False)
-    self.productionsToIgnore = self.am_getOption( "ProductionsToIgnore", [] )
+    self.productionsToIgnore = self.am_getOption("TransformationsToIgnore", [])
     self.transformationTypes = self.am_getOption( "TransformationTypes",
                                                   ['MCReconstruction',
                                                    'MCSimulation',
@@ -272,19 +280,18 @@ class DataRecoveryAgent( AgentModule ):
     if not transformations['OK']:
       self.log.error( "Failure to get transformations", transformations['Message'] )
       return S_ERROR( "Failure to get transformations" )
-    for prodID,values in transformations['Value'].iteritems():
+    for prodID, transInfoDict in transformations['Value'].iteritems():
       if prodID in self.productionsToIgnore:
         self.log.notice( "Ignoring Production: %s " % prodID )
         continue
       self.__resetCounters()
       self.inputFilesProcessed = set()
-      transType, transName = values
-      self.log.notice( "Running over Production: %s " % prodID )
-      self.treatProduction( int(prodID), transName, transType )
+      self.log.notice("Running over Production: %s " % prodID)
+      self.treatProduction(int(prodID), transInfoDict)
 
-      if self.notesToSend and self.__notOnlyKeepers( transType ):
-        ##remove from the jobCache because something happened
-        self.jobCache.pop( int(prodID), None )
+      if self.notesToSend and self.__notOnlyKeepers(transInfoDict['Type']):
+        # remove from the jobCache because something happened
+        self.jobCache.pop(int(prodID), None)
         notification = NotificationClient()
         for address in self.addressTo:
           result = notification.sendMail( address, "%s: %s" %( self.subject, prodID ), self.notesToSend, self.addressFrom, localAttempt = False )
@@ -303,15 +310,13 @@ class DataRecoveryAgent( AgentModule ):
     transformations = {}
     for prod in res['Value']:
       prodID = prod['TransformationID']
-      prodName = prod['TransformationName']
-      transformations[str(prodID)] = (prod['Type'], prodName)
+      transformations[str(prodID)] = prod
     return S_OK(transformations)
 
-  def treatProduction( self, prodID, transName, transType ):
-    """run this thing for given production"""
-
-    tInfo = TransformationInfo( prodID, transName, transType, self.enabled,
-                                self.tClient, self.fcClient, self.jobMon )
+  def treatProduction(self, prodID, transInfoDict):
+    """Run this thing for given production."""
+    tInfo = TransformationInfo(prodID, transInfoDict, self.enabled,
+                               self.tClient, self.fcClient, self.jobMon)
     jobs, nDone, nFailed = tInfo.getJobs(statusList=self.jobStatus)
 
     if self.jobCache[prodID][0] == nDone and self.jobCache[prodID][1] == nFailed:
@@ -323,7 +328,7 @@ class DataRecoveryAgent( AgentModule ):
     tasksDict=None
     lfnTaskDict=None
 
-    if not transType.startswith( "MCGeneration" ):
+    if not transInfoDict['Type'].startswith("MCGeneration"):
       self.log.notice( "Getting tasks...")
       tasksDict = tInfo.checkTasksStatus()
       lfnTaskDict = dict( [ ( tasksDict[taskID]['LFN'],taskID ) for taskID in tasksDict ] )

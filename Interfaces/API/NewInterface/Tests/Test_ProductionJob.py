@@ -32,6 +32,8 @@ class ProductionJobTestCase( unittest.TestCase ):
     super(ProductionJobTestCase, self).setUp()
     with patch.object(ProductionJob, 'setPlatform', new=Mock(S_OK())):
       self.prodJob = ProductionJob()
+    self.prodJob.trc = Mock(name="TRC")
+    self.prodJob.trc.getTransformationStats.return_value = S_ERROR('Production does not exist yet')
     self.prodJob.energy=250.0
 
   def test_Energy250( self ):
@@ -294,9 +296,10 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
                        'uploadLog' : 'myuploadlog', 'sendFailover' : 'mysendfailover' }
     file_contents = [["I'm an XML file"]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
+
     with patch('__builtin__.open', mock_open()) as all_mo, \
          patch('%s.open' % MODULE_NAME, mock_open(), create=True) as mo, \
-         patch('%s.Transformation.addTransformation' % MODULE_NAME, new=Mock(return_value=S_OK())):         #patch.object(DIRAC.ConfigurationSystem.Client.Helpers.Resources, 'getDIRACPlatforms', return_value=S_OK([])):
+         patch('%s.Transformation.addTransformation' % MODULE_NAME, new=Mock(return_value=S_OK())):
       mo.side_effect = (h for h in handles)
       job.description = 'MyTestDescription'
       res = job.createProduction( 'goodtestname' )
@@ -439,18 +442,15 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     assertDiracSucceeds( res, self )
     testid = 138
     job.dryrun = False
-    # Mock the entire class, else it's not possible to mock out a nonexisting method
-    with patch('%s.TransformationClient' % MODULE_NAME) as mo:
-      instance = mo.return_value
-      instance.createTransformationInputDataQuery.return_value = S_OK('works')
-      res = job.applyInputDataQuery( ' my metadata ', testid )
-      assertDiracSucceeds( res, self )
-      assertEqualsImproved( job.transfid, testid, self )
-      assertEqualsImproved( job.inputBKSelection, ' my metadata ', self )
-    with patch('%s.TransformationClient' % MODULE_NAME) as mo:
-      instance = mo.return_value
-      instance.createTransformationInputDataQuery.return_value = S_ERROR('mycoolerror')
-      assertDiracFailsWith(job.applyInputDataQuery( ' my metadata ', testid ), 'mycoolerror', self )
+
+    job.trc.createTransformationInputDataQuery.return_value = S_OK('works')
+    res = job.applyInputDataQuery(' my metadata ', testid)
+    assertDiracSucceeds(res, self)
+    assertEqualsImproved(job.transfid, testid, self)
+    assertEqualsImproved(job.inputBKSelection, ' my metadata ', self)
+
+    job.trc.createTransformationInputDataQuery.return_value = S_ERROR('mycoolerror')
+    assertDiracFailsWith(job.applyInputDataQuery(' my metadata ', testid), 'mycoolerror', self)
 
   #TODO Fix runtime of these tests???
   def test_finalizeProd( self ):
@@ -495,11 +495,10 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.fc.createDirectory.side_effect = createdir_sideeffect
     job.fc.changePathMode.side_effect = changepath_sideeffect
 
-    with patch('%s.RPCClient' % MODULE_NAME, new=Mock()) as rpc_mock:
-      rpc_mock.setTransformationParameter.return_value = S_OK(True)
-      res = job.finalizeProd( 1387 )
-      assertDiracSucceeds( res, self )
-      #TODO Check result variables to be as expected
+    job.trc.setTransformationParameter.return_value = S_OK(True)
+    res = job.finalizeProd(1387)
+    assertDiracSucceeds(res, self)
+    # TODO Check result variables to be as expected
 
   def test_finalizeProd_noswpackages_nometadictexternal( self ):
     job = self.prodJob
@@ -516,10 +515,9 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     job.fc.createDirectory.side_effect = createdir_sideeffect
     job.fc.changePathMode.side_effect = changepath_sideeffect
 
-    with patch('%s.RPCClient' % MODULE_NAME, new=Mock()) as rpc_mock:
-      rpc_mock.setTransformationParameter.return_value = S_OK(True)
-      res = job.finalizeProd( 1387 )
-      assertDiracSucceeds( res, self )
+    job.trc.setTransformationParameter.return_value = S_OK(True)
+    res = job.finalizeProd(1387)
+    assertDiracSucceeds(res, self)
 
   def test_finalizeProd_lumiZero( self ):
     job = self.prodJob
