@@ -532,6 +532,43 @@ def test_createTransformations_2(theChain):
   theChain.createReconstructionProduction.assert_called_once_with(task, over=True)
 
 
+def test_addSimTask(theChain):
+  """Test adding sim task."""
+  taskDict = defaultdict(list)
+  theChain.addSimTask(taskDict, metaInput={'ProdID': '23', 'Energy': '350'}, originalTask=Task({}, {}, 123))
+  assert len(taskDict['SIM']) == 1
+
+  taskDict = defaultdict(list)
+  theChain.applicationOptions['DDSim']['FE.steeringFile'] = ['a.py', 'b.py']
+  theChain.applicationOptions['DDSim']['FE.additionalName'] = ['APY', 'BPY']
+  theChain.addSimTask(taskDict, metaInput={'ProdID': '23', 'Energy': '350'}, originalTask=Task({}, {}, 123))
+  assert len(taskDict['SIM']) == 2
+  assert taskDict['SIM'][0].applicationOptions['steeringFile'] == 'a.py'
+  assert taskDict['SIM'][1].applicationOptions['steeringFile'] == 'b.py'
+  assert taskDict['SIM'][0].taskName == 'APY'
+  assert taskDict['SIM'][1].taskName == 'BPY'
+
+
+def test_addRecTask(theChain):
+  """Test adding rec task."""
+  taskDict = defaultdict(list)
+  theChain.addRecTask(taskDict, metaInput={'ProdID': '23', 'Energy': '350'}, originalTask=Task({}, {}, 123))
+  assert len(taskDict['REC']) == 1
+
+  taskDict = defaultdict(list)
+  theChain.applicationOptions['Marlin']['FE.steeringFile'] = ['a.xml', 'b.xml']
+  theChain.applicationOptions['Marlin']['FE.QueryLanguage'] = ['EN', 'DE']
+  theChain.applicationOptions['Marlin']['FE.cliReco'] = ['--Option=Value0', '--Option=Value1']
+  theChain.addRecTask(taskDict, metaInput={'ProdID': '23', 'Energy': '350'}, originalTask=Task({}, {}, 123))
+  assert len(taskDict['REC']) == 2
+  assert taskDict['REC'][0].applicationOptions['steeringFile'] == 'a.xml'
+  assert taskDict['REC'][1].applicationOptions['steeringFile'] == 'b.xml'
+  assert taskDict['REC'][0].meta['Language'] == 'EN'
+  assert taskDict['REC'][1].meta['Language'] == 'DE'
+  assert taskDict['REC'][0].cliReco == '--Option=Value0'
+  assert taskDict['REC'][1].cliReco == '--Option=Value1'
+
+
 @pytest.fixture
 def theFlags():
   """Return the flags fixture."""
