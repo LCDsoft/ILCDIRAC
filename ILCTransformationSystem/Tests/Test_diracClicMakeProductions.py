@@ -396,7 +396,8 @@ def test_setApplicationOptions(theChain):
   """Test setting the application options."""
   application = Mock()
   application.setSomeParameter = Mock()
-  theChain.applicationOptions['AppName'] = {'SomeParameter': 'SomeValue'}
+  theChain.applicationOptions['AppName'] = {'SomeParameter': 'SomeValue', 'FE.foo': ['bar', 'baz'],
+                                            'C_Repl': 'longValueWeDoNotwantToRepeat'}
   theChain._setApplicationOptions('AppName', application)
   application.setSomeParameter.assert_called_once_with('SomeValue')
 
