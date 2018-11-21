@@ -354,9 +354,6 @@ MoveTypes = %(moveTypes)s
 
     self._flags._dryRun = params.dryRun #pylint: disable=protected-access
 
-
-
-
   def meta( self, prodID, process, energy ):
     """ return meta data dictionary, always new"""
     metaD = {'ProdID': str(prodID),
@@ -368,11 +365,8 @@ MoveTypes = %(moveTypes)s
       metaD.pop(key)
     return metaD
 
-
-
-  def loadParameters( self, parameter ):
-    """ load parameters from config file """
-
+  def loadParameters(self, parameter):
+    """Load parameters from config file."""
     if parameter.prodConfigFilename is not None:
       defaultValueDict = vars(self)
       self._flags.updateDictWithFlags( defaultValueDict )
