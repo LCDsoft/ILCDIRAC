@@ -1049,58 +1049,39 @@ overlayEventType = %(overlayEventType)s
     originalTask.dryRun = self._flags.dryRun
     taskDict['GEN'].append(originalTask)
 
-  def addSimTask(self, taskDict, metaInput, originalTask):
-    """Add a sim task."""
-    parameterDict = originalTask.parameterDict
-    eventsPerJob = originalTask.eventsPerJob
-    sourceMetaDict = originalTask.meta
-    dryRun = self._flags.dryRun
-
-    options = defaultdict(list)
-    nTasks = 0
-    for option, value in self.applicationOptions['DDSim'].items():
-      if option.startswith('FE.'):
-        optionName = option.split('.', 1)[1]
-        options[optionName] = listify(value)
-        nTasks = len(options[optionName])
-
-    theTask = Task(metaInput, parameterDict, eventsPerJob, metaPrev=sourceMetaDict, dryRun=dryRun)
-    theTask.sourceName = originalTask.sourceName
-    if not nTasks:
-      taskDict['SIM'].append(theTask)
-      return
-
-    taskList = [deepcopy(theTask) for _ in xrange(nTasks)]
-    taskDict['SIM'].extend(taskList)
-    self.addTaskOptions(options, taskList)
-    return
-
-  def addRecTask(self, taskDict, metaInput, originalTask):
-    """Add a reconstruction or reconstruction without overlay task or both."""
+  def _addTask(self, taskDict, metaInput, originalTask, prodType, applicationName):
+    """Add a task to the given prodType and applicatioName."""
     eventsPerJob = originalTask.eventsPerJob
     parameterDict = originalTask.parameterDict
     sourceMetaDict = originalTask.meta
-    dryRun = self._flags.dryRun
 
     options = defaultdict(list)
     nTasks = 0
-    for option, value in self.applicationOptions['Marlin'].items():
+    for option, value in self.applicationOptions[applicationName].items():
       if option.startswith('FE.'):
         optionName = option.split('.', 1)[1]
         options[optionName] = listify(value)
         gLogger.notice("Found option %s with values %s" % (optionName, pformat(options[optionName])))
         nTasks = len(options[optionName])
 
-    theTask = Task(metaInput, parameterDict, eventsPerJob, metaPrev=sourceMetaDict, dryRun=dryRun)
+    theTask = Task(metaInput, parameterDict, eventsPerJob, metaPrev=sourceMetaDict, dryRun=self._flags.dryRun)
     theTask.sourceName = originalTask.taskName
     if not nTasks:
-      taskDict['REC'].append(theTask)
+      taskDict[prodType].append(theTask)
       return
 
     taskList = [deepcopy(theTask) for _ in xrange(nTasks)]
-    taskDict['REC'].extend(taskList)
+    taskDict[prodType].extend(taskList)
     self.addTaskOptions(options, taskList)
     return
+
+  def addRecTask(self, taskDict, metaInput, originalTask):
+    """Add a reconstruction task."""
+    return self._addTask(taskDict, metaInput, originalTask, prodType='REC', applicationName='Marlin')
+
+  def addSimTask(self, taskDict, metaInput, originalTask):
+    """Add a sim task."""
+    return self._addTask(taskDict, metaInput, originalTask, prodType='SIM', applicationName='DDSim')
 
   @staticmethod
   def addTaskOptions(options, taskList):
