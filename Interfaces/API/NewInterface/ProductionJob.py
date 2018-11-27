@@ -96,7 +96,8 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       self.__setDefaults()
 
     self._recBasePaths = {}
-      
+    self.maxFCFoldersToCheck = 100000
+
   #############################################################################
   def __setDefaults(self):
     """Sets some default parameters.
@@ -224,12 +225,11 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
 
     if "ProdID" not in metadata:
       return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
-    
     retDirs = self._checkFindDirectories( metadata )
     if not retDirs['OK']:
       return retDirs
     dirs = retDirs['Value'].values()
-    for mdir in dirs:
+    for mdir in dirs[:self.maxFCFoldersToCheck]:
       LOG.notice("Directory: %s" % mdir)
       res = self.fc.getDirectoryUserMetadata(mdir)
       if not res['OK']:
@@ -559,8 +559,6 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     info.append('- Registered non searchable metadata: ')
     for path, metadata in sorted( self.finalMetaDictNonSearch.iteritems() ):
       info.append('    %s = %s' % (path, metadata))
-
-    pprint.pprint( info )
 
     infoString = '\n'.join(info)
     self.prodparameters['DetailedInfo'] = infoString

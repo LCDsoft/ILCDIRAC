@@ -3,11 +3,11 @@
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 
+import sys
 import pytest
 from mock import MagicMock, call
 
 import ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent as JRA
-from ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent import JobResetAgent
 
 import DIRAC.Resources.Storage.StorageElement as SeModule
 from DIRAC.RequestManagementSystem.Client.File import File
@@ -66,6 +66,8 @@ def today():
 @pytest.fixture
 def jobResetAgent(today):
   """Fixture for jobResetAgent."""
+  import ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent as JRA
+  from ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent import JobResetAgent
   agent = JRA
   agent.AgentModule = MagicMock()
   agent.JobMonitoringClient = MagicMock()
@@ -83,8 +85,8 @@ def jobResetAgent(today):
   theAgent.jobManagerClient = MagicMock()
   theAgent.jobStateUpdateClient = MagicMock()
   theAgent._jobDB = MagicMock()
-
-  return theAgent
+  yield theAgent
+  sys.modules.pop('ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent')
 
 
 def createRequest(requestID, opType, opStatus, fileStatus, lfnError=" ",
@@ -127,6 +129,7 @@ def failedRemoveRequest():
 
 def test_init(jobResetAgent):
   """Test the constructor."""
+  from ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent import JobResetAgent
   assert isinstance(jobResetAgent, JobResetAgent)
   assert isinstance(jobResetAgent.jobMonClient, MagicMock)
   assert isinstance(jobResetAgent.dataManager, MagicMock)
@@ -557,7 +560,7 @@ def test_send_notification(jobResetAgent):
   assert jobResetAgent.errors == []
 
 
-def test_treat_User_Job_With_RegisterFile(userProxyFixture, jobResetAgent, fakeJobID, alreadyErrorMessage):
+def test_treat_User_Job_With_RegisterFile(jobResetAgent, userProxyFixture, fakeJobID, alreadyErrorMessage):
   """Test user jobs with RegisterFile request operations."""
   jobResetAgent.markJob = MagicMock()
   jobResetAgent.resetRequest = MagicMock()
@@ -628,7 +631,7 @@ def test_treat_User_Job_With_RegisterFile(userProxyFixture, jobResetAgent, fakeJ
   jobResetAgent._fcClient.removeFile.assert_called_once_with("/ilc/fake/lfn")
 
 
-def test_treat_User_Job_With_RegisterFile_2(failingUserProxyFixture, jobResetAgent, fakeJobID, alreadyErrorMessage):
+def test_treat_User_Job_With_RegisterFile_2(jobResetAgent, failingUserProxyFixture, fakeJobID, alreadyErrorMessage):
   """Test when UserProxy failed."""
   jobResetAgent.markJob = MagicMock()
   jobResetAgent.resetRequest = MagicMock()

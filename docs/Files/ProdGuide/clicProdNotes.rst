@@ -1,3 +1,6 @@
+
+.. _clicProdMan:
+
 CLIC Production Manager Guide
 =============================
 
@@ -43,3 +46,31 @@ Creating New GG Hadron Simulation Files
      MoveTypes = Gen, Sim, Rec
      move = True
      overlayEvents = 3TeV
+
+
+
+
+Further Options to Create Multiple Transformations
+--------------------------------------------------
+
+It is also possible to create the same type of transformation with the same input files but different application parameters.
+For this purpose an application parameter can be prefixed with ``FE.`` and given a comma separated list of values
+All lists with the ``FE.`` for one application need to have the same length.
+
+.. code-block:: ini
+
+  ...
+  [Marlin]
+  # note the comma at the end of one of the lines, create transformations for each comma separated entry
+  FE.cliReco =  --VXDBarrelDigitiser.ResolutionU=0.005 --VXDBarrelDigitiser.ResolutionV=0.005
+                --VXDEndcapDigitiser.ResolutionU=0.005 --VXDEndcapDigitiser.ResolutionV=0.005,
+                --VXDBarrelDigitiser.ResolutionU=0.007 --VXDBarrelDigitiser.ResolutionV=0.007
+                --VXDEndcapDigitiser.ResolutionU=0.007 --VXDEndcapDigitiser.ResolutionV=0.007
+  FE.additionalName = Vtx005, Vtx007
+  SteeringFile = clicReconstruction_VtxUn_ILC.xml
+
+  [DDSim]
+  # Add a field to the InputDataQuery: add 'Type' with value of 10degrees, 20degrees, etc.
+  FE.QueryType = 10degrees,20degrees,30degrees,40degrees
+  FE.additionalName = 10degrees,20degrees,30degrees,40degrees
+  ...
