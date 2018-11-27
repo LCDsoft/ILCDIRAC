@@ -21,19 +21,20 @@ MODULE_NAME = 'ILCDIRAC.Interfaces.API.NewInterface.Job'
 class JobTestCase( unittest.TestCase ):
   """ Test the ILCDIRAC Job class
   """
-
   def setUp(self):
     """set up the objects"""
     import DIRAC
-    with patch.object(DIRAC.ConfigurationSystem.Client.Helpers.Resources, 'getDIRACPlatforms', return_value=S_OK(['x86_64-slc5-gcc43-opt'])):
-      self.job = Job( '' )
-      self.job.check = True
+    objectLoaderInst = Mock(name="ObjectLoader")
+    objectLoaderInst.loadObject.return_value = S_OK(lambda: S_OK(['x86_64-slc5-gcc43-opt']))
+    olMock = Mock(name="ObjectLoaderModule", return_value=objectLoaderInst)
+    with patch.object(DIRAC.Interfaces.API.Job, 'ObjectLoader', new=olMock):
+      self.job = Job('')
+    self.job.check = True
 
-  def test_setsysconf( self ):
-    import DIRAC
-    with patch.object(DIRAC.ConfigurationSystem.Client.Helpers.Resources, 'getDIRACPlatforms', return_value=S_OK(['myTestPlatform'])):
-      self.job.setSystemConfig( 'myTestPlatform' )
-      self.assertFalse( self.job.errorDict )
+  def test_setsysconf(self):
+    self.job.getDIRACPlatforms = Mock(return_value=S_OK(['myTestPlatform']))
+    self.job.setPlatform('myTestPlatform')
+    self.assertFalse(self.job.errorDict)
 
   def test_unimplemented_methods( self ):
     self.job.setInputData('')
@@ -270,7 +271,13 @@ class IntrospectJob( Job ):
   """
 
   def __init__( self, script = None ):
-    super( IntrospectJob, self ).__init__( script )
+    import DIRAC
+    objectLoaderInst = Mock(name="ObjectLoader")
+    objectLoaderInst.loadObject.return_value = S_OK(lambda: S_OK(['x86_64-slc5-gcc43-opt']))
+    olMock = Mock(name="ObjectLoaderModule", return_value=objectLoaderInst)
+    with patch.object(DIRAC.Interfaces.API.Job, 'ObjectLoader', new=olMock):
+      super(IntrospectJob, self).__init__(script)
+    self.getDIRACPlatforms = Mock(return_value=S_OK(['x86_64-slc5-gcc43-opt']))
 
   def indirection_for_checkArgs( self, arg_to_check, argtype ):
     """ Method that uses the _checkArgs method so it can be tested.
