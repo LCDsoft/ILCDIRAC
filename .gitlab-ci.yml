@@ -19,6 +19,7 @@ variables:
   DIRAC_TAG: "v7r0-pre3"
   SETUP: "ILC-Production"
   ILCDIRAC_BRANCH: "master"
+  DIRAC_DEPRECATED_FAIL: "1"
 
 .install_template: &install
   stage: install

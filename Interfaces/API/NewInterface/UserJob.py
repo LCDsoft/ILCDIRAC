@@ -81,7 +81,7 @@ class UserJob(SplitMixin, Job):
       self.diracinstance = DiracILC()
     else:
       self.diracinstance = diracinstance
-    return self.diracinstance.submit(self, mode)
+    return self.diracinstance.submitJob(self, mode)
     
   #############################################################################
   def setInputData( self, lfns ):

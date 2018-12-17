@@ -60,22 +60,22 @@ class UserJobTestCase(unittest.TestCase):
 
   def test_submit_createnew_dirac_instance( self ):
     ilc_mock = Mock()
-    ilc_mock().submit.return_value = S_OK( 'test_submission_successful' )
+    ilc_mock().submitJob.return_value = S_OK('test_submission_successful')
     self.ujo.proxyinfo = S_OK( { 'group' : 'ilc_user' } )
     with patch('%s.UserJob._addToWorkflow' % MODULE_NAME, new=Mock(return_value=S_OK())), \
          patch('%s.DiracILC' % MODULE_NAME, new=ilc_mock):
       assertDiracSucceedsWith_equals( self.ujo.submit(), 'test_submission_successful', self )
-      ilc_mock().submit.assert_called_once_with( self.ujo, 'wms' )
+      ilc_mock().submitJob.assert_called_once_with(self.ujo, 'wms')
       assert self.ujo.oktosubmit
 
   def test_submit_existing_dirac_instance(self):
     """Test submit with dirac instance."""
     ilc_mock = Mock()
-    ilc_mock.submit.return_value = S_OK('test_submission_successful')
+    ilc_mock.submitJob.return_value = S_OK('test_submission_successful')
     self.ujo.proxyinfo = S_OK({'group': 'ilc_user'})
     with patch('%s.UserJob._addToWorkflow' % MODULE_NAME, new=Mock(return_value=S_OK())):
       assertDiracSucceedsWith_equals(self.ujo.submit(diracinstance=ilc_mock), 'test_submission_successful', self)
-      ilc_mock.submit.assert_called_once_with(self.ujo, 'wms')
+      ilc_mock.submitJob.assert_called_once_with(self.ujo, 'wms')
       assert self.ujo.oktosubmit
 
   def test_setinputdata_failed( self ):
@@ -209,9 +209,9 @@ class UserJobTestCase(unittest.TestCase):
     self.ujo._split = Mock(return_value=S_OK())
     self.ujo.proxyinfo = S_OK({'group': 'ilc_user'})
     ilc_mock = Mock()
-    ilc_mock.submit.return_value = S_OK('test_submission_successful')
+    ilc_mock.submitJob.return_value = S_OK('test_submission_successful')
     assertDiracSucceeds(self.ujo.submit(diracinstance=ilc_mock), self)
-    ilc_mock.submit.assert_called_once_with(self.ujo, 'wms')
+    ilc_mock.submitJob.assert_called_once_with(self.ujo, 'wms')
 
     self.ujo._splittingOption = True
     self.ujo._split = Mock(return_value=S_ERROR("Splitting InValid"))
