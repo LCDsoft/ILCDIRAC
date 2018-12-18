@@ -23,8 +23,7 @@ class Task(object):
     self.taskName = ''
     self.sourceName = ''
 
-    if self.metaPrev:
-      self._updateMeta(self.meta, self.metaPrev, self.eventsPerJob)
+    self._updateMeta(self.meta, self.metaPrev, self.eventsPerJob)
 
   def __str__(self):
     """Return string representation of Task."""
@@ -39,6 +38,8 @@ class Task(object):
 
     Fake the input dataquery result in dryRun mode.
     """
+    if eventsPerJob:
+      outputDict['NumberOfEvents'] = eventsPerJob
     if not self.dryRun:
       return
 
