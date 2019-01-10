@@ -55,5 +55,7 @@ class Task(object):
                              '_'.join(args),
                              self.sourceName,
                              self.taskName,
-                             ]).strip('_').replace('__', '_')
+                             ]).strip('_')
+    while '__' in workflowName:
+      workflowName = workflowName.replace('__', '_')
     return workflowName
