@@ -809,8 +809,8 @@ overlayEventType = %(overlayEventType)s
     meta = task.meta
     recType = 'rec_overlay' if over else 'rec'
     prodName = task.getProdName(recType, self.detectorModel, self.additionalName)
-    prodName = prodName.replace('overlay', 'overlay%s' % self.overlayEvents if
-                                self.overlayEvents else energyWithUnit(meta['energy']))
+    if over:
+      prodName = prodName.replace('overlay', 'overlay%s' % self.overlayEvents if self.overlayEvents else meta['Energy'])
     parameterDict = task.parameterDict
     gLogger.notice("*" * 80 + "\nCreating %s reconstruction production: %s " % ('overlay' if over else '', prodName))
     recProd = self.getProductionJob()
