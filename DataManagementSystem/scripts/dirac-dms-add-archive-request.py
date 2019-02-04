@@ -11,15 +11,23 @@ List of operations:
 
 """
 import os
-from pprint import pprint
+from pprint import pprint, pformat
 
 import DIRAC
 from DIRAC import gLogger
 from DIRAC.Core.Utilities import DEncode
+from DIRAC.Core.Utilities.ReturnValues import returnSingleResult
 from DIRAC.Core.Base import Script
 
+
+LOG = gLogger.getSubLogger("AddArchive")
 __RCSID__ = "$Id$"
 MAX_SIZE = 2 * 1024 * 1024 * 1024
+
+
+def FileCatalog():
+  from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient as FC
+  return FC()
 
 def registerSwitches():
   switches = {}
@@ -27,6 +35,9 @@ def registerSwitches():
              ("F", "FinalSE", "Final SE for tarball"),
              ("A", "ArchiveSE", "SE for registering archive files at"),
              ("T", "TarballSE", "SE to initially upload arball"),
+             ("P", "Path", "LFN path to folder, all files in the folder will be archived"),
+             ("N", "Name", "Name of the Tarball, if not given Path_Tars/Path_N.tar will be used to store tarballs"),
+             ("L", "List", "File containing list of LFNs to archive, requires Name to be given"),
             ]
   flags = [("R", "RegisterArchiveReplica", "Register archived files in ArchiveSE"),
            ("D", "RemoveReplicas", "Remove Replicas from non-ArchiveSE"),
@@ -48,7 +59,7 @@ def registerSwitches():
   Script.parseCommandLine()
 
   args = Script.getPositionalArgs()
-  if len(args) != 2:
+  if len(args) != 0:
     Script.showHelp()
     DIRAC.exit(1)
 
@@ -64,14 +75,46 @@ def registerSwitches():
   switches['DryRun'] = not switches.get('Execute', False)
   return args, switches
 
-def getLFNList(arg):
+def getLFNList(switches):
   """ get list of LFNs """
   lfnList = []
-  if os.path.exists(arg):
-    lfnList = [line.split()[0] for line in open(arg).read().splitlines()]
-  else:
-    raise ValueError('%s not a file'% arg)
-  return list(set(lfnList))
+  if switches.get("List"):
+    if os.path.exists(switches.get("List")):
+      lfnList = [line.split()[0] for line in open(switches.get("List")).read().splitlines()]
+    else:
+      raise ValueError('%s not a file' % switches.get("List"))
+    lfnList = list(set(lfnList))
+  if switches.get("Path"):
+    path = switches.get("Path")
+    LOG.debug("Check if %r is a directory" % path)
+    isDir = returnSingleResult(FileCatalog().isDirectory(path))
+    LOG.debug("Result: %r" % isDir)
+    if not isDir['OK'] or not isDir['Value']:
+      LOG.error("Path is not a directory", isDir.get('Message', ''))
+      raise RuntimeError("Path %r is not a directory" % path)
+    LOG.debug("Looking for files in %r" % path)
+    lfns = FileCatalog().findFilesByMetadata(metaDict={}, path=switches.get("Path"))
+    if not lfns['OK']:
+      LOG.error("Could not find files")
+      raise RuntimeError(lfns['Message'])
+    if not switches.get("Name"):
+      switches["Name"] = os.path.join(switches.get("Path"), os.path.basename(switches.get("Path")) + ".tar")
+      LOG.info("Using %r for tarball" % switches.get('Name'))
+    lfnList = lfns['Value']
+
+  tbLFN = switches.get("Name")
+  LOG.debug("Checking permissions for %r" % tbLFN)
+  hasAccess = returnSingleResult(FileCatalog().hasAccess(tbLFN, "addFile"))
+  if not tbLFN or not hasAccess['OK'] or not hasAccess['Value']:
+    LOG.error("Error checking tarball location: %r" % hasAccess)
+    raise ValueError('%s is not a valid path, parameter "Name" must be correct' % tbLFN)
+  LOG.debug("Parameters: %s" % pformat(switches))
+  LOG.debug("LFNs: %s" % ",".join(lfnList))
+
+  if lfnList:
+    return lfnList
+
+  raise ValueError("'Path' or 'List' need to be provided!")
 
 
 def splitLFNsBySize(lfns):
@@ -79,7 +122,6 @@ def splitLFNsBySize(lfns):
 
   :return: list of list of lfns
   """
-  from DIRAC.Resources.Catalog.FileCatalog import FileCatalog
   metaData = FileCatalog().getFileMetadata(lfns)
   error = False
   if not metaData["OK"]:
@@ -117,8 +159,8 @@ def splitLFNsBySize(lfns):
 def run(args, switches):
   """Perform checks andcreate the request."""
 
-  lfnList = getLFNList(args[0])
-  baseArchiveLFN = archiveLFN = args[1]
+  lfnList = getLFNList(switches)
+  baseArchiveLFN = archiveLFN = switches["Name"]
 
   tarballName = os.path.basename(archiveLFN)
   baseRequestName = requestName = 'Archive_%s' % tarballName.rsplit('.', 1)[0]
@@ -214,7 +256,6 @@ def run(args, switches):
       requests.append(request)
 
   for request in requests:
-
     if switches.get("DryRun"):
       from DIRAC.RequestManagementSystem.private.RequestTask import RequestTask
       handlerDict = {}
