@@ -160,8 +160,14 @@ class ArchiveFiles(OperationHandlerBase):
   def _cleanup(self):
     """Remove the tarball and the downloaded files."""
     self.log.info('Cleaning files and tarball')
-    os.remove(os.path.basename(self.parameterDict['ArchiveLFN']))
-    shutil.rmtree(self.cacheFolder)
+    try:
+      os.remove(os.path.basename(self.parameterDict['ArchiveLFN']))
+    except OSError as e:
+      self.log.warn('Error when removing tarball: %s' % str(e))
+    try:
+      shutil.rmtree(self.cacheFolder, ignore_errors=True)
+    except OSError as e:
+      self.log.warn('Error when removing cacheFolder: %s' % str(e))
 
   def setOperation(self, operation):  # pylint: disable=useless-super-delegation
     """Set Operation and request setter.
