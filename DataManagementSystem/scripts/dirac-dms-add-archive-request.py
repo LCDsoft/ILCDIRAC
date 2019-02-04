@@ -37,7 +37,6 @@ class CreateArchiveRequest(object):
     self._fcClient = None
     self._reqClient = None
 
-    self.requestName = ''
     self.switches = {}
     self.lfnList = []
     self.registerSwitches()
@@ -139,12 +138,12 @@ class CreateArchiveRequest(object):
         LOG.error('Could not find files')
         raise RuntimeError(lfns['Message'])
       if not self.switches.get('Name'):
-        self.switches['Name'] = os.path.join(os.path.dirname(path), os.path.basename(path) + '.tar')
-        LOG.notice('Using %r for tarball' % self.switches.get('Name'))
+        self.switches['AutoName'] = os.path.join(os.path.dirname(path), os.path.basename(path) + '.tar')
+        LOG.notice('Using %r for tarball' % self.switches.get('AutoName'))
       self.lfnList = lfns['Value']
 
     if self.lfnList:
-      LOG.notice('Will create request %r with %d lfns' % (self.requestName, len(self.lfnList)))
+      LOG.notice('Will create request(s) with %d lfns' % len(self.lfnList))
       return
 
     raise ValueError('"Path" or "List" need to be provided!')
@@ -187,8 +186,12 @@ class CreateArchiveRequest(object):
 
   def run(self):
     """Perform checks and create the request."""
-    baseArchiveLFN = archiveLFN = self.switches['Name']
-    tarballName = os.path.basename(archiveLFN)
+    if self.switches.get('AutoName'):
+      baseArchiveLFN = archiveLFN = self.switches['AutoName']
+      tarballName = os.path.basename(archiveLFN)
+    else:
+      archiveLFN = self.switches['Name']
+      tarballName = os.path.basename(archiveLFN)
     baseRequestName = requestName = 'Archive_%s' % tarballName.rsplit('.', 1)[0]
 
     from DIRAC.RequestManagementSystem.private.RequestValidator import RequestValidator
