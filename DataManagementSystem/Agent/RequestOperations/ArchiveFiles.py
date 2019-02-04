@@ -84,7 +84,7 @@ class ArchiveFiles(OperationHandlerBase):
 
       attempts = 0
       destFolder = os.path.join(self.cacheFolder, os.path.dirname(lfn)[1:])
-      self.log.notice("destFolder: %s" % destFolder)
+      self.log.notice("Local Cache Folder: %s" % destFolder)
       if not os.path.exists(destFolder):
         os.makedirs(destFolder)
       while True:

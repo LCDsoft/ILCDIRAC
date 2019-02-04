@@ -282,7 +282,7 @@ class CreateArchiveRequest(object):
     handlerDict = {}
     handlerDict['ArchiveFiles'] = 'ILCDIRAC.DataManagementSystem.Agent.RequestOperations.ArchiveFiles'
     handlerDict['ReplicateAndRegister'] = 'DIRAC.DataManagementSystem.Agent.RequestOperations.ReplicateAndRegister'
-    handlerDict['RemoveFiles'] = 'DIRAC.DataManagementSystem.Agent.RequestOperations.RemoveFiles'
+    handlerDict['RemoveFile'] = 'DIRAC.DataManagementSystem.Agent.RequestOperations.RemoveFile'
     requestIDs = []
     for request in self.requests:
       if self.switches.get("DryRun"):
@@ -328,9 +328,9 @@ class CreateArchiveRequest(object):
 
   def checkArchive(self, archiveLFN):
     """Check that archiveLFN does not exist yet."""
-    LOG.notice("Tarball: %s" % archiveLFN)
+    LOG.notice("Using Tarball: %s" % archiveLFN)
     exists = returnSingleResult(self.fcClient.isFile(archiveLFN))
-    LOG.notice("Checking for Tarball existance %r" % exists)
+    LOG.debug("Checking for Tarball existance %r" % exists)
     if exists['OK'] and exists['Value']:
       raise RuntimeError("Tarball %r already exists" % archiveLFN)
 
