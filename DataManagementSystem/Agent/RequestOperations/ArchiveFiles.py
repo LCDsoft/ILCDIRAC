@@ -70,6 +70,7 @@ class ArchiveFiles(OperationHandlerBase):
     self.log.info('Cache folder: %r' % self.cacheFolder)
     self.waitingFiles = self.getWaitingFilesList()
     self.lfns = [opFile.LFN for opFile in self.waitingFiles]
+    self._checkReplicas()
     self._downloadFiles()
     self._tarFiles()
     self._uploadTarBall()
@@ -82,6 +83,35 @@ class ArchiveFiles(OperationHandlerBase):
     self.log.debug('Checking for Tarball existance %r' % exists)
     if exists['OK'] and exists['Value']:
       raise RuntimeError('Tarball %r already exists' % archiveLFN)
+
+  def _checkReplicas(self):
+    """Make sure the source files are at the sourceSE."""
+    resReplica = self.fc.getReplicas(self.lfns)
+    if not resReplica['OK']:
+      self.log.error('Failed to get replica information:', resReplica['Message'])
+      raise RuntimeError('Failed to get replica information')
+
+    atSource = []
+    notAt = []
+    failed = []
+    sourceSE = self.parameterDict.get('SourceSE', 'CERN-DST-EOS')
+    for lfn, replInfo in resReplica['Value']['Successful'].iteritems():
+      if sourceSE in replInfo:
+        atSource.append(lfn)
+      else:
+        self.log.warn('LFN %r not found at source, only at: %s' % (lfn, ','.join(replInfo.keys())))
+        notAt.append(lfn)
+
+    for lfn, errorMessage in resReplica['Value']['Failed'].iteritems():
+      self.log.error('Failed to get replica info', '%s: %s' % (lfn, errorMessage))
+      failed.append(lfn)
+
+    if failed:
+      self.log.error('LFNs failed to get replica info:', '%r' % ' '.join(failed))
+      raise RuntimeError('Failed to get replica information')
+    if notAt:
+      self.log.error('LFNs not at sourceSE:', '%r' % ' '.join(notAt))
+      raise RuntimeError('Some replicas are not at the source')
 
   def _downloadFiles(self):
     """Download the files."""
