@@ -140,7 +140,9 @@ class ArchiveFiles(OperationHandlerBase):
         opFile.Attempt += 1
         self.operation.Error = opFile.Error
         if 'No such file or directory' in opFile.Error:
-          opFile.Status = 'Failed'
+          # The File does not exist, we just ignore this and continue, otherwise we never archive the other files
+          opFile.Status = 'Done'
+          download = S_OK()
           break
         if attempts > 10:
           self.log.error('Completely failed to download file:', errorString)
