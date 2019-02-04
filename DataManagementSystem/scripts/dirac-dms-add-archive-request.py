@@ -55,15 +55,10 @@ def registerSwitches():
   Script.setUsageMessage('\n'.join([__doc__,
                                     'Usage:',
                                     ' %s [option|cfgfile] LFNs tarBallName' % Script.scriptName,
-                                    'Arguments:',
-                                    '         LFNs: file with LFNs',
-                                    '  tarBallName: LFN of the tarball',
                                     ]))
 
   Script.parseCommandLine()
-
-  args = Script.getPositionalArgs()
-  if args:
+  if Script.getPositionalArgs():
     Script.showHelp()
     DIRAC.exit(1)
 
@@ -77,7 +72,7 @@ def registerSwitches():
         switches[longOption] = True
         break
   switches['DryRun'] = not switches.get('Execute', False)
-  return args, switches
+  return switches
 
 
 def getLFNList(switches):
@@ -131,7 +126,7 @@ def getLFNList(switches):
 
 
 def splitLFNsBySize(lfns):
-  """Split LFNs into 2GB chunks.
+  """Split LFNs into MAX_SIZE chunks.
 
   :return: list of list of lfns
   """
@@ -170,112 +165,122 @@ def splitLFNsBySize(lfns):
   return lfnChunks, metaData, replicaSEs
 
 
-def run(args, switches):
-  """Perform checks andcreate the request."""
+def run(switches):
+  """Perform checks and create the request."""
   lfnList = getLFNList(switches)
   baseArchiveLFN = archiveLFN = switches["Name"]
-
   tarballName = os.path.basename(archiveLFN)
   baseRequestName = requestName = 'Archive_%s' % tarballName.rsplit('.', 1)[0]
 
   LOG.notice("Will create request '%s' with %s lfns" % (requestName, len(lfnList)))
 
-  from DIRAC.RequestManagementSystem.Client.Request import Request
-  from DIRAC.RequestManagementSystem.Client.Operation import Operation
-  from DIRAC.RequestManagementSystem.Client.File import File
-  from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
+  from DIRAC.RequestManagementSystem.private.RequestValidator import RequestValidator
 
-  count = 0
-  reqClient = ReqClient()
   requests = []
-  requestIDs = []
 
   lfnChunks, metaData, replicaSEs = splitLFNsBySize(lfnList)
-  multiRequests = True or len(lfnChunks) > 1
 
-  for lfnChunk in lfnChunks:
+  for count, lfnChunk in enumerate(lfnChunks):
     if not lfnChunk:
       LOG.error("LFN list is empty!!!")
       return 1
 
-    count += 1
-    request = Request()
-
-    if multiRequests:
+    if len(lfnChunks) > 1:
       requestName = '%s_%d' % (baseRequestName, count)
       baseName = os.path.split(baseArchiveLFN.rsplit('.', 1)[0])
       archiveLFN = '%s/%s_Tars/%s_%d.tar' % (baseName[0], baseName[1], baseName[1], count)
-      LOG.notice("Tarball %s" % archiveLFN)
 
-    request.RequestName = requestName
+    LOG.notice("Tarball: %s" % archiveLFN)
 
-    archiveFiles = Operation()
-    archiveFiles.Type = "ArchiveFiles"
-    archiveFiles.Arguments = DEncode.encode({'SourceSE': switches.get('SourceSE', 'CERN-DST-EOS'),
-                                             'TarballSE': switches.get('TarballSE', 'CERN-DST-EOS'),
-                                             'ArchiveSE': switches.get('ArchiveSE', 'CERN-ARCHIVE'),
-                                             'FinalSE': switches.get('FinalSE', 'CERN-SRM'),
-                                             'ArchiveLFN': archiveLFN})
-    addLFNs(archiveFiles, lfnChunk, metaData)
-    request.addOperation(archiveFiles)
+    request = createRequest(requestName, archiveLFN, lfnChunk, metaData, replicaSEs, switches)
 
-    if switches.get("ReplicateTarball"):
-      # Replicate the Tarball, ArchiveFiles will upload it
-      replicateAndRegisterTarBall = Operation()
-      replicateAndRegisterTarBall.Type = "ReplicateAndRegister"
-      replicateAndRegisterTarBall.TargetSE = switches.get('FinalSE', 'CERN-SRM')
-      opFile = File()
-      opFile.LFN = archiveLFN
-      replicateAndRegisterTarBall.addFile(opFile)
-      request.addOperation(replicateAndRegisterTarBall)
-
-    # Register Archive Replica for LFNs
-    if switches.get("RegisterArchiveReplica"):
-      registerArchived = Operation()
-      registerArchived.Type = "RegisterReplica"
-      registerArchived.TargetSE = 'CERN-ARCHIVE'
-      addLFNs(registerArchived, lfnChunk, metaData, addPFN=True)
-      request.addOperation(registerArchived)
-
-      if switches.get("RemoveReplicas"):
-        # Remove all Other Replicas for LFNs
-        removeArchiveReplicas = Operation()
-        removeArchiveReplicas.Type = "RemoveReplica"
-        removeArchiveReplicas.TargetSE = ','.join(replicaSEs)
-        addLFNs(removeArchiveReplicas, lfnChunk, metaData)
-        request.addOperation(removeArchiveReplicas)
-
-    if switches.get("RemoveFiles"):
-      # Remove all Other Replicas for LFNs
-      removeArchiveFiles = Operation()
-      removeArchiveFiles.Type = "RemoveFile"
-      addLFNs(removeArchiveFiles, lfnChunk, metaData)
-      request.addOperation(removeArchiveFiles)
-
-    if switches.get("ReplicateTarball"):
-      # Remove Original tarball replica
-      removeTarballOrg = Operation()
-      removeTarballOrg.Type = "RemoveReplica"
-      removeTarballOrg.TargetSE = 'CERN-DST-EOS'
-      opFile = File()
-      opFile.LFN = archiveLFN
-      removeTarballOrg.addFile(opFile)
-      request.addOperation(removeTarballOrg)
-
-    from DIRAC.RequestManagementSystem.private.RequestValidator import RequestValidator
     valid = RequestValidator().validate(request)
     if not valid["OK"]:
       LOG.error("putRequest: request not valid", "%s" % valid["Message"])
-      return valid
+      return 1
     else:
       requests.append(request)
 
+  putOrRunRequests(requests, switches)
+  return 0
+
+
+def createRequest(requestName, archiveLFN, lfnChunk, metaData, replicaSEs, switches):
+  """Create the Request."""
+  from DIRAC.RequestManagementSystem.Client.Request import Request
+  from DIRAC.RequestManagementSystem.Client.Operation import Operation
+  from DIRAC.RequestManagementSystem.Client.File import File
+
+  request = Request()
+  request.RequestName = requestName
+
+  archiveFiles = Operation()
+  archiveFiles.Type = "ArchiveFiles"
+  archiveFiles.Arguments = DEncode.encode({'SourceSE': switches.get('SourceSE', 'CERN-DST-EOS'),
+                                           'TarballSE': switches.get('TarballSE', 'CERN-DST-EOS'),
+                                           'ArchiveSE': switches.get('ArchiveSE', 'CERN-ARCHIVE'),
+                                           'FinalSE': switches.get('FinalSE', 'CERN-SRM'),
+                                           'ArchiveLFN': archiveLFN})
+  addLFNs(archiveFiles, lfnChunk, metaData)
+  request.addOperation(archiveFiles)
+
+  # Replicate the Tarball, ArchiveFiles will upload it
+  if switches.get("ReplicateTarball"):
+    replicateAndRegisterTarBall = Operation()
+    replicateAndRegisterTarBall.Type = "ReplicateAndRegister"
+    replicateAndRegisterTarBall.TargetSE = switches.get('FinalSE', 'CERN-SRM')
+    opFile = File()
+    opFile.LFN = archiveLFN
+    replicateAndRegisterTarBall.addFile(opFile)
+    request.addOperation(replicateAndRegisterTarBall)
+
+  # Register Archive Replica for LFNs
+  if switches.get("RegisterArchiveReplica"):
+    registerArchived = Operation()
+    registerArchived.Type = "RegisterReplica"
+    registerArchived.TargetSE = 'CERN-ARCHIVE'
+    addLFNs(registerArchived, lfnChunk, metaData, addPFN=True)
+    request.addOperation(registerArchived)
+
+    # Remove all Other Replicas for LFNs
+    if switches.get("RemoveReplicas"):
+      removeArchiveReplicas = Operation()
+      removeArchiveReplicas.Type = "RemoveReplica"
+      removeArchiveReplicas.TargetSE = ','.join(replicaSEs)
+      addLFNs(removeArchiveReplicas, lfnChunk, metaData)
+      request.addOperation(removeArchiveReplicas)
+
+  # Remove all Other Replicas for LFNs
+  if switches.get("RemoveFiles"):
+    removeArchiveFiles = Operation()
+    removeArchiveFiles.Type = "RemoveFile"
+    addLFNs(removeArchiveFiles, lfnChunk, metaData)
+    request.addOperation(removeArchiveFiles)
+
+  # Remove Original tarball replica
+  if switches.get("ReplicateTarball"):
+    removeTarballOrg = Operation()
+    removeTarballOrg.Type = "RemoveReplica"
+    removeTarballOrg.TargetSE = 'CERN-DST-EOS'
+    opFile = File()
+    opFile.LFN = archiveLFN
+    removeTarballOrg.addFile(opFile)
+    request.addOperation(removeTarballOrg)
+  return request
+
+
+def putOrRunRequests(requests, switches):
+  """Run or put requests."""
+  handlerDict = {}
+  handlerDict['ArchiveFiles'] = 'ILCDIRAC.DataManagementSystem.Agent.RequestOperations.ArchiveFiles'
+  handlerDict['ReplicateAndRegister'] = 'DIRAC.DataManagementSystem.Agent.RequestOperations.ReplicateAndRegister'
+  handlerDict['RemoveFiles'] = 'DIRAC.DataManagementSystem.Agent.RequestOperations.RemoveFiles'
+  from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
+  reqClient = ReqClient()
+  requestIDs = []
   for request in requests:
     if switches.get("DryRun"):
       from DIRAC.RequestManagementSystem.private.RequestTask import RequestTask
-      handlerDict = {}
-      handlerDict['ArchiveFiles'] = 'ILCDIRAC.DataManagementSystem.Agent.RequestOperations.ArchiveFiles'
-      handlerDict['ReplicateAndRegister'] = 'DIRAC.DataManagementSystem.Agent.RequestOperations.ReplicateAndRegister'
       rq = RequestTask(request.toJSON()['Value'],
                        handlerDict,
                        '/Systems/RequestManagement/Development/Agents/RequestExecutingAgents',
@@ -285,19 +290,18 @@ def run(args, switches):
       putRequest = reqClient.putRequest(request)
       if not putRequest["OK"]:
         LOG.error("unable to put request '%s': %s" % (request.RequestName, putRequest["Message"]))
-        error = -1
         continue
       requestIDs.append(str(putRequest["Value"]))
-      if not multiRequests:
-        LOG.always("Request '%s' has been put to ReqDB for execution." % request.RequestName)
+      LOG.always("Request '%s' has been put to ReqDB for execution." % request.RequestName)
 
-      if multiRequests:
-        LOG.always("%d requests have been put to ReqDB for execution, with name %s_<num>" %
-                   (count, requestName))
-      if requestIDs:
-        LOG.always("RequestID(s): %s" % " ".join(requestIDs))
-      LOG.always("You can monitor requests' status using command: 'dirac-rms-request <requestName/ID>'")
-      DIRAC.exit(error)
+  if requestIDs:
+    LOG.always("%d requests have been put to ReqDB for execution" % len(requestIDs))
+    LOG.always("RequestID(s): %s" % " ".join(requestIDs))
+    LOG.always("You can monitor requests' status using command: 'dirac-rms-request <requestName/ID>'")
+    return 0
+
+  LOG.error("No requests created")
+  return 1
 
 
 def addLFNs(operation, lfns, metaData, addPFN=False):
@@ -318,5 +322,5 @@ def addLFNs(operation, lfns, metaData, addPFN=False):
 
 
 if __name__ == "__main__":
-  ARGS, SW = registerSwitches()
-  run(ARGS, SW)
+  SW = registerSwitches()
+  run(SW)
