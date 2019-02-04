@@ -214,6 +214,7 @@ def run(args, switches):
       from DIRAC.RequestManagementSystem.private.RequestTask import RequestTask
       handlerDict = {}
       handlerDict['ArchiveFiles'] = 'ILCDIRAC.DataManagementSystem.Agent.RequestOperations.ArchiveFiles'
+      handlerDict['ReplicateAndRegister'] = 'DIRAC.DataManagementSystem.Agent.RequestOperations.ReplicateAndRegister'
       rq = RequestTask(request.toJSON()['Value'], handlerDict, '/Systems/RequestManagement/Development/Agents/RequestExecutingAgents',
                        'RequestManagement/RequestExecutingAgent', standalone=True)
       rq()
