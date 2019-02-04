@@ -2,47 +2,66 @@
 
 List of operations:
 
-#. ArchiveFiles 
+#. ArchiveFiles
 #. ReplicateAndRegister Tarball
 #. Add ArchiveSE replica for all files
 #. Check for Tarball Migration (TODO)
-#. Remove all other replicas for these files 
+#. Remove all other replicas for these files
 #. Remove original replica of Tarball
 
 """
-__RCSID__ = "$Id$"
 import os
 from pprint import pprint
 
+import DIRAC
 from DIRAC import gLogger
 from DIRAC.Core.Utilities import DEncode
 from DIRAC.Core.Base import Script
-Script.setUsageMessage('\n'.join([__doc__,
-                                  'Usage:',
-                                  ' %s [option|cfgfile] LFNs tarBallName targetSE' % Script.scriptName,
-                                  'Arguments:',
-                                  '         LFNs: file with LFNs',
-                                  '  tarBallName: name of the tarball',
-                                  '     targetSE: target SE']))
 
-switches = {}
-sw = [("S", "SourceSE", "Source SE to use"),
-      ("F", "FinalSE", "Final SE for tarball"),
-      ("A", "ArchiveSE", "SE for registering archive files at"),
-      ("T", "TarballSE", "SE to initially upload arball"),
-      ]
-for s, l, d in sw:
-  Script.registerSwitch(s+':', l+'=', d)
-for switch in Script.getUnprocessedSwitches():
-  for s, l, d in sw:
-    if switch[0] == s or switch[0].lower() == l.lower():
-      switches[l] = switch[1]
-      break
+__RCSID__ = "$Id$"
+MAX_SIZE = 2 * 1024 * 1024 * 1024
 
+def registerSwitches():
+  switches = {}
+  options = [("S", "SourceSE", "Source SE to use"),
+             ("F", "FinalSE", "Final SE for tarball"),
+             ("A", "ArchiveSE", "SE for registering archive files at"),
+             ("T", "TarballSE", "SE to initially upload arball"),
+            ]
+  flags = [("R", "RegisterArchiveReplica", "Register archived files in ArchiveSE"),
+           ("D", "RemoveReplicas", "Remove Replicas from non-ArchiveSE"),
+           ("U", "RemoveFiles", "Remove Archived files completely"),
+           ]
+  for short, longOption, doc in options:
+    Script.registerSwitch(short + ':', longOption + '=', doc)
+  for short, longOption, doc in flags:
+    Script.registerSwitch(short, longOption, doc)
+  Script.setUsageMessage('\n'.join([__doc__,
+                                    'Usage:',
+                                    ' %s [option|cfgfile] LFNs tarBallName' % Script.scriptName,
+                                    'Arguments:',
+                                    '         LFNs: file with LFNs',
+                                    '  tarBallName: name of the tarball',
+                                   ]))
 
+  Script.parseCommandLine()
 
-MAX_SIZE = 30 * 1024 * 1024
-    
+  args = Script.getPositionalArgs()
+  if len(args) < 3:
+    Script.showHelp()
+    DIRAC.exit(1)
+
+  for switch in Script.getUnprocessedSwitches():
+    for short, longOption, doc in options:
+      if switch[0] == short or switch[0].lower() == longOption.lower():
+        switches[longOption] = switch[1]
+        break
+    for short, longOption, doc in flags:
+      if switch[0] == short or switch[0].lower() == longOption.lower():
+        switches[longOption] = True
+        break
+  return args, switches
+
 def getLFNList(arg):
   """ get list of LFNs """
   lfnList = []
@@ -91,20 +110,10 @@ def splitLFNsBySize(lfns):
                     for seItem in se.keys()])
 
   return lfnChunks, metaData, replicaSEs
-  
-# execution
-def run():
 
-  from DIRAC.Core.Base.Script import parseCommandLine
-  parseCommandLine()
 
-  import DIRAC
-
-  args = Script.getPositionalArgs()
-
-  if len(args) < 3:
-    Script.showHelp()
-    DIRAC.exit(1)
+def run(args, switches):
+  """Perform checks andcreate the request."""
 
   lfnList = getLFNList(args[0])
   baseArchiveLFN = archiveLFN = args[1]
@@ -120,7 +129,6 @@ def run():
   from DIRAC.RequestManagementSystem.Client.File import File
   from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
 
-  error = 0
   count = 0
   reqClient = ReqClient()
   requestIDs = []
@@ -131,8 +139,7 @@ def run():
   for lfnChunk in lfnChunks:
     if not lfnChunk:
       gLogger.error("LFN list is empty!!!")
-      error = -1
-      return
+      return 1
 
     count += 1
     request = Request()
@@ -152,18 +159,7 @@ def run():
                                              'ArchiveSE': switches.get('ArchiveSE', 'CERN-ARCHIVE'),
                                              'FinalSE': switches.get('FinalSE', 'CERN-SRM'),
                                              'ArchiveLFN': archiveLFN})
-    for lfn in lfnChunk:
-      metaDict = metaData["Successful"][lfn]
-      opFile = File()
-      opFile.LFN = lfn
-      opFile.Size = metaDict["Size"]
-
-      if "Checksum" in metaDict:
-        # should check checksum type, now assuming Adler32 (metaDict["ChecksumType"] = 'AD'
-        opFile.Checksum = metaDict["Checksum"]
-        opFile.ChecksumType = "ADLER32"
-      archiveFiles.addFile(opFile)
-
+    addLFNs(archiveFiles, lfnChunk, metaData)
     request.addOperation(archiveFiles)
 
     # Replicate the Tarball, ArchiveFiles will upload it
@@ -176,39 +172,27 @@ def run():
     request.addOperation(replicateAndRegisterTarBall)
 
     # Register Archive Replica for LFNs
-    registerArchived = Operation()
-    registerArchived.Type = "RegisterReplica"
-    registerArchived.TargetSE = 'CERN-ARCHIVE'
-    for lfn in lfnChunk:
-      metaDict = metaData["Successful"][lfn]
-      opFile = File()
-      opFile.LFN = lfn
-      opFile.PFN = lfn
-      opFile.Size = metaDict["Size"]
-      if "Checksum" in metaDict:
-        # should check checksum type, now assuming Adler32 (metaDict["ChecksumType"] = 'AD'
-        opFile.Checksum = metaDict["Checksum"]
-        opFile.ChecksumType = "ADLER32"
-      registerArchived.addFile(opFile)
-    request.addOperation(registerArchived)
+    if switches.get("RegisterArchiveReplica"):
+      registerArchived = Operation()
+      registerArchived.Type = "RegisterReplica"
+      registerArchived.TargetSE = 'CERN-ARCHIVE'
+      addLFNs(registerArchived, lfnChunk, metaData, addPFN=True)
+      request.addOperation(registerArchived)
 
-    # Remove all Other Replicas for LFNs
-    removeArchiveReplicas = Operation()
-    removeArchiveReplicas.Type = "RemoveReplica"
-    removeArchiveReplicas.TargetSE = ','.join(replicaSEs)
-    for lfn in lfnChunk:
-      metaDict = metaData["Successful"][lfn]
-      opFile = File()
-      opFile.LFN = lfn
-      opFile.Size = metaDict["Size"]
+      if switches.get("RemoveReplicas"):
+        # Remove all Other Replicas for LFNs
+        removeArchiveReplicas = Operation()
+        removeArchiveReplicas.Type = "RemoveReplica"
+        removeArchiveReplicas.TargetSE = ','.join(replicaSEs)
+        addLFNs(removeArchiveReplicas, lfnChunk, metaData)
+        request.addOperation(removeArchiveReplicas)
 
-      if "Checksum" in metaDict:
-        # should check checksum type, now assuming Adler32 (metaDict["ChecksumType"] = 'AD'
-        opFile.Checksum = metaDict["Checksum"]
-        opFile.ChecksumType = "ADLER32"
-      removeArchiveReplicas.addFile(opFile)
-
-    request.addOperation(removeArchiveReplicas)
+    if switches.get("RemoveFiles"):
+      # Remove all Other Replicas for LFNs
+      removeArchiveFiles = Operation()
+      removeArchiveFiles.Type = "RemoveFile"
+      addLFNs(removeArchiveFiles, lfnChunk, metaData)
+      request.addOperation(removeArchiveFiles)
 
     # Remove Original tarball replica
     removeTarballOrg = Operation()
@@ -249,6 +233,23 @@ def run():
   # gLogger.always("You can monitor requests' status using command: 'dirac-rms-request <requestName/ID>'")
   # DIRAC.exit(error)
 
+def addLFNs(operation, lfns, metaData, addPFN=False):
+  """Add lfns to operation."""
+  from DIRAC.RequestManagementSystem.Client.File import File
+  for lfn in lfns:
+    metaDict = metaData["Successful"][lfn]
+    opFile = File()
+    opFile.LFN = lfn
+    if addPFN:
+      opFile.PFN = lfn
+    opFile.Size = metaDict["Size"]
+    if "Checksum" in metaDict:
+      # should check checksum type, now assuming Adler32 (metaDict["ChecksumType"] = 'AD')
+      opFile.Checksum = metaDict["Checksum"]
+      opFile.ChecksumType = "ADLER32"
+    operation.addFile(opFile)
+
 
 if __name__ == "__main__":
-  run()
+  ARGS, SW = registerSwitches()
+  run(ARGS, SW)
