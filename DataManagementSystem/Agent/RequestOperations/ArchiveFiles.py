@@ -1,5 +1,5 @@
 """
-RequestOperation to Tar and Upload a list of Files
+RequestOperation to Tar and Upload a list of Files.
 
 Download a list of files to local storage, then tars it and uploads it to a StorageElement
 
@@ -24,12 +24,10 @@ __RCSID__ = "$Id$"
 
 
 class ArchiveFiles(OperationHandlerBase):
-  """
-  ArchiveFiles operation handler
-  """
+  """ArchiveFiles operation handler."""
 
   def __init__(self, operation=None, csPath=None):
-    """Constructor for ArchifeFiles.
+    """Initialize the ArchifeFiles handler.
 
     :param self: self reference
     :param Operation operation: Operation instance
@@ -43,14 +41,14 @@ class ArchiveFiles(OperationHandlerBase):
                               "RequestExecutingAgent", "Files/min", gMonitor.OP_SUM)
     gMonitor.registerActivity("ArchiveFilesFail", "Downloads failed",
                               "RequestExecutingAgent", "Files/min", gMonitor.OP_SUM)
-    self.workDirectory = os.environ.get('DIRAC_ARCHIVE_CACHE', os.environ.get('AGENT_WORKDIRECTORY', './ARCHIVE_TMP'))
+    self.workDirectory = os.environ.get(
+        'DIRAC_ARCHIVE_CACHE', os.environ.get('AGENT_WORKDIRECTORY', './ARCHIVE_TMP'))
     self.parameterDict = {}
     self.cacheFolder = None
-    self.waitingFiles= []
+    self.waitingFiles = []
 
   def __call__(self):
-    """ArchiveFiles operation processing."""
-
+    """Process the ArchiveFiles operation."""
     try:
       self._run()
     except Exception as e:
@@ -62,7 +60,8 @@ class ArchiveFiles(OperationHandlerBase):
 
   def _run(self):
     """Execute the download and tarring."""
-    self.parameterDict = DEncode.decode(self.operation.Arguments)[0]  # tuple: dict, number of characters
+    self.parameterDict = DEncode.decode(self.operation.Arguments)[
+        0]  # tuple: dict, number of characters
     self.cacheFolder = os.path.join(self.workDirectory, self.request.RequestName)
     self.log.notice("Parameters: %s" % pformat(self.parameterDict))
     self.waitingFiles = self.getWaitingFilesList()
@@ -72,11 +71,10 @@ class ArchiveFiles(OperationHandlerBase):
     self._markFilesDone()
 
   def _downloadFiles(self):
-    """Download the files"""
-
+    """Download the files."""
     self._checkFileSizes()
     self._checkFilePermissions()
-    
+
     for opFile in self.waitingFiles:
       lfn = opFile.LFN
       self.log.notice("processing file %s" % lfn)
@@ -85,7 +83,7 @@ class ArchiveFiles(OperationHandlerBase):
       sourceSE = self.parameterDict['SourceSE']
 
       attempts = 0
-      destFolder= os.path.join(self.cacheFolder, os.path.dirname(lfn)[1:])
+      destFolder = os.path.join(self.cacheFolder, os.path.dirname(lfn)[1:])
       self.log.notice("destFolder: %s" % destFolder)
       if not os.path.exists(destFolder):
         os.makedirs(destFolder)
@@ -128,7 +126,8 @@ class ArchiveFiles(OperationHandlerBase):
     """Tar the files."""
     tarFileName = os.path.splitext(os.path.basename(self.parameterDict['ArchiveLFN']))[0]
     baseDir = self.parameterDict['ArchiveLFN'].strip('/').split('/')[0]
-    shutil.make_archive(tarFileName, format='tar', root_dir=self.cacheFolder, base_dir=baseDir, dry_run=False, logger=self.log)
+    shutil.make_archive(tarFileName, format='tar', root_dir=self.cacheFolder, base_dir=baseDir,
+                        dry_run=False, logger=self.log)
 
   def _uploadTarBall(self):
     """Upload the tarball to specified LFN."""
@@ -150,9 +149,10 @@ class ArchiveFiles(OperationHandlerBase):
     shutil.rmtree(self.cacheFolder)
 
   def setOperation(self, operation):  # pylint: disable=useless-super-delegation
-    """ operation and request setter
+    """Set Operation and request setter.
 
-      :param ~DIRAC.RequestManagementSystem.Client.Operation.Operation operation: operation instance
-      :raises TypeError: if ``operation`` in not an instance of :class:`~DIRAC.RequestManagementSystem.Client.Operation.Operation`
+    :param ~DIRAC.RequestManagementSystem.Client.Operation.Operation operation: operation instance
+    :raises TypeError: if ``operation`` in not an instance
+        of :class:`~DIRAC.RequestManagementSystem.Client.Operation.Operation`
     """
     super(ArchiveFiles, self).setOperation(operation)

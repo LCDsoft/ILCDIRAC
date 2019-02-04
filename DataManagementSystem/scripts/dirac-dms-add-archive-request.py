@@ -11,7 +11,7 @@ List of operations:
 
 """
 import os
-from pprint import pprint, pformat
+from pprint import pformat
 
 import DIRAC
 from DIRAC import gLogger
@@ -22,14 +22,17 @@ from DIRAC.Core.Base import Script
 
 LOG = gLogger.getSubLogger("AddArchive")
 __RCSID__ = "$Id$"
-MAX_SIZE = 2 * 1024 * 1024 * 1024
+MAX_SIZE = 2 * 1024 * 1024 * 1024  # 2 GB
 
 
-def FileCatalog():
+def fcClient():
+  """Return FileCatalogClient."""
   from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient as FC
   return FC()
 
+
 def registerSwitches():
+  """Set flags and options."""
   switches = {}
   options = [("S", "SourceSE", "Source SE to use"),
              ("F", "FinalSE", "Final SE for tarball"),
@@ -38,7 +41,7 @@ def registerSwitches():
              ("P", "Path", "LFN path to folder, all files in the folder will be archived"),
              ("N", "Name", "Name of the Tarball, if not given Path_Tars/Path_N.tar will be used to store tarballs"),
              ("L", "List", "File containing list of LFNs to archive, requires Name to be given"),
-            ]
+             ]
   flags = [("R", "RegisterArchiveReplica", "Register archived files in ArchiveSE"),
            ("C", "ReplicateTarball", "Replicate the tarball"),
            ("D", "RemoveReplicas", "Remove Replicas from non-ArchiveSE"),
@@ -55,7 +58,7 @@ def registerSwitches():
                                     'Arguments:',
                                     '         LFNs: file with LFNs',
                                     '  tarBallName: LFN of the tarball',
-                                   ]))
+                                    ]))
 
   Script.parseCommandLine()
 
@@ -76,24 +79,34 @@ def registerSwitches():
   switches['DryRun'] = not switches.get('Execute', False)
   return args, switches
 
+
 def getLFNList(switches):
-  """ get list of LFNs """
+  """Get list of LFNs.
+
+  Either read the provided file, or get the files found beneath the proviede folder.
+  Also Set TarBall name if given folder and not given it already.
+
+  :param dict switches: options from command line
+  :returns: list of lfns
+  :raises: RuntimeError, ValueError
+  """
   lfnList = []
   if switches.get("List"):
     if os.path.exists(switches.get("List")):
-      lfnList = list(set([line.split()[0] for line in open(switches.get("List")).read().splitlines()]))
+      lfnList = list(set([line.split()[0]
+                          for line in open(switches.get("List")).read().splitlines()]))
     else:
       raise ValueError('%s not a file' % switches.get("List"))
   if switches.get("Path"):
     path = switches.get("Path")
     LOG.debug("Check if %r is a directory" % path)
-    isDir = returnSingleResult(FileCatalog().isDirectory(path))
+    isDir = returnSingleResult(fcClient().isDirectory(path))
     LOG.debug("Result: %r" % isDir)
     if not isDir['OK'] or not isDir['Value']:
       LOG.error("Path is not a directory", isDir.get('Message', ''))
       raise RuntimeError("Path %r is not a directory" % path)
     LOG.notice("Looking for files in %r" % path)
-    lfns = FileCatalog().findFilesByMetadata(metaDict={}, path=switches.get("Path"))
+    lfns = fcClient().findFilesByMetadata(metaDict={}, path=switches.get("Path"))
     if not lfns['OK']:
       LOG.error("Could not find files")
       raise RuntimeError(lfns['Message'])
@@ -104,7 +117,7 @@ def getLFNList(switches):
 
   tbLFN = switches.get("Name")
   LOG.debug("Checking permissions for %r" % tbLFN)
-  hasAccess = returnSingleResult(FileCatalog().hasAccess(tbLFN, "addFile"))
+  hasAccess = returnSingleResult(fcClient().hasAccess(tbLFN, "addFile"))
   if not tbLFN or not hasAccess['OK'] or not hasAccess['Value']:
     LOG.error("Error checking tarball location: %r" % hasAccess)
     raise ValueError('%s is not a valid path, parameter "Name" must be correct' % tbLFN)
@@ -123,7 +136,7 @@ def splitLFNsBySize(lfns):
   :return: list of list of lfns
   """
   LOG.notice("Splitting files by Size")
-  metaData = FileCatalog().getFileMetadata(lfns)
+  metaData = fcClient().getFileMetadata(lfns)
   error = False
   if not metaData["OK"]:
     LOG.error("Unable to read metadata for lfns: %s" % metaData["Message"])
@@ -151,7 +164,7 @@ def splitLFNsBySize(lfns):
   lfnChunks.append(lfnChunk)
   LOG.notice("Created Chunk of %s lfns with %s bytes" % (len(lfnChunk), totalSize))
 
-  replicaSEs = set([seItem for se in FileCatalog().getReplicas(lfns)['Value']['Successful'].values()
+  replicaSEs = set([seItem for se in fcClient().getReplicas(lfns)['Value']['Successful'].values()
                     for seItem in se.keys()])
 
   return lfnChunks, metaData, replicaSEs
@@ -159,7 +172,6 @@ def splitLFNsBySize(lfns):
 
 def run(args, switches):
   """Perform checks andcreate the request."""
-
   lfnList = getLFNList(switches)
   baseArchiveLFN = archiveLFN = switches["Name"]
 
@@ -192,7 +204,7 @@ def run(args, switches):
     if multiRequests:
       requestName = '%s_%d' % (baseRequestName, count)
       baseName = os.path.split(baseArchiveLFN.rsplit('.', 1)[0])
-      archiveLFN = '%s/%s_Tars/%s_%d.tar' % (baseName[0], baseName[1], baseName[1] , count)
+      archiveLFN = '%s/%s_Tars/%s_%d.tar' % (baseName[0], baseName[1], baseName[1], count)
       LOG.notice("Tarball %s" % archiveLFN)
 
     request.RequestName = requestName
@@ -264,7 +276,9 @@ def run(args, switches):
       handlerDict = {}
       handlerDict['ArchiveFiles'] = 'ILCDIRAC.DataManagementSystem.Agent.RequestOperations.ArchiveFiles'
       handlerDict['ReplicateAndRegister'] = 'DIRAC.DataManagementSystem.Agent.RequestOperations.ReplicateAndRegister'
-      rq = RequestTask(request.toJSON()['Value'], handlerDict, '/Systems/RequestManagement/Development/Agents/RequestExecutingAgents',
+      rq = RequestTask(request.toJSON()['Value'],
+                       handlerDict,
+                       '/Systems/RequestManagement/Development/Agents/RequestExecutingAgents',
                        'RequestManagement/RequestExecutingAgent', standalone=True)
       rq()
     else:
@@ -278,11 +292,13 @@ def run(args, switches):
         LOG.always("Request '%s' has been put to ReqDB for execution." % request.RequestName)
 
       if multiRequests:
-        LOG.always("%d requests have been put to ReqDB for execution, with name %s_<num>" % (count, requestName))
+        LOG.always("%d requests have been put to ReqDB for execution, with name %s_<num>" %
+                   (count, requestName))
       if requestIDs:
         LOG.always("RequestID(s): %s" % " ".join(requestIDs))
       LOG.always("You can monitor requests' status using command: 'dirac-rms-request <requestName/ID>'")
       DIRAC.exit(error)
+
 
 def addLFNs(operation, lfns, metaData, addPFN=False):
   """Add lfns to operation."""
