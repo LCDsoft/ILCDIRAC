@@ -27,7 +27,7 @@ from DIRAC.Core.Base import Script
 LOG = gLogger.getSubLogger('AddArchive')
 __RCSID__ = '$Id$'
 MAX_SIZE = 2 * 1024 * 1024 * 1024  # 2 GB
-
+MAX_FILES = 2000
 
 class CreateArchiveRequest(object):
   """Create the request to archive files."""
@@ -150,7 +150,7 @@ class CreateArchiveRequest(object):
     raise ValueError('"Path" or "List" need to be provided!')
 
   def splitLFNsBySize(self):
-    """Split LFNs into MAX_SIZE chunks.
+    """Split LFNs into MAX_SIZE chunks of at most MAX_FILES length.
 
     :return: list of list of lfns
     """
@@ -171,7 +171,7 @@ class CreateArchiveRequest(object):
     lfnChunk = []
     totalSize = 0
     for lfn, info in self.metaData['Successful'].iteritems():
-      if totalSize > MAX_SIZE:
+      if (totalSize > MAX_SIZE or len(lfnChunk) >= MAX_FILES) and not self.switches.get('List'):
         self.lfnChunks.append(lfnChunk)
         LOG.notice('Created Chunk of %s lfns with %s bytes' % (len(lfnChunk), totalSize))
         lfnChunk = []
