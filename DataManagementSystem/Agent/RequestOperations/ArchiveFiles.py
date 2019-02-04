@@ -65,6 +65,7 @@ class ArchiveFiles(OperationHandlerBase):
     """Execute the download and tarring."""
     self.parameterDict = DEncode.decode(self.operation.Arguments)[0]  # tuple: dict, number of characters
     self.cacheFolder = os.path.join(self.workDirectory, self.request.RequestName)
+    self._checkArchiveLFN()
     self.log.info('Parameters: %s' % pformat(self.parameterDict))
     self.log.info('Cache folder: %r' % self.cacheFolder)
     self.waitingFiles = self.getWaitingFilesList()
@@ -73,6 +74,14 @@ class ArchiveFiles(OperationHandlerBase):
     self._tarFiles()
     self._uploadTarBall()
     self._markFilesDone()
+
+  def _checkArchiveLFN(self):
+    """Make sure the archive LFN does not exist yet."""
+    archiveLFN = self.parameterDict['ArchiveLFN']
+    exists = returnSingleResult(self.fc.isFile(archiveLFN))
+    self.log.debug('Checking for Tarball existance %r' % exists)
+    if exists['OK'] and exists['Value']:
+      raise RuntimeError('Tarball %r already exists' % archiveLFN)
 
   def _downloadFiles(self):
     """Download the files."""
