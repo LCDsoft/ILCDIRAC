@@ -40,6 +40,7 @@ def registerSwitches():
              ("L", "List", "File containing list of LFNs to archive, requires Name to be given"),
             ]
   flags = [("R", "RegisterArchiveReplica", "Register archived files in ArchiveSE"),
+           ("C", "ReplicateTarball", "Replicate the tarball"),
            ("D", "RemoveReplicas", "Remove Replicas from non-ArchiveSE"),
            ("U", "RemoveFiles", "Remove Archived files completely"),
            ("X", "Execute", "Put Requests, else dryrun"),
@@ -206,14 +207,15 @@ def run(args, switches):
     addLFNs(archiveFiles, lfnChunk, metaData)
     request.addOperation(archiveFiles)
 
-    # Replicate the Tarball, ArchiveFiles will upload it
-    replicateAndRegisterTarBall = Operation()
-    replicateAndRegisterTarBall.Type = "ReplicateAndRegister"
-    replicateAndRegisterTarBall.TargetSE = switches.get('FinalSE', 'CERN-SRM')
-    opFile = File()
-    opFile.LFN = archiveLFN
-    replicateAndRegisterTarBall.addFile(opFile)
-    request.addOperation(replicateAndRegisterTarBall)
+    if switches.get("ReplicateTarball"):
+      # Replicate the Tarball, ArchiveFiles will upload it
+      replicateAndRegisterTarBall = Operation()
+      replicateAndRegisterTarBall.Type = "ReplicateAndRegister"
+      replicateAndRegisterTarBall.TargetSE = switches.get('FinalSE', 'CERN-SRM')
+      opFile = File()
+      opFile.LFN = archiveLFN
+      replicateAndRegisterTarBall.addFile(opFile)
+      request.addOperation(replicateAndRegisterTarBall)
 
     # Register Archive Replica for LFNs
     if switches.get("RegisterArchiveReplica"):
@@ -238,14 +240,15 @@ def run(args, switches):
       addLFNs(removeArchiveFiles, lfnChunk, metaData)
       request.addOperation(removeArchiveFiles)
 
-    # Remove Original tarball replica
-    removeTarballOrg = Operation()
-    removeTarballOrg.Type = "RemoveReplica"
-    removeTarballOrg.TargetSE = 'CERN-DST-EOS'
-    opFile = File()
-    opFile.LFN = archiveLFN
-    removeTarballOrg.addFile(opFile)
-    request.addOperation(removeTarballOrg)
+    if switches.get("ReplicateTarball"):
+      # Remove Original tarball replica
+      removeTarballOrg = Operation()
+      removeTarballOrg.Type = "RemoveReplica"
+      removeTarballOrg.TargetSE = 'CERN-DST-EOS'
+      opFile = File()
+      opFile.LFN = archiveLFN
+      removeTarballOrg.addFile(opFile)
+      request.addOperation(removeTarballOrg)
 
     from DIRAC.RequestManagementSystem.private.RequestValidator import RequestValidator
     valid = RequestValidator().validate(request)
