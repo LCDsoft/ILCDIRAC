@@ -1,14 +1,10 @@
 """Ensure the files have been migrated to tape."""
 
 
-import os
-import shutil
 from pprint import pformat
 
 from DIRAC import S_OK, S_ERROR
-from DIRAC.Core.Utilities import DEncode
 from DIRAC.Core.Utilities.ReturnValues import returnSingleResult
-from DIRAC.FrameworkSystem.Client.MonitoringClient import gMonitor
 from DIRAC.RequestManagementSystem.private.OperationHandlerBase import OperationHandlerBase
 from DIRAC.Resources.Storage.StorageElement import StorageElement
 
