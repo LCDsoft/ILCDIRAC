@@ -12,6 +12,7 @@ DIRAC_ARCHIVE_CACHE
 
 import os
 import tarfile
+from pprint import pformat
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Utilities import DEncode
@@ -41,7 +42,7 @@ class ArchiveFiles(OperationHandlerBase):
                               "RequestExecutingAgent", "Files/min", gMonitor.OP_SUM)
     gMonitor.registerActivity("ArchiveFilesFail", "Downloads failed",
                               "RequestExecutingAgent", "Files/min", gMonitor.OP_SUM)
-    self.workDirectory = os.environ.get('DIRAC_ARCHIVE_CACHE', os.environ.get('AGENT_WORKDIRECTORY', '/opt/dirac/ArchiveFiles'))
+    self.workDirectory = os.environ.get('DIRAC_ARCHIVE_CACHE', os.environ.get('AGENT_WORKDIRECTORY', './ARCHIVE_TMP'))
     self.parameterDict = {}
     self.targetSE = ''
     self.cacheFolder = None
@@ -53,14 +54,15 @@ class ArchiveFiles(OperationHandlerBase):
       self._run()
     except Exception as e:
       self.log.error("Failed to execute ArchiveFiles", repr(e))
+      raise
       return S_ERROR(str(e))
     return S_OK()
 
   def _run(self):
     """Execute the download and tarring."""
-    self.parameterDict = DEncode.decode(self.operation.Arguments)
+    self.parameterDict = DEncode.decode(self.operation.Arguments)[0]  # tuple: dict, number of characters
     self.cacheFolder = os.path.join(self.workDirectory, self.request.RequestName)
-    self.log.info("Parameters: %s" % self.parameterDict)
+    self.log.info("Parameters: %s" % pformat(self.parameterDict))
     self._getTargetSE()
     self._downloadFiles()
     self._tarFiles()
@@ -115,31 +117,37 @@ class ArchiveFiles(OperationHandlerBase):
 
       sourceSE = self.parameterDict['SourceSE']
 
-      download = S_ERROR()
       attempts = 0
-      while not download['OK']:
+      destFolder= os.path.join(self.cacheFolder, os.path.dirname(lfn)[1:])
+      self.log.info("destFolder: %s" % destFolder)
+      if not os.path.exists(destFolder):
+        os.makedirs(destFolder)
+      while True:
         attempts += 1
-        destFolder= os.path.join(self.cacheFolder, os.path.dirname(lfn))
-        if not os.path.exists(destFolder):
-          os.path.makedirs(destFolder)
         download = self.dm.getFile(lfn, destinationDir=destFolder, sourceSE=sourceSE)
-        if download["OK"]:
+        if download["OK"] and lfn in download['Value']['Successful']:
           self.log.info("Downloaded file: %s" % lfn)
           gMonitor.addMark("ArchiveFilesOK", 1)
           break
-        self.log.error("Failed to download file:", download["Message"])
-        opFile.Error = str(download["Message"])
+        errorString = ''
+        if not download['OK']:
+          errorString = download['Message']
+          self.log.error("Failed to download file:", errorString)
+        elif lfn in download['Value']['Failed']:
+          errorString = download['Value']['Failed'][lfn]
+          self.log.error("Failed to download file:", errorString)
+        opFile.Error = errorString
         opFile.Attempt += 1
         self.operation.Error = opFile.Error
         if 'No such file or directory' in opFile.Error:
           opFile.Status = 'Failed'
           break
         if attempts > 10:
-          self.log.error("Completely failed to download file:", download["Message"])
-          break
+          self.log.error("Completely failed to download file:", errorString)
+          raise RuntimeError("Completely failed to download file: %s" % errorString)
 
-      if not download['OK']:
-        raise RuntimeError(download['Message'])
+      if not download['OK'] or lfn in download['Value']['Failed']:
+        raise RuntimeError('Failed to download file: %s' % attempts)
 
       if lfn in download['Value']:
         gMonitor.addMark("ArchiveFilesOK", 1)
@@ -157,8 +165,8 @@ class ArchiveFiles(OperationHandlerBase):
 
   def _tarFiles(self):
     """Tar the files."""
-    tarFileName = self.parameterDict['TarFileName']
-    with tarfile.TarFile(tarFileName) as archive:
+    tarFileName = self.parameterDict['ArchiveLFN']
+    with tarfile.TarFile(os.path.basename(tarFileName), mode='w') as archive:
       archive.add(self.cacheFolder+'/ilc', arcname='ilc/', recursive=True)
       archive.list(verbose=True)
 
