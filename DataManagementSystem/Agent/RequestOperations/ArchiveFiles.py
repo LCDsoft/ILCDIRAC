@@ -12,7 +12,6 @@ DIRAC_ARCHIVE_CACHE
 
 import os
 import shutil
-import tarfile
 from pprint import pformat
 
 from DIRAC import S_OK, S_ERROR
@@ -71,40 +70,6 @@ class ArchiveFiles(OperationHandlerBase):
     self._tarFiles()
     self._uploadTarBall()
     self._markFilesDone()
-
-  def _getTargetSE(self):
-    """Get the targetSE."""
-    targetSEs = self.operation.targetSEList
-    if len(targetSEs) != 1:
-      self.log.error("wrong value for TargetSE list = %s, should contain only one target!" % targetSEs)
-      self.operation.Error = "Wrong parameters: TargetSE should contain only one targetSE"
-      for opFile in self.operation:
-
-        opFile.Status = "Failed"
-        opFile.Error = "Wrong parameters: TargetSE should contain only one targetSE"
-
-        gMonitor.addMark("ArchiveFilesAtt", 1)
-        gMonitor.addMark("ArchiveFilesFail", 1)
-
-      raise ValueError("TargetSE should contain only one target, got %s" % targetSEs)
-
-    self.targetSE = targetSEs[0]
-    targetWrite = self.rssSEStatus(self.targetSE, "WriteAccess")
-    if not targetWrite["OK"]:
-      self.log.error(targetWrite["Message"])
-      for opFile in self.operation:
-        opFile.Status = "Failed"
-        opFile.Error = "Wrong parameters: %s" % targetWrite["Message"]
-        gMonitor.addMark("ArchiveFilesAtt", 1)
-        gMonitor.addMark("ArchiveFilesFail", 1)
-      self.operation.Error = targetWrite["Message"]
-      raise ValueError("Wrong parameter value")
-
-    if not targetWrite["Value"]:
-      self.operation.Error = "TargetSE %s is banned for writing"
-      raise RuntimeError(self.operation.Error)
-
-    return
 
   def _downloadFiles(self):
     """Download the files"""
