@@ -161,10 +161,9 @@ class ArchiveFiles(OperationHandlerBase):
 
   def _tarFiles(self):
     """Tar the files."""
-    tarFileName = self.parameterDict['ArchiveLFN']
-    with tarfile.TarFile(os.path.basename(tarFileName), mode='w') as archive:
-      archive.add(self.cacheFolder+'/ilc', arcname='ilc/', recursive=True)
-      archive.list(verbose=True)
+    tarFileName = os.path.splitext(os.path.basename(self.parameterDict['ArchiveLFN']))[0]
+    baseDir = self.parameterDict['ArchiveLFN'].strip('/').split('/')[0]
+    shutil.make_archive(tarFileName, format='tar', root_dir=self.cacheFolder, base_dir=baseDir, dry_run=False, logger=self.log)
 
   def _uploadTarBall(self):
     """Upload the tarball to specified LFN."""

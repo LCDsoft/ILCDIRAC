@@ -132,6 +132,7 @@ def run(args, switches):
 
   count = 0
   reqClient = ReqClient()
+  requests = []
   requestIDs = []
 
   lfnChunks, metaData, replicaSEs = splitLFNsBySize(lfnList)
@@ -209,6 +210,10 @@ def run(args, switches):
     if not valid["OK"]:
       gLogger.error("putRequest: request not valid", "%s" % valid["Message"])
       return valid
+    else:
+      requests.append(request)
+
+  for request in requests:
 
     if switches.get("DryRun"):
       from DIRAC.RequestManagementSystem.private.RequestTask import RequestTask
