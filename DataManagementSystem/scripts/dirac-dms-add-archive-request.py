@@ -63,7 +63,7 @@ class CreateArchiveRequest(object):
     options = [('S', 'SourceSE', 'Source SE to use'),
                ('F', 'FinalSE', 'Final SE for tarball'),
                ('A', 'ArchiveSE', 'SE for registering archive files at'),
-               ('T', 'TarballSE', 'SE to initially upload arball'),
+               ('T', 'TarballSE', 'SE to initially upload tarball'),
                ('P', 'Path', 'LFN path to folder, all files in the folder will be archived'),
                ('N', 'Name', 'Name of the Tarball, if not given Path_Tars/Path_N.tar will be used to store tarballs'),
                ('L', 'List', 'File containing list of LFNs to archive, requires Name to be given'),
@@ -243,6 +243,14 @@ class CreateArchiveRequest(object):
       replicateAndRegisterTarBall.addFile(opFile)
       request.addOperation(replicateAndRegisterTarBall)
 
+      checkMigrationTarBall = Operation()
+      checkMigrationTarBall.Type = 'CheckMigration'
+      checkMigrationTarBall.TargetSE = self.switches.get('FinalSE', 'CERN-SRM')
+      opFile = File()
+      opFile.LFN = archiveLFN
+      checkMigrationTarBall.addFile(opFile)
+      request.addOperation(checkMigrationTarBall)
+
     # Register Archive Replica for LFNs
     if self.switches.get('RegisterArchiveReplica'):
       registerArchived = Operation()
@@ -281,6 +289,7 @@ class CreateArchiveRequest(object):
     """Run or put requests."""
     handlerDict = {}
     handlerDict['ArchiveFiles'] = 'ILCDIRAC.DataManagementSystem.Agent.RequestOperations.ArchiveFiles'
+    handlerDict['CheckMigration'] = 'ILCDIRAC.DataManagementSystem.Agent.RequestOperations.CheckMigration'
     handlerDict['ReplicateAndRegister'] = 'DIRAC.DataManagementSystem.Agent.RequestOperations.ReplicateAndRegister'
     handlerDict['RemoveFile'] = 'DIRAC.DataManagementSystem.Agent.RequestOperations.RemoveFile'
     requestIDs = []
