@@ -5,9 +5,14 @@ List of operations:
 #. ArchiveFiles
 #. ReplicateAndRegister Tarball
 #. Add ArchiveSE replica for all files
-#. Check for Tarball Migration (TODO)
+#. Check for Tarball Migration
 #. Remove all other replicas for these files
 #. Remove original replica of Tarball
+
+Will copy all the respective files and place them in to tarballs. Then the tarballs are migrated to
+another storage element. Once the file is migrated to tape the original files will be
+removed. Optionally the original files can be registered in a special archive SE, so that their
+metadata is preserved.
 
 """
 import os
