@@ -31,6 +31,7 @@ def registerSwitches():
   flags = [("R", "RegisterArchiveReplica", "Register archived files in ArchiveSE"),
            ("D", "RemoveReplicas", "Remove Replicas from non-ArchiveSE"),
            ("U", "RemoveFiles", "Remove Archived files completely"),
+           ("X", "Execute", "Put Requests, else dryrun"),
            ]
   for short, longOption, doc in options:
     Script.registerSwitch(short + ':', longOption + '=', doc)
@@ -41,13 +42,13 @@ def registerSwitches():
                                     ' %s [option|cfgfile] LFNs tarBallName' % Script.scriptName,
                                     'Arguments:',
                                     '         LFNs: file with LFNs',
-                                    '  tarBallName: name of the tarball',
+                                    '  tarBallName: LFN of the tarball',
                                    ]))
 
   Script.parseCommandLine()
 
   args = Script.getPositionalArgs()
-  if len(args) < 3:
+  if len(args) != 2:
     Script.showHelp()
     DIRAC.exit(1)
 
@@ -60,6 +61,7 @@ def registerSwitches():
       if switch[0] == short or switch[0].lower() == longOption.lower():
         switches[longOption] = True
         break
+  switches['DryRun'] = not switches.get('Execute', False)
   return args, switches
 
 def getLFNList(arg):
@@ -117,7 +119,6 @@ def run(args, switches):
 
   lfnList = getLFNList(args[0])
   baseArchiveLFN = archiveLFN = args[1]
-  targetSE = args[2]
 
   tarballName = os.path.basename(archiveLFN)
   baseRequestName = requestName = 'Archive_%s' % tarballName.rsplit('.', 1)[0]
@@ -203,35 +204,36 @@ def run(args, switches):
     removeTarballOrg.addFile(opFile)
     request.addOperation(removeTarballOrg)
 
-  pprint(eval(str(request).replace('null', 'None')))
-  from DIRAC.RequestManagementSystem.private.RequestValidator import RequestValidator
-  valid = RequestValidator().validate(request)
-  if not valid["OK"]:
-    gLogger.error("putRequest: request not valid", "%s" % valid["Message"])
-    return valid
+    pprint(eval(str(request).replace('null', 'None')))
+    from DIRAC.RequestManagementSystem.private.RequestValidator import RequestValidator
+    valid = RequestValidator().validate(request)
+    if not valid["OK"]:
+      gLogger.error("putRequest: request not valid", "%s" % valid["Message"])
+      return valid
 
-  from DIRAC.RequestManagementSystem.private.RequestTask import RequestTask
-  handlerDict = {}
-  handlerDict['ArchiveFiles'] = 'ILCDIRAC.DataManagementSystem.Agent.RequestOperations.ArchiveFiles'
-  rq = RequestTask(request.toJSON()['Value'], handlerDict, '/Systems/RequestManagement/Development/Agents/RequestExecutingAgents',
-                   'RequestManagement/RequestExecutingAgent', standalone=True)
-  rq()
+    if switches.get("DryRun"):
+      from DIRAC.RequestManagementSystem.private.RequestTask import RequestTask
+      handlerDict = {}
+      handlerDict['ArchiveFiles'] = 'ILCDIRAC.DataManagementSystem.Agent.RequestOperations.ArchiveFiles'
+      rq = RequestTask(request.toJSON()['Value'], handlerDict, '/Systems/RequestManagement/Development/Agents/RequestExecutingAgents',
+                       'RequestManagement/RequestExecutingAgent', standalone=True)
+      rq()
+    else:
+      putRequest = reqClient.putRequest(request)
+      if not putRequest["OK"]:
+        gLogger.error("unable to put request '%s': %s" % (request.RequestName, putRequest["Message"]))
+        error = -1
+        continue
+      requestIDs.append(str(putRequest["Value"]))
+      if not multiRequests:
+        gLogger.always("Request '%s' has been put to ReqDB for execution." % request.RequestName)
 
-  #   putRequest = reqClient.putRequest(request)
-  #   if not putRequest["OK"]:
-  #     gLogger.error("unable to put request '%s': %s" % (request.RequestName, putRequest["Message"]))
-  #     error = -1
-  #     continue
-  #   requestIDs.append(str(putRequest["Value"]))
-  #   if not multiRequests:
-  #     gLogger.always("Request '%s' has been put to ReqDB for execution." % request.RequestName)
-
-  # if multiRequests:
-  #   gLogger.always("%d requests have been put to ReqDB for execution, with name %s_<num>" % (count, requestName))
-  # if requestIDs:
-  #   gLogger.always("RequestID(s): %s" % " ".join(requestIDs))
-  # gLogger.always("You can monitor requests' status using command: 'dirac-rms-request <requestName/ID>'")
-  # DIRAC.exit(error)
+      if multiRequests:
+        gLogger.always("%d requests have been put to ReqDB for execution, with name %s_<num>" % (count, requestName))
+      if requestIDs:
+        gLogger.always("RequestID(s): %s" % " ".join(requestIDs))
+      gLogger.always("You can monitor requests' status using command: 'dirac-rms-request <requestName/ID>'")
+      DIRAC.exit(error)
 
 def addLFNs(operation, lfns, metaData, addPFN=False):
   """Add lfns to operation."""
