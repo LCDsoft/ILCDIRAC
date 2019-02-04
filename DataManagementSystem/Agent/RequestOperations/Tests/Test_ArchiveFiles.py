@@ -61,11 +61,12 @@ def multiRetVal(*args, **kwargs):
   if isinstance(lfns, basestring):
     lfns = [lfns]
   for index, lfn in enumerate(lfns):
-    print index, lfn
     if str(kwargs.get('Index', 5)) in lfn:
       retVal['Value']['Failed'][lfn] = kwargs.get('Error', 'Failed to do X')
+      print "Error for ", lfn, retVal['Value']['Failed'][lfn]
     else:
       retVal['Value']['Successful'][lfn] = kwargs.get('Success', True)
+      print "Success for ", lfn, retVal['Value']['Successful'][lfn]
   return retVal
 
 
@@ -104,7 +105,7 @@ def archiveFiles(mocker, archiveRequestAndOp, multiRetValOK):
   af.fc.hasAccess = mocker.MagicMock()
   af.fc.hasAccess.return_value = multiRetValOK
   af.fc.getReplicas = mocker.MagicMock()
-  af.fc.getReplicas.side_effect = partial(multiRetVal, Success=['SOURCE-SE'], Index=11)
+  af.fc.getReplicas.side_effect = partial(multiRetVal, Success={'SOURCE-SE': 'PFN'}, Index=11)
   af.fc.isFile = mocker.MagicMock()
   archiveLFN = '/vo/tars/myTar.tar'
   af.fc.isFile.return_value = S_OK({'Failed': {archiveLFN: 'no file'},
@@ -229,3 +230,73 @@ def test_cleanup(archiveFiles, mocker):
   archiveFiles._cleanup()
   osMocker.assert_called_with('nofile.tar')
   rmTreeMock.assert_called_with(archiveFiles.cacheFolder, ignore_errors=True)
+
+
+def test_checkArchiveLFN(archiveFiles):
+  archiveLFN = '/vo/tars/myTar.tar'
+  archiveFiles.parameterDict = {'ArchiveLFN': archiveLFN}
+  # tarball does not exist
+  archiveFiles._checkArchiveLFN()
+  archiveFiles.fc.isFile.assert_called_with(archiveLFN)
+
+def test_checkArchiveLFN_Fail(archiveFiles):
+  archiveLFN = '/vo/tars/myTar.tar'
+  archiveFiles.parameterDict = {'ArchiveLFN': archiveLFN}
+  # tarball already exists
+  archiveFiles.fc.isFile.side_effect = multiRetVal
+  with pytest.raises(RuntimeError, match='already exists$'):
+    archiveFiles._checkArchiveLFN()
+
+
+def test_checkReplicas_success(archiveFiles):
+  archiveFiles.waitingFiles = archiveFiles.getWaitingFilesList()
+  archiveFiles.parameterDict = {'SourceSE': 'SOURCE-SE'}
+  archiveFiles.lfns = [opFile.LFN for opFile in archiveFiles.waitingFiles]
+  archiveFiles.fc.getReplicas.side_effect = partial(multiRetVal,
+                                                    Index=11,
+                                                    Success={'SOURCE-SE': 'PFN'})
+  assert archiveFiles._checkReplicas() is None
+
+
+def test_checkReplicas_notAt(archiveFiles):
+  archiveFiles.waitingFiles = archiveFiles.getWaitingFilesList()
+  archiveFiles.parameterDict = {'SourceSE': 'SOURCE-SE'}
+  archiveFiles.lfns = [opFile.LFN for opFile in archiveFiles.waitingFiles]
+  archiveFiles.fc.getReplicas.side_effect = partial(multiRetVal,
+                                                    Index=11,
+                                                    Success={'Not-SOURCE-SE': 'PFN'})
+  with pytest.raises(RuntimeError, match='Some replicas are not at the source'):
+    archiveFiles._checkReplicas()
+
+
+def test_checkReplicas_noSuchFile(archiveFiles):
+  archiveFiles.waitingFiles = archiveFiles.getWaitingFilesList()
+  archiveFiles.parameterDict = {'SourceSE': 'SOURCE-SE'}
+  archiveFiles.lfns = [opFile.LFN for opFile in archiveFiles.waitingFiles]
+  archiveFiles.fc.getReplicas.side_effect = partial(multiRetVal,
+                                                    Index=7,
+                                                    Success={'SOURCE-SE': 'PFN'},
+                                                    Error='No such file or directory')
+  assert archiveFiles._checkReplicas() is None
+
+
+def test_checkReplicas_somefailed(archiveFiles):
+  archiveFiles.waitingFiles = archiveFiles.getWaitingFilesList()
+  archiveFiles.parameterDict = {'SourceSE': 'SOURCE-SE'}
+  archiveFiles.lfns = [opFile.LFN for opFile in archiveFiles.waitingFiles]
+  archiveFiles.fc.getReplicas.side_effect = partial(multiRetVal,
+                                                    Index=7,
+                                                    Success={'SOURCE-SE': 'PFN'},
+                                                    Error='some error')
+  with pytest.raises(RuntimeError, match='Failed to get some replica information'):
+    archiveFiles._checkReplicas()
+
+
+def test_checkReplicas_failed(archiveFiles, mocker):
+  archiveFiles.waitingFiles = archiveFiles.getWaitingFilesList()
+  archiveFiles.parameterDict = {'SourceSE': 'SOURCE-SE'}
+  archiveFiles.lfns = [opFile.LFN for opFile in archiveFiles.waitingFiles]
+  archiveFiles.fc.getReplicas = mocker.MagicMock()
+  archiveFiles.fc.getReplicas.return_value = S_ERROR('some error')
+  with pytest.raises(RuntimeError, match='Failed to get replica information'):
+    archiveFiles._checkReplicas()

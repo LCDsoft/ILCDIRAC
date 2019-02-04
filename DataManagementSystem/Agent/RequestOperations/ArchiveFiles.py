@@ -103,12 +103,14 @@ class ArchiveFiles(OperationHandlerBase):
         notAt.append(lfn)
 
     for lfn, errorMessage in resReplica['Value']['Failed'].iteritems():
-      self.log.error('Failed to get replica info', '%s: %s' % (lfn, errorMessage))
+      self.log.warn('Failed to get replica info', '%s: %s' % (lfn, errorMessage))
+      if 'No such file or directory' in errorMessage:
+        continue
       failed.append(lfn)
 
     if failed:
       self.log.error('LFNs failed to get replica info:', '%r' % ' '.join(failed))
-      raise RuntimeError('Failed to get replica information')
+      raise RuntimeError('Failed to get some replica information')
     if notAt:
       self.log.error('LFNs not at sourceSE:', '%r' % ' '.join(notAt))
       raise RuntimeError('Some replicas are not at the source')
