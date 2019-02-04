@@ -1,11 +1,11 @@
 """Tests for the ArchiveFiles Operation"""
 
-import functools
+from functools import partial
 import os
 
 import pytest
 
-from DIRAC import S_ERROR
+from DIRAC import S_ERROR, S_OK
 from DIRAC.Core.Utilities import DEncode
 from DIRAC.RequestManagementSystem.Client.File import File
 from DIRAC.RequestManagementSystem.Client.Operation import Operation
@@ -51,7 +51,7 @@ def multiRetValOK(listOfLFNs):
   return retVal
 
 
-def multiRetValFail(*args, **kwargs):
+def multiRetVal(*args, **kwargs):
   """Return a return structure for multiple values"""
   retVal = {'OK': True, 'Value':
             {'Failed': {},
@@ -65,7 +65,7 @@ def multiRetValFail(*args, **kwargs):
     if str(kwargs.get('Index', 5)) in lfn:
       retVal['Value']['Failed'][lfn] = kwargs.get('Error', 'Failed to do X')
     else:
-      retVal['Value']['Successful'][lfn] = True
+      retVal['Value']['Successful'][lfn] = kwargs.get('Success', True)
   return retVal
 
 
@@ -103,6 +103,12 @@ def archiveFiles(mocker, archiveRequestAndOp, multiRetValOK):
   af.fc = mocker.MagicMock('FileCatalogMock')
   af.fc.hasAccess = mocker.MagicMock()
   af.fc.hasAccess.return_value = multiRetValOK
+  af.fc.getReplicas = mocker.MagicMock()
+  af.fc.getReplicas.side_effect = partial(multiRetVal, Success=['SOURCE-SE'], Index=11)
+  af.fc.isFile = mocker.MagicMock()
+  archiveLFN = '/vo/tars/myTar.tar'
+  af.fc.isFile.return_value = S_OK({'Failed': {archiveLFN: 'no file'},
+                                    'Successful': {}})
   af.dm = mocker.MagicMock('DataManagerMock')
   af.dm.getFile = mocker.MagicMock(return_value=multiRetValOK)
   af.dm.putAndRegister = mocker.MagicMock(return_value=multiRetValOK)
@@ -127,7 +133,7 @@ def test_run_OK(archiveFiles, myMocker, listOfLFNs):
 
 
 def test_run_Fail(archiveFiles, myMocker, listOfLFNs):
-  archiveFiles.dm.getFile.side_effect = functools.partial(multiRetValFail, Index=5)
+  archiveFiles.dm.getFile.side_effect = partial(multiRetVal, Index=5)
   with pytest.raises(RuntimeError, match='Completely failed to download file'):
     archiveFiles._run()
   archiveFiles.dm.getFile.assert_called_with(listOfLFNs[5],
@@ -138,7 +144,7 @@ def test_run_Fail(archiveFiles, myMocker, listOfLFNs):
 
 
 def test_run_IgnoreMissingFiles(archiveFiles, myMocker, listOfLFNs):
-  archiveFiles.dm.getFile.side_effect = functools.partial(multiRetValFail, Index=5, Error='No such file or directory')
+  archiveFiles.dm.getFile.side_effect = partial(multiRetVal, Index=5, Error='No such file or directory')
   archiveFiles._run()
   archiveFiles.dm.getFile.assert_called_with(listOfLFNs[9],
                                              destinationDir=os.path.join(DEST_DIR, 'MyRequest', 'vo'),
@@ -155,7 +161,7 @@ def test_checkFilePermissions(archiveFiles, myMocker):
   archiveFiles.waitingFiles = archiveFiles.getWaitingFilesList()
   archiveFiles.lfns = [opFile.LFN for opFile in archiveFiles.waitingFiles]
   assert len(archiveFiles.lfns) == N_FILES
-  archiveFiles.fc.hasAccess.side_effect = functools.partial(multiRetValFail, Index=3, Error='Permission denied')
+  archiveFiles.fc.hasAccess.side_effect = partial(multiRetVal, Index=3, Error='Permission denied')
   with pytest.raises(RuntimeError, match='^Do not have sufficient permissions$'):
     archiveFiles._checkFilePermissions()
   for index, opFile in enumerate(archiveFiles.operation):
