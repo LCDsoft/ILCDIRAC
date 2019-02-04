@@ -137,19 +137,18 @@ def test_run_Fail(archiveFiles, myMocker, listOfLFNs):
     assert opFile.Status == 'Waiting'
 
 
-def test_run_FailForEver(archiveFiles, myMocker, listOfLFNs):
+def test_run_IgnoreMissingFiles(archiveFiles, myMocker, listOfLFNs):
   archiveFiles.dm.getFile.side_effect = functools.partial(multiRetValFail, Index=5, Error='No such file or directory')
-  with pytest.raises(RuntimeError, match='Failed to download file: 1$'):
-    archiveFiles._run()
-  archiveFiles.dm.getFile.assert_called_with(listOfLFNs[5],
+  archiveFiles._run()
+  archiveFiles.dm.getFile.assert_called_with(listOfLFNs[9],
                                              destinationDir=os.path.join(DEST_DIR, 'MyRequest', 'vo'),
                                              sourceSE='SOURCE-SE')
   for index, opFile in enumerate(archiveFiles.operation):
     print opFile
     if index == 5:
-      assert opFile.Status == 'Failed'
+      assert opFile.Status == 'Done'
     else:
-      assert opFile.Status == 'Waiting'
+      assert opFile.Status == 'Done'
 
 
 def test_checkFilePermissions(archiveFiles, myMocker):
