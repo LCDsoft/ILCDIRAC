@@ -11,6 +11,7 @@ DIRAC_ARCHIVE_CACHE
 """
 
 import os
+import shutil
 import tarfile
 from pprint import pformat
 
@@ -45,8 +46,8 @@ class ArchiveFiles(OperationHandlerBase):
                               "RequestExecutingAgent", "Files/min", gMonitor.OP_SUM)
     self.workDirectory = os.environ.get('DIRAC_ARCHIVE_CACHE', os.environ.get('AGENT_WORKDIRECTORY', './ARCHIVE_TMP'))
     self.parameterDict = {}
-    self.targetSE = ''
     self.cacheFolder = None
+    self.waitingFiles= []
 
   def __call__(self):
     """ArchiveFiles operation processing."""
@@ -65,10 +66,11 @@ class ArchiveFiles(OperationHandlerBase):
     self.parameterDict = DEncode.decode(self.operation.Arguments)[0]  # tuple: dict, number of characters
     self.cacheFolder = os.path.join(self.workDirectory, self.request.RequestName)
     self.log.info("Parameters: %s" % pformat(self.parameterDict))
-    self._getTargetSE()
+    self.waitingFiles = self.getWaitingFilesList()
     self._downloadFiles()
     self._tarFiles()
     self._uploadTarBall()
+    self._markFilesDone()
 
   def _getTargetSE(self):
     """Get the targetSE."""
@@ -106,12 +108,11 @@ class ArchiveFiles(OperationHandlerBase):
 
   def _downloadFiles(self):
     """Download the files"""
-    waitingFiles = self.getWaitingFilesList()
 
-    self._checkFileSizes(waitingFiles)
-    self._checkFilePermissions(waitingFiles)
+    self._checkFileSizes()
+    self._checkFilePermissions()
     
-    for opFile in waitingFiles:
+    for opFile in self.waitingFiles:
       lfn = opFile.LFN
       self.log.info("processing file %s" % lfn)
       gMonitor.addMark("ArchiveFilesAtt", 1)
@@ -146,15 +147,15 @@ class ArchiveFiles(OperationHandlerBase):
         raise RuntimeError('Failed to download file: %s' % attempts)
 
       gMonitor.addMark("ArchiveFilesOK", 1)
-      self.log.info("Downloaded %s to %s" % lfn)
+      self.log.info("Downloaded %s to %s" % (lfn, destFolder))
 
     return
 
-  def _checkFileSizes(self, waitingFiles):
+  def _checkFileSizes(self):
     """Check the files for total file size and return error if too large."""
     return
 
-  def _checkFilePermissions(self, waitingFiles):
+  def _checkFilePermissions(self):
     """Check that the request owner has permission to read and remove the files."""
     return
 
@@ -174,9 +175,15 @@ class ArchiveFiles(OperationHandlerBase):
     if not upload['OK']:
       raise RuntimeError("Failed to upload tarball: %s" % upload['Message'])
 
+  def _markFilesDone(self):
+    """Mark all the files as done."""
+    for opFile in self.waitingFiles:
+      opFile.Status = 'Done'
+
   def _cleanup(self):
     """Remove the tarball and the downloaded files."""
-    os.unlink(os.path.basename(self.parameterDict['ArchiveLFN']))
+    os.remove(os.path.basename(self.parameterDict['ArchiveLFN']))
+    shutil.rmtree(self.cacheFolder)
 
   def setOperation(self, operation):  # pylint: disable=useless-super-delegation
     """ operation and request setter

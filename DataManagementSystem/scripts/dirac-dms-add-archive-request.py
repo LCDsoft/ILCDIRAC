@@ -134,8 +134,8 @@ def run(args, switches):
   reqClient = ReqClient()
   requestIDs = []
 
-  lfnChunks, metaData, replicaSEs = splitLFNsBySize(lfnList[:3])
-  multiRequests = True or len(lfnChunks) > 1
+  lfnChunks, metaData, replicaSEs = splitLFNsBySize(lfnList)
+  multiRequests = len(lfnChunks) > 1
 
   for lfnChunk in lfnChunks:
     if not lfnChunk:
@@ -154,7 +154,6 @@ def run(args, switches):
 
     archiveFiles = Operation()
     archiveFiles.Type = "ArchiveFiles"
-    archiveFiles.TargetSE = targetSE
     archiveFiles.Arguments = DEncode.encode({'SourceSE': switches.get('SourceSE', 'CERN-DST-EOS'),
                                              'TarballSE': switches.get('TarballSE', 'CERN-DST-EOS'),
                                              'ArchiveSE': switches.get('ArchiveSE', 'CERN-ARCHIVE'),
