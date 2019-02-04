@@ -26,10 +26,18 @@ Script.setUsageMessage('\n'.join([__doc__,
                                   '     targetSE: target SE']))
 
 switches = {}
-Script.registerSwitch("S:", "SourceSE=", "   Source SE to use")
+sw = [("S", "SourceSE", "Source SE to use"),
+      ("F", "FinalSE", "Final SE for tarball"),
+      ("A", "ArchiveSE", "SE for registering archive files at"),
+      ("T", "TarballSE", "SE to initially upload arball"),
+      ]
+for s, l, d in sw:
+  Script.registerSwitch(s+':', l+'=', d)
 for switch in Script.getUnprocessedSwitches():
-  if switch[0] == "S" or switch[0].lower() == "sourcese":
-    switches['SourceSE'] = switch[1]
+  for s, l, d in sw:
+    if switch[0] == s or switch[0].lower() == l.lower():
+      switches[l] = switch[1]
+      break
 
 
 
@@ -140,6 +148,9 @@ def run():
     archiveFiles.Type = "ArchiveFiles"
     archiveFiles.TargetSE = targetSE
     archiveFiles.Arguments = DEncode.encode({'SourceSE': switches.get('SourceSE', 'CERN-DST-EOS'),
+                                             'TarballSE': switches.get('TarballSE', 'CERN-DST-EOS'),
+                                             'ArchiveSE': switches.get('ArchiveSE', 'CERN-ARCHIVE'),
+                                             'FinalSE': switches.get('FinalSE', 'CERN-SRM'),
                                              'ArchiveLFN': archiveLFN})
     for lfn in lfnChunk:
       metaDict = metaData["Successful"][lfn]
@@ -158,7 +169,7 @@ def run():
     # Replicate the Tarball, ArchiveFiles will upload it
     replicateAndRegisterTarBall = Operation()
     replicateAndRegisterTarBall.Type = "ReplicateAndRegister"
-    replicateAndRegisterTarBall.TargetSE = 'CERN-SRM'
+    replicateAndRegisterTarBall.TargetSE = switches.get('FinalSE', 'CERN-SRM')
     opFile = File()
     opFile.LFN = archiveLFN
     replicateAndRegisterTarBall.addFile(opFile)

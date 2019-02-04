@@ -16,6 +16,7 @@ from pprint import pformat
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Utilities import DEncode
+from DIRAC.Core.Utilities.ReturnValues import returnSingleResult
 from DIRAC.FrameworkSystem.Client.MonitoringClient import gMonitor
 from DIRAC.RequestManagementSystem.private.OperationHandlerBase import OperationHandlerBase
 
@@ -53,9 +54,10 @@ class ArchiveFiles(OperationHandlerBase):
     try:
       self._run()
     except Exception as e:
-      self.log.error("Failed to execute ArchiveFiles", repr(e))
-      raise
+      self.log.exception("Failed to execute ArchiveFiles", repr(e), lException=e)
       return S_ERROR(str(e))
+    finally:
+      self._cleanup()
     return S_OK()
 
   def _run(self):
@@ -67,7 +69,6 @@ class ArchiveFiles(OperationHandlerBase):
     self._downloadFiles()
     self._tarFiles()
     self._uploadTarBall()
-
 
   def _getTargetSE(self):
     """Get the targetSE."""
@@ -124,18 +125,13 @@ class ArchiveFiles(OperationHandlerBase):
         os.makedirs(destFolder)
       while True:
         attempts += 1
-        download = self.dm.getFile(lfn, destinationDir=destFolder, sourceSE=sourceSE)
-        if download["OK"] and lfn in download['Value']['Successful']:
+        download = returnSingleResult(self.dm.getFile(lfn, destinationDir=destFolder, sourceSE=sourceSE))
+        if download["OK"]:
           self.log.info("Downloaded file: %s" % lfn)
           gMonitor.addMark("ArchiveFilesOK", 1)
           break
-        errorString = ''
-        if not download['OK']:
-          errorString = download['Message']
-          self.log.error("Failed to download file:", errorString)
-        elif lfn in download['Value']['Failed']:
-          errorString = download['Value']['Failed'][lfn]
-          self.log.error("Failed to download file:", errorString)
+        errorString = download['Message']
+        self.log.error("Failed to download file:", errorString)
         opFile.Error = errorString
         opFile.Attempt += 1
         self.operation.Error = opFile.Error
@@ -146,12 +142,11 @@ class ArchiveFiles(OperationHandlerBase):
           self.log.error("Completely failed to download file:", errorString)
           raise RuntimeError("Completely failed to download file: %s" % errorString)
 
-      if not download['OK'] or lfn in download['Value']['Failed']:
+      if not download['OK']:
         raise RuntimeError('Failed to download file: %s' % attempts)
 
-      if lfn in download['Value']:
-        gMonitor.addMark("ArchiveFilesOK", 1)
-        self.log.info("Downloaded %s to %s" % lfn)
+      gMonitor.addMark("ArchiveFilesOK", 1)
+      self.log.info("Downloaded %s to %s" % lfn)
 
     return
 
@@ -169,6 +164,19 @@ class ArchiveFiles(OperationHandlerBase):
     with tarfile.TarFile(os.path.basename(tarFileName), mode='w') as archive:
       archive.add(self.cacheFolder+'/ilc', arcname='ilc/', recursive=True)
       archive.list(verbose=True)
+
+  def _uploadTarBall(self):
+    """Upload the tarball to specified LFN."""
+    lfn = self.parameterDict['ArchiveLFN']
+    localFile = os.path.basename(lfn)
+    tarballSE = self.parameterDict['TarballSE']
+    upload = returnSingleResult(self.dm.putAndRegister(lfn, localFile, tarballSE))
+    if not upload['OK']:
+      raise RuntimeError("Failed to upload tarball: %s" % upload['Message'])
+
+  def _cleanup(self):
+    """Remove the tarball and the downloaded files."""
+    os.unlink(os.path.basename(self.parameterDict['ArchiveLFN']))
 
   def setOperation(self, operation):  # pylint: disable=useless-super-delegation
     """ operation and request setter
