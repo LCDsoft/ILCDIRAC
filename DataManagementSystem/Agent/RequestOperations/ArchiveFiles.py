@@ -46,6 +46,7 @@ class ArchiveFiles(OperationHandlerBase):
     self.parameterDict = {}
     self.cacheFolder = None
     self.waitingFiles = []
+    self.lfns = []
 
   def __call__(self):
     """Process the ArchiveFiles operation."""
@@ -62,7 +63,8 @@ class ArchiveFiles(OperationHandlerBase):
     """Execute the download and tarring."""
     self.parameterDict = DEncode.decode(self.operation.Arguments)[0]  # tuple: dict, number of characters
     self.cacheFolder = os.path.join(self.workDirectory, self.request.RequestName)
-    self.log.notice('Parameters: %s' % pformat(self.parameterDict))
+    self.log.info('Parameters: %s' % pformat(self.parameterDict))
+    self.log.info('Cache folder: %r' % self.cacheFolder)
     self.waitingFiles = self.getWaitingFilesList()
     self.lfns = [opFile.LFN for opFile in self.waitingFiles]
     self._downloadFiles()
@@ -77,21 +79,21 @@ class ArchiveFiles(OperationHandlerBase):
 
     for opFile in self.waitingFiles:
       lfn = opFile.LFN
-      self.log.notice('processing file %s' % lfn)
+      self.log.info('Processing file %s' % lfn)
       gMonitor.addMark('ArchiveFilesAtt', 1)
 
       sourceSE = self.parameterDict['SourceSE']
 
       attempts = 0
       destFolder = os.path.join(self.cacheFolder, os.path.dirname(lfn)[1:])
-      self.log.notice('Local Cache Folder: %s' % destFolder)
+      self.log.debug('Local Cache Folder: %s' % destFolder)
       if not os.path.exists(destFolder):
         os.makedirs(destFolder)
       while True:
         attempts += 1
         download = returnSingleResult(self.dm.getFile(lfn, destinationDir=destFolder, sourceSE=sourceSE))
         if download['OK']:
-          self.log.notice('Downloaded file: %s' % lfn)
+          self.log.info('Downloaded file %r to %r' % (lfn, destFolder))
           gMonitor.addMark('ArchiveFilesOK', 1)
           break
         errorString = download['Message']
@@ -108,9 +110,6 @@ class ArchiveFiles(OperationHandlerBase):
 
       if not download['OK']:
         raise RuntimeError('Failed to download file: %s' % attempts)
-
-      gMonitor.addMark('ArchiveFilesOK', 1)
-      self.log.notice('Downloaded %s to %s' % (lfn, destFolder))
 
     return
 
@@ -144,19 +143,23 @@ class ArchiveFiles(OperationHandlerBase):
   def _uploadTarBall(self):
     """Upload the tarball to specified LFN."""
     lfn = self.parameterDict['ArchiveLFN']
+    self.log.info('Uploading tarball to %r' % lfn)
     localFile = os.path.basename(lfn)
     tarballSE = self.parameterDict['TarballSE']
     upload = returnSingleResult(self.dm.putAndRegister(lfn, localFile, tarballSE))
     if not upload['OK']:
       raise RuntimeError('Failed to upload tarball: %s' % upload['Message'])
+    self.log.debug('Uploading finished')
 
   def _markFilesDone(self):
     """Mark all the files as done."""
+    self.log.info('Marking files as done')
     for opFile in self.waitingFiles:
       opFile.Status = 'Done'
 
   def _cleanup(self):
     """Remove the tarball and the downloaded files."""
+    self.log.info('Cleaning files and tarball')
     os.remove(os.path.basename(self.parameterDict['ArchiveLFN']))
     shutil.rmtree(self.cacheFolder)
 
