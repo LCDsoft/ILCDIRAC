@@ -59,7 +59,7 @@ def registerSwitches():
   Script.parseCommandLine()
 
   args = Script.getPositionalArgs()
-  if len(args) != 0:
+  if args:
     Script.showHelp()
     DIRAC.exit(1)
 
@@ -80,10 +80,9 @@ def getLFNList(switches):
   lfnList = []
   if switches.get("List"):
     if os.path.exists(switches.get("List")):
-      lfnList = [line.split()[0] for line in open(switches.get("List")).read().splitlines()]
+      lfnList = list(set([line.split()[0] for line in open(switches.get("List")).read().splitlines()]))
     else:
       raise ValueError('%s not a file' % switches.get("List"))
-    lfnList = list(set(lfnList))
   if switches.get("Path"):
     path = switches.get("Path")
     LOG.debug("Check if %r is a directory" % path)
@@ -92,14 +91,14 @@ def getLFNList(switches):
     if not isDir['OK'] or not isDir['Value']:
       LOG.error("Path is not a directory", isDir.get('Message', ''))
       raise RuntimeError("Path %r is not a directory" % path)
-    LOG.debug("Looking for files in %r" % path)
+    LOG.notice("Looking for files in %r" % path)
     lfns = FileCatalog().findFilesByMetadata(metaDict={}, path=switches.get("Path"))
     if not lfns['OK']:
       LOG.error("Could not find files")
       raise RuntimeError(lfns['Message'])
     if not switches.get("Name"):
-      switches["Name"] = os.path.join(switches.get("Path"), os.path.basename(switches.get("Path")) + ".tar")
-      LOG.info("Using %r for tarball" % switches.get('Name'))
+      switches["Name"] = os.path.join(os.path.dirname(path), os.path.basename(path) + ".tar")
+      LOG.notice("Using %r for tarball" % switches.get('Name'))
     lfnList = lfns['Value']
 
   tbLFN = switches.get("Name")
@@ -122,15 +121,16 @@ def splitLFNsBySize(lfns):
 
   :return: list of list of lfns
   """
+  LOG.notice("Splitting files by Size")
   metaData = FileCatalog().getFileMetadata(lfns)
   error = False
   if not metaData["OK"]:
-    gLogger.error("Unable to read metadata for lfns: %s" % metaData["Message"])
+    LOG.error("Unable to read metadata for lfns: %s" % metaData["Message"])
     raise RuntimeError("Could not read metadata: %s" % metaData['Message'])
 
   metaData = metaData["Value"]
   for failedLFN, reason in metaData["Failed"].items():
-    gLogger.error("skipping %s: %s" % (failedLFN, reason))
+    LOG.error("skipping %s: %s" % (failedLFN, reason))
     error = True
   if error:
     raise RuntimeError("Could not read all metadata")
@@ -141,14 +141,14 @@ def splitLFNsBySize(lfns):
   for lfn, info in metaData['Successful'].iteritems():
     if totalSize > MAX_SIZE:
       lfnChunks.append(lfnChunk)
-      gLogger.info("Created Chunk of %s lfns with %s bytes" % (len(lfnChunk), totalSize))
+      LOG.notice("Created Chunk of %s lfns with %s bytes" % (len(lfnChunk), totalSize))
       lfnChunk = []
       totalSize = 0
     lfnChunk.append(lfn)
     totalSize += info['Size']
 
   lfnChunks.append(lfnChunk)
-  gLogger.info("Created Chunk of %s lfns with %s bytes" % (len(lfnChunk), totalSize))
+  LOG.notice("Created Chunk of %s lfns with %s bytes" % (len(lfnChunk), totalSize))
 
   replicaSEs = set([seItem for se in FileCatalog().getReplicas(lfns)['Value']['Successful'].values()
                     for seItem in se.keys()])
@@ -165,7 +165,7 @@ def run(args, switches):
   tarballName = os.path.basename(archiveLFN)
   baseRequestName = requestName = 'Archive_%s' % tarballName.rsplit('.', 1)[0]
 
-  gLogger.info("Will create request '%s' with %s lfns" % (requestName, len(lfnList)))
+  LOG.notice("Will create request '%s' with %s lfns" % (requestName, len(lfnList)))
 
   from DIRAC.RequestManagementSystem.Client.Request import Request
   from DIRAC.RequestManagementSystem.Client.Operation import Operation
@@ -178,11 +178,11 @@ def run(args, switches):
   requestIDs = []
 
   lfnChunks, metaData, replicaSEs = splitLFNsBySize(lfnList)
-  multiRequests = len(lfnChunks) > 1
+  multiRequests = True or len(lfnChunks) > 1
 
   for lfnChunk in lfnChunks:
     if not lfnChunk:
-      gLogger.error("LFN list is empty!!!")
+      LOG.error("LFN list is empty!!!")
       return 1
 
     count += 1
@@ -190,10 +190,11 @@ def run(args, switches):
 
     if multiRequests:
       requestName = '%s_%d' % (baseRequestName, count)
-      archiveLFN = '%s_%d.tar' % (baseArchiveLFN.rsplit('.', 1)[0] , count)
+      baseName = os.path.split(baseArchiveLFN.rsplit('.', 1)[0])
+      archiveLFN = '%s/%s_Tars/%s_%d.tar' % (baseName[0], baseName[1], baseName[1] , count)
+      LOG.notice("Tarball %s" % archiveLFN)
 
     request.RequestName = requestName
-    request.OwnerGroup = 'ilc_user'
 
     archiveFiles = Operation()
     archiveFiles.Type = "ArchiveFiles"
@@ -246,11 +247,10 @@ def run(args, switches):
     removeTarballOrg.addFile(opFile)
     request.addOperation(removeTarballOrg)
 
-    pprint(eval(str(request).replace('null', 'None')))
     from DIRAC.RequestManagementSystem.private.RequestValidator import RequestValidator
     valid = RequestValidator().validate(request)
     if not valid["OK"]:
-      gLogger.error("putRequest: request not valid", "%s" % valid["Message"])
+      LOG.error("putRequest: request not valid", "%s" % valid["Message"])
       return valid
     else:
       requests.append(request)
@@ -267,18 +267,18 @@ def run(args, switches):
     else:
       putRequest = reqClient.putRequest(request)
       if not putRequest["OK"]:
-        gLogger.error("unable to put request '%s': %s" % (request.RequestName, putRequest["Message"]))
+        LOG.error("unable to put request '%s': %s" % (request.RequestName, putRequest["Message"]))
         error = -1
         continue
       requestIDs.append(str(putRequest["Value"]))
       if not multiRequests:
-        gLogger.always("Request '%s' has been put to ReqDB for execution." % request.RequestName)
+        LOG.always("Request '%s' has been put to ReqDB for execution." % request.RequestName)
 
       if multiRequests:
-        gLogger.always("%d requests have been put to ReqDB for execution, with name %s_<num>" % (count, requestName))
+        LOG.always("%d requests have been put to ReqDB for execution, with name %s_<num>" % (count, requestName))
       if requestIDs:
-        gLogger.always("RequestID(s): %s" % " ".join(requestIDs))
-      gLogger.always("You can monitor requests' status using command: 'dirac-rms-request <requestName/ID>'")
+        LOG.always("RequestID(s): %s" % " ".join(requestIDs))
+      LOG.always("You can monitor requests' status using command: 'dirac-rms-request <requestName/ID>'")
       DIRAC.exit(error)
 
 def addLFNs(operation, lfns, metaData, addPFN=False):
