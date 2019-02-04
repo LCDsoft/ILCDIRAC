@@ -118,10 +118,9 @@ class ArchiveFiles(OperationHandlerBase):
     self._checkFileSizes()
     self._checkFilePermissions()
 
-    for opFile in self.waitingFiles:
+    for index, opFile in enumerate(self.waitingFiles):
       lfn = opFile.LFN
-      self.log.info('Processing file %s' % lfn)
-
+      self.log.info('Processing file (%d/%d) %r' % (index, len(self.waitingFiles), lfn))
       sourceSE = self.parameterDict['SourceSE']
 
       attempts = 0
