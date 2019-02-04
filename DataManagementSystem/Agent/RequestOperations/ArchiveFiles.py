@@ -34,12 +34,11 @@ class ArchiveFiles(OperationHandlerBase):
     :param string csPath: CS path for this handler
     """
     OperationHandlerBase.__init__(self, operation, csPath)
-    # gMonitor stuff
-    gMonitor.registerActivity('ArchiveFilesAtt', 'Download file attempts',
+    gMonitor.registerActivity('ArchiveFilesAtt', 'Request attempt',
                               'RequestExecutingAgent', 'Files/min', gMonitor.OP_SUM)
-    gMonitor.registerActivity('ArchiveFilesOK', 'Downloads successful',
+    gMonitor.registerActivity('ArchiveFilesOK', 'Requests successful',
                               'RequestExecutingAgent', 'Files/min', gMonitor.OP_SUM)
-    gMonitor.registerActivity('ArchiveFilesFail', 'Downloads failed',
+    gMonitor.registerActivity('ArchiveFilesFail', 'Requests failed',
                               'RequestExecutingAgent', 'Files/min', gMonitor.OP_SUM)
     self.workDirectory = os.environ.get('DIRAC_ARCHIVE_CACHE',
                                         os.environ.get('AGENT_WORKDIRECTORY', './ARCHIVE_TMP'))
@@ -51,9 +50,12 @@ class ArchiveFiles(OperationHandlerBase):
   def __call__(self):
     """Process the ArchiveFiles operation."""
     try:
+      gMonitor.addMark('ArchiveFilesAtt', 1)
       self._run()
+      gMonitor.addMark('ArchiveFilesOK', 1)
     except Exception as e:
       self.log.exception('Failed to execute ArchiveFiles', repr(e), lException=e)
+      gMonitor.addMark('ArchiveFilesFail', 1)
       return S_ERROR(str(e))
     finally:
       self._cleanup()
@@ -80,7 +82,6 @@ class ArchiveFiles(OperationHandlerBase):
     for opFile in self.waitingFiles:
       lfn = opFile.LFN
       self.log.info('Processing file %s' % lfn)
-      gMonitor.addMark('ArchiveFilesAtt', 1)
 
       sourceSE = self.parameterDict['SourceSE']
 
@@ -94,7 +95,6 @@ class ArchiveFiles(OperationHandlerBase):
         download = returnSingleResult(self.dm.getFile(lfn, destinationDir=destFolder, sourceSE=sourceSE))
         if download['OK']:
           self.log.info('Downloaded file %r to %r' % (lfn, destFolder))
-          gMonitor.addMark('ArchiveFilesOK', 1)
           break
         errorString = download['Message']
         self.log.error('Failed to download file:', errorString)
