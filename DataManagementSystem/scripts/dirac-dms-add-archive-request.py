@@ -23,6 +23,10 @@ from DIRAC.Core.Utilities import DEncode
 from DIRAC.Core.Utilities.ReturnValues import returnSingleResult
 from DIRAC.Core.Base import Script
 
+from DIRAC.RequestManagementSystem.Client.Request import Request
+from DIRAC.RequestManagementSystem.Client.Operation import Operation
+from DIRAC.RequestManagementSystem.Client.File import File
+
 
 LOG = gLogger.getSubLogger('AddArchive')
 __RCSID__ = '$Id$'
@@ -224,12 +228,10 @@ class CreateArchiveRequest(object):
 
   def createRequest(self, requestName, archiveLFN, lfnChunk):
     """Create the Request."""
-    from DIRAC.RequestManagementSystem.Client.Request import Request
-    from DIRAC.RequestManagementSystem.Client.Operation import Operation
-    from DIRAC.RequestManagementSystem.Client.File import File
-
     request = Request()
     request.RequestName = requestName
+
+    self._checkReplicaSites(request, lfnChunk)
 
     archiveFiles = Operation()
     archiveFiles.Type = 'ArchiveFiles'
@@ -356,6 +358,48 @@ class CreateArchiveRequest(object):
     if not archiveLFN or not hasAccess['OK'] or not hasAccess['Value']:
       LOG.error('Error checking tarball location: %r' % hasAccess)
       raise ValueError('%s is not a valid path, parameter "Name" must be correct' % archiveLFN)
+
+  def _checkReplicaSites(self, request, lfnChunk):
+    """Ensure that all lfns can be found at the sourceSE, otherwise add replication operation to request.
+
+    Abort if too many files are not at the source?
+    """
+    resReplica = self.fcClient.getReplicas(lfnChunk)
+    if not resReplica['OK']:
+      LOG.error('Failed to get replica information:', resReplica['Message'])
+      raise RuntimeError('Failed to get replica information')
+
+    atSource = []
+    notAt = []
+    failed = []
+    sourceSE = self.switches.get('SourceSE', 'CERN-DST-EOS')
+    for lfn, replInfo in resReplica['Value']['Successful'].iteritems():
+      if sourceSE in replInfo:
+        atSource.append(lfn)
+      else:
+        LOG.warn('LFN %r not found at source, only at: %s' % ','.join(replInfo.keys()))
+        notAt.append(lfn)
+
+    for lfn, errorMessage in resReplica['Value']['Failed'].iteritems():
+      LOG.error('Failed to get replica info', '%s: %s' % (lfn, errorMessage))
+      failed.append(lfn)
+
+    if failed:
+      raise RuntimeError('Failed to get replica information')
+
+    self._replicateSourceFiles(request, notAt)
+
+  def _replicateSourceFiles(self, request, lfns):
+    """Create the replicateAndRegisterRequest.
+
+    :param request: The request to add the operation to
+    :param lfns: list of LFNs
+    """
+    registerSource = Operation()
+    registerSource.Type = 'RegisterReplica'
+    registerSource.TargetSE = self.switches.get('SourceSE', 'CERN-DST-EOS')
+    self.addLFNs(registerSource, lfns, self.metaData, addPFN=True)
+    request.addOperation(registerSource)
 
 
 if __name__ == '__main__':
