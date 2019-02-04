@@ -20,7 +20,7 @@ from DIRAC.Core.Utilities.ReturnValues import returnSingleResult
 from DIRAC.FrameworkSystem.Client.MonitoringClient import gMonitor
 from DIRAC.RequestManagementSystem.private.OperationHandlerBase import OperationHandlerBase
 
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
 
 
 class ArchiveFiles(OperationHandlerBase):
@@ -35,14 +35,14 @@ class ArchiveFiles(OperationHandlerBase):
     """
     OperationHandlerBase.__init__(self, operation, csPath)
     # gMonitor stuff
-    gMonitor.registerActivity("ArchiveFilesAtt", "Download file attempts",
-                              "RequestExecutingAgent", "Files/min", gMonitor.OP_SUM)
-    gMonitor.registerActivity("ArchiveFilesOK", "Downloads successful",
-                              "RequestExecutingAgent", "Files/min", gMonitor.OP_SUM)
-    gMonitor.registerActivity("ArchiveFilesFail", "Downloads failed",
-                              "RequestExecutingAgent", "Files/min", gMonitor.OP_SUM)
-    self.workDirectory = os.environ.get(
-        'DIRAC_ARCHIVE_CACHE', os.environ.get('AGENT_WORKDIRECTORY', './ARCHIVE_TMP'))
+    gMonitor.registerActivity('ArchiveFilesAtt', 'Download file attempts',
+                              'RequestExecutingAgent', 'Files/min', gMonitor.OP_SUM)
+    gMonitor.registerActivity('ArchiveFilesOK', 'Downloads successful',
+                              'RequestExecutingAgent', 'Files/min', gMonitor.OP_SUM)
+    gMonitor.registerActivity('ArchiveFilesFail', 'Downloads failed',
+                              'RequestExecutingAgent', 'Files/min', gMonitor.OP_SUM)
+    self.workDirectory = os.environ.get('DIRAC_ARCHIVE_CACHE',
+                                        os.environ.get('AGENT_WORKDIRECTORY', './ARCHIVE_TMP'))
     self.parameterDict = {}
     self.cacheFolder = None
     self.waitingFiles = []
@@ -52,7 +52,7 @@ class ArchiveFiles(OperationHandlerBase):
     try:
       self._run()
     except Exception as e:
-      self.log.exception("Failed to execute ArchiveFiles", repr(e), lException=e)
+      self.log.exception('Failed to execute ArchiveFiles', repr(e), lException=e)
       return S_ERROR(str(e))
     finally:
       self._cleanup()
@@ -60,11 +60,11 @@ class ArchiveFiles(OperationHandlerBase):
 
   def _run(self):
     """Execute the download and tarring."""
-    self.parameterDict = DEncode.decode(self.operation.Arguments)[
-        0]  # tuple: dict, number of characters
+    self.parameterDict = DEncode.decode(self.operation.Arguments)[0]  # tuple: dict, number of characters
     self.cacheFolder = os.path.join(self.workDirectory, self.request.RequestName)
-    self.log.notice("Parameters: %s" % pformat(self.parameterDict))
+    self.log.notice('Parameters: %s' % pformat(self.parameterDict))
     self.waitingFiles = self.getWaitingFilesList()
+    self.lfns = [opFile.LFN for opFile in self.waitingFiles]
     self._downloadFiles()
     self._tarFiles()
     self._uploadTarBall()
@@ -77,25 +77,25 @@ class ArchiveFiles(OperationHandlerBase):
 
     for opFile in self.waitingFiles:
       lfn = opFile.LFN
-      self.log.notice("processing file %s" % lfn)
-      gMonitor.addMark("ArchiveFilesAtt", 1)
+      self.log.notice('processing file %s' % lfn)
+      gMonitor.addMark('ArchiveFilesAtt', 1)
 
       sourceSE = self.parameterDict['SourceSE']
 
       attempts = 0
       destFolder = os.path.join(self.cacheFolder, os.path.dirname(lfn)[1:])
-      self.log.notice("Local Cache Folder: %s" % destFolder)
+      self.log.notice('Local Cache Folder: %s' % destFolder)
       if not os.path.exists(destFolder):
         os.makedirs(destFolder)
       while True:
         attempts += 1
         download = returnSingleResult(self.dm.getFile(lfn, destinationDir=destFolder, sourceSE=sourceSE))
-        if download["OK"]:
-          self.log.notice("Downloaded file: %s" % lfn)
-          gMonitor.addMark("ArchiveFilesOK", 1)
+        if download['OK']:
+          self.log.notice('Downloaded file: %s' % lfn)
+          gMonitor.addMark('ArchiveFilesOK', 1)
           break
         errorString = download['Message']
-        self.log.error("Failed to download file:", errorString)
+        self.log.error('Failed to download file:', errorString)
         opFile.Error = errorString
         opFile.Attempt += 1
         self.operation.Error = opFile.Error
@@ -103,14 +103,14 @@ class ArchiveFiles(OperationHandlerBase):
           opFile.Status = 'Failed'
           break
         if attempts > 10:
-          self.log.error("Completely failed to download file:", errorString)
-          raise RuntimeError("Completely failed to download file: %s" % errorString)
+          self.log.error('Completely failed to download file:', errorString)
+          raise RuntimeError('Completely failed to download file: %s' % errorString)
 
       if not download['OK']:
         raise RuntimeError('Failed to download file: %s' % attempts)
 
-      gMonitor.addMark("ArchiveFilesOK", 1)
-      self.log.notice("Downloaded %s to %s" % (lfn, destFolder))
+      gMonitor.addMark('ArchiveFilesOK', 1)
+      self.log.notice('Downloaded %s to %s' % (lfn, destFolder))
 
     return
 
@@ -136,7 +136,7 @@ class ArchiveFiles(OperationHandlerBase):
     tarballSE = self.parameterDict['TarballSE']
     upload = returnSingleResult(self.dm.putAndRegister(lfn, localFile, tarballSE))
     if not upload['OK']:
-      raise RuntimeError("Failed to upload tarball: %s" % upload['Message'])
+      raise RuntimeError('Failed to upload tarball: %s' % upload['Message'])
 
   def _markFilesDone(self):
     """Mark all the files as done."""
