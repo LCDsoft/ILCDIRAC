@@ -53,6 +53,10 @@ class ArchiveFiles(OperationHandlerBase):
       gMonitor.addMark('ArchiveFilesAtt', 1)
       self._run()
       gMonitor.addMark('ArchiveFilesOK', 1)
+    except RuntimeError as e:
+      self.log.info('Failed to execute ArchiveFiles', repr(e))
+      gMonitor.addMark('ArchiveFilesFail', 1)
+      return S_ERROR(str(e))
     except Exception as e:
       self.log.exception('Failed to execute ArchiveFiles', repr(e), lException=e)
       gMonitor.addMark('ArchiveFilesFail', 1)
@@ -66,7 +70,8 @@ class ArchiveFiles(OperationHandlerBase):
     self.parameterDict = DEncode.decode(self.operation.Arguments)[0]  # tuple: dict, number of characters
     self.cacheFolder = os.path.join(self.workDirectory, self.request.RequestName)
     self._checkArchiveLFN()
-    self.log.info('Parameters: %s' % pformat(self.parameterDict))
+    for parameter, value in self.parameterDict.iteritems():
+      self.log.info('Parameters: %s = %s' % (parameter, value))
     self.log.info('Cache folder: %r' % self.cacheFolder)
     self.waitingFiles = self.getWaitingFilesList()
     self.lfns = [opFile.LFN for opFile in self.waitingFiles]
@@ -201,11 +206,11 @@ class ArchiveFiles(OperationHandlerBase):
     try:
       os.remove(os.path.basename(self.parameterDict['ArchiveLFN']))
     except OSError as e:
-      self.log.warn('Error when removing tarball: %s' % str(e))
+      self.log.debug('Error when removing tarball: %s' % str(e))
     try:
       shutil.rmtree(self.cacheFolder, ignore_errors=True)
     except OSError as e:
-      self.log.warn('Error when removing cacheFolder: %s' % str(e))
+      self.log.debug('Error when removing cacheFolder: %s' % str(e))
 
   def setOperation(self, operation):  # pylint: disable=useless-super-delegation
     """Set Operation and request setter.
