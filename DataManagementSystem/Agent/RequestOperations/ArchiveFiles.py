@@ -120,6 +120,18 @@ class ArchiveFiles(OperationHandlerBase):
 
   def _checkFilePermissions(self):
     """Check that the request owner has permission to read and remove the files."""
+    permissions = self.fc.hasAccess(self.lfns, 'removeFile')
+    if not permissions['OK']:
+      raise RuntimeError('Could not resolve permissions')
+    if permissions['Value']['Failed']:
+      for lfn in permissions['Value']['Failed']:
+        self.log.error('Cannot archive file:', lfn)
+        for opFile in self.waitingFiles:
+          if opFile.LFN == lfn:
+            opFile.Status = 'Failed'
+            opFile.Error = 'Permission denied'
+            break
+      raise RuntimeError('Do not have sufficient permissions')
     return
 
   def _tarFiles(self):
