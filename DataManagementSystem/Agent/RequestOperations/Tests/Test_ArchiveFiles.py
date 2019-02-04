@@ -224,8 +224,7 @@ def test_call_withError(archiveFiles, myMocker, listOfLFNs):
 
 def test_cleanup(archiveFiles, mocker):
   osMocker = mocker.patch(MODULE + '.os.remove', side_effect=OSError('No such file or directory'))
-  rmTreeMock = mocker.patch(MODULE + '.shutil.rmtree')
-
+  rmTreeMock = mocker.patch(MODULE + '.shutil.rmtree', side_effect=OSError('No such file or directory'))
   archiveFiles.parameterDict = {'ArchiveLFN': '/vo.lfn/nofile.tar'}
   archiveFiles._cleanup()
   osMocker.assert_called_with('nofile.tar')
