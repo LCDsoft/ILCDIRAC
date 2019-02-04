@@ -149,10 +149,6 @@ class ArchiveFiles(OperationHandlerBase):
         if attempts > 10:
           self.log.error('Completely failed to download file:', errorString)
           raise RuntimeError('Completely failed to download file: %s' % errorString)
-
-      if not download['OK']:
-        raise RuntimeError('Failed to download file: %s' % attempts)
-
     return
 
   def _checkFileSizes(self):
