@@ -170,6 +170,8 @@ class Calibration(MarlinAnalysis):
       return S_ERROR('Something wrong with software installation')
     marlin_dll = res["Value"]
 
+    # such loop has to be done for each phase
+    # each phase will have its own set of input slcio files (listofslcio)
     while True:
 
       calibrationParameters = self.cali.requestNewParameters()
@@ -186,7 +188,7 @@ class Calibration(MarlinAnalysis):
       self.log.notice("new set of calibration parameters: %r" % parameters)
       finalXML = xml_generate(self.baseSteeringFile, self.workerID, listofslcio, *parameters)
 
-      self.result = self.runMarlin(finalXML, env_script_path, marlin_dll)
+      self.result = self.runScript(finalXML, env_script_path, marlin_dll)
       if not self.result['OK']:
         self.log.error('Something wrong during running:', self.result['Message'])
         self.setApplicationStatus('Error during running %s' % self.applicationName)
@@ -299,7 +301,23 @@ class Calibration(MarlinAnalysis):
 
     return S_OK(marlindll)
 
-  def runMarlin(self, inputxml, env_script_path, marlin_dll):
+  def runScript(self, inputxml, env_script_path, marlin_dll):
+    _prepareMarlinPartOfTheScript(self, inputxml, env_script_path, marlin_dll)
+    _preparePandoraPartOfTheScript(self)
+
+    scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
+
+    if os.path.exists(self.applicationLog):
+      os.remove(self.applicationLog)
+
+    os.chmod(scriptName, 0755)
+    comm = 'sh -c "./%s"' % (scriptName)
+    self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER))
+    self.stdError = ''
+    res = shellCall(0, comm, callbackFunction=self.redirectLogOutput, bufferLimit=20971520)
+    return res
+
+  def _prepareMarlinPartOfTheScript(self, inputxml, env_script_path, marlin_dll):
     """ Actual bit of code running Marlin. Tomato calls this function.
     """
     scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
@@ -353,19 +371,20 @@ fi
       script.close()
       self.log.error("Steering file missing")
       return S_ERROR("SteeringFile is missing")
+    script.close()
+    return S_OK()
+
+  def _preparePandoraPartOfTheScript(self):
+    scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
+    script = open(scriptName, 'a')
+
+    # TODO implement Pandora related stuff
+
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')
-
     script.close()
-    if os.path.exists(self.applicationLog):
-      os.remove(self.applicationLog)
+    return S_OK()
 
-    os.chmod(scriptName, 0755)
-    comm = 'sh -c "./%s"' % (scriptName)
-    self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER))
-    self.stdError = ''
-    res = shellCall(0, comm, callbackFunction=self.redirectLogOutput, bufferLimit=20971520)
-    return res
 
   def GetInputFiles(self):
     """ Resolve the input files. But not if in the application definition it was decided

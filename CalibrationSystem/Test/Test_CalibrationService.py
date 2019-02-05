@@ -41,14 +41,14 @@ class CalibrationHandlerTest(unittest.TestCase):
 # FIXME: Change tests to reflect new way of starting calibration creation
 
   def test_submitresult(self):
-    with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
+    with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
       self.calh.export_createCalibration('', '', [], 0, '', '')
     assertDiracSucceeds(self.calh.export_submitResult(1, 0, 8234, [12.2, 1.2, .3]), self)
     assertEqualsImproved(CalibrationHandler.activeCalibrations[1].stepResults[0].results[8234],
                          [12.2, 1.2, 0.3], self)
 
   def test_submitresult_old_stepid(self):
-    with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
+    with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
       for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
         self.calh.export_createCalibration('', '', [], 0, '', '')
     CalibrationHandler.activeCalibrations[27].currentStep = 13
@@ -58,7 +58,7 @@ class CalibrationHandlerTest(unittest.TestCase):
                            0, self)
 
   def test_submitresult_wrong_calibrationID(self):
-    with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
+    with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
       for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
         self.calh.export_createCalibration('', '', [], 0, '', '')
     res = self.calh.export_submitResult(54, 1, 9841, [5, 6, 2, 1, 7])
@@ -70,7 +70,7 @@ class CalibrationHandlerTest(unittest.TestCase):
   def test_createcalibration(self):
     CalibrationHandler.calibrationCounter = 834 - 1  # newly created Calibration gets ID 834
     job_mock = Mock()
-    with patch.object(CalibrationRun, 'submitInitialJobs', new=job_mock):
+    with patch.object(CalibrationRun, 'submitJobs', new=job_mock):
       result = self.calh.export_createCalibration('steeringfile', 'version', ['inputfile1', 'inputfile2'],
                                                   12, '', '')
     assertDiracSucceedsWith_equals(result, (834, job_mock()), self)
@@ -146,7 +146,7 @@ class CalibrationHandlerTest(unittest.TestCase):
                                    982435, self)
 
   def test_getnewparams_inactive_calibration(self):
-    with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
+    with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
       for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
         self.calh.export_createCalibration('', '', [], 0, '', '')
     assertDiracFailsWith(self.calh.export_getNewParameters(135, 913),
@@ -173,7 +173,7 @@ class CalibrationHandlerTest(unittest.TestCase):
 
   def test_endcurrentstep(self):
     from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
-    with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
+    with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
       self.calh.export_createCalibration('', '', [], 0, '', '')
     self.calh.activeCalibrations[1].currentStep = 15
     result1 = [1, 2.3, 5]
@@ -189,7 +189,7 @@ class CalibrationHandlerTest(unittest.TestCase):
 
   def test_endcurrentstep_not_finished(self):
     from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
-    with patch.object(CalibrationRun, 'submitInitialJobs', new=Mock()):
+    with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
       self.calh.export_createCalibration('', '', [], 0, '', '')
     self.calh.activeCalibrations[1].currentStep = 14
     result1 = [1, 2.3, 5]
@@ -245,5 +245,5 @@ class CalibrationHandlerTest(unittest.TestCase):
   def atest_resubmitJob(self):
     pass  # FIXME: Finish atest once corresponding method is written
 
-  def atest_submitInitialJobs(self):
+  def atest_submitJobs(self):
     pass  # FIXME: Finish atest once corresponding method is written

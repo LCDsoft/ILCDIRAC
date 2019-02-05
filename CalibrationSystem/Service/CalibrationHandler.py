@@ -20,13 +20,13 @@ class CalibrationPhase(object):
   """ Represents the different phases a calibration can be in.
   Since Python 2 does not have enums, this is hardcoded for the moment.
   Should this solution not be sufficient any more, one can make a better enum implementation by hand or install a backport of the python3 implementation from PyPi."""
-  ECalDigi, HCalDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy = range(5)
+  ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy = range(6)
 
   @staticmethod
   def phaseIDFromString(phase_name):
     """ Returns the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
     :returns: ID of this phase
     :rtype: int
     """
@@ -34,12 +34,14 @@ class CalibrationPhase(object):
       return 0
     elif phase_name == 'HCalDigi':
       return 1
-    elif phase_name == 'MuonDigi':
+    elif phase_name == 'HCalOtherDigi':
       return 2
-    elif phase_name == 'ElectroMagEnergy':
+    elif phase_name == 'MuonDigi':
       return 3
-    elif phase_name == 'HadronicEnergy':
+    elif phase_name == 'ElectroMagEnergy':
       return 4
+    elif phase_name == 'HadronicEnergy':
+      return 5
     else:
       raise ValueError('There is no CalibrationPhase with the name %s' % phase_name)
 
@@ -47,7 +49,7 @@ class CalibrationPhase(object):
   def fileKeyFromPhase(phaseID):
     """ Returns the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
     :returns: file key for this phase
     :rtype: str
     """
@@ -55,6 +57,8 @@ class CalibrationPhase(object):
       return "GAMMA"
     elif phaseID == CalibrationPhase.HCalDigi:
       return "KAON"
+    elif phaseID == CalibrationPhase.HCalDigi:
+      return "MUON"
     elif phaseID == CalibrationPhase.MuonDigi:
       return "MUON"
     elif phaseID == CalibrationPhase.ElectroMagEnergy:
@@ -77,10 +81,12 @@ class CalibrationPhase(object):
     elif phaseID == 1:
       return 'HCalDigi'
     elif phaseID == 2:
-      return 'MuonDigi'
+      return 'HCalOtherDigi'
     elif phaseID == 3:
-      return 'ElectroMagEnergy'
+      return 'MuonDigi'
     elif phaseID == 4:
+      return 'ElectroMagEnergy'
+    elif phaseID == 5:
       return 'HadronicEnergy'
     else:
       raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)
@@ -151,37 +157,64 @@ class CalibrationRun(object):
     #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs to be accessed by the agent in the case of resubmission
 
   @executeWithUserProxy
-  def submitInitialJobs(self, calibrationID):
+  def submitJobs(self, calibrationID, idsOfWorkerNodesToSubmitTo=None):
     """ Submit the calibration jobs to the workers for the first time.
     Use a specially crafted application that runs repeated Marlin reconstruction steps
 
     :param int calibrationID: ID of this calibration. Needed for the jobName parameter
-    :returns: None
+    :param idsOfWorkerNodesToSubmitTo: list of integers representing IDs of worker nodes to submit jobs to; if None submit to all allocated nodes
+    :returns: S_OK or S_ERROR
+    :rtype: dict
     """
+    usernameAndGroup = _getUsernameAndGroup()
+    if not username['OK']:
+        return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s; WorkerID = %s' % (calibrationID, curWorkerID))
+    proxyUsername = usernameAndGroup['username']
+    proxyUserGroup = usernameAndGroup['group']
+
     from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
     from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
     dirac = DiracILC(True, 'some_job_repository.rep')
     results = []
     self.init_files()
-    for i in xrange(0, self.numberOfJobs):
-      curWorkerID = 1  # FIXME: Decide ID of worker somehow
+    listOfNodesToSubmitTo = xrange(0, self.numberOfJobs)
+    if idsOfWorkerNodesToSubmitTo is not None:
+        listOfNodesToSubmitTo = idsOfWorkerNodesToSubmitTo
+    for curWorkerID in listOfNodesToSubmitTo:
       curJob = UserJob()
       curJob.check = False  # Necessary to turn off user confirmation
       curJob.setName('CalibrationService_calid_%s_workerid_%s' % (calibrationID, curWorkerID))
       curJob.setJobGroup('CalibrationService_calib_job')
-      curJob.setExecutable('/bin/bash',
-                           arguments='CalibrationSystem/Client/run_calibration.sh %s 0' % self.ilcsoftPath,
-                           logFile='pfa_test.log')
+
+      # TODO check if the name of module (Calibration) is correct
+      calib = Calibration()
+      # FIXME provide marlinVersion and detectorModel
+      calib.setVersion(marlinVersion)
+      calib.setDetectorModel(detectorModel)
+      #  calib.setNbEvts(nEvts+1)
+      #  calib.setProcessorsToUse([])
+      calib.setSteeringFile(recoSteeringFileName)
+      #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"  --Output_DST.LCIOOutputFile="+outputFile+"  --constant.CalorimeterIntegrationTimeWindow="+str(calorimeterIntegrationTimeWindow))
+      res = curJob.append(calib)
+      if not res['OK']:
+        print res['Message']
+        return S_ERROR('Failed to setup Calibration worklow module. CalibrationID = %s; WorkerID = %s' % (calibrationID, curWorkerID))
+
+      # FIXME should we set any time limit at all?
       curJob.setCPUTime(3600)
+      # FIXME allow user to specify xml-files. CLIC detector have different name of PandoraLikelihhod file than CLD
       inputSB = ['GearOutput.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
+      # FIXME implement distribution of slcio files of each category (MUON, KAON, PHOTON) among the jobs
+      # FIXME treat case when number of input files in one of category is less than number of jobs...
       key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
       lcioFile = _getLCIOInputFiles(self.inputFiles[key][i])
+
       curJob.setInputData(lcioFile)
       curJob.setInputSandbox(inputSB)
       curJob.setOutputSandbox(['*.log'])
       res = curJob.submit(dirac)
       results.append(res)
-      #FIXME: Maybe move creation of job object to its own method and share code with resubmitJob method?
+
     return results
 
   def init_files(self):
@@ -290,6 +323,7 @@ class CalibrationRun(object):
     """ run the pandora executable over the existing root files from the workers for given phase and step """
     folder = "phase%s/step%s" % (self.currentPhase, stepID)
 
+
   @executeWithUserProxy
   def resubmitJob(self, workerID):
     """ Resubmits a job to the worker with the given ID, passing the current parameterSet.
@@ -319,8 +353,7 @@ class CalibrationHandler(RequestHandler):
   auth_createCalibration = ['authenticated']
   types_createCalibration = [basestring, basestring, dict, int, basestring, basestring]
 
-  def export_createCalibration(self, steeringFile, ilcsoftPath, inputFiles, numberOfJobs,
-                               proxyUserName, proxyUserGroup):
+  def export_createCalibration(self, steeringFile, ilcsoftPath, inputFiles, numberOfJobs):
     """ Called by users to create a calibration run (series of calibration iterations)
 
     :param basestring steeringFile: Steering file used in the calibration, LFN
@@ -328,8 +361,6 @@ class CalibrationHandler(RequestHandler):
     :param inputFiles: Input files for the calibration. Dictionary
     :type inputFiles: `python:dict`
     :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
-    :param basestring proxyUserName: Name of the user of the proxy the user is currently having
-    :param basestring proxyUserGroup: Name of the group of the proxy the user is currently having
     :returns: S_OK containing ID of the calibration, used to retrieve results etc
     :rtype: dict
     """
@@ -337,12 +368,10 @@ class CalibrationHandler(RequestHandler):
     calibrationID = CalibrationHandler.calibrationCounter
     newRun = CalibrationRun(steeringFile, ilcsoftPath, inputFiles, numberOfJobs)
     CalibrationHandler.activeCalibrations[calibrationID] = newRun
-    #newRun.submitInitialJobs( calibrationID )
+    #newRun.submitJobs( calibrationID )
     #return S_OK( calibrationID )
-    #FIXME: Find out how to get username and group for this.
     #FIXME: Check if lock is necessary.(Race condition?)
-    # , executionLock = False ) #pylint: disable=unexpected-keyword-arg
-    res = newRun.submitInitialJobs(calibrationID, proxyUserName=proxyUserName, proxyUserGroup=proxyUserGroup)
+    res = newRun.submitJobs(calibrationID)  # , executionLock = False ) #pylint: disable=unexpected-keyword-arg
     if _calibration_creation_failed(res):
       # FIXME: This should be treated, since the successfully submitted jobs will still run
       ret_val = S_ERROR('Submitting at least one of the jobs failed')
@@ -457,8 +486,15 @@ class CalibrationHandler(RequestHandler):
       if calibrationID not in CalibrationHandler.activeCalibrations:
         failedPairs.append((calibrationID, workerID))
         continue
-      CalibrationHandler.activeCalibrations[calibrationID].resubmitJob(
-          workerID, proxyUserName='', proxyUserGroup='')  # pylint: disable=unexpected-keyword-arg
+
+    for iCalib in CalibrationHandler.activeCalibrations:
+      jobsToResubmit = []
+      for calibrationID, workerID in failedJobs:
+        if calibrationID == iCalib:
+          jobsToResubmit.append(workerID)
+      if jobsToResubmit:
+        CalibrationHandler.submitJobs(iCalib, jobsToResubmit)  # pylint: disable=unexpected-keyword-arg
+
     if failedPairs:
       result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs)
       result['failed_pairs'] = failedPairs
@@ -466,7 +502,8 @@ class CalibrationHandler(RequestHandler):
     else:
       return S_OK()
 
-  auth_getNumberOfJobsPerCalibration = ['authenticated']
+  #  auth_getNumberOfJobsPerCalibration = [ 'authenticated' ]
+  auth_getNumberOfJobsPerCalibration = ['all']
   types_getNumberOfJobsPerCalibration = []
 
   def export_getNumberOfJobsPerCalibration(self):
@@ -480,6 +517,26 @@ class CalibrationHandler(RequestHandler):
     for calibrationID in CalibrationHandler.activeCalibrations:
       result[calibrationID] = CalibrationHandler.activeCalibrations[calibrationID].numberOfJobs
     return S_OK(result)
+
+  def _getUsernameAndGroup(self):
+    """ Returns name of the group and name of the user of the proxy the user is currently having
+    Implementation is taken from DIRAC/Core/Security/BaseSecurity.py 
+
+    :returns: S_OK with value being dict with 'group' and 'username' entries or S_ERROR
+    :rtype: `python:dict`
+    """
+    retVal = self.getCredentials()
+    if not retVal['OK']:
+      return retVal
+    credDict = retVal['Value']
+    if not credDict['isProxy']:
+      return S_ERROR(DErrno.EX509, "chain does not contain a proxy")
+    if not credDict['validDN']:
+      return S_ERROR(DErrno.EDISET, "DN %s is not known in dirac" % credDict['subject'])
+    if not credDict['validGroup']:
+      return S_ERROR(DErrno.EDISET, "Group %s is invalid for DN %s" % (credDict['group'], credDict['subject']))
+    usernameAndGroupDict = {'group': credDict['group'], 'username': credDict['username']}
+    return S_OK(usernameAndGroupDict)
 
 #TODO: Add stopping criterion to calibration loop. This should be checked when new parameter sets are calculated
 #In that case, the calibration should be removed from activeCalibrations and the result stored.
