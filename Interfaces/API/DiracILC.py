@@ -206,9 +206,9 @@ class DiracILC(Dirac):
   def _checkapp(self, platform, appName, appVersion):
     """ Check availability of application in CS
 
-    :param string platform: System platform
-    :param string appName: Application name
-    :param string appVersion: Application version
+    :param str platform: System platform
+    :param str appName: Application name
+    :param str appVersion: Application version
     :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` or :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     csPathTarBall = "/AvailableTarBalls/%s/%s/%s/TarBall" %(platform, appName, appVersion)
@@ -228,7 +228,7 @@ class DiracILC(Dirac):
   def _checkoutputpath(self, path):
     """ Validate the outputpath specified for the application
 
-    :param string path: Path of output data
+    :param str path: Path of output data
     :return: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK` , :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     if path.find("//") > -1 or path.find("/./") > -1 or path.find("/../") > -1:

@@ -91,7 +91,7 @@ class SplitMixin(object):
     >>> job.setSplitInputData(listOfLFNs, numberOfFilesPerJob=10)
 
     :param lfns: Logical File Names
-    :type lfns: list of LFNs
+    :type lfns: list(str)
     :param int numberOfFilesPerJob: The number of input data processed by a single job
     """
     self._data = lfns if isinstance(lfns, list) else [lfns]
@@ -103,7 +103,7 @@ class SplitMixin(object):
     """Split a list of input files into many jobs per file.
 
     :param lfns: Logical File Names
-    :type lfns: list of LFNs
+    :type lfns: list(str)
     :param int eventsPerFile: number of evenst in each file
     :param int eventsPerJob: number of events in each job. There will be eventsPerFile/eventsPerJob jobs for each file
     """
@@ -128,8 +128,7 @@ class SplitMixin(object):
   def _split(self):
     """Check the consistency of the job and call the right split method.
 
-    :return: The success or the failure of the consistency checking
-    :rtype: DIRAC.S_OK, DIRAC.S_ERROR
+    :return: The success or the failure of the consistency checking, :func`~DIRAC.Core.Utilities.ReturnValues.S_OK`, :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     LOG.notice("Job splitting...")
 
@@ -169,7 +168,7 @@ class SplitMixin(object):
     """Split into one job per input file.
 
     :return: parameter name and parameter values for setParameterSequence()
-    :rtype: list of tuple of (str, list, bool/str)
+    :rtype: list(tuple(str, list, bool/str))
     """
     # reset split attribute to avoid infinite loop
     self._splittingOption = None
@@ -195,7 +194,7 @@ class SplitMixin(object):
     """Split into job per subset of events.
 
     :return: parameter name and parameter values for setParameterSequence()
-    :rtype: list of tuple of (str, list, bool/str)
+    :rtype: list(tuple(str, list, bool/str))
     """
     # reset split attribute to avoid infinite loop
     self._splittingOption = None

@@ -35,7 +35,7 @@ def checkOrGetGroupProxy( group ):
   :any:`getNewProxy` method to obtain a proxy for this group
 
   :param group: dirac group of the desired proxy
-  :type group: python:list, str
+  :type group: list or str
   :returns: :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_OK`,
      :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_ERROR`
   """

@@ -72,7 +72,7 @@ class Mokka(LCApplication):
   def setDetectorModel(self, detectorModel):
     """ Define detector to use for Mokka simulation
 
-    :param string detectorModel: Detector Model to use for Mokka simulation.
+    :param str detectorModel: Detector Model to use for Mokka simulation.
     """
     self._checkArgs( { 'detectorModel' : types.StringTypes } )
 
@@ -81,7 +81,7 @@ class Mokka(LCApplication):
   def setMacFile(self, macfile):
     """ Optional: Define Mac File. Useful if using particle gun.
 
-    :param string macfile: Macro file for Mokka
+    :param str macfile: Macro file for Mokka
     """
     self._checkArgs( { 'macfile' : types.StringTypes } )
     self.macFile = macfile
@@ -105,7 +105,7 @@ class Mokka(LCApplication):
   def setProcessID(self, processID):
     """ Optional: Define the processID. This is added to the event header.
 
-    :param string processID: process ID string
+    :param str processID: process ID string
 
     """
     self._checkArgs( { 'processID' : types.StringTypes } )
@@ -115,7 +115,7 @@ class Mokka(LCApplication):
   def setDbSlice(self, dbSlice):
     """ Optional: Define the data base that will use mokka
 
-    :param string dbSlice: database used by Mokka
+    :param str dbSlice: database used by Mokka
 
     """
     self._checkArgs( { 'dbSlice' : types.StringTypes } )

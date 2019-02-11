@@ -103,7 +103,7 @@ The individual applications can be further modified in their respective section:
 All attributes with a ``set`` method can be changed. See
 :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2`,
 :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Marlin`,
-:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Overlay`,
+:mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput`,
 :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim`.
 
 

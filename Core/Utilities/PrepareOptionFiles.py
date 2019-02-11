@@ -28,9 +28,9 @@ __RCSID__ = "$Id$"
 def getNewLDLibs(platform, application, applicationVersion):
   """ Prepare the LD_LIBRARY_PATH environment variable: make sure all lib folder are included
 
-  :param string platform: System config used for the job
-  :param string application: name of the application considered
-  :param string applicationVersion: version of the application considered
+  :param str platform: System config used for the job
+  :param str application: name of the application considered
+  :param str applicationVersion: version of the application considered
   :return: new LD_LIBRARY_PATH
   """
   log = LOG.getSubLogger("GetLDLibs")
@@ -64,9 +64,9 @@ def getNewLDLibs(platform, application, applicationVersion):
 def getNewPATH(platform, application, applicationVersion):
   """ Same as :func:`getNewLDLibs`,but for the PATH
 
-  :param string platform: System config used for the job
-  :param string application: name of the application considered
-  :param string applicationVersion: version of the application considered
+  :param str platform: System config used for the job
+  :param str application: name of the application considered
+  :param str applicationVersion: version of the application considered
   :return: new PATH
   """
   log = LOG.getSubLogger("GetPaths")
@@ -94,13 +94,13 @@ def prepareWhizardFile(input_in, evttype, energy, randomseed, nevts, lumi, outpu
   
   Using specified parameters in the job definition passed from :mod:`~ILCDIRAC.Workflow.Modules.WhizardAnalysis`
   
-  :param string input_in: input whizard.in to modify
-  :param string evttype: process type that will prepend stdhep output name
+  :param str input_in: input whizard.in to modify
+  :param str evttype: process type that will prepend stdhep output name
   :param int randomseed: random seed to use
   :param int nevts: number of events to generate
   :param lumi: luminosity to use
-  :type lumi: int (float?)
-  :param string output_in: whizard.in output file name (usually whizard.in)
+  :type lumi: int or float
+  :param str output_in: whizard.in output file name (usually whizard.in)
   :return: S_OK
   """
   foundprocessid = False
@@ -130,10 +130,10 @@ def prepareWhizardFileTemplate(input_in, evttype, parameters, output_in):
   
   Using specified parameters in the job definition passed from :mod:`~ILCDIRAC.Workflow.Modules.WhizardAnalysis`
   
-  :param string input_in: input whizard.in to modify
-  :param string evttype: process type that will prepend stdhep output name
+  :param str input_in: input whizard.in to modify
+  :param str evttype: process type that will prepend stdhep output name
   :param dict parameters: dictionary of parameters to set in the whizard.in
-  :param string output_in: whizard.in output file name (usually whizard.in)
+  :param str output_in: whizard.in output file name (usually whizard.in)
   :return: S_OK()
   """
   foundprocessid = False
@@ -186,18 +186,18 @@ def prepareSteeringFile(inputSteering, outputSteering, detectormodel,
   
   Using specified parameters in the job definition passed from :mod:`~ILCDIRAC.Workflow.Modules.MokkaAnalysis`
   
-  :param string inputSteering: input steering file name
-  :param string outputSteering: new steering file that will be used by Mokka
-  :param string detectormodel: detector model to use from the DB
-  :param string stdhepFile: generator file name to put in the mac file, if needed
-  :param string mac: input macro file
+  :param str inputSteering: input steering file name
+  :param str outputSteering: new steering file that will be used by Mokka
+  :param str detectormodel: detector model to use from the DB
+  :param str stdhepFile: generator file name to put in the mac file, if needed
+  :param str mac: input macro file
   :param int nbOfRuns: number of runs to use
   :param int startFrom: First event to read from the generator file
   :param int randomseed: Seed to use
   :param int mcrunnumber: MC Run number written to lcio file header
-  :param string processID: process ID written to lcio file header
+  :param str processID: process ID written to lcio file header
   :param bool debug: overwrite default print level. If set to True, don't change printLevel steering parameter
-  :param string outputlcio: output slcio file name
+  :param str outputlcio: output slcio file name
   :param dict filemeta: meta data dictionary used to set various metadata parameters Mokka can write to the lcio file header
   :return: S_OK()
   """
@@ -298,15 +298,15 @@ def prepareXMLFile(finalxml, inputXML, inputGEAR, inputSLCIO,
   
   Takes in input the specified job parameters for Marlin application given from :mod:`~ILCDIRAC.Workflow.Modules.MarlinAnalysis`
   
-  :param string finalxml: name of the xml file that will be used by Marlin
-  :param string inputXML: name of the provided input XML file
-  :param string inputGEAR: name of the Gear file
+  :param str finalxml: name of the xml file that will be used by Marlin
+  :param str inputXML: name of the provided input XML file
+  :param str inputGEAR: name of the Gear file
   :param inputSLCIO: input slcio file list
-  :type inputSLCIO: list of strings
+  :type inputSLCIO: list(str)
   :param int numberofevts: number of events to process
-  :param string outputFile: name of the outputfile
-  :param string outputREC: file name of REC
-  :param string outputDST: file name of DST
+  :param str outputFile: name of the outputfile
+  :param str outputREC: file name of REC
+  :param str outputDST: file name of DST
   :param bool debug: set to True to use given mode, otherwise set verbosity to SILENT
   :param str dd4hepGeoFile: path to the dd4hep Geometry XML file, optional, default None
   :param int overlayParam: list of tuples of background type, number of events in each background file, and processorName; optional, default None
@@ -397,14 +397,14 @@ def prepareMacFile(inputmac, outputmac, stdhep, nbevts,
   
   Takes the parameters passed from :mod:`~ILCDIRAC.Workflow.Modules.SLICAnalysis` to define a new mac file if none was provided
   
-  :param string inputmac: name of the specified mac file
-  :param string outputmac: name of the final mac file used by SLIC
-  :param string stdhep: name of the generator file to use
+  :param str inputmac: name of the specified mac file
+  :param str outputmac: name of the final mac file used by SLIC
+  :param str stdhep: name of the generator file to use
   :param int nbevts: number of events to process
   :param int startfrom: event nu,ber to start from in the generator file
-  :param string detector: Detector model to use.
+  :param str detector: Detector model to use.
   :param int randomseed: random seed to use for simulation
-  :param string outputlcio: name of the produced output slcio file, this is useful when combined with :func:`setOutputData() <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>`
+  :param str outputlcio: name of the produced output slcio file, this is useful when combined with :func:`setOutputData() <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>`
   :param bool debug: UNUSED
   :return: S_OK
   """
@@ -455,18 +455,18 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   
   Takes the parameters passed from :mod:`~ILCDIRAC.Workflow.Modules.LCSIMAnalysis`
   
-  :param string inputlcsim: name of the provided lcsim
-  :param string outputlcsim: name of the lcsim file on which LCSIM is going to run, defined in :mod:`~ILCDIRAC.Workflow.Modules.LCSIMAnalysis`
+  :param str inputlcsim: name of the provided lcsim
+  :param str outputlcsim: name of the lcsim file on which LCSIM is going to run, defined in :mod:`~ILCDIRAC.Workflow.Modules.LCSIMAnalysis`
   :param int numberofevents: Number of events to process
-  :param string trackingstrategy: trackingstrategy file to use, can be empty
+  :param str trackingstrategy: trackingstrategy file to use, can be empty
   :param inputslcio: list of slcio files on which LCSIM should run
-  :type inputslcio: list of strings
+  :type inputslcio: list(str)
   :param jars: list of jar files that should be added in the classpath definition
-  :type jars: list of strings
-  :param string cachedir: folder that holds the cache directory, instead of Home
-  :param string outputFile: File name of the output
-  :param string outputDSTFile: filename of the DST file
-  :param string outputRECFile: filename of the REC file
+  :type jars: list(str)
+  :param str cachedir: folder that holds the cache directory, instead of Home
+  :param str outputFile: File name of the output
+  :param str outputDSTFile: filename of the DST file
+  :param str outputRECFile: filename of the REC file
   :param bool debug: By default set verbosity to true
   
   :return: S_OK(string)
@@ -704,13 +704,13 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
 def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
   """Prepare the proper steering file for Tomato
 
-  :param string inputxml: name of the xml steering file
-  :param string outputxml: name of the final tomato steering file
-  :param string inputSLCIO: inputSLCIO
-  :param string outputFile: name of the produced output slcio file, this is
+  :param str inputxml: name of the xml steering file
+  :param str outputxml: name of the final tomato steering file
+  :param str inputSLCIO: inputSLCIO
+  :param str outputFile: name of the produced output slcio file, this is
       useful when combined with :func:`setOutputData()
       <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>`
-  :param string collection: collection to be analysed
+  :param str collection: collection to be analysed
 
   :return: S_OK
 

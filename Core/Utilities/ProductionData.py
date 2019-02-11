@@ -85,7 +85,7 @@ def getLogPath(paramDict, basePath=None):
   """ Can construct log file paths even if job fails e.g. no output files available.
 
   :param dict paramDict: dictionary with at least the keys ``PRODUCTION_ID``, ``JOB_ID``, ``LogFilePath``
-  :param string basePath: Optional, base path for the log file failover, of not set LogFilePath
+  :param str basePath: Optional, base path for the log file failover, of not set LogFilePath
     from paramDict is used as a base
   :returns: S_OK with dict with LogFilePath and LogTargetPath
   """
@@ -122,10 +122,10 @@ def constructUserLFNs(jobID, vo, owner, outputFiles, outputPath):
    * <vo>/user/<initial e.g. s>/<owner e.g. sposs>/<outputPath>/<fileName>
 
   :param int jobID: the jobID
-  :param string vo: the vo of the owners proxy
-  :param string owner: the username
+  :param str vo: the vo of the owners proxy
+  :param str owner: the username
   :param list outputFiles: the list of outputfiles found for the job
-  :param string outputPath: the outputpath defined for the job
+  :param str outputPath: the outputpath defined for the job
   :returns: S_OK with list of output file lfns
   """
   initial = owner[:1]
@@ -244,7 +244,8 @@ def checkForMandatoryKeys(paramDict, keys):
 
   :param dict paramDict: dictionary to check for mandatory ``keys``
   :param list keys: list of keys that need to be in ``paramDict``
-  :returns: S_OK, S_ERROR
+  :returns: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK`, :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
+
   """
   for k in keys:
     if k not in paramDict:

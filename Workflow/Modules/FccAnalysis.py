@@ -62,7 +62,8 @@ class FccAnalysis(ModuleBase):
        an 'FCC' executable followed by arguments provided by the Fcc module.
 
     :return: The success or the failure of the execution
-    :rtype: DIRAC.S_OK, DIRAC.S_ERROR
+        :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK`,
+        :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
 
     """
 
@@ -426,7 +427,7 @@ class FccAnalysis(ModuleBase):
     according to the version, application name and platform.
 
     :return: The success or failure of the environment script creation
-    :rtype: DIRAC.S_OK, DIRAC.S_ERROR
+      :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK`, :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
 
     """
 

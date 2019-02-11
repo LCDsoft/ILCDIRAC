@@ -35,7 +35,7 @@ class RootScript(_Root):
   def setScript(self, executable):
     """Define executable to use
 
-    :param string executable: Script to run on. Can be shell or root
+    :param str executable: Script to run on. Can be shell or root
       executable. Must be a local file or in the PATH when using CVMFS based
       software.
 

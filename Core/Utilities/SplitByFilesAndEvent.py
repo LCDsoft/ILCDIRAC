@@ -1,7 +1,7 @@
 '''
 Try some fancy splitting, DO NOT USE
 
-Based on :func:`DIRAC.SplitByFiles` idea, but doing the splitting by number of events
+.. deprecated:: v29r0p3
 
 :since: Feb 10, 2010
 :author: sposs

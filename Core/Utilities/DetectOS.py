@@ -142,8 +142,8 @@ def getConfig(architecture, platformtype, compiler, debug=False):
 def pathBinaryMatch(path, cmtconfig):
   """ returns True if the path belong to the cmtconfig distribution
 
-  :param string path: file/path to be tested
-  :param string cmtconfig: target cmtconfig
+  :param str path: file/path to be tested
+  :param str cmtconfig: target cmtconfig
   """
   selected = False
   log = logging.getLogger()
@@ -161,8 +161,8 @@ def pathBinaryMatch(path, cmtconfig):
 def pathSharedMatch(path, dummy_cmtconfig=None):
   """ select path with are not part of a binary distribution
 
-  :param string path: file/dir path to be tested
-  :param string dummy_cmtconfig: optional parameter to exclude specific files for a given cmtconfig, UNUSED
+  :param str path: file/dir path to be tested
+  :param str dummy_cmtconfig: optional parameter to exclude specific files for a given cmtconfig, UNUSED
   """
   selected = True
   for b in binary_list :

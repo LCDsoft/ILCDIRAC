@@ -12,13 +12,14 @@ LOG = gLogger.getSubLogger("ILCJob")
 class DDInterfaceMixin( object ):
   """Mixin for DD4hep interface functions
 
-  This mixin class requires that the main class should be of :class:`Application` type
-  and have the :attr:`detectorModel`, :attr:`_ops`, :attr:`version`, and :attr:`_log` attributes.
+  This mixin class requires that the main class should be of
+  :class:`~ILDCIRAC.Interfaces.API.NewInterface.Application.Application` type and have the
+  ``detectorModel``, ``_ops``, ``version``, and ``_log`` attributes.
 
-     * :attr:`_ops` is an Operations instance
-     * :attr:`_log` a gLogger sublogger
-     * :attr:`version` is the version of the application
-     * :attr:`detectorModel` is set to the name of the detector model as inferred in the :func:`setDetectorModel` function
+   * ``_ops`` is an Operations instance
+   * ``_log`` a gLogger sublogger
+   * ``version`` is the version of the application
+   * ``detectorModel`` is set to the name of the detector model as inferred in the :func:`setDetectorModel` function
 
   """
 
@@ -39,7 +40,7 @@ class DDInterfaceMixin( object ):
     The tarball must contain all xml files inside a folder called detectorModel.
     That is the main file is located in *detectorModel/detectorModel.xml*
     
-    :param string detectorModel: Detector Model to use for simulation or reconstruction. Can
+    :param str detectorModel: Detector Model to use for simulation or reconstruction. Can
       be on CVMFS, tarball LFN or inputSandbox tarball
     
     """
@@ -85,7 +86,7 @@ class DDInterfaceMixin( object ):
 
     Depends on the version of the software though...
 
-    :param string version: Optional: Software version for which to print the detector models. If not given the version of the application instance is used.
+    :param str version: Optional: Software version for which to print the detector models. If not given the version of the application instance is used.
     :returns: S_OK with list of detector models known for this software version, S_ERROR
     
     """

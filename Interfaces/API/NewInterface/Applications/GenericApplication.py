@@ -44,7 +44,7 @@ class GenericApplication(LCApplication):
   def setScript(self, script):
     """ Define script to use
 
-    :param string script: Script to run. Can be shell or python or compiled executable. Can be local file or LFN.
+    :param str script: Script to run. Can be shell or python or compiled executable. Can be local file or LFN.
     """
     self._checkArgs( { 'script' : types.StringTypes } )
     if os.path.exists(script) or script.lower().count("lfn:"):
@@ -55,7 +55,7 @@ class GenericApplication(LCApplication):
   def setArguments(self, args):
     """ Optional: Define the arguments of the script
 
-    :param string args: Arguments to pass to the command call
+    :param str args: Arguments to pass to the command call
     """
     self._checkArgs( { 'args' : types.StringTypes } )
     self.arguments = args

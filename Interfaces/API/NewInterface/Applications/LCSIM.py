@@ -49,8 +49,8 @@ class LCSIM(LCApplication):
     <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>` if you
     want to keep the file on the grid.
 
-    :param string outputRecFile: output rec file for LCSIM
-    :param string path: Path where to store the file.
+    :param str outputRecFile: output rec file for LCSIM
+    :param str path: Path where to store the file.
 
     """
     self._checkArgs( { 'outputRecFile' : types.StringTypes } )
@@ -66,8 +66,8 @@ class LCSIM(LCApplication):
     <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>` if you
     want to keep the file on the grid.
 
-    :param string outputDstFile: output dst file for LCSIM
-    :param string path: Path where to store the file.
+    :param str outputDstFile: output dst file for LCSIM
+    :param str path: Path where to store the file.
 
     """
     self._checkArgs( { 'outputDstFile' : types.StringTypes } )
@@ -80,7 +80,7 @@ class LCSIM(LCApplication):
   def setAliasProperties(self, alias):
     """ Optional: Define the path to the alias.properties file name that will be used
 
-    :param string alias: Path to the alias.properties file name that will be used
+    :param str alias: Path to the alias.properties file name that will be used
     """
     self._checkArgs( { 'alias' : types.StringTypes } )
 
@@ -91,7 +91,7 @@ class LCSIM(LCApplication):
   def setDetectorModel(self, model):
     """ Detector Model to use
 
-    :param string model: name, zip file, or lfn that points to the detector model
+    :param str model: name, zip file, or lfn that points to the detector model
     """
     self._checkArgs( { 'model' : types.StringTypes } )
     self.detectorModel = model
@@ -101,7 +101,7 @@ class LCSIM(LCApplication):
   def setTrackingStrategy(self, trackingstrategy):
     """ Optional: Define the tracking strategy to use.
 
-    :param string trackingstrategy: path to the trackingstrategy file to use. If not called, will use whatever is
+    :param str trackingstrategy: path to the trackingstrategy file to use. If not called, will use whatever is
                                     in the steering file
 
     """
@@ -113,7 +113,7 @@ class LCSIM(LCApplication):
   def setExtraParams(self, extraparams):
     """ Optional: Define command line parameters to pass to java
 
-    :param string extraparams: Command line parameters to pass to java
+    :param str extraparams: Command line parameters to pass to java
     """
     self._checkArgs( { 'extraparams' : types.StringTypes } )
 

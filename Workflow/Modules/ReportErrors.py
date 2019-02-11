@@ -25,7 +25,10 @@ class ReportErrors(ModuleBase):
   def execute(self):
     """Print out the errors from all applications.
 
-    ErrorDict is filled in :func:`ModuleBase.finalStatusReport`, which is called from all modules.
+    ErrorDict is filled in
+    :func:`ILCDIRAC.Workflow.Modules.ModuleBase.ModuleBase.finalStatusReport`, which is called from
+    all modules.
+
     """
     errorDict = self.workflow_commons.get('ErrorDict', {})
     if not errorDict:

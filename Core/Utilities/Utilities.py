@@ -11,8 +11,7 @@ def toInt(number, cond=None):
 
   :param number: the number to cast (number of events, number of jobs)
   :type number: str or int
-  :param cond: function to check validity of number, range, etc.
-  :type cond: unary function
+  :param cond: unary function to check validity of number, range, etc.
   :return: The success or the failure of the casting
   :rtype: bool, int or None
   """

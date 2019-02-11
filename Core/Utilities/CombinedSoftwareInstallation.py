@@ -193,7 +193,7 @@ def getSharedAreaLocation():
   "/cvmfs/ilc.desy.de/clic", "$VO_ILC_SW_DIR", "$OSG_APP", "/cvmfs/oasis.opensciencegrid.org/ilc/clic"
 
   :returns: path to shared area
-  :rtype: string
+  :rtype: str
   """
 
   listOfSharedAreas = Operations().getValue( "Software/SharedAreaLocations",
@@ -299,9 +299,9 @@ def getSoftwareFolder(platform, appname, appversion):
   """ 
   Discover location of a given folder, either the local or the shared area
 
-  :param string platform: platform
-  :param string appname: name of the application
-  :param string appversion: version of the application
+  :param str platform: platform
+  :param str appname: name of the application
+  :param str appversion: version of the application
 
   """
   res = checkCVMFS(platform, [appname, appversion])
@@ -330,17 +330,17 @@ def getSoftwareFolder(platform, appname, appversion):
 def getEnvironmentScript(platform, appname, appversion, fcn_env):
   """Return the path to the environment script, either from CVMFS, or from the fcn_env function
 
-  :param string platform: platform
-  :param string appname: name of the application
-  :param string appversion: version of the application
+  :param str platform: platform
+  :param str appname: name of the application
+  :param str appversion: version of the application
 
-  :param function fcn_env: function provided by the Application daughter class
+  :param fcn_env: function provided by the Application daughter class
     to create its own environment in case there is no environment script in the
     application version. Signature has to be *fcn_env(platform, appname,
     appversion)* and has to return *S_OK(pathToScript)*. If you do not want to
     provide such a function you can set fcn_env=S_ERROR('User must provide script')
     and the error will be returned.
-
+  :type fcn_env: ``function``
   """
   res = checkCVMFS(platform, [appname, appversion])
   if res["OK"]:
@@ -359,8 +359,9 @@ def getEnvironmentScript(platform, appname, appversion, fcn_env):
 def checkCVMFS(platform, app):
   """ Check the existence of the CVMFS path for given platform and application
 
-  :param string platform: platform
-  :param tuple app: tuple off application name and version
+  :param str platform: platform
+  :param app: tuple off application name and version
+  :type app: ``tuple``
   :returns: S_OK of tuple of path and environmen stript
   """
   name, version = app

@@ -46,7 +46,7 @@ class SLICPandora(LCApplication):
   def setDetectorModel(self, detectorModel):
     """ Define detector to use for SlicPandora simulation
 
-    :param string detectorModel: Detector Model to use for SlicPandora simulation.
+    :param str detectorModel: Detector Model to use for SlicPandora simulation.
     """
     self._checkArgs( { 'detectorModel' : types.StringTypes } )
 
@@ -65,7 +65,7 @@ class SLICPandora(LCApplication):
   def setPandoraSettings(self, pandoraSettings):
     """ Optional: Define the path where pandora settings are
 
-    :param string pandoraSettings: path where pandora settings are
+    :param str pandoraSettings: path where pandora settings are
     """
     self._checkArgs( { 'pandoraSettings' : types.StringTypes } )
     self.pandoraSettings = pandoraSettings

@@ -91,7 +91,7 @@ class ProcessList(object):
   def getCSPath(self, process):
     """ Return the path to the TarBall (for install)
 
-    :param string process: process to look for
+    :param str process: process to look for
     """
     return self.cfg.getOption("Processes/%s/TarBallCSPath" % process, None)
 

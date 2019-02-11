@@ -863,7 +863,7 @@ CHANGEPATH_DICT = { 'testpath123/a/b/c' : S_OK(),
 def createdir_sideeffect( value ):
   """ Returns the appropriate return value of the createDir method for the given directory string
 
-  :param string value: directory to be created
+  :param str value: directory to be created
   :returns: S_OK/S_ERROR structure with the value in CREATEDIR_DICT
   :rtype: dict
 
@@ -874,7 +874,7 @@ def changepath_sideeffect( val, bool_flag ): #pylint: disable=unused-argument
   """ Returns the appropriate return value of the changePathMode method for the given directory string.
   bool_flag is not used in this test version, but in the original method.
 
-  :param string val: path to be changed to
+  :param str val: path to be changed to
   :param bool bool_flag: ignored, used in the actual implementation
   :returns: S_OK/S_ERROR structure with the value in CHANGEPATH_DICT
   :rtype: dict

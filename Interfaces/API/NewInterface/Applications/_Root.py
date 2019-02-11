@@ -39,7 +39,7 @@ class _Root(LCApplication):
   def setArguments(self, args):
     """ Optional: Define the arguments of the script
 
-    :param string args: Arguments to pass to the command line call
+    :param str args: Arguments to pass to the command line call
 
     Note for RootMacro string arguments need to be passed as a raw string with the quotation marks escaped.
     E.g.:

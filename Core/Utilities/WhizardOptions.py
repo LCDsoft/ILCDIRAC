@@ -33,7 +33,7 @@ class WhizardOptions(object):
   """
   def __init__(self, model = "sm"):
     """
-    :param string model: physics model to be used by whizard, default "sm"
+    :param str model: physics model to be used by whizard, default "sm"
     """
 
     self.genmodel = GeneratorModels()

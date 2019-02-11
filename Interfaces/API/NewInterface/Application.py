@@ -173,7 +173,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
   def setName(self, name):
     """ Define name of application
     
-    :param string name: Name of the application. Normally, every application defines its own, so no need to call that one
+    :param str name: Name of the application. Normally, every application defines its own, so no need to call that one
     """
     self._checkArgs({ 'name' : types.StringTypes } )
     self.appname = name
@@ -182,7 +182,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
   def setVersion(self, version):
     """ Define version to use
     
-    :param string version: Version of the application to use
+    :param str version: Version of the application to use
     """
     self._checkArgs({ 'version' : types.StringTypes } )
     self.version = version
@@ -191,7 +191,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
   def setSteeringFile(self, steeringfile):
     """ Set the steering file, and add it to the sandbox
     
-    :param string steeringfile: Steering file to use. Can be any type: whizard.in, mokka.steer, slic.mac, marlin.xml, lcsim.lcsim, etc.
+    :param str steeringfile: Steering file to use. Can be any type: whizard.in, mokka.steer, slic.mac, marlin.xml, lcsim.lcsim, etc.
     """
     self._checkArgs({ 'steeringfile' : types.StringTypes } )
     self.steeringFile = steeringfile
@@ -202,7 +202,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
   def setLogFile(self, logfile):
     """ Define application log file
     
-    :param string logfile: Log file to use. Set by default if not set.
+    :param str logfile: Log file to use. Set by default if not set.
     """
     self._checkArgs({ 'logfile' : types.StringTypes } )
     self.logFile = logfile
@@ -212,10 +212,10 @@ class Application(object): #pylint: disable=too-many-instance-attributes
   def setOutputFile(self, ofile, path = None):
     """Set the output file
     
-    :param string ofile: Output file name. Will overwrite the default. This is
+    :param str ofile: Output file name. Will overwrite the default. This is
        necessary when linking applications (when using :any:`getInputFromApp`)
 
-    :param string path: Set the output path for the output file to go. Will not
+    :param str path: Set the output path for the output file to go. Will not
        do anything in a :mod:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob`. Use
        :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData`
        of the job for that functionality.
@@ -239,7 +239,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
   def setOutputSE(self, se):
     """ Set the output storage element for all files produced by this application.
     
-    :param string se: Storage element name. Example CERN-SRM, IN2P3-SRM, RAL-SRM, IMPERIAL-SRM
+    :param str se: Storage element name. Example CERN-SRM, IN2P3-SRM, RAL-SRM, IMPERIAL-SRM
   
     """
     self._checkArgs({ 'se' : types.StringTypes } )
@@ -293,7 +293,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
   def setExtraCLIArguments(self, arguments):
     """ Pass any command line arguments as a string to the application
 
-    :param string arguments:
+    :param str arguments:
     """
     self._checkArgs({ "arguments": types.StringTypes} )
     self.extraCLIArguments = arguments
@@ -429,7 +429,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
     that all required parameters are defined.
 
     :param job: The instance of the job
-    :type job: :func:`~Interfaces.API.NewInterface.Job.Job`
+    :type job: :func:`~ILCDIRAC.Interfaces.API.NewInterface.Job.Job`
     :returns: S_OK/S_ERROR
 
     """
@@ -552,7 +552,7 @@ class Application(object): #pylint: disable=too-many-instance-attributes
 
   def _resolveLinkedStepParameters(self, stepinstance):
     """ Method to be overloaded by every application that resolve what are the linked parameters (e.g. 
-    OuputFile and InputFile). See :class:`~Interfaces.API.NewInterface.Applications.StdhepCut.StdhepCut` for example.
+    OuputFile and InputFile). See :class:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCut.StdhepCut` for example.
     Called from Job.
     """
     return S_OK()

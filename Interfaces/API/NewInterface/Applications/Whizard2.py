@@ -52,7 +52,7 @@ class Whizard2( LCApplication ):
   def setEvtType(self, evttype):
     """ Define process. If the process given is not found, when calling :func:`UserJob.append() <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.append>` a full list is printed.
 
-    :param string evttype: Process to generate
+    :param str evttype: Process to generate
     """
     self._checkArgs( { 'evttype' : types.StringTypes } )
     if self.addedtojob:
@@ -72,7 +72,7 @@ class Whizard2( LCApplication ):
     .. versionadded:: v28r0p6
 
     :param processes: which processes to call simulate on, by default 'decay_proc'
-    :type processes: python:list, str
+    :type processes: list, str
     """
     if isinstance(processes, basestring):
       self._decayProc = [proc.strip() for proc in processes.split(',')]

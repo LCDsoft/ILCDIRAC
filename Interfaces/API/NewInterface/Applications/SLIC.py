@@ -55,7 +55,7 @@ class SLIC(LCApplication):
   def setDetectorModel(self, detectorModel):
     """ Define detector model to use for Slic simulation
 
-    :param string detectorModel: Detector Model to use for Slic simulation.
+    :param str detectorModel: Detector Model to use for Slic simulation.
     """
     self._checkArgs( { 'detectorModel' : types.StringTypes } )
     if detectorModel.lower().count("lfn:"):
