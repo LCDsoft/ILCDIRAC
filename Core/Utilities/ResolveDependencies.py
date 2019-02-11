@@ -15,9 +15,9 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Opera
 def resolveDeps(sysconfig, appli, appversion):
   """ Resolve the dependencies
   
-  :param string sysconfig: system configuration
-  :param string appli: application name
-  :param string appversion: application version
+  :param str sysconfig: system configuration
+  :param str appli: application name
+  :param str appversion: application version
   :return: list of dictionaries
   """
   log = gLogger.getSubLogger("resolveDeps")

@@ -26,7 +26,7 @@ class Whizard(LCApplication):
   >>> wh.setNumberOfEvents(1000)
   >>> wh.setModel("sm")
 
-  use :func:`setExtraArguments` to overwrite the content of the whizard.in
+  use :func:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard.Whizard.setExtraCLIArguments` to overwrite the content of the whizard.in
   in case you use something not standard (parameter scan for exmple)
   """
   def __init__(self, processlist = None, paramdict = None):
@@ -69,7 +69,7 @@ class Whizard(LCApplication):
   def setEvtType(self, evttype):
     """ Define process. If the process given is not found, when calling :func:`UserJob.append() <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.append>` a full list is printed.
 
-    :param string evttype: Process to generate
+    :param str evttype: Process to generate
     """
     self._checkArgs( { 'evttype' : types.StringTypes } )
     if self.addedtojob:
@@ -152,7 +152,7 @@ class Whizard(LCApplication):
   def setModel(self, model):
     """ Optional: Define Model
 
-    :param string model: Model to use for generation. Predefined list available in the :mod:`GeneratorModels<ILCDIRAC.Core.Utilities.GeneratorModels.GeneratorModels>` class.
+    :param str model: Model to use for generation. Predefined list available in the :mod:`GeneratorModels<ILCDIRAC.Core.Utilities.GeneratorModels.GeneratorModels>` class.
     """
     self._checkArgs( { 'model' : types.StringTypes } )
 
@@ -173,7 +173,7 @@ class Whizard(LCApplication):
   def setJobIndex(self, index):
     """ Optional: Define Job Index. Added in the file name between the event type and the extension.
 
-    :param string index: Index to use for generation
+    :param str index: Index to use for generation
     """
     self._checkArgs( { 'index' : types.StringTypes } )
 
@@ -182,7 +182,7 @@ class Whizard(LCApplication):
   def dumpWhizardDotIn(self, fname = 'whizard.in'):
     """ Dump the content of the whizard.in file requested for this application
 
-    :param string fname: filename in which whizard.in is written
+    :param str fname: filename in which whizard.in is written
     """
     if self.addedtojob:
       self._wo.toWhizardDotIn(fname)

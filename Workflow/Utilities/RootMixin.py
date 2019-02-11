@@ -17,9 +17,9 @@ class RootMixin( object ):
     :func:`~ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation.getEnvironmentScript`,
     but none of the arguments are used.
 
-    :param string _platform: Unused, Software platform
-    :param string _appname: Unused, application name
-    :param string _appversion: Unused, application version
+    :param str _platform: Unused, Software platform
+    :param str _appname: Unused, application name
+    :param str _appversion: Unused, application version
     :returns: S_OK( pathToScript )
 
     """

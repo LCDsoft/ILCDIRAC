@@ -139,7 +139,7 @@ class ModuleBase(object):
   def setJobParameter(self, name, value, sendFlag = True):
     """Wraps around setJobParameter of state update client
 
-    :param string name: job parameter
+    :param str name: job parameter
     :param value: value of the job parameter
     :param bool sendFlag: passed to setJobParameter
     :return: S_OK, S_ERROR
@@ -182,8 +182,8 @@ class ModuleBase(object):
     """ Set the file status for the given production in the Production Database
 
     :param int production: production ID
-    :param string lfn: logical file name of the file that needs status change
-    :param string status: status to set
+    :param str lfn: logical file name of the file that needs status change
+    :param str status: status to set
     :return: S_OK(), S_ERROR()
     """
     LOG.verbose('setFileStatus(%s,%s,%s)' % (production, lfn, status))
@@ -575,14 +575,14 @@ class ModuleBase(object):
 
   def redirectLogOutput(self, fd, message):
     """Catch the output from the application
-    print ``message`` to stdout and to the :attr:`self.applicationLog` file
+    print ``message`` to stdout and to the ``self.applicationLog`` file
 
-    * If :attr:`self.eventstring` is None print everything.
+    * If ``self.eventstring`` is None print everything.
     * If it is an empty list, an empty string, or an empty string in a list print nothing
     * If it is a string or a list of strings print only matching strings
 
-    :param file fd: file descriptor ???
-    :param string message: message string
+    :param int fd: if 1 append message to ``self.stdError``
+    :param str message: message string
     :returns: None
     """
     sys.stdout.flush()

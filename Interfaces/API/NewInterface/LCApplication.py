@@ -27,7 +27,7 @@ class LCApplication(LCUtilityApplication):
   def setSteeringFileVersion(self, version):
     """ Define the SteeringFile version to use
 
-    :param string version:
+    :param str version:
     """
     self.steeringFileVersion = version
     

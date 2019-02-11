@@ -275,7 +275,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
   def setDescription(self, desc):
     """ Set the production's description
     
-    :param string desc: Description
+    :param str desc: Description
     """
     self.description = desc
     return S_OK()

@@ -14,7 +14,7 @@ FILES_TO_REMOVE = ["libc.so","libc-2.5","libm.so","libpthread.so","libdl.so", "l
 def removeLibc(libraryPath):
   """ Remove libraries that can be problematic, like libc.so
 
-  :param string libraryPath: libraryPath to look for libraries to remove
+  :param str libraryPath: libraryPath to look for libraries to remove
   :returns: True on Success, False in case of error
   """
 

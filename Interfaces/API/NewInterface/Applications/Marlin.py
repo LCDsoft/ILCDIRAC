@@ -71,7 +71,7 @@ class Marlin( DDInterfaceMixin, LCApplication ):
   def setGearFile(self, gearFile):
     """ Define input gear file for Marlin
 
-    :param string gearFile: input gear file for Marlin reconstructor
+    :param str gearFile: input gear file for Marlin reconstructor
     """
     self._checkArgs( { 'gearFile' : types.StringTypes } )
 
@@ -85,8 +85,8 @@ class Marlin( DDInterfaceMixin, LCApplication ):
     <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>` if you
     want to keep the file on the grid.
 
-    :param string outputRecFile: output rec file for Marlin
-    :param string path: Path where to store the file.
+    :param str outputRecFile: output rec file for Marlin
+    :param str path: Path where to store the file.
 
     """
     self._checkArgs( { 'outputRecFile' : types.StringTypes } )
@@ -102,8 +102,8 @@ class Marlin( DDInterfaceMixin, LCApplication ):
     <ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setOutputData>` if you
     want to keep the file on the grid.
 
-    :param string outputDstFile: output dst file for Marlin
-    :param string path: Path where to store the file.
+    :param str outputDstFile: output dst file for Marlin
+    :param str path: Path where to store the file.
 
     """
     self._checkArgs( { 'outputDstFile' : types.StringTypes } )
@@ -121,7 +121,7 @@ class Marlin( DDInterfaceMixin, LCApplication ):
     >>> ma.setProcessorsToUse(['libMarlinTPC.so','libMarlinReco.so','libOverlay.so','libMarlinTrkProcessors.so'])
 
     :param processorlist: list of processors to use
-    :type processorlist: python:list
+    :type processorlist: list
     """
     self._checkArgs( { 'processorlist' : types.ListType } )
     self.processorsToUse = processorlist
@@ -134,7 +134,7 @@ class Marlin( DDInterfaceMixin, LCApplication ):
     >>> ma.setProcessorsToExclude(['libLCFIVertex.so'])
 
     :param processorlist: list of processors to exclude
-    :type processorlist: python:list
+    :type processorlist: list
     """
     self._checkArgs( { 'processorlist' : types.ListType } )
     self.processorsToExclude = processorlist

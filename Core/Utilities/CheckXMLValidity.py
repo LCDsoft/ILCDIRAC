@@ -15,7 +15,7 @@ from xml.etree.ElementTree                                import ElementTree
 def checkXMLValidity(xmlfile):
   """ Check that the xml parsing of the specified xml will not fail when running on the GRID
 
-  :param string xmlfile: path to xml file
+  :param str xmlfile: path to xml file
   :returns: :func:`S_OK() <DIRAC:DIRAC.Core.Utilities.ReturnValues.S_OK>`, :func:`~DIRAC:DIRAC.Core.Utilities.ReturnValues.S_ERROR`
   """
   tree = ElementTree()

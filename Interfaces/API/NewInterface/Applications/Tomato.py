@@ -36,7 +36,7 @@ class Tomato(LCApplication):
   def setLibTomato(self, libTomato):
     """ Optional: Set the the optional Tomato library with the user version
 
-    :param string libTomato: Tomato library
+    :param str libTomato: Tomato library
 
     """
     self._checkArgs( { 'libTomato' : types.StringTypes } )

@@ -73,7 +73,7 @@ def assertDiracFailsWith( result, errorstring, assertobject ):
   """Asserts that result, which is the return value of a dirac method call, is an S_ERROR with errorstring contained in the error message (case insensitive).
 
   :param dict result: Structure (expected to be S_ERROR) returned by the dirac call
-  :param string errorstring: String expected to be contained in the error message
+  :param str errorstring: String expected to be contained in the error message
   :param TestCase assertobject: Testcase object, used to gain the assertX methods.
   """
   assertobject.assertFalse( result['OK'] )

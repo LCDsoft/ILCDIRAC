@@ -132,7 +132,7 @@ class OverlayInput(LCUtilityApplication):
     """ Set the detector type for the background files.
     Files are defined in the ConfigurationSystem: Operations/Overlay/<Accelerator>/<energy>/<Detector>
 
-    :param string detectormodel: Detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3' or 'ILD_o1_v05'
+    :param str detectormodel: Detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3' or 'ILD_o1_v05'
 
     """
     self._checkArgs( { 'detectormodel' : types.StringTypes } )
@@ -144,7 +144,7 @@ class OverlayInput(LCUtilityApplication):
     """ Sets the path to where the overlay files are located.
     Setting this option will ignore all other settings!
 
-    :param string path: LFN path to the folder containing the overlay files
+    :param str path: LFN path to the folder containing the overlay files
     """
     self._checkArgs( { 'path' : types.StringTypes } )
     self.pathToOverlayFiles = path
@@ -156,7 +156,7 @@ class OverlayInput(LCUtilityApplication):
     .. deprecated:: 23r0
        Use :func:`setBackgroundType` instead
 
-    :param string backgroundEventType: Background type.
+    :param str backgroundEventType: Background type.
 
     """
     self._checkArgs( { 'backgroundEventType' : types.StringTypes } )
@@ -169,7 +169,7 @@ class OverlayInput(LCUtilityApplication):
   def setBackgroundType(self, backgroundType):
     """Define the background type
 
-    :param string backgroundType: Background type.
+    :param str backgroundType: Background type.
 
     """
     return self.setBkgEvtType(backgroundType)
@@ -179,7 +179,7 @@ class OverlayInput(LCUtilityApplication):
     invocations of the overlay processor happen in marlin for example.
     Different processors must use different background types
 
-    :param string processorName: Name of the Processor these input files are for
+    :param str processorName: Name of the Processor these input files are for
 
     """
     self._checkArgs( { 'processorName' : types.StringTypes } )

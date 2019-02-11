@@ -58,7 +58,7 @@ class Whizard2Analysis(ModuleBase):
       - prepare the steering file and command line parameters
       - run Whizard2 on this steering file and catch the exit status
 
-    :rtype: S_OK, S_ERROR
+    :rtype: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK`, :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     self.result = S_OK()
     if not self.platform:

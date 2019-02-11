@@ -26,7 +26,7 @@ class LogUpload( OperationHandlerBase ):
 
     :param self: self reference
     :param Operation operation: Operation instance
-    :param string csPath: CS path for this handler
+    :param str csPath: CS path for this handler
     """
     # # base class ctor
     OperationHandlerBase.__init__( self, operation, csPath )

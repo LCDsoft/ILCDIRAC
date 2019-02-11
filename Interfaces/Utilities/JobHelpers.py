@@ -4,8 +4,10 @@ def getValue( value, conversion=None, typeToCheck=None ):
   """ returns the first entry, if it is a list, or the value otherwise
 
   :param value: value to check
-  :param callable conversion: type to convert the value to, callable
-  :param class typeToCheck: class the parameter should be an instance of
+  :param conversion: type to convert the value to, callable
+  :type conversion: ``callable``
+  :param typeToCheck: class the parameter should be an instance of
+  :param typeToCheck: ``class``
   """
   newValue = None
   if isinstance( value, list ):

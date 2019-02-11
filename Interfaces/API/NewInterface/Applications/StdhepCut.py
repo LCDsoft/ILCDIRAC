@@ -64,7 +64,7 @@ class StdhepCut(LCApplication):
   def setInlineCuts(self, cutsstring):
     """ Define cuts directly, not by specifying a file
 
-    :param string cutsstring: Cut string. Can be multiline
+    :param str cutsstring: Cut string. Can be multiline
     """
     self._checkArgs( { 'cutsstring' : types.StringTypes } )
 

@@ -122,6 +122,38 @@ modindex_common_prefix = ['ILCDIRAC.']
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
+# if true complain about bad links
+nitpicky = True
+nitpick_ignore = [
+    ('py:exc', 'TypeError'),
+    ('py:exc', 'ValueError'),
+    ('py:class', 'list'),
+    ('py:class', 'python:list'),
+    ('py:class', 'lists'),
+    ('py:class', 'string'),  # inherited
+    ('py:class', 'TypeError'), # transformation
+    ('py:class', 'tuple'),
+    ('py:class', 'bool/str'),
+    ('py:class', 'StringIO'),
+    ('py:class', 'Int'),
+    ('py:class', 'python:list of tuples'),
+    ('py:class', 'list of tuples'),
+    ('py:class', 'dictionary'),
+    ('py:class', "'Check'"),
+    ('py:class', "'Read'"),
+    ('py:class', "'Remove'"),
+    ('py:class', "'Write'"),
+    ('py:class', 'Boolean'),
+    ('py:class', 'LFN str'),
+    ('py:class', 'Single LFN string'),
+    ('py:class', 'boolean'),
+    ('py:class', 'integer'),
+    ('py:class', 'list of LFNs'),
+    ('py:class', 'list of lists of LFNs'),
+    ('py:class', 'list of strings'),
+    ('py:class', 'of string and dictionaries'),
+    ('py:class', 'string in'),
+]
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -316,6 +348,6 @@ autodoc_member_order = 'bysource'
 autodoc_mock_imports = ['GSI', 'MySQLdb', 'sqlalchemy', 'lcg_util', 'suds'
                         ]
 
-intersphinx_mapping = {'DIRAC': ('http://dirac.readthedocs.io/en/rel-v6r20', None),
+intersphinx_mapping = {'DIRAC': ('https://dirac.readthedocs.io/en/rel-v6r20', None),
                        'python': ('https://docs.python.org/2.7', None),
                        }

@@ -74,7 +74,7 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
       - prepare the steering file and command line parameters
       - run DDSim on this steering file and catch the exit status
 
-    :rtype: S_OK, S_ERROR
+    :returns: :func:`~DIRAC.Core.Utilities.ReturnValues.S_OK`, :func:`~DIRAC.Core.Utilities.ReturnValues.S_ERROR`
     """
     self.result = S_OK()
     if not self.platform:

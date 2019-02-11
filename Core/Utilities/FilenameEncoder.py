@@ -9,7 +9,7 @@ class FilenameEncoder(object):
   A utility class to decode a output filename from an input file name
   according to the file name convension used by ILD.
   Once rules are defined, output file, directory and meta values
-  can be generated base on the :mod:`dict` object. See __main__
+  can be generated base on the `dict` object. See __main__
   attached below.
 
   Examples to use this class will be found in ILCDIRAC/Core/Utilities/tests/Test_FilenameEncoder.py
@@ -200,7 +200,7 @@ def makeFilename( fileformat, filemeta, preonly=True ):
   '''
 
   Make a filename, namely, Replace fileformat according to the filemeta.
-  Filemeta is a :mod:`dict` objects, each entry being key and value.
+  Filemeta is a `dict` objects, each entry being key and value.
   As a default, key is one character and "%[key]" in fileformat is
   replaced by "value".  If preonly is "False", "%[key]%" is replaced by value.
   In this case, [key] can be more than one character.
@@ -226,9 +226,9 @@ def makeFilename( fileformat, filemeta, preonly=True ):
 def makeDirMetaData( metaformat, items ):
   '''
 
-  Returns a :mod:`dict` object which should be used for directory meta key and value
+  Returns a `dict` object which should be used for directory meta key and value
   definition.  "%[key]" strings in a dict object, metaformat, is
-  replaced according to items and a reusltant :mod:`dict` object is returned.
+  replaced according to items and a reusltant `dict` object is returned.
 
   :param dict metaformat: Dictionary object defining the format. The key's and value's of
        metaformat should be string containing "%[key]"
