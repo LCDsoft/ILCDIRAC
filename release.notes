@@ -58,16 +58,16 @@ CHANGE: (!238) The overview pages for packages has changed to *index*
 
 *Interfaces
 
-NEW: (!238) New automatic job splitting function to split one file across multiple jobs :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.setSplitFilesAcrossJobs`
-NEW: (!238) New function to set the job indices to use for automatic job splitting: :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.setSplitJobIndexList`
+NEW: (!238) New automatic job splitting function to split one file across multiple jobs :func:`~ILCDIRAC.Interfaces.Utilities.SplitMixin.SplitMixin.setSplitFilesAcrossJobs`
+NEW: (!238) New function to set the job indices to use for automatic job splitting: :func:`~ILCDIRAC.Interfaces.Utilities.SplitMixin.SplitMixin.setSplitJobIndexList`
 CHANGE: (!238) The name of the loggers has changed, the output will be more hierarchical
-CHANGE: (!238) :func:`ILCDIRAC.Interfaces.DiracILC.runLocal` is used from DIRAC interfaces again, as the patches to run locally with LFNs in input sandboxes have been ported to upstream
+CHANGE: (!238) ``runLocal`` is used from DIRAC interfaces again, as the patches to run locally with LFNs in input sandboxes have been ported to upstream
 FIX: (!239) :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2`: fix to be able to parse and replace non-integer sqrts values
 
 *FrameworkSystem
 
-NEW: (!235) :class:`~ILCDIRAC.FrameworkSystem.Agents.MonitorAgents.MonitorAgents`: add component control: ensure services/agents/executors are in the correct run status.
-NEW: (!235) :class:`~ILCDIRAC.FrameworkSystem.Agents.MonitorAgents.MonitorAgents`: add component control: ensure the URL for running services is set
+NEW: (!235) :class:`~ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.MonitorAgents`: add component control: ensure services/agents/executors are in the correct run status.
+NEW: (!235) :class:`~ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.MonitorAgents`: add component control: ensure the URL for running services is set
 
 *ILCTransformationSystem
 
@@ -95,14 +95,14 @@ FIX: (!227) :mod:`~ILCDIRAC.Interfaces.Utilities.DDInterfaceMixin`: ensure error
 *Workflow
 
 FIX: (!222) :mod:`~ILCDIRAC.Workflow.Modules.ModuleBase`: Fix cleanup of request operations in case of failure. RemovalReplica requests are also removed, which in the past lead to un-fulfillable requests
-FIX: (!222) :mod:`~ILCDIRAC.Workflow.Modules.Modulebase`: only calculate checksum once.
-CHANGE: (!222) :mod:`~ILCDIRAC.Workflow.Modules.Modulebase`: change the name of the log output to **__name__**
+FIX: (!222) :mod:`~ILCDIRAC.Workflow.Modules.ModuleBase`: only calculate checksum once.
+CHANGE: (!222) :mod:`~ILCDIRAC.Workflow.Modules.ModuleBase`: change the name of the log output to **__name__**
 CHANGE: (!223) :mod:`~ILCDIRAC.Workflow.Modules.OverlayInput`: only wait 3 minutes between copying if the previous copy attempt failed, fixes ILCDIRAC-850
 
 *FrameworkSystem
 
-FIX: (!224) :mod:`~ILCDIRAC.FrameworkSystem.Agents.MonitorAgents`: prevent exception for missing LogAge for services
-CHANGE: (!224) :mod:`~ILCDIRAC.FrameworkSystem.Agents.MonitorAgents`: add hostname to the email subject, include service url in error messages
+FIX: (!224) :mod:`~ILCDIRAC.FrameworkSystem.Agent.MonitorAgents`: prevent exception for missing LogAge for services
+CHANGE: (!224) :mod:`~ILCDIRAC.FrameworkSystem.Agent.MonitorAgents`: add hostname to the email subject, include service url in error messages
 
 *ILCTransformationSystem
 
@@ -129,7 +129,7 @@ FIX: (!216) TransformationPlugin: BroadcastProcessed: only print about failure f
 
 *Interfaces
 
-NEW: (!214) New function :func:`~ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplittingStartIndex` to set the starting index for the naming of output files.
+NEW: (!214) New function :func:`~ILCDIRAC.Interfaces.Utilities.SplitMixin.SplitMixin.setSplittingStartIndex` to set the starting index for the naming of output files.
 CHANGE: (!215) :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob` classes now execute the :class:`~ILCDIRAC.Workflow.Modules.ReportErrors.ReportErrors` Module at the very end, solves ILCDIRAC-760. Only works for productions created with this or later releases.
 FIX: (!212) :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob`: Fix for meta energy _without_ decimal digits
 NEW: (!218) Parametric (Splitting) Jobs can now be tested locally. Only the first entry of the sequence will be run however! Fixes ILCDIRAC-818
@@ -137,7 +137,7 @@ FIX: (!218) When testing jobs locally, the LFNs in the input sandbox will be tre
 
 *FrameworkSystem
 
-NEW: (!213) :class:`~ILCDIRAC.FrameworkSystem.Agents.MonitorAgents.MonitorAgents` now also monitors services by pinging them
+NEW: (!213) :class:`~ILCDIRAC.FrameworkSystem.Agent.MonitorAgents.MonitorAgents` now also monitors services by pinging them
 
 *Workflow
 
@@ -301,7 +301,7 @@ NEW: (!150) :class:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2.
 
 *Interface
 
-NEW: (!153) `ILCDIRAC.Interfaces.API.NewInterface.UserJob.UserJob.setSplitDoNotAlterOutputFilename`: function to disable the injecting of the JobIndex into the filename
+NEW: (!153) `ILCDIRAC.Interfaces.Utilities.SplitMixin.SplitMixin.setSplitDoNotAlterOutputFilename`: function to disable the injecting of the JobIndex into the filename
 
 *ILCTransformationSystem
 
@@ -331,7 +331,7 @@ NEW: (!153) if some kind of jobSplitting is done the OutputData LFNs are automat
 
 *ILCTransformationSystem
 
-FIX: (!140) :mod:`~ILCDIRAC.ILCTransformationSystem.Utilities.MovingTransformation`: fix the *targetSE* argument type; fix if *targetSE* is a string
+FIX: (!140) ``MovingTransformation``: fix the *targetSE* argument type; fix if *targetSE* is a string
 FIX: (!140) `dirac-clic-make-productions`: *Move* parameter was not parsed before, now moving transformations are also created if it is True
 FIX: (!144) `dirac-clic-make-productions` make more parameters optional
 CHANGE: (!144) `dirac-clic-make-productions` change parameter name *NumberOfEventsInBaseFiles* to *eventsInSplitFiles*
@@ -521,7 +521,7 @@ FIX: DataRecoveryAgent using DiraAPI getJobJDL function to get dictionary of JDL
 
 * Interfaces:
 
-FIX: Fix exception in internal :meth:`DIRAC.Core.Base.API.API._reportError` function when function argument is 'name'
+FIX: Fix exception in internal :class:`DIRAC.Core.Base.API.API` ``._reportError`` function when function argument is 'name'
 
 [v26r0p1]
 
@@ -623,13 +623,13 @@ FIX: Files from the ParametricInputData should now be handled correctly
 
 * WorkloadManagement:
 
-FIX: Copy :func:`getCPUNormalization` from DIRAC and reduce memory footprint ILCDIRAC-661
+FIX: Copy ``getCPUNormalization`` from DIRAC and reduce memory footprint ILCDIRAC-661
 
 [v25r0p4]
 
 * WorkloadManagement:
 
-FIX: Copy :mod:`DownloadInputData` from DIRAC and fix ILCDIRAC-655
+FIX: Copy :mod:`~ILCDIRAC.WorkloadManagementSystem.Client.DownloadInputData` from DIRAC and fix ILCDIRAC-655
 
 [v25r0p3]
 
@@ -765,8 +765,8 @@ Based von DIRAC v6r12p53, see also v6r12p52
 
 *Workflow
 
-FIX: :mod:`~ILCDIRAC.Workflow.Modules.RootMacro` and :mod:`~ILCDIRAC.Workflow.Modules.RootScript` can now use the software versions natively installed on CVMFS (ILCDIRAC-582)
-FIX: :mod:`~ILCDIRAC.Workflow.Modules.RootScript` can now also be used to run binaries located in the PATH, e.g., 'hadd' to join root files
+FIX: :mod:`~ILCDIRAC.Workflow.Modules.RootMacroAnalysis` and :mod:`~ILCDIRAC.Workflow.Modules.RootExecutableAnalysis` can now use the software versions natively installed on CVMFS (ILCDIRAC-582)
+FIX: :mod:`~ILCDIRAC.Workflow.Modules.RootExecutableAnalysis` can now also be used to run binaries located in the PATH, e.g., 'hadd' to join root files
 
 *ILCTransformationSystem
 
@@ -783,7 +783,7 @@ NEW: :mod:`~ILCDIRAC.WorkloadManagementSystem.Executor.SoftwareVersions` Executo
 FIX: :mod:`~ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent`: Fixes for notification, updates configuration before every cycle
 
 *RequestManagement
-FIX: :mod:`~ILCDIRAC.RequestManagementSystem.Agent.RestartReqExeAgent` deal with multiple PIDs
+FIX: ``RestartReqExeAgent`` deal with multiple PIDs
 
 [v23r0p9]
 
@@ -807,7 +807,7 @@ NEW: Rewrite of the :mod:`~ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAg
 FIX: :any:`dirac-ilc-upload-gen-files`: ILCDIRAC-571 correct energy variable, better logging for metadata setting in case of errors
 
 *RequestManagement
-NEW: :mod:`~ILCDIRAC.RequestManagementSystem.Agent.RestartReqExeAgent` to restart the RequestManagementAgent when it gets stuck, ILCDIRAC-572
+NEW: ``RestartReqExeAgent`` to restart the RequestManagementAgent when it gets stuck, ILCDIRAC-572
 
 *Workflow
 FIX: ILCDIRAC-576: :mod:`~ILCDIRAC.Workflow.Modules.ApplicationScript`: Set OMP_NUM_THREADS=1
