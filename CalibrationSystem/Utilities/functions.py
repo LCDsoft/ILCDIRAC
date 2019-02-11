@@ -2,6 +2,9 @@
 
 import re
 import os
+from DIRAC import S_OK, S_ERROR
+import csv
+from xml.etree import ElementTree as et
 
 #pylint: disable=invalid-name,too-many-locals,too-many-statements
 
@@ -109,3 +112,143 @@ def xml_generate(baseFileName='CLIC_PfoAnalysis_AAAA_SN_BBBB.xml',
     newXML.write(newContent)
 
   return newFileName
+
+
+def validateExistenceOfWordsInFile(inFile, words):
+  """ TODO
+
+  """
+  with open(inFile) as file:
+    for iWord in words:
+      if iWord not in file:
+        return S_ERROR('Word %s is not found in template file: %s' % (iWord, inFile))
+  return S_OK()
+
+
+def validateMarlinRecoTemplateFile(marlinRecoTemplateFileName):
+  """ TODO
+
+  """
+  parametersToValidate = ['ECALTOEM_XXXX', 'HCALTOEM_XXXX', 'ECALTOHAD_XXXX', 'HCALTOHAD_XXXX', 'MHHHE_XXXX',
+                          'slcio_XXXX', 'Gear_XXXX', 'CALIBR_ECAL_XXXX', 'CALIBR_HCAL_BARREL_XXXX',
+                          'CALIBR_HCAL_ENDCAP_XXXX', 'CALIBR_HCAL_OTHER_XXXX', 'EMT_XXXX', 'HMT_XXXX',
+                          'ECalGeVToMIP_XXXX', 'HCalGeVToMIP_XXXX']
+  return validateExistenceOfWordsInFile(marlinRecoTemplateFileName, parametersToValidate)
+
+
+def validatePandoraSettingsFile(pandoraSettingsFileName):
+  """ TODO
+
+  """
+  parametersToValidate = ['PANDORALIKELIHOOD_XXXX']
+  return validateExistenceOfWordsInFile(pandoraSettingsFileName, parametersToValidate)
+
+
+def makeParameterTable():
+  tree = et.parse('testing/FCCee_PfoAnalysis_AAAA_SN_BBBB.xml')
+  root = tree.getroot()
+
+  outList = []
+  for child in root:
+    for grandChild in child:
+      if grandChild.text == None:
+        continue
+      if 'XXXX' in grandChild.text:
+        grandChild.text = "".join(grandChild.text.split())
+        parentType = child.tag
+        parentName = child.attrib.get('name')
+        childName = grandChild.attrib.get('name')
+        #  outStr = '%s,%s,%s,DUMMY' % (parentType, parentName, childName)
+        outStr = '%s,%s,%s' % (parentType, parentName, childName)
+        print (outStr)
+        outList.append(outStr)
+
+  return outList
+
+
+def updateSteeringFile(inFileName, outFileName, parametersToSetup):
+  tree = et.parse(inFileName)
+  root = tree.getroot()
+
+  parTable = [x.split(',') for x in parametersToSetup]
+  #  print parTable
+
+  parameterDict = {}
+  for x in parTable:
+    parameterDict['%s,%s,%s' % (x[0], x[1], x[2])] = x[3]
+
+  print("Updating following values:")
+
+  for child in root:
+    if child.tag not in [x[0] for x in parTable]:
+      continue
+    for grandChild in child:
+      if grandChild.text == None:
+        continue
+
+      parentType = child.tag
+      parentName = child.attrib.get('name')
+      childName = grandChild.attrib.get('name')
+      formattedStr = '%s,%s,%s' % (parentType, parentName, childName)
+
+      if formattedStr in parameterDict:
+        if grandChild.text != parameterDict[formattedStr]:
+          print('%s:\t"%s" --> "%s"' % (childName, grandChild.text, parameterDict[formattedStr]))
+          grandChild.text = parameterDict[formattedStr]
+
+  tree.write(outFileName)
+
+
+def readParameterTable():
+  outList = []
+  with open('testing/test.csv', mode='r') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    line_count = 0
+    for row in csv_reader:
+      if line_count == 0:
+        line_count += 1
+        continue
+      else:
+        outList.append('%s,%s,%s' % (row[0], row[1], row[2]))
+        line_count += 1
+  return outList
+
+
+def readParametersFromSteeringFile(inFileName, parameterTable):
+  outList = []
+  tree = et.parse(inFileName)
+  root = tree.getroot()
+
+  parameterTableInternal = list(parameterTable)
+
+  for child in root:
+    for grandChild in child:
+      if grandChild.text == None:
+        continue
+
+      parentType = child.tag
+      parentName = child.attrib.get('name')
+      childName = grandChild.attrib.get('name')
+      formattedStr = '%s,%s,%s' % (parentType, parentName, childName)
+
+      if formattedStr in parameterTableInternal:
+        parameterTableInternal.remove(formattedStr)
+        grandChild.text = "".join(grandChild.text.split())  # remove spaces. TODO make it optional?
+        outList.append(formattedStr + ',' + grandChild.text)
+
+  if len(parameterTableInternal) != 0:
+    print("Some parameters are not found:")
+    print parameterTableInternal
+    return None
+
+  return outList
+
+
+def testUpdateOfSteeringFileWithNewParameters():
+  inFileName = 'testing/in1.xml'
+  outFileName = 'testing/out1.xml'
+
+  parTable = readParameterTable()
+  currentParameters = readParametersFromSteeringFile(inFileName, parTable)
+
+  updateSteeringFile(inFileName, outFileName, currentParameters)

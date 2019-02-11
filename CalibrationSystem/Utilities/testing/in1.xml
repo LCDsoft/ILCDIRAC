@@ -1,0 +1,1217 @@
+<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
+  <execute>
+
+    
+    <processor name="MyAIDAProcessor" />
+    <processor name="EventNumber" />
+    <processor name="InitDD4hep" />
+    <processor name="Config" />
+
+    <if condition="Config.Overlay91GeV">
+      <processor name="Overlay91GeV" />
+    </if>
+
+    <if condition="Config.Overlay365GeV">
+      <processor name="Overlay365GeV" />
+    </if>
+
+    
+    <processor name="VXDBarrelDigitiser" />
+    <processor name="VXDEndcapDigitiser" />
+    <processor name="InnerPlanarDigiProcessor" />
+    <processor name="InnerEndcapPlanarDigiProcessor" />
+    <processor name="OuterPlanarDigiProcessor" />
+    <processor name="OuterEndcapPlanarDigiProcessor" />
+
+    
+    
+    <if condition="Config.TrackingTruth">
+      <processor name="MyTruthTrackFinder" />
+    </if>
+    <if condition="Config.TrackingConformal">
+      <processor name="MyConformalTracking" />
+      <processor name="ClonesAndSplitTracksFinder" />
+    </if>
+
+    <processor name="Refit" />
+
+    
+    <processor name="MyDDCaloDigi" />
+    <processor name="MyDDSimpleMuonDigi" /> 
+    <processor name="MyDDMarlinPandora" /> 
+    <processor name="MyPfoAnalysis" /> 
+    
+
+    
+    <processor name="MyClicEfficiencyCalculator" />
+    <processor name="MyRecoMCTruthLinker" />
+    <processor name="MyTrackChecker" />
+    <Xprocessor name="MyHitResiduals" /> 
+
+    
+
+    <group name="PfoSelector" />
+
+    <processor name="Output_REC" />
+    <processor name="Output_DST" />
+
+  </execute>
+
+
+  <global>
+    <parameter name="LCIOInputFiles">
+       slcio_XXXX
+    </parameter>
+    
+    <parameter name="MaxRecordNumber" value="-1" />
+    <parameter name="SkipNEvents" value="0" />
+    <parameter name="SupressCheck" value="false" />  
+    <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> WARNING  </parameter>
+    <parameter name="RandomSeed" value="1234567890" />
+  </global>
+
+
+  <processor name="InitDD4hep" type="InitializeDD4hep">
+    
+    
+    <parameter name="EncodingStringParameter"> GlobalTrackerReadoutID </parameter>
+    <parameter name="DD4hepXMLFile" type="string">COMPACTXML_XXXX
+    </parameter>
+  </processor>
+
+  <processor name="Config" type="CLICRecoConfig">
+    
+    <parameter name="Overlay" type="string">False </parameter>
+    
+    <parameter name="Tracking" type="string">Conformal </parameter>
+  </processor>
+
+  <group name="Overlay">
+    <parameter name="MCParticleCollectionName" type="string">MCParticle </parameter>
+    
+    <parameter name="MCPhysicsParticleCollectionName" type="string"> MCPhysicsParticles </parameter>
+    
+    <parameter name="Delta_t" type="float" value="20" />
+    
+    <parameter name="NBunchtrain" type="int" value="20" />
+
+    <parameter name="Collection_IntegrationTimes" type="StringVec">
+      VertexBarrelCollection        380
+      VertexEndcapCollection        380
+
+      InnerTrackerBarrelCollection  380
+      InnerTrackerEndcapCollection  380
+
+      OuterTrackerBarrelCollection  380
+      OuterTrackerEndcapCollection  380
+
+      ECalBarrelCollection          380
+      ECalEndcapCollection          380
+      ECalPlugCollection            380
+
+      HCalBarrelCollection          380
+      HCalEndcapCollection          380
+      HCalRingCollection            380
+
+      YokeBarrelCollection          380
+      YokeEndcapCollection          380
+
+      LumiCalCollection             380
+      BeamCalCollection             380
+    </parameter>
+    
+    <parameter name="PhysicsBX" type="int" value="1" />
+    
+    <parameter name="Poisson_random_NOverlay" type="bool" value="false" />
+    
+    <parameter name="RandomBx" type="bool" value="false" />
+    
+    <parameter name="TPCDriftvelocity" type="float" value="0.05" />
+    <parameter name="BackgroundFileNames" type="StringVec">
+      pairs_Z_sim.slcio
+    </parameter>
+
+      <processor name="Overlay91GeV" type="OverlayTimingGeneric">
+        <parameter name="NumberBackground" type="float" value="1." />
+      </processor>
+
+      <processor name="Overlay365GeV" type="OverlayTimingGeneric">
+        <parameter name="NumberBackground" type="float" value="1." />
+      </processor>
+  </group>
+
+  <processor name="VXDBarrelDigitiser" type="DDPlanarDigiProcessor">
+    <parameter name="SubDetectorName" type="string">Vertex </parameter>
+    
+    
+    <parameter name="IsStrip" type="bool">false </parameter>
+    
+    <parameter name="ResolutionU" type="float"> 0.003 0.003 0.003 0.003 0.003 0.003 </parameter>
+    
+    <parameter name="ResolutionV" type="float"> 0.003 0.003 0.003 0.003 0.003 0.003  </parameter>
+    
+    <parameter lcioInType="SimTrackerHit" name="SimTrackHitCollectionName" type="string">VertexBarrelCollection </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="SimTrkHitRelCollection" type="string">VXDTrackerHitRelations </parameter>
+    
+    <parameter lcioOutType="TrackerHitPlane" name="TrackerHitCollectionName" type="string">VXDTrackerHits </parameter>
+    
+    <parameter name="Verbosity" type="string">WARNING </parameter>
+  </processor>
+
+  <processor name="VXDEndcapDigitiser" type="DDPlanarDigiProcessor">
+    <parameter name="SubDetectorName" type="string">Vertex </parameter>
+    
+    
+    <parameter name="IsStrip" type="bool">false </parameter>
+    
+    <parameter name="ResolutionU" type="float"> 0.003 0.003 0.003 0.003 0.003 0.003 </parameter>
+    
+    <parameter name="ResolutionV" type="float"> 0.003 0.003 0.003 0.003 0.003 0.003  </parameter>
+    
+    <parameter lcioInType="SimTrackerHit" name="SimTrackHitCollectionName" type="string">VertexEndcapCollection </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="SimTrkHitRelCollection" type="string">VXDEndcapTrackerHitRelations </parameter>
+    
+    <parameter lcioOutType="TrackerHitPlane" name="TrackerHitCollectionName" type="string">VXDEndcapTrackerHits </parameter>
+    
+    <parameter name="Verbosity" type="string">WARNING </parameter>
+  </processor>
+
+
+  <processor name="InnerPlanarDigiProcessor" type="DDPlanarDigiProcessor">
+    
+    <parameter name="SubDetectorName" type="string"> InnerTrackers </parameter>
+    
+    <parameter name="IsStrip" type="bool"> false </parameter>
+    
+    <parameter name="ResolutionU" type="float">0.007 </parameter> 
+    
+    <parameter name="ResolutionV" type="float">0.09 </parameter>  
+    
+    <parameter lcioInType="SimTrackerHit" name="SimTrackHitCollectionName" type="string"> InnerTrackerBarrelCollection </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="SimTrkHitRelCollection" type="string">InnerTrackerBarrelHitsRelations </parameter>
+    
+    <parameter lcioOutType="TrackerHitPlane" name="TrackerHitCollectionName" type="string">ITrackerHits </parameter>
+    
+    <parameter name="Verbosity" type="string">WARNING </parameter>
+  </processor>
+
+  <processor name="InnerEndcapPlanarDigiProcessor" type="DDPlanarDigiProcessor">
+    
+    <parameter name="SubDetectorName" type="string"> InnerTrackers </parameter>
+    
+    <parameter name="IsStrip" type="bool"> false </parameter>
+    
+    <parameter name="ResolutionU" type="float"> 0.005 0.007 0.007 0.007 0.007 0.007 0.007</parameter>
+    
+    <parameter name="ResolutionV" type="float"> 0.005 0.09 0.09 0.09 0.09 0.09 0.09</parameter>
+    
+    <parameter lcioInType="SimTrackerHit" name="SimTrackHitCollectionName" type="string"> InnerTrackerEndcapCollection </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="SimTrkHitRelCollection" type="string">InnerTrackerEndcapHitsRelations </parameter>
+    
+    <parameter lcioOutType="TrackerHitPlane" name="TrackerHitCollectionName" type="string">ITrackerEndcapHits </parameter>
+    
+    <parameter name="Verbosity" type="string">WARNING </parameter>
+  </processor>
+
+  <processor name="OuterPlanarDigiProcessor" type="DDPlanarDigiProcessor">
+    
+    <parameter name="SubDetectorName" type="string"> OuterTrackers </parameter>
+    
+    <parameter name="IsStrip" type="bool"> false </parameter>
+    
+    <parameter name="ResolutionU" type="float"> 0.007 0.007 0.007</parameter>
+    
+    <parameter name="ResolutionV" type="float"> 0.09 0.09 0.09 </parameter>
+    
+    <parameter lcioInType="SimTrackerHit" name="SimTrackHitCollectionName" type="string">OuterTrackerBarrelCollection </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="SimTrkHitRelCollection" type="string">OuterTrackerBarrelHitsRelations </parameter>
+    
+    <parameter lcioOutType="TrackerHitPlane" name="TrackerHitCollectionName" type="string">OTrackerHits </parameter>
+    
+    <parameter name="Verbosity" type="string">WARNING </parameter>
+  </processor>
+
+  <processor name="OuterEndcapPlanarDigiProcessor" type="DDPlanarDigiProcessor">
+    
+    <parameter name="SubDetectorName" type="string"> OuterTrackers </parameter>
+    
+    <parameter name="IsStrip" type="bool"> false </parameter>
+    
+    <parameter name="ResolutionU" type="float"> 0.007 0.007 0.007 0.007 0.007 </parameter>
+    
+    <parameter name="ResolutionV" type="float"> 0.09 0.09 0.09 0.09 0.09 </parameter>
+    
+    <parameter lcioInType="SimTrackerHit" name="SimTrackHitCollectionName" type="string">OuterTrackerEndcapCollection </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="SimTrkHitRelCollection" type="string">OuterTrackerEndcapHitsRelations </parameter>
+    
+    <parameter lcioOutType="TrackerHitPlane" name="TrackerHitCollectionName" type="string">OTrackerEndcapHits </parameter>
+    
+    <parameter name="Verbosity" type="string">WARNING </parameter>
+  </processor>
+
+  
+  <processor name="MyTruthTrackFinder" type="TruthTrackFinder">
+    <parameter name="FitForward" type="bool">true</parameter>
+    
+    <parameter lcioInType="TrackerHitPlane" name="TrackerHitCollectionNames" type="StringVec">
+      VXDTrackerHits
+      ITrackerHits
+      OTrackerHits
+      VXDEndcapTrackerHits
+      ITrackerEndcapHits
+      OTrackerEndcapHits
+    </parameter>
+    <parameter lcioInType="LCRelation" name="SimTrackerHitRelCollectionNames" type="StringVec">
+      VXDTrackerHitRelations
+      InnerTrackerBarrelHitsRelations
+      OuterTrackerBarrelHitsRelations
+      VXDEndcapTrackerHitRelations
+      InnerTrackerEndcapHitsRelations
+      OuterTrackerEndcapHitsRelations
+    </parameter>
+
+    
+    <parameter lcioInType="MCParticle" name="MCParticleCollectionName" type="string">MCParticle </parameter>
+    
+    <parameter lcioOutType="Track" name="SiTrackCollectionName" type="string">SiTracks </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="SiTrackRelationCollectionName" type="string">SiTrackRelations </parameter>
+    
+    <parameter name="UseTruthInPrefit" type="bool">false </parameter>
+
+    <parameter name="Verbosity" type="string">WARNING </parameter>
+  </processor>
+
+  
+
+  <processor name="MyConformalTracking" type="ConformalTracking">
+    
+
+    
+    <parameter lcioInType="TrackerHitPlane" name="TrackerHitCollectionNames" type="StringVec"> VXDTrackerHits VXDEndcapTrackerHits ITrackerHits OTrackerHits ITrackerEndcapHits OTrackerEndcapHits </parameter>
+    
+    <parameter lcioInType="TrackerHitPlane" name="VertexBarrelHitCollectionNames" type="StringVec">VXDTrackerHits </parameter>
+    
+    <parameter lcioInType="TrackerHitPlane" name="VertexEndcapHitCollectionNames" type="StringVec">VXDEndcapTrackerHits </parameter>
+    
+    <parameter lcioInType="TrackerHitPlane" name="MainTrackerHitCollectionNames" type="StringVec">ITrackerHits OTrackerHits ITrackerEndcapHits OTrackerEndcapHits </parameter>
+    
+    <parameter lcioInType="LCRelation" name="RelationsNames" type="StringVec"> VXDTrackerHitRelations VXDEndcapTrackerHitRelations InnerTrackerBarrelHitsRelations OuterTrackerBarrelHitsRelations InnerTrackerEndcapHitsRelations OuterTrackerEndcapHitsRelations </parameter>
+
+
+    
+    <parameter name="ThetaRange" type="double"> 0.05 </parameter>
+    <parameter name="MaxCellAngle" type="double"> 0.01 </parameter>
+    <parameter name="MaxCellAngleRZ" type="double"> 0.01 </parameter>
+    <parameter name="MaxDistance" type="double"> 0.03 </parameter>
+    <parameter name="MinClustersOnTrack" type="int"> 4 </parameter>
+    <parameter name="MaxChi2" type="double"> 100 </parameter>
+    <parameter name="DebugPlots" type="bool"> false </parameter>
+    <parameter name="trackPurity" type="double">0.7 </parameter>
+
+    
+    <parameter lcioOutType="Track" name="SiTrackCollectionName" type="string">SiTracksCT </parameter>
+    
+    <parameter lcioInType="MCParticle" name="MCParticleCollectionName" type="string">MCParticle </parameter>
+    
+    
+  </processor>
+
+  <processor name="ClonesAndSplitTracksFinder" type="ClonesAndSplitTracksFinder">
+    <parameter name="InputTrackCollectionName" type="string"> SiTracksCT </parameter>
+    <parameter name="OutputTrackCollectionName" type="string"> SiTracks </parameter>
+    <parameter name="MultipleScatteringOn" type="bool"> true </parameter>
+    <parameter name="EnergyLossOn" type="bool"> true </parameter>
+    <parameter name="SmoothOn" type="bool"> false </parameter>
+    <parameter name="extrapolateForward" type="bool"> true </parameter>
+    <parameter name="maxDeltaTheta" type="double"> 0.59 </parameter>
+    <parameter name="maxDeltaPhi" type="double"> 0.99 </parameter>
+    <parameter name="maxDeltaPt" type="double"> 0.69 </parameter>
+    <parameter name="mergeSplitTracks" type="bool"> false </parameter>
+  </processor>
+
+  <processor name="Refit" type="RefitFinal">
+    
+    
+    <parameter name="EnergyLossOn" type="bool"> true </parameter>
+    
+    <parameter lcioInType="LCRelation" name="InputRelationCollectionName" type="string"> SiTrackRelations </parameter>
+    
+    <parameter lcioInType="Track" name="InputTrackCollectionName" type="string"> SiTracks </parameter>
+    
+    <parameter name="Max_Chi2_Incr" type="double"> 1.79769e+30 </parameter>
+    
+    <parameter name="MultipleScatteringOn" type="bool"> true </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="OutputRelationCollectionName" type="string">
+      SiTracks_Refitted_Relation
+    </parameter>
+    
+    <parameter lcioOutType="Track" name="OutputTrackCollectionName" type="string">
+      SiTracks_Refitted
+    </parameter>
+    
+    <parameter name="ReferencePoint" type="int"> -1 </parameter>
+    
+    <parameter name="SmoothOn" type="bool"> false </parameter>
+    
+    
+    
+    <parameter name="extrapolateForward" type="bool"> true </parameter>
+  </processor>
+
+
+  <processor name="MyClicEfficiencyCalculator" type="ClicEfficiencyCalculator">
+    
+    
+    <parameter name="efficiencyTreeName" type="string">trktree </parameter>
+    
+    <parameter name="purityTreeName" type="string">puritytree </parameter>
+    
+    <parameter name="mcTreeName" type="string">mctree </parameter>   
+    
+    <parameter lcioInType="Track" name="TrackCollectionName" type="string"> SiTracks_Refitted </parameter>
+    
+    <parameter lcioInType="TrackerHitPlane" name="TrackerHitCollectionNames" type="StringVec"> VXDTrackerHits VXDEndcapTrackerHits ITrackerHits OTrackerHits ITrackerEndcapHits OTrackerEndcapHits  </parameter>
+    
+    <parameter lcioInType="LCRelation" name="TrackerHitRelCollectionNames" type="StringVec"> VXDTrackerHitRelations VXDEndcapTrackerHitRelations InnerTrackerBarrelHitsRelations OuterTrackerBarrelHitsRelations InnerTrackerEndcapHitsRelations OuterTrackerEndcapHitsRelations </parameter>
+    
+    <parameter lcioInType="MCParticle" name="MCParticleCollectionName" type="string">MCParticle </parameter>
+    
+    <parameter lcioInType="MCParticle" name="MCPhysicsParticleCollectionName" type="string">MCPhysicsParticles </parameter>
+    
+    <parameter lcioOutType="MCParticle" name="MCParticleNotReco" type="string">MCParticleNotReco </parameter>
+    
+    <parameter name="morePlots" type="bool">false </parameter>
+    
+    <parameter name="reconstructableDefinition" type="string">ILDLike </parameter>
+    
+    <parameter name="vertexBarrelID" type="int">1 </parameter>  
+    
+    
+  </processor>
+
+
+  <processor name="MyTrackChecker" type="TrackChecker">
+    
+    
+    <parameter lcioInType="MCParticle" name="MCParticleCollectionName" type="string">MCParticle </parameter>
+    
+    <parameter lcioInType="Track" name="TrackCollectionName" type="string"> SiTracks_Refitted </parameter>
+    
+    <parameter lcioInType="LCRelation" name="TrackRelationCollectionName" type="string">SiTracksMCTruthLink </parameter>
+    
+    <parameter name="TreeName" type="string">checktree </parameter>
+    
+    <parameter name="UseOnlyTree" type="bool">true </parameter>  
+    
+    
+  </processor>
+
+
+  <processor name="MyAIDAProcessor" type="AIDAProcessor">
+    
+    
+    <parameter name="Compress" type="int" value="1" />
+    
+    <parameter name="FileName" type="string" value="histograms" />
+    
+    <parameter name="FileType" type="string" value="root " />
+  </processor>
+
+
+  <processor name="EventNumber" type="Statusmonitor">
+    <parameter name="HowOften" type="int">1 </parameter>
+    <parameter name="Verbosity" type="string"> MESSAGE </parameter>
+  </processor>
+
+
+  <processor name="MyDDCaloDigi" type="DDCaloDigi">
+    
+
+    
+    <parameter name="Histograms" type="int">0 </parameter>
+    <parameter name="RootFile" type="string">Digi_SiW.root</parameter>
+    
+    <parameter lcioOutType="LCRelation" name="RelationOutputCollection" type="string">RelationCaloHit </parameter>
+    
+    <parameter name="energyPerEHpair" type="float">3.6 </parameter>
+    
+    
+
+
+    
+
+    
+    <parameter lcioInType="SimCalorimeterHit" name="ECALCollections" type="StringVec">ECalBarrelCollection ECalEndcapCollection ECalPlugCollection </parameter>
+    
+    <parameter lcioOutType="CalorimeterHit" name="ECALOutputCollection0" type="string">ECALBarrel </parameter>
+    
+    <parameter lcioOutType="CalorimeterHit" name="ECALOutputCollection1" type="string">ECALEndcap </parameter>
+    
+    <parameter lcioOutType="CalorimeterHit" name="ECALOutputCollection2" type="string">ECALOther </parameter>
+    
+    <parameter name="IfDigitalEcal" type="int">0 </parameter>
+    
+    <parameter name="ECALLayers" type="IntVec">41 100  </parameter>
+    
+    <parameter name="ECAL_default_layerConfig" type="string">000000000000000 </parameter>
+    
+    <parameter name="StripEcal_default_nVirtualCells" type="int">9 </parameter>
+
+    
+    <parameter name="CalibECALMIP" type="float">0.0001 </parameter>
+    
+    <parameter name="CalibrECAL" type="FloatVec">CALIBR_ECAL_BARREL_XXXX</parameter>
+    
+    <parameter name="ECALThreshold" type="float">5e-05 </parameter>
+    
+    <parameter name="ECALThresholdUnit" type="string">GeV </parameter>
+    
+    <parameter name="ECALEndcapCorrectionFactor" type="float">CALIBR_ECAL_ENDCAPCORR_XXXX</parameter>
+    
+    <parameter name="ECALGapCorrection" type="int">1 </parameter>
+    
+    <parameter name="ECALGapCorrectionFactor" type="float">1 </parameter>
+    
+    <parameter name="ECALModuleGapCorrectionFactor" type="float">0.0 </parameter>
+    
+    <parameter name="MapsEcalCorrection" type="int">0 </parameter>
+
+    
+    <parameter name="ECAL_PPD_N_Pixels" type="int">10000 </parameter>
+    
+    <parameter name="ECAL_PPD_N_Pixels_uncertainty" type="float">0.05 </parameter>
+    
+    <parameter name="ECAL_PPD_PE_per_MIP" type="float">7 </parameter>
+    
+    <parameter name="ECAL_apply_realistic_digi" type="int">0 </parameter>
+    
+    <parameter name="ECAL_deadCellRate" type="float">0 </parameter>
+    
+    <parameter name="ECAL_deadCell_memorise" type="bool">false </parameter>
+    
+    <parameter name="ECAL_elec_noise_mips" type="float">0 </parameter>
+    
+    <parameter name="ECAL_maxDynamicRange_MIP" type="float">2500 </parameter>
+    
+    <parameter name="ECAL_miscalibration_correl" type="float">0 </parameter>
+    
+    <parameter name="ECAL_miscalibration_uncorrel" type="float">0 </parameter>
+    
+    <parameter name="ECAL_miscalibration_uncorrel_memorise" type="bool">false </parameter>
+    
+    <parameter name="ECAL_pixel_spread" type="float">0.05 </parameter>
+    
+    <parameter name="ECAL_strip_absorbtionLength" type="float">1e+06 </parameter>
+    
+    
+    <parameter name="UseEcalTiming" type="int">1 </parameter>
+    
+    <parameter name="ECALCorrectTimesForPropagation" type="int">1 </parameter>
+    
+    <parameter name="ECALTimeWindowMin" type="float">-1 </parameter>
+    
+    <parameter name="ECALBarrelTimeWindowMax" type="float">ECALBarrelTimeWindowMax_XXXX </parameter>
+    
+    <parameter name="ECALEndcapTimeWindowMax" type="float">ECALEndcapTimeWindowMax_XXXX </parameter>
+    
+    <parameter name="ECALSimpleTimingCut" type="bool">true </parameter>
+     
+    <parameter name="ECALDeltaTimeHitResolution" type="float">10 </parameter>
+    
+    <parameter name="ECALTimeResolution" type="float">10 </parameter>
+
+
+    
+    
+    
+    <parameter lcioInType="SimCalorimeterHit" name="HCALCollections" type="StringVec">HCalBarrelCollection HCalEndcapCollection HCalRingCollection </parameter>
+    
+    <parameter lcioOutType="CalorimeterHit" name="HCALOutputCollection0" type="string">HCALBarrel </parameter>
+    
+    <parameter lcioOutType="CalorimeterHit" name="HCALOutputCollection1" type="string">HCALEndcap </parameter>
+    
+    <parameter lcioOutType="CalorimeterHit" name="HCALOutputCollection2" type="string">HCALOther </parameter>
+    
+    <parameter name="IfDigitalHcal" type="int">0 </parameter>
+    
+    <parameter name="HCALLayers" type="IntVec">100  </parameter>
+
+    
+    <parameter name="CalibHCALMIP" type="float">0.0001 </parameter>
+    
+    <parameter name="CalibrHCALBarrel" type="FloatVec">CALIBR_HCAL_BARREL_XXXX</parameter>
+    
+    <parameter name="CalibrHCALEndcap" type="FloatVec">CALIBR_HCAL_ENDCAP_XXXX</parameter>
+    
+    <parameter name="CalibrHCALOther" type="FloatVec">CALIBR_HCAL_OTHER_XXXX</parameter>
+    
+    <parameter name="HCALThreshold" type="FloatVec">0.00025  </parameter>
+    
+    <parameter name="HCALThresholdUnit" type="string">GeV </parameter>
+    
+    <parameter name="HCALEndcapCorrectionFactor" type="float">1.000 </parameter>
+    
+    <parameter name="HCALGapCorrection" type="int">1 </parameter>
+    
+    <parameter name="HCALModuleGapCorrectionFactor" type="float">0.5 </parameter>
+
+    
+    <parameter name="HCAL_PPD_N_Pixels" type="int">400 </parameter>
+    
+    <parameter name="HCAL_PPD_N_Pixels_uncertainty" type="float">0.05 </parameter>
+    
+    <parameter name="HCAL_PPD_PE_per_MIP" type="float">10 </parameter>
+    
+    <parameter name="HCAL_apply_realistic_digi" type="int">0 </parameter>
+    
+    <parameter name="HCAL_deadCellRate" type="float">0 </parameter>
+    
+    <parameter name="HCAL_deadCell_memorise" type="bool">false </parameter>
+    
+    <parameter name="HCAL_elec_noise_mips" type="float">0 </parameter>
+    
+    <parameter name="HCAL_maxDynamicRange_MIP" type="float">200 </parameter>
+    
+    <parameter name="HCAL_miscalibration_correl" type="float">0 </parameter>
+    
+    <parameter name="HCAL_miscalibration_uncorrel" type="float">0 </parameter>
+    
+    <parameter name="HCAL_miscalibration_uncorrel_memorise" type="bool">false </parameter>
+    
+    <parameter name="HCAL_pixel_spread" type="float">0 </parameter>
+
+    
+    <parameter name="UseHcalTiming" type="int">1 </parameter>
+    
+    <parameter name="HCALCorrectTimesForPropagation" type="int">1 </parameter>
+    
+    <parameter name="HCALTimeWindowMin" type="float">-1 </parameter>
+    
+    <parameter name="HCALBarrelTimeWindowMax" type="float">HCALBarrelTimeWindowMax_XXXX </parameter>
+    
+    <parameter name="HCALEndcapTimeWindowMax" type="float">HCALEndcapTimeWindowMax_XXXX </parameter>
+    
+    <parameter name="HCALSimpleTimingCut" type="bool">true </parameter>
+      
+    <parameter name="HCALDeltaTimeHitResolution" type="float">10 </parameter>
+    
+    <parameter name="HCALTimeResolution" type="float">10 </parameter>
+
+  </processor>
+
+
+
+  <processor name="MyDDMarlinPandora" type="DDPandoraPFANewProcessor">
+    <parameter name="PandoraSettingsXmlFile" type="String">PSF_XXXX</parameter>
+    
+    <parameter name="TrackCollections" type="StringVec"> SiTracks_Refitted </parameter>
+    <parameter name="ECalCaloHitCollections" type="StringVec">ECALBarrel ECALEndcap ECALOther</parameter>
+    <parameter name="HCalCaloHitCollections" type="StringVec">HCALBarrel HCALEndcap HCALOther</parameter>
+    <parameter name="LCalCaloHitCollections" type="StringVec" />
+    <parameter name="LHCalCaloHitCollections" type="StringVec" />
+    <parameter name="MuonCaloHitCollections" type="StringVec">MUON</parameter>
+    <parameter name="MCParticleCollections" type="StringVec">MCParticle</parameter>
+    <parameter name="RelCaloHitCollections" type="StringVec">RelationCaloHit RelationMuonHit</parameter>
+    <parameter name="RelTrackCollections" type="StringVec"> SiTracks_Refitted_Relation </parameter>
+    <parameter name="KinkVertexCollections" type="StringVec">KinkVertices</parameter>
+    <parameter name="ProngVertexCollections" type="StringVec">ProngVertices</parameter>
+    <parameter name="SplitVertexCollections" type="StringVec">SplitVertices</parameter>
+    <parameter name="V0VertexCollections" type="StringVec">V0Vertices</parameter>
+    <parameter name="ClusterCollectionName" type="String">PandoraClusters</parameter>
+    <parameter name="PFOCollectionName" type="String">PandoraPFOs</parameter>
+    
+    <parameter name="ECalToMipCalibration" type="float">ECalGeVToMIP_XXXX</parameter>
+    <parameter name="HCalToMipCalibration" type="float">HCalGeVToMIP_XXXX</parameter>
+    <parameter name="ECalMipThreshold" type="float">0.5</parameter>
+    <parameter name="HCalMipThreshold" type="float">0.3</parameter>
+    <parameter name="ECalToEMGeVCalibration" type="float">ECALTOEM_XXXX</parameter>
+    <parameter name="HCalToEMGeVCalibration" type="float">HCALTOEM_XXXX</parameter>
+    <parameter name="ECalToHadGeVCalibrationBarrel" type="float">ECALTOHAD_XXXX</parameter>
+    <parameter name="ECalToHadGeVCalibrationEndCap" type="float">ECALTOHAD_XXXX</parameter>
+    <parameter name="HCalToHadGeVCalibration" type="float">HCALTOHAD_XXXX</parameter>
+    <parameter name="MuonToMipCalibration" type="float">MuonGeVToMIP_XXXX</parameter>
+    <parameter name="DigitalMuonHits" type="int">0</parameter>
+    <parameter name="MaxHCalHitHadronicEnergy" type="float">MHHHE_XXXX</parameter>
+    
+    <parameter name="UseOldTrackStateCalculation" type="int">0 </parameter>
+    <parameter name="NEventsToSkip" type="int">0</parameter>
+    <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> WARNING</parameter>
+    
+    
+    
+    
+    
+    <parameter name="CreateGaps" type="bool">false </parameter>
+    
+    
+    
+    <parameter name="MinBarrelTrackerHitFractionOfExpected" type="int">0 </parameter>
+    
+    <parameter name="MinFtdHitsForBarrelTrackerHitFraction" type="int">0 </parameter>
+    
+    <parameter name="MinFtdTrackHits" type="int">0 </parameter>
+    
+    <parameter name="MinMomentumForTrackHitChecks" type="float">0 </parameter>
+    
+    <parameter name="MinTpcHitFractionOfExpected" type="float">0 </parameter>
+    
+    <parameter name="MinTrackECalDistanceFromIp" type="float">0 </parameter>
+    
+    <parameter name="MinTrackHits" type="int">0 </parameter>
+    
+    
+    
+    <parameter name="ReachesECalBarrelTrackerOuterDistance" type="float">-100 </parameter>
+    
+    <parameter name="ReachesECalBarrelTrackerZMaxDistance" type="float">-50 </parameter>
+    
+    <parameter name="ReachesECalFtdZMaxDistance" type="float">1 </parameter>
+    
+    <parameter name="ReachesECalMinFtdLayer" type="int">0 </parameter>
+    
+    <parameter name="ReachesECalNBarrelTrackerHits" type="int">0 </parameter>
+    
+    <parameter name="ReachesECalNFtdHits" type="int">0 </parameter>
+    
+    <parameter name="UnmatchedVertexTrackMaxEnergy" type="float">5 </parameter>
+    
+    <parameter name="UseNonVertexTracks" type="int">1 </parameter>
+    
+    <parameter name="UseOldTrackStateCalculation" type="int">0 </parameter>
+    
+    <parameter name="UseUnmatchedNonVertexTracks" type="int">0 </parameter>
+    
+    <parameter name="UseUnmatchedVertexTracks" type="int">1 </parameter>
+    
+    <parameter name="Z0TrackCut" type="float">50 </parameter>
+    
+    <parameter name="Z0UnmatchedVertexTrackCut" type="float">5 </parameter>
+    
+    <parameter name="ZCutForNonVertexTracks" type="float">250 </parameter>
+    
+    <parameter name="MaxTrackHits" type="int">5000 </parameter>
+    
+    <parameter name="MaxTrackSigmaPOverP" type="float">0.15 </parameter>
+    
+    <parameter name="CurvatureToMomentumFactor" type="float">0.00015 </parameter>
+    
+    <parameter name="D0TrackCut" type="float">50 </parameter>
+    
+    <parameter name="D0UnmatchedVertexTrackCut" type="float">5 </parameter>
+
+    
+    <parameter name="StartVertexAlgorithmName" type="string">PandoraPFANew </parameter>
+    
+    <parameter lcioOutType="Vertex" name="StartVertexCollectionName" type="string"> PandoraStartVertices </parameter>
+
+    
+    <parameter name="YokeBarrelNormalVector" type="FloatVec">0 0 1  </parameter>
+    
+    <parameter name="HCalBarrelNormalVector" type="FloatVec">0 0 1  </parameter>
+    
+    <parameter name="ECalBarrelNormalVector" type="FloatVec">0 0 1  </parameter>
+    
+    <parameter name="MuonBarrelBField" type="float">-1.0</parameter>
+    
+    <parameter name="MuonEndCapBField" type="float">0.01 </parameter>
+
+    
+    <parameter name="EMConstantTerm" type="float">0.01 </parameter>
+    
+    <parameter name="EMStochasticTerm" type="float">0.17 </parameter>
+    
+    <parameter name="HadConstantTerm" type="float">0.03 </parameter>
+    
+    <parameter name="HadStochasticTerm" type="float">0.6 </parameter>
+
+    
+    <parameter name="InputEnergyCorrectionPoints" type="FloatVec"> </parameter>
+
+    
+    <parameter name="LayersFromEdgeMaxRearDistance" type="float">250 </parameter>
+    
+    <parameter name="NOuterSamplingLayers" type="int">3 </parameter>
+    
+    <parameter name="TrackStateTolerance" type="float">0 </parameter>
+
+    
+    <parameter name="MaxBarrelTrackerInnerRDistance" type="float">50 </parameter>
+
+    
+    <parameter name="MinCleanCorrectedHitEnergy" type="float">0.1 </parameter>
+    
+    <parameter name="MinCleanHitEnergy" type="float">0.5 </parameter>
+    
+    <parameter name="MinCleanHitEnergyFraction" type="float">0.01 </parameter>
+
+    
+    <parameter name="MuonHitEnergy" type="float">0.5 </parameter>
+
+    
+    <parameter name="ShouldFormTrackRelationships" type="int">1 </parameter>
+
+    
+    <parameter name="TrackCreatorName" type="string">DDTrackCreatorCLIC </parameter>
+    
+    <parameter name="TrackSystemName" type="string">DDKalTest </parameter>
+    
+    <parameter name="OutputEnergyCorrectionPoints" type="FloatVec"> </parameter>
+
+
+    
+    <parameter name="UseEcalScLayers" type="int">0 </parameter>
+    
+    <parameter name="ECalScMipThreshold" type="float">0 </parameter>
+    
+    <parameter name="ECalScToEMGeVCalibration" type="float">1 </parameter>
+    
+    <parameter name="ECalScToHadGeVCalibrationBarrel" type="float">1 </parameter>
+    
+    <parameter name="ECalScToHadGeVCalibrationEndCap" type="float">1 </parameter>
+    
+    <parameter name="ECalScToMipCalibration" type="float">1 </parameter>
+    
+    <parameter name="ECalSiMipThreshold" type="float">0 </parameter>
+    
+    <parameter name="ECalSiToEMGeVCalibration" type="float">1 </parameter>
+    
+    <parameter name="ECalSiToHadGeVCalibrationBarrel" type="float">1 </parameter>
+    
+    <parameter name="ECalSiToHadGeVCalibrationEndCap" type="float">1 </parameter>
+    
+    <parameter name="ECalSiToMipCalibration" type="float">1 </parameter>
+    
+    <parameter name="StripSplittingOn" type="int">0 </parameter>
+
+  </processor>
+
+  <processor name="MyDDSimpleMuonDigi" type="DDSimpleMuonDigi">
+    
+    
+    <parameter name="CalibrMUON" type="FloatVec">70.1</parameter>
+    
+    <parameter name="MaxHitEnergyMUON" type="float">2.0</parameter>
+    
+    <parameter name="MUONCollections" type="StringVec">
+      YokeBarrelCollection YokeEndcapCollection</parameter>
+    
+    <parameter name="MUONOutputCollection" type="string">MUON </parameter>
+    
+    <parameter name="MuonThreshold" type="float">1e-06 </parameter>
+    
+    <parameter name="RelationOutputCollection" type="string">RelationMuonHit </parameter>
+  </processor>
+
+  <processor name="MyStatusmonitor" type="Statusmonitor">
+    <parameter name="HowOften" type="int">100</parameter>
+    <parameter name="Verbosity" type="string">MESSAGE </parameter>
+  </processor>
+
+
+  <processor name="MyRecoMCTruthLinker" type="RecoMCTruthLinker">
+    
+    
+    <parameter name="BremsstrahlungEnergyCut" type="float">1 </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="CalohitMCTruthLinkName" type="string"> CalohitMCTruthLink </parameter>
+    
+    <parameter lcioInType="Cluster" name="ClusterCollection" type="string">PandoraClusters </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="ClusterMCTruthLinkName" type="string"> ClusterMCTruthLink </parameter>
+    
+    <parameter name="FullRecoRelation" type="bool">false </parameter>
+    
+    <parameter name="InvertedNonDestructiveInteractionLogic" type="bool"> false </parameter>
+    
+    
+    <parameter name="KeepDaughtersPDG" type="IntVec">22 111 310 13 211 321 3120 </parameter>
+    
+    <parameter lcioInType="MCParticle" name="MCParticleCollection" type="string"> MCParticle </parameter>
+    
+    <parameter lcioOutType="MCParticle" name="MCParticlesSkimmedName" type="string"> MCParticlesSkimmed </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="MCTruthClusterLinkName" type="string"> </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="MCTruthRecoLinkName" type="string"> </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="MCTruthTrackLinkName" type="string"> </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="RecoMCTruthLinkName" type="string"> RecoMCTruthLink </parameter>
+    
+    <parameter lcioInType="ReconstructedParticle" name="RecoParticleCollection" type="string"> PandoraPFOs </parameter>
+    
+    <parameter name="SaveBremsstrahlungPhotons" type="bool">false </parameter>
+    
+    <parameter lcioInType="SimCalorimeterHit" name="SimCaloHitCollections" type="StringVec">
+      ECalBarrelCollection
+      ECalEndcapCollection
+      ECalPlugCollection
+      HCalBarrelCollection
+      HCalEndcapCollection
+      HCalRingCollection
+      YokeBarrelCollection
+      YokeEndcapCollection
+      LumiCalCollection
+      BeamCalCollection
+    </parameter>
+    
+    <parameter lcioInType="LCRelation" name="SimCalorimeterHitRelationNames" type="StringVec">
+      RelationCaloHit RelationMuonHit
+    </parameter>
+    
+    <parameter lcioInType="SimTrackerHit" name="SimTrackerHitCollections" type="StringVec">
+      VertexBarrelCollection
+      VertexEndcapCollection
+      InnerTrackerBarrelCollection
+      OuterTrackerBarrelCollection
+      InnerTrackerEndcapCollection
+      OuterTrackerEndcapCollection
+    </parameter>
+    
+    <parameter lcioInType="Track" name="TrackCollection" type="string"> SiTracks_Refitted </parameter>
+    
+    <parameter lcioOutType="LCRelation" name="TrackMCTruthLinkName" type="string"> SiTracksMCTruthLink </parameter>
+    
+    <parameter lcioInType="LCRelation" name="TrackerHitsRelInputCollections" type="StringVec">
+      VXDTrackerHitRelations
+      VXDEndcapTrackerHitRelations
+      InnerTrackerBarrelHitsRelations
+      OuterTrackerBarrelHitsRelations
+      InnerTrackerEndcapHitsRelations
+      OuterTrackerEndcapHitsRelations
+    </parameter>
+    
+    <parameter name="UseTrackerHitRelations" type="bool"> true </parameter>
+    
+    <parameter name="UsingParticleGun" type="bool"> false </parameter>
+    
+    <parameter name="Verbosity" type="string"> MESSAGE </parameter>
+    
+    <parameter name="daughtersECutMeV" type="float"> 10 </parameter>
+  </processor>
+
+
+
+  <processor name="MyHitResiduals" type="HitResiduals">
+    
+    
+    <parameter name="EnergyLossOn" type="bool">true </parameter>
+    
+    <parameter name="MaxChi2Increment" type="double">1000 </parameter>
+    
+    <parameter name="MultipleScatteringOn" type="bool">true </parameter>
+    
+    <parameter name="SmoothOn" type="bool">false </parameter>
+    
+    <parameter lcioInType="Track" name="TrackCollectionName" type="string"> SiTracks_Refitted </parameter>
+    
+    <parameter name="outFileName" type="string">residuals.root </parameter>
+    
+    <parameter name="treeName" type="string">restree </parameter>
+    
+    
+  </processor>
+
+  <processor name="LumiCalReco" type="MarlinLumiCalClusterer">
+    
+    <parameter name="Verbosity" type="string"> WARNING </parameter>
+    
+    <parameter lcioInType="SimCalorimeterHit" name="LumiCal_Collection" type="string"> LumiCalCollection </parameter>
+    
+    <parameter lcioOutType="Cluster" name="LumiCal_Clusters" type="string">LumiCalClusters </parameter>
+    
+    <parameter lcioOutType="ReconstructedParticle" name="LumiCal_RecoParticles" type="string">LumiCalRecoParticles </parameter>
+    
+    <parameter name="SkipNEvents" type="int">0 </parameter>
+    
+    <parameter name="MaxRecordNumber" type="int">10 </parameter>
+    
+    <parameter name="OutDirName" type="string">rootOut </parameter>
+    
+    <parameter name="OutRootFileName" type="string" />
+    
+    <parameter name="MemoryResidentTree" type="int">0 </parameter>
+    
+    <parameter name="NumEventsTree" type="int">500 </parameter>
+
+    
+    
+    <parameter name="ClusterMinNumHits" type="int">15 </parameter>
+    
+    <parameter name="ElementsPercentInShowerPeakLayer" type="double">0.03 </parameter>
+    
+    <parameter name="LogWeigthConstant" type="double"> 6.5 </parameter>
+    
+    <parameter name="MiddleEnergyHitBoundFrac" type="double"> 0.01 </parameter>
+    
+    <parameter name="MinClusterEngy" type="double"> 2.0 </parameter>
+    
+    <parameter name="EnergyCalibConst" type="double"> 0.01213 </parameter>
+    
+    <parameter name="MinHitEnergy" type="double"> 20e-06 </parameter>
+    
+    <parameter name="MoliereRadius" type="double"> 20 </parameter>
+    
+    <parameter name="NumOfNearNeighbor" type="int"> 6 </parameter>
+    
+    <parameter name="WeightingMethod" type="string"> LogMethod </parameter>
+    
+    <parameter name="ZLayerPhiOffset" type="double"> 0.0 </parameter>
+  </processor>
+
+  <processor name="MyPfoAnalysis" type="PfoAnalysis">
+    
+    
+    <parameter lcioInType="CalorimeterHit" name="BCalCollections" type="StringVec"> BCAL </parameter>
+    
+    <parameter name="CollectCalibrationDetails" type="int">1 </parameter>
+    
+    <parameter lcioInType="CalorimeterHit" name="ECalCollections" type="StringVec">ECALBarrel ECALEndcap </parameter>
+    
+    <parameter lcioInType="SimCalorimeterHit" name="ECalCollectionsSimCaloHit" type="StringVec">ECalBarrelCollection ECalEndcapCollection ECalPlugCollection</parameter>
+    
+    <parameter lcioInType="SimCalorimeterHit" name="HCalBarrelCollectionsSimCaloHit" type="StringVec">HCalBarrelCollection</parameter>
+    
+    <parameter lcioInType="CalorimeterHit" name="HCalCollections" type="StringVec"> HCALBarrel HCALEndcap HCALOther </parameter>
+    
+    <parameter lcioInType="SimCalorimeterHit" name="HCalEndCapCollectionsSimCaloHit" type="StringVec">  HCalEndcapCollection</parameter>
+    
+    <parameter lcioInType="SimCalorimeterHit" name="HCalOtherCollectionsSimCaloHit" type="StringVec">  HCalRingCollection </parameter>
+    
+    <parameter name="HCalRingOuterPhi0" type="float">0 </parameter>
+    
+    <parameter name="HCalRingOuterSymmetryOrder" type="int">8 </parameter>
+    
+    <parameter lcioInType="CalorimeterHit" name="LCalCollections" type="StringVec"> LCAL</parameter>
+    
+    <parameter lcioInType="CalorimeterHit" name="LHCalCollections" type="StringVec"> </parameter>
+    
+    <parameter name="LookForQuarksWithMotherZ" type="int">0 </parameter>
+    
+    <parameter lcioInType="MCParticle" name="MCParticleCollection" type="string"> MCParticle</parameter>
+    
+    <parameter name="MCPfoSelectionLowEnergyNPCutOff" type="float">1.2 </parameter>
+    
+    <parameter name="MCPfoSelectionMomentum" type="float">0.01 </parameter>
+    
+    <parameter name="MCPfoSelectionRadius" type="float">500 </parameter>
+    
+    <parameter lcioInType="CalorimeterHit" name="MuonCollections" type="StringVec"> MUON</parameter>
+    
+    <parameter lcioInType="ReconstructedParticle" name="PfoCollection" type="string"> PandoraPFOs</parameter>
+    
+    <parameter name="Printing" type="int">0 </parameter>
+    
+    <parameter name="RootFile" type="string">pfoAnalysis_XXXX.root </parameter>
+    
+    
+  </processor>
+
+
+  <group name="PfoSelector">
+    
+    
+    <parameter name="ChargedPfoLooseTimingCut" type="float">3 </parameter>
+    
+    <parameter name="ChargedPfoNegativeLooseTimingCut" type="float">-1 </parameter>
+    
+    <parameter name="ChargedPfoNegativeTightTimingCut" type="float">-0.5 </parameter>
+    
+    <parameter name="ChargedPfoPtCut" type="float">0 </parameter>
+    
+    <parameter name="ChargedPfoPtCutForLooseTiming" type="float">4 </parameter>
+    
+    <parameter name="ChargedPfoTightTimingCut" type="float">1.5 </parameter>
+    
+    <parameter name="CheckKaonCorrection" type="int">0 </parameter>
+    
+    <parameter name="CheckProtonCorrection" type="int">0 </parameter>
+    
+    <parameter name="ClusterLessPfoTrackTimeCut" type="float">10 </parameter>
+    
+    <parameter name="CorrectHitTimesForTimeOfFlight" type="int">0 </parameter>
+    
+    <parameter name="DisplayRejectedPfos" type="int">1 </parameter>
+    
+    <parameter name="DisplaySelectedPfos" type="int">1 </parameter>
+    
+    <parameter name="FarForwardCosTheta" type="float">0.975 </parameter>
+    
+    <parameter name="ForwardCosThetaForHighEnergyNeutralHadrons" type="float">0.95 </parameter>
+    
+    <parameter name="ForwardHighEnergyNeutralHadronsEnergy" type="float">10 </parameter>
+    
+    <parameter name="HCalBarrelLooseTimingCut" type="float">20 </parameter>
+    
+    <parameter name="HCalBarrelTightTimingCut" type="float">10 </parameter>
+    
+    <parameter name="HCalEndCapTimingFactor" type="float">1 </parameter>
+    
+    <parameter lcioInType="ReconstructedParticle" name="InputPfoCollection" type="string">PandoraPFOs </parameter>
+    
+    <parameter name="KeepKShorts" type="int">1 </parameter>
+    
+    <parameter name="MaxMomentumForClusterLessPfos" type="float">2 </parameter>
+    
+    <parameter name="MinECalHitsForTiming" type="int">5 </parameter>
+    
+    <parameter name="MinHCalEndCapHitsForTiming" type="int">5 </parameter>
+    
+    <parameter name="MinMomentumForClusterLessPfos" type="float">0.5 </parameter>
+    
+    <parameter name="MinPtForClusterLessPfos" type="float">0.5 </parameter>
+    
+    <parameter name="MinimumEnergyForNeutronTiming" type="float">1 </parameter>
+    
+    <parameter name="Monitoring" type="int">0 </parameter>
+    
+    <parameter name="MonitoringPfoEnergyToDisplay" type="float">1 </parameter>
+    
+    <parameter name="NeutralFarForwardLooseTimingCut" type="float">2 </parameter>
+    
+    <parameter name="NeutralFarForwardTightTimingCut" type="float">1 </parameter>
+    
+    <parameter name="NeutralHadronBarrelPtCutForLooseTiming" type="float">3.5 </parameter>
+    
+    <parameter name="NeutralHadronLooseTimingCut" type="float">2.5 </parameter>
+    
+    <parameter name="NeutralHadronPtCut" type="float">0 </parameter>
+    
+    <parameter name="NeutralHadronPtCutForLooseTiming" type="float">8 </parameter>
+    
+    <parameter name="NeutralHadronTightTimingCut" type="float">1.5 </parameter>
+    
+    <parameter name="PhotonFarForwardLooseTimingCut" type="float">2 </parameter>
+    
+    <parameter name="PhotonFarForwardTightTimingCut" type="float">1 </parameter>
+    
+    <parameter name="PhotonLooseTimingCut" type="float">2 </parameter>
+    
+    <parameter name="PhotonPtCut" type="float">0 </parameter>
+    
+    <parameter name="PhotonPtCutForLooseTiming" type="float">4 </parameter>
+    
+    <parameter name="PhotonTightTimingCut" type="float">1 </parameter>
+    
+    <parameter name="PtCutForTightTiming" type="float">0.75 </parameter>
+    
+    <parameter lcioOutType="ReconstructedParticle" name="SelectedPfoCollection" type="string">SelectedPandoraPFOs </parameter>
+    
+    <parameter name="UseClusterLessPfos" type="int">1 </parameter>
+    
+    <parameter name="UseNeutronTiming" type="int">0 </parameter>
+    
+    <parameter name="Verbosity" type="string">MESSAGE </parameter>
+
+    <processor name="MyCLICPfoSelectorDefault" type="CLICPfoSelector">
+      <parameter lcioOutType="ReconstructedParticle" name="SelectedPfoCollection" type="string"> SelectedPandoraPFOs </parameter>
+    </processor>
+
+    <processor name="MyCLICPfoSelectorLoose" type="CLICPfoSelector">
+      
+      
+      <parameter name="ChargedPfoNegativeLooseTimingCut" type="float">-2.0</parameter>
+      
+      <parameter name="ChargedPfoNegativeTightTimingCut" type="float">-2.0</parameter>
+      
+      <parameter name="ClusterLessPfoTrackTimeCut" type="float">1000.</parameter>
+      
+      <parameter name="MinMomentumForClusterLessPfos" type="float">0.0 </parameter>
+      
+      <parameter name="MinPtForClusterLessPfos" type="float">0.25 </parameter>
+      
+      
+      <parameter name="NeutralFarForwardLooseTimingCut" type="float">2.5 </parameter>
+      
+      <parameter name="NeutralFarForwardTightTimingCut" type="float">1.5 </parameter>
+      
+      <parameter name="PhotonLooseTimingCut" type="float">2. </parameter>
+      
+      <parameter name="PhotonTightTimingCut" type="float">2. </parameter>
+      
+      <parameter lcioOutType="ReconstructedParticle" name="SelectedPfoCollection" type="string">LooseSelectedPandoraPFOs </parameter>
+      <parameter name="Monitoring" type="int">0</parameter>
+    </processor>
+
+    <processor name="MyCLICPfoSelectorTight" type="CLICPfoSelector">
+      
+      
+      <parameter name="ChargedPfoLooseTimingCut" type="float">2.0 </parameter>
+      
+      <parameter name="ChargedPfoNegativeLooseTimingCut" type="float">-0.5 </parameter>
+      
+      <parameter name="ChargedPfoNegativeTightTimingCut" type="float">-0.25 </parameter>
+      
+      <parameter name="ChargedPfoTightTimingCut" type="float">1.0 </parameter>
+      
+      <parameter name="FarForwardCosTheta" type="float">0.95 </parameter>
+      
+      <parameter name="MaxMomentumForClusterLessPfos" type="float">1.5 </parameter>
+      
+      <parameter name="MinPtForClusterLessPfos" type="float">1.0 </parameter>
+      
+      <parameter name="NeutralFarForwardLooseTimingCut" type="float">1.5 </parameter>
+      
+      <parameter name="NeutralHadronPtCut" type="float">0.5 </parameter>
+      
+      <parameter name="PhotonPtCut" type="float">0.2 </parameter>
+      
+      <parameter name="PtCutForTightTiming" type="float">1.0 </parameter>
+      
+      <parameter lcioOutType="ReconstructedParticle" name="SelectedPfoCollection" type="string">TightSelectedPandoraPFOs </parameter>
+      
+      <parameter name="UseClusterLessPfos" type="int">0 </parameter>
+      <parameter name="Monitoring" type="int">0</parameter>
+    </processor>
+
+  </group>
+
+  <processor name="Output_REC" type="LCIOOutputProcessor">
+    
+    <parameter name="LCIOOutputFile" type="string"> Output_REC.slcio </parameter>
+    <parameter name="FullSubsetCollections" type="StringVec"> EfficientMCParticles InefficientMCParticles </parameter>
+    <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW" />
+    <parameter name="Verbosity" type="string">WARNING </parameter>
+  </processor>
+
+  <processor name="Output_DST" type="LCIOOutputProcessor">
+    
+    <parameter name="LCIOOutputFile" type="string"> Output_DST.slcio </parameter>
+    <parameter name="FullSubsetCollections" type="StringVec">
+      EfficientMCParticles
+      InefficientMCParticles
+    </parameter>
+    <parameter name="DropCollectionTypes" type="StringVec">
+      SimCalorimeterHit
+      CalorimeterHit
+    </parameter>
+    <parameter name="KeepCollectionNames" type="StringVec">
+      MCParticle
+      LCRelation
+      SimTrackerHit
+      TrackerHit
+      TrackerHitPlane
+      Track
+      ReconstructedParticle
+      LCFloatVec
+      RecoMCTruthLink
+      SiTracks
+      PandoraClusters
+      PandoraPFOs
+      SelectedPandoraPFOs
+      LooseSelectedPandoraPFOs
+      TightSelectedPandoraPFOs
+    </parameter>
+    <parameter name="LCIOWriteMode" type="string" value="WRITE_NEW" />
+    <parameter name="Verbosity" type="string">WARNING </parameter>
+  </processor>
+
+</marlin>

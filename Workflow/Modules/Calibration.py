@@ -302,8 +302,22 @@ class Calibration(MarlinAnalysis):
     return S_OK(marlindll)
 
   def runScript(self, inputxml, env_script_path, marlin_dll):
-    _prepareMarlinPartOfTheScript(self, inputxml, env_script_path, marlin_dll)
-    _preparePandoraPartOfTheScript(self)
+    """ Actual bit of code running Marlin and PandoraAnalysis.
+
+    :param inputxml: list of xml-file names. Should contain 3 names: marlin steering file, PandoraSetting file and Pandora photon likelihood file
+                     e.g.: ['fccReconstruction.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
+    :param string env_script_path: path to the setup environment scripts
+    :param string marlin_dll: string containing path to marlin libraries
+
+    :returns: FIXME S_OK or S_ERROR
+    :rtype: dict
+    """
+    res = self._prepareMarlinPartOfTheScript(inputxml, env_script_path, marlin_dll)
+    if not res['OK']:
+      return res
+    res = self._preparePandoraPartOfTheScript()
+    if not res['OK']:
+      return res
 
     scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
 
@@ -318,7 +332,15 @@ class Calibration(MarlinAnalysis):
     return res
 
   def _prepareMarlinPartOfTheScript(self, inputxml, env_script_path, marlin_dll):
-    """ Actual bit of code running Marlin. Tomato calls this function.
+    """ Returns the current parameters
+
+    :param inputxml: list of xml-file names. Should contain 3 names: marlin steering file, PandoraSetting file and Pandora photon likelihood file
+                     e.g.: ['fccReconstruction.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
+    :param string env_script_path: path to the setup environment scripts
+    :param string marlin_dll: string containing path to marlin libraries
+
+    :returns: S_OK or S_ERROR
+    :rtype: dict
     """
     scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
     if os.path.exists(scriptName):
@@ -362,15 +384,18 @@ fi
       script.write('echo =============================\n')
     script.write('env | sort >> localEnv.log\n')
 
-    if os.path.exists(inputxml):
-      #check
-      script.write('Marlin -c %s %s\n' % (inputxml, self.extraCLIarguments))
-      #real run
-      script.write('Marlin %s %s\n' % (inputxml, self.extraCLIarguments))
-    else:
-      script.close()
-      self.log.error("Steering file missing")
-      return S_ERROR("SteeringFile is missing")
+    if len(inputxml) != 3:
+        return S_ERROR("One or more marlin steering files are missing. There should be 3 xml-files: marlin steering, PandoraSetting and PandoraLikelihoodData")
+
+    for iFile in inputxml:
+      if not os.path.exists(iFile):
+        script.close()
+        self.log.error("Steering file missing: %s" % (iFile))
+        return S_ERROR("SteeringFile is missing: %s" % (iFile))
+    #check
+    script.write('Marlin -c %s %s\n' % (inputxml[0], self.extraCLIarguments))
+    #real run
+    script.write('Marlin %s %s\n' % (inputxml[0], self.extraCLIarguments))
     script.close()
     return S_OK()
 
@@ -384,7 +409,6 @@ fi
     script.write('exit $appstatus\n')
     script.close()
     return S_OK()
-
 
   def GetInputFiles(self):
     """ Resolve the input files. But not if in the application definition it was decided
