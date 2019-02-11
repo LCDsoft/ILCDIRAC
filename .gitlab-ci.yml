@@ -21,6 +21,16 @@ variables:
   ILCDIRAC_BRANCH: "Rel-v29r0"
   DIRAC_DEPRECATED_FAIL: "1"
 
+.retry_template: &retry_policy
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - unknown_failure
+      - api_failure
+      - runner_unsupported
+
 .install_template: &install
   stage: install
   script:
@@ -50,7 +60,7 @@ variables:
      paths:
        - installation
      expire_in: 2 hours
-  retry: 2
+  <<: *retry_policy
 
 .sl6docker_template: &sl6docker
   tags:
@@ -115,7 +125,7 @@ code_quality:
        - installation/ILCDIRAC/.coverage
        - installation/ILCDIRAC/htmlcov
      expire_in: 2 hours
-  retry: 2
+  <<: *retry_policy
   except:
     - tags
 
@@ -135,7 +145,7 @@ unittest:CC7:
 checkFormat:
   <<: *sl6docker
   allow_failure: true
-  retry: 2
+  <<: *retry_policy
   stage: unittest
   dependencies:
     - install:SL6
@@ -163,7 +173,7 @@ checkFormat:
     - source ../bashrc
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-pylint.sh
-  retry: 2
+  <<: *retry_policy
 
 pylint:SL6:
   <<: *sl6docker
@@ -192,7 +202,7 @@ pylint:CC7:
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-cvmfstests.sh
   coverage: '/\d+\%\s*$/'
-  retry: 2
+  <<: *retry_policy
   artifacts:
     paths:
       - installation/ILCDIRAC/tmp*/Local_*/*Step*.log
@@ -257,7 +267,7 @@ jobTests:CC7Prod:
     - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
     - .gitlab-ci.d/run-setests.sh
   coverage: '/\d+\%\s*$/'
-  retry: 2
+  <<: *retry_policy
   only:
     - schedules
 
@@ -308,7 +318,7 @@ compiledoc:
     expire_in: 2 hours
     when: always
   allow_failure: true
-  retry: 2
+  <<: *retry_policy
 
 maketarballs:
   <<: *sl6docker
@@ -332,7 +342,7 @@ maketarballs:
     paths:
       - ILCDIRACTars
     expire_in: 2 hours
-  retry: 2
+  <<: *retry_policy
 
 
 makeILCConfig:
@@ -350,7 +360,7 @@ makeILCConfig:
     paths:
       - ILCDIRACTars
     expire_in: 2 hours
-  retry: 2
+  <<: *retry_policy
 
 
 deploydoc:
@@ -371,7 +381,7 @@ deploydoc:
     - deploy-eos
   before_script: []
   after_script: []
-  retry: 2
+  <<: *retry_policy
 
 
 docDev:
@@ -391,7 +401,7 @@ docDev:
     - deploy-eos
   before_script: []
   after_script: []
-  retry: 2
+  <<: *retry_policy
 
 
 docProd:
@@ -413,7 +423,7 @@ docProd:
     - deploy-eos
   before_script: []
   after_script: []
-  retry: 2
+  <<: *retry_policy
 
 
 
@@ -434,7 +444,7 @@ deploytag:
     - deploy-eos
   before_script: []
   after_script: []
-  retry: 2
+  <<: *retry_policy
 
 deployToCVMFS:
   stage: deployToCVMFS
