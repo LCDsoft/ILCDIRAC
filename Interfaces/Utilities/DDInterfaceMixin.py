@@ -13,7 +13,7 @@ class DDInterfaceMixin( object ):
   """Mixin for DD4hep interface functions
 
   This mixin class requires that the main class should be of
-  :class:`~ILDCIRAC.Interfaces.API.NewInterface.Application.Application` type and have the
+  :class:`~ILCDIRAC.Interfaces.API.NewInterface.Application.Application` type and have the
   ``detectorModel``, ``_ops``, ``version``, and ``_log`` attributes.
 
    * ``_ops`` is an Operations instance
