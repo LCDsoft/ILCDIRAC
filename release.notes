@@ -1,3 +1,38 @@
+[v29r0p3]
+
+Release date: 2018-09-19
+
+
+*ILCTransformationSystem
+
+CHANGE: (!243) The :class:`~ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent.DataRecoveryAgent` no longer uses a shifterProxy
+NEW: (!245) `dirac-clic-make-productions`: new options for configuration. add ForEach type configuration for application parameters, see :ref:`clicProdMan`.
+NEW: (!245) `dirac-clic-make-productions`: Add ``MoveStatus`` options to set the status of the replaction transformations after creation: Active or Stopped. Needs DIRAC v6r20p19
+NEW: (!245) `dirac-clic-make-productions`: additionalName can be used as ``ApplicationParameter`` to give more sensible names for different transformations types when created in a chain
+FIX: (!252) `dirac-clic-make-productions`: When starting a chain with a simulation productions, the number of events was not set, now always set NumberOfEvents into the meta dictionary
+FIX: (!254) `dirac-clic-make-productions`: Fix exception when creation non overlay Reconstruction productions
+
+*Interfaces
+
+CHANGE: (!244) :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob`: use TransformationClient instead of RPCClient
+NEW: (!245) :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob` new member parameter ```maxFCFoldersToCheck`` to limit the number of FileCatalog folders that are checked for metadata
+CHANGE: (!251) The JDL created for Jobs no longer contains *Site* if not explicitly set in the job creation
+
+*FrameworkSystem
+
+CHANGE: (!244) :mod:`~ILCDIRAC.FrameworkSystem.Agent.MonitorAgents`: Use Client instead of RPCClient
+
+*WorkloadManagementSystem
+
+CHANGE: (!244) :mod:`~ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent`: use Client instead of RPCClient
+
+*Workflow
+
+CHANGE: (!244) :mod:`~ILCDIRAC.Workflow.Modules.OverlayInput`: use OverlaySystemClient instead of RCPClient
+CHANGE: (!244) :mod:`~ILCDIRAC.WorkloadManagementSystem.Client.DownloadInputData`: use Client instead of RPClient
+CHANGE: (!244) :mod:`~ILCDIRAC.Workflow.Modules.GetSRMFile`: use JObMonitoringClient instead of RPCClient
+
+
 [v29r0p2]
 
 Release date: 2018-09-19
