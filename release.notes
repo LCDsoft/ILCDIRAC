@@ -28,8 +28,8 @@ CHANGE: (!244) :mod:`~ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent`: us
 
 *Workflow
 
-CHANGE: (!244) :mod:`~ILCDIRAC.Workflow.Modules.OverlayInput`: use OverlaySystemClient instead of RCPClient
-CHANGE: (!244) :mod:`~ILCDIRAC.WorkloadManagementSystem.Client.DownloadInputData`: use Client instead of RPClient
+CHANGE: (!244) :mod:`~ILCDIRAC.Workflow.Modules.OverlayInput`: use OverlaySystemClient instead of RPCClient
+CHANGE: (!244) :mod:`~ILCDIRAC.WorkloadManagementSystem.Client.DownloadInputData`: use Client instead of RPCClient
 CHANGE: (!244) :mod:`~ILCDIRAC.Workflow.Modules.GetSRMFile`: use JObMonitoringClient instead of RPCClient
 
 
