@@ -4,10 +4,13 @@ Test Whizard2 module
 
 """
 
-import inspect
+
+import linecache
 import unittest
-from mock import create_autospec, patch, MagicMock as Mock
+from mock import patch, MagicMock as Mock
 from mock import mock_open
+from mock import mock as mock_module
+
 
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard2
@@ -25,6 +28,21 @@ gLogger.showHeaders(True)
 class Whizard2TestCase( unittest.TestCase ):
   """ Base class for the Whizard2 test cases
   """
+
+  @classmethod
+  def setUpClass(cls):
+    """Load the Application file into the linecache to prevent exceptions when mocking the builtin open."""
+    from ILCDIRAC.Interfaces.API.NewInterface import Application
+    for fName in [Application.__file__, mock_module.__file__]:
+      if fName.endswith(('.pyc', '.pyo')):
+        fName = fName[:-1]
+      linecache.getlines(fName)
+
+  @classmethod
+  def tearDownClass(cls):
+    """Remove all entries from linecache because we mock builtin open."""
+    linecache.clearcache()
+
   def setUp(self):
     """set up the objects"""
     self.whiz = Whizard2( {} )
@@ -53,7 +71,6 @@ class Whizard2TestCase( unittest.TestCase ):
 
   @patch( 'os.path.isfile', new = Mock(return_value=True ) )
   @patch( '__builtin__.open', mock_open(read_data='process decay_proc = "A", "A" => "b", "B"'))
-  @patch( "%s._checkArgs" % MODULE_NAME, new=Mock(return_value=True))
   def test_setSinFile( self ):
     self.assertFalse( self.whiz._errorDict )
     self.whiz.setSinFile('/some/path')
@@ -62,19 +79,16 @@ class Whizard2TestCase( unittest.TestCase ):
 
   @patch( "os.path.isfile", new = Mock(return_value=True ) )
   @patch('__builtin__.open', mock_open(read_data='process decay_proc = "A", "A" => "b", "B"\n n_events'))
-  @patch( "%s._checkArgs" % MODULE_NAME, new=Mock(return_value=True))
   def test_setSinFile_fails2( self ):
     assertDiracFailsWith( self.whiz.setSinFile('/some/path') , 'Do not set n_events', self )
 
   @patch( "os.path.isfile", new = Mock(return_value=True ) )
   @patch('__builtin__.open', mock_open(read_data='process decay_proc = "A", "A" => "b", "B"\n seed'))
-  @patch( "%s._checkArgs" % MODULE_NAME, new=Mock(return_value=True))
   def test_setSinFile_fails3( self ):
     assertDiracFailsWith( self.whiz.setSinFile('/some/path') , 'Do not set seed', self )
 
   @patch('os.path.isfile', new=Mock(return_value=True))
   @patch('__builtin__.open', mock_open(read_data='process decay_proc = "A", "A" => "b", "B"\n simulate  ( decay_proc)'))
-  @patch('%s._checkArgs' % MODULE_NAME, new=Mock(return_value=True))
   def test_setSinFile_fails4(self):
     assertDiracFailsWith(self.whiz.setSinFile('/some/path'), 'Do not call "simulate ()"', self)
 
