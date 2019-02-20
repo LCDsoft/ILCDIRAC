@@ -15,6 +15,82 @@ from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 __RCSID__ = "$Id$"
 
 
+class CalibrationPhase(object):
+  """ Represents the different phases a calibration can be in.
+  Since Python 2 does not have enums, this is hardcoded for the moment.
+  Should this solution not be sufficient any more, one can make a better enum implementation by hand or install a backport of the python3 implementation from PyPi."""
+  ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy = range(6)
+
+  @staticmethod
+  def phaseIDFromString(phase_name):
+    """ Returns the ID of the given CalibrationPhase, passed as a string.
+
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
+    :returns: ID of this phase
+    :rtype: int
+    """
+    if phase_name == 'ECalDigi':
+      return 0
+    elif phase_name == 'HCalDigi':
+      return 1
+    elif phase_name == 'HCalOtherDigi':
+      return 2
+    elif phase_name == 'MuonDigi':
+      return 3
+    elif phase_name == 'ElectroMagEnergy':
+      return 4
+    elif phase_name == 'HadronicEnergy':
+      return 5
+    else:
+      raise ValueError('There is no CalibrationPhase with the name %s' % phase_name)
+
+  @staticmethod
+  def fileKeyFromPhase(phaseID):
+    """ Returns the ID of the given CalibrationPhase, passed as a string.
+
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
+    :returns: file key for this phase
+    :rtype: str
+    """
+    if phaseID == CalibrationPhase.ECalDigi:
+      return "GAMMA"
+    elif phaseID == CalibrationPhase.HCalDigi:
+      return "KAON"
+    elif phaseID == CalibrationPhase.HCalDigi:
+      return "MUON"
+    elif phaseID == CalibrationPhase.MuonDigi:
+      return "MUON"
+    elif phaseID == CalibrationPhase.ElectroMagEnergy:
+      return "GAMMA"
+    elif phaseID == CalibrationPhase.HadronicEnergy:
+      return "KAON"
+    else:
+      raise ValueError('There is no CalibrationPhase with the ID %s' % phaseID)
+
+  @staticmethod
+  def phaseNameFromID(phaseID):
+    """ Returns the name of the CalibrationPhase with the given ID, as a string
+
+    :param int phaseID: ID of the enquired CalibrationPhase
+    :returns: The name of the CalibrationPhase
+    :rtype: basestring
+    """
+    if phaseID == 0:
+      return 'ECalDigi'
+    elif phaseID == 1:
+      return 'HCalDigi'
+    elif phaseID == 2:
+      return 'HCalOtherDigi'
+    elif phaseID == 3:
+      return 'MuonDigi'
+    elif phaseID == 4:
+      return 'ElectroMagEnergy'
+    elif phaseID == 5:
+      return 'HadronicEnergy'
+    else:
+      raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)
+
+
 class CalibrationClient(object):
   """ Handles the workflow of the worker nodes. Fetches the necessary data from the service,
   calls the calibration software to be run and reports the results back.
@@ -41,6 +117,7 @@ class CalibrationClient(object):
     :returns: A string if the calibration is finished and this job should stop, else the parameter set for the new step, or None if no new parameters are available yet
     :rtype: list
     """
+    # FIXME return value has to be dictionary which contains keys: stepID, phaseID and parameters (list of strings in form which is accepted by updateSteeringFile function from CalibrationSystem/Utilities/functions.py)
     res = self.calibrationService.getNewParameters(self.calibrationID, self.currentStep)
     if res['OK']:
       if isinstance(res['Value'], basestring):

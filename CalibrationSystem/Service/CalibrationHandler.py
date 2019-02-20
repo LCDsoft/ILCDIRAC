@@ -16,82 +16,6 @@ from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 __RCSID__ = "$Id$"
 
 
-class CalibrationPhase(object):
-  """ Represents the different phases a calibration can be in.
-  Since Python 2 does not have enums, this is hardcoded for the moment.
-  Should this solution not be sufficient any more, one can make a better enum implementation by hand or install a backport of the python3 implementation from PyPi."""
-  ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy = range(6)
-
-  @staticmethod
-  def phaseIDFromString(phase_name):
-    """ Returns the ID of the given CalibrationPhase, passed as a string.
-
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
-    :returns: ID of this phase
-    :rtype: int
-    """
-    if phase_name == 'ECalDigi':
-      return 0
-    elif phase_name == 'HCalDigi':
-      return 1
-    elif phase_name == 'HCalOtherDigi':
-      return 2
-    elif phase_name == 'MuonDigi':
-      return 3
-    elif phase_name == 'ElectroMagEnergy':
-      return 4
-    elif phase_name == 'HadronicEnergy':
-      return 5
-    else:
-      raise ValueError('There is no CalibrationPhase with the name %s' % phase_name)
-
-  @staticmethod
-  def fileKeyFromPhase(phaseID):
-    """ Returns the ID of the given CalibrationPhase, passed as a string.
-
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
-    :returns: file key for this phase
-    :rtype: str
-    """
-    if phaseID == CalibrationPhase.ECalDigi:
-      return "GAMMA"
-    elif phaseID == CalibrationPhase.HCalDigi:
-      return "KAON"
-    elif phaseID == CalibrationPhase.HCalDigi:
-      return "MUON"
-    elif phaseID == CalibrationPhase.MuonDigi:
-      return "MUON"
-    elif phaseID == CalibrationPhase.ElectroMagEnergy:
-      return "GAMMA"
-    elif phaseID == CalibrationPhase.HadronicEnergy:
-      return "KAON"
-    else:
-      raise ValueError('There is no CalibrationPhase with the ID %s' % phaseID)
-
-  @staticmethod
-  def phaseNameFromID(phaseID):
-    """ Returns the name of the CalibrationPhase with the given ID, as a string
-
-    :param int phaseID: ID of the enquired CalibrationPhase
-    :returns: The name of the CalibrationPhase
-    :rtype: basestring
-    """
-    if phaseID == 0:
-      return 'ECalDigi'
-    elif phaseID == 1:
-      return 'HCalDigi'
-    elif phaseID == 2:
-      return 'HCalOtherDigi'
-    elif phaseID == 3:
-      return 'MuonDigi'
-    elif phaseID == 4:
-      return 'ElectroMagEnergy'
-    elif phaseID == 5:
-      return 'HadronicEnergy'
-    else:
-      raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)
-
-
 class WorkerInfo(object):
   """ Wrapper class to store information needed by workers to compute their result. """
 
@@ -206,8 +130,9 @@ class CalibrationRun(object):
       inputSB = ['GearOutput.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
       # FIXME implement distribution of slcio files of each category (MUON, KAON, PHOTON) among the jobs
       # FIXME treat case when number of input files in one of category is less than number of jobs...
-      key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
-      lcioFile = _getLCIOInputFiles(self.inputFiles[key][i])
+      lcioFile = None
+      #  key = CalibrationPhase.fileKeyFromPhase( self.currentPhase )
+      #  lcioFile = _getLCIOInputFiles( self.inputFiles[key][ i ] )
 
       curJob.setInputData(lcioFile)
       curJob.setInputSandbox(inputSB)

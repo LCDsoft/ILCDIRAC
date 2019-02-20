@@ -167,6 +167,7 @@ def makeParameterTable():
 
 
 def updateSteeringFile(inFileName, outFileName, parametersToSetup):
+  #FIXME throw error when required parameter is not found in the file
   tree = et.parse(inFileName)
   root = tree.getroot()
 
@@ -252,3 +253,6 @@ def testUpdateOfSteeringFileWithNewParameters():
   currentParameters = readParametersFromSteeringFile(inFileName, parTable)
 
   updateSteeringFile(inFileName, outFileName, currentParameters)
+
+  outFileName = 'testing/out2.xml'
+  updateSteeringFile(inFileName, outFileName, ['processor,MyPfoAnalysis,RootFile,dummyRootFile.root'])
