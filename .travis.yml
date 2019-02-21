@@ -16,4 +16,4 @@ script:
   - echo $PYTHONPATH
   - .gitlab-ci.d/run-unittests.sh
 after_success:
-  - coveralls
+  - codecov

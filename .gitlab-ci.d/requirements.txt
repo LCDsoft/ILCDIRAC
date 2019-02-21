@@ -21,6 +21,6 @@ pytest-cov>=2.2.0
 pytest-mock
 coverage>=4.0.3
 rst2pdf>=0.93
-python-coveralls
 flake8
 psutil
+codecov
