@@ -1024,7 +1024,8 @@ overlayEventType = %(overlayEventType)s
 
       elif self._flags.spl and eventsPerBaseFile == eventsPerJob:
         gLogger.notice("*" * 80 + "\nSkipping split transformation for %s\n" % prodName + "*" * 80)
-        self.addSimTask(taskDict, metaInput, Task({}, parameterDict, eventsPerJob))
+        if self._flags.sim:
+          self.addSimTask(taskDict, metaInput, Task({}, parameterDict, eventsPerJob))
       elif self._flags.spl:
         taskDict['SPLIT'].append(Task(metaInput, parameterDict, eventsPerJob,
                                       eventsPerBaseFile=eventsPerBaseFile))
