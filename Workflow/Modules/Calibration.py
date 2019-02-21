@@ -143,10 +143,15 @@ class Calibration(MarlinAnalysis):
     if not os.path.exists(pandorasettings):
       if photontrainingfiledirname and os.path.exists(os.path.join(photontrainingfiledirname, pandorasettings)):
         try:
+          fullPathPandoraSettings = os.path.join(os.getcwd(), pandorasettings)
           shutil.copy(os.path.join(photontrainingfiledirname, pandorasettings),
-                      os.path.join(os.getcwd(), pandorasettings))
+                      fullPathPandoraSettings)
+          tree = et.parse(fullPathPandoraSettings)
+          tree.find(
+              "algorithm[@type='PhotonReconstruction']/HistogramFile").text = 'PandoraLikelihoodDataPhotonTraining.xml'
+          tree.write(fullPathPandoraSettings)
         except EnvironmentError, x:
-          self.log.warn('Could not copy PandoraSettingsPhotonTraining.xml, exception: %s' % x)
+          self.log.warn('Could not copy and prepare PandoraSettingsPhotonTraining.xml, exception: %s' % x)
 
     if self.inputGEAR:
       self.inputGEAR = os.path.basename(self.inputGEAR)
@@ -163,19 +168,19 @@ class Calibration(MarlinAnalysis):
       self.log.error("Steering file not defined, shouldn't happen!")
       return S_ERROR("Could not find steering file")
 
-    eventsPerBackgroundFile = self.workflow_commons.get("OI_eventsPerBackgroundFile", 0)
-    self.log.info("Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile)
-
-    res = prepareXMLFile(self.baseSteeringFile, self.SteeringFile, self.inputGEAR, listofslcio,
-                         self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST,
-                         self.debug,
-                         dd4hepGeoFile=compactFile,
-                         eventsPerBackgroundFile=eventsPerBackgroundFile,
-                         )
-    if not res['OK']:
-      self.log.error('Something went wrong with XML generation because %s' % res['Message'])
-      self.setApplicationStatus('Marlin: something went wrong with XML generation')
-      return res
+    #  eventsPerBackgroundFile=self.workflow_commons.get("OI_eventsPerBackgroundFile", 0)
+    #  self.log.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
+    #
+    #  res = prepareXMLFile(self.baseSteeringFile, self.SteeringFile, self.inputGEAR, listofslcio,
+    #                       self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST,
+    #                       self.debug,
+    #                       dd4hepGeoFile=compactFile,
+    #                       eventsPerBackgroundFile=eventsPerBackgroundFile,
+    #                      )
+    #  if not res['OK']:
+    #    self.log.error('Something went wrong with XML generation because %s' % res['Message'])
+    #    self.setApplicationStatus('Marlin: something went wrong with XML generation')
+    #    return res
 
     res = self.prepareMARLIN_DLL(env_script_path)
     if not res['OK']:
@@ -184,8 +189,7 @@ class Calibration(MarlinAnalysis):
       return S_ERROR('Something wrong with software installation')
     marlin_dll = res["Value"]
 
-    # such loop has to be done for each phase
-    # each phase will have its own set of input slcio files (listofslcio)
+    #FIXME cross check if using 'True' for this while loop will bring expected result
     while True:
 
       calibrationParameters = self.cali.requestNewParameters()
@@ -202,21 +206,20 @@ class Calibration(MarlinAnalysis):
       self.stepID = calibrationParameters['stepID']
       self.iterationNumber = self.iterationNumber + 1
       parameterList = calibrationParameters['parameters']
-      resolveInputSlcioFilesAndAddToParameterList(self.stepID, self.phaseID, parameterList)
+      resolveInputSlcioFilesAndAddToParameterList(listofslcio, parameterList)
 
       steeringFileToRun = 'marlinSteeringFile_%s_%s_%s.xml' % (self.stepID, self.phaseID, self.iterationNumber)
       updateSteeringFile(self.SteeringFile, steeringFileToRun, parameterList)
-      # TODO additionaly clean up Marlin file - a lot of processors we don't need for calibration
+      # TODO clean up Marlin steering file - we don't need a lot of processors for calibration
       self.log.notice("new set of calibration parameters: %r" % parameterList)
 
-      finalXML = xml_generate(self.baseSteeringFile, self.workerID, listofslcio, *parameters)
-
-      self.result = self.runScript(finalXML, env_script_path, marlin_dll)
+      self.result = self.runScript(steeringFileToRun, env_script_path, marlin_dll)
       if not self.result['OK']:
         self.log.error('Something wrong during running:', self.result['Message'])
         self.setApplicationStatus('Error during running %s' % self.applicationName)
         return S_ERROR('Failed to run %s' % self.applicationName)
 
+      #FIXME make sure that runScript function return tuple of the same format as used below
       #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
       resultTuple = self.result['Value']
       if not os.path.exists(self.applicationLog):
@@ -230,19 +233,18 @@ class Calibration(MarlinAnalysis):
       # stdError = resultTuple[2]
       self.log.info("Status after the application execution is:", str(status))
 
-      # FIXME TODO report correct root file or xml-file (in case of PhotonTraining step)
-      pfoAnalysisRootFile = "pfoAnalysis.root"
+      outFile = "pfoAnalysis.root"
+      if stepID == 2:
+        outFile = 'PandoraLikelihoodDataPhotonTraining.xml'
 
-      self.cali.reportResult(pfoAnalysisRootFile)
+      self.cali.reportResult(outFile)
 
     return self.finalStatusReport(status)
 
-  def resolveInputSlcioFilesAndAddToParameterList(allSlcioFiles, stepID, phaseID, parameterList):
+  def resolveInputFilesAndUpdateParameterList(allSlcioFiles, parameterList):
   """ Add PandoraSettings-file and input slcio files which corresponds to current stepID and phaseID to the parameterList
 
   :param list basestring allSlcioFiles: List of all slcio-files in the node
-  :param int stepID: current stepID
-  :param int phaseID: current phaseID
   :param list basestring parameterList: list of parameters and their values
 
   :returns: S_OK or S_ERROR
@@ -253,8 +255,8 @@ class Calibration(MarlinAnalysis):
 
   patternToSearchFor = ''
   pandoraSettingsFile = ''
-   if stepID in [1, 3]:  # FIXME hardcoded values are bad...
-      patternToSearchFor = fileKeyFromPhase(phaseID).lower()
+  if self.stepID in [1, 3]:  # FIXME hardcoded values are bad...
+      patternToSearchFor = fileKeyFromPhase(self.phaseID).lower()
       pandoraSettingsFile = 'PandoraSettings.xml'
     else:
       patternToSearchFor = 'zuds'
@@ -265,7 +267,8 @@ class Calibration(MarlinAnalysis):
       return s_ERROR('empty list of input slcio-files')
 
     parameterList.append('global,None,LCIOInputFiles,%s' % (filesToRunOn))
-    parameterList.append('processor,MyDDMarlinPandora,PandoraSettingsXmlFile' % (pandoraSettingsFile))
+    parameterList.append('processor,MyDDMarlinPandora,PandoraSettingsXmlFile,%s' % (pandoraSettingsFile))
+    parameterList.append('processor,MyDDMarlinPandora,RootFile,pfoAnalysis.root')
     return S_OK()
 
   def prepareMARLIN_DLL(self, env_script_path):
@@ -453,8 +456,10 @@ fi
     script = open(scriptName, 'a')
 
     # TODO implement Pandora related stuff
-    #      - need to rename output root or xml files
+    if self.stepID in [1,3]:
+      pass
 
+    # TODO rename output root or xml file
 
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')

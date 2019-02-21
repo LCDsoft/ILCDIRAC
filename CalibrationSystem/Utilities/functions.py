@@ -144,8 +144,8 @@ def validatePandoraSettingsFile(pandoraSettingsFileName):
   return validateExistenceOfWordsInFile(pandoraSettingsFileName, parametersToValidate)
 
 
-def makeParameterTable():
-  tree = et.parse('testing/FCCee_PfoAnalysis_AAAA_SN_BBBB.xml')
+def makeParameterTable(inFile='testing/FCCee_PfoAnalysis_AAAA_SN_BBBB.xml'):
+  tree = et.parse(inFile)
   root = tree.getroot()
 
   outList = []
@@ -200,9 +200,9 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup):
   tree.write(outFileName)
 
 
-def readParameterTable():
+def readParameterTable(inFile='testing/test.csv'):
   outList = []
-  with open('testing/test.csv', mode='r') as csv_file:
+  with open(inFile, mode='r') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     line_count = 0
     for row in csv_reader:
@@ -256,3 +256,7 @@ def testUpdateOfSteeringFileWithNewParameters():
 
   outFileName = 'testing/out2.xml'
   updateSteeringFile(inFileName, outFileName, ['processor,MyPfoAnalysis,RootFile,dummyRootFile.root'])
+
+  inFileName = 'testing/inAndOut1.xml'
+  outFileName = inFileName
+  updateSteeringFile(inFileName, outFileName, ['processor,MyPfoAnalysis,RootFile,DUMMY.root'])
