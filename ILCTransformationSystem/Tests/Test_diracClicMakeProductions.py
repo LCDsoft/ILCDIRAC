@@ -133,6 +133,17 @@ def test_meta(theChain):
           'Machine': 'clic'} == ret
 
 
+@pytest.mark.parametrize('eInput, eOutput',
+                         [(123.0, '123'),
+                          (123.03, '123.03'),
+                          (123.235, '123.23'),
+                          ('123.235', '123.235'),
+                          ])
+def test_metaEnergy(theChain, eInput, eOutput):
+  """Test meta data."""
+  assert theChain.metaEnergy(eInput) == eOutput
+
+
 def test_overlayParameter(theChain):
   """Test overlayPamareters."""
   assert theChain.checkOverlayParameter('300GeV') == '300GeV'
