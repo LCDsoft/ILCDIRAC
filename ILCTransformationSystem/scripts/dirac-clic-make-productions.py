@@ -1022,7 +1022,7 @@ overlayEventType = %(overlayEventType)s
 
     for parameterDict in self.getParameterDictionary(prodName):
       if self._flags.gen:
-        self.addGenTask(taskDict, Task(metaInput, parameterDict, eventsPerJob, nbTasks, sinFile))
+        self.addGenTask(taskDict, Task(metaInput, parameterDict, eventsPerJob, nbTasks=nbTasks, sinFile=sinFile))
 
       elif self._flags.spl and eventsPerBaseFile == eventsPerJob:
         gLogger.notice("*" * 80 + "\nSkipping split transformation for %s\n" % prodName + "*" * 80)
@@ -1037,18 +1037,8 @@ overlayEventType = %(overlayEventType)s
 
     return taskDict
 
-  def addGenTask(self, taskDict, originalTask):
-    """Add a gen task with required options."""
-    # FIXME add loop for parameters(?)
-    originalTask.dryRun = self._flags.dryRun
-    taskDict['GEN'].append(originalTask)
-
   def _addTask(self, taskDict, metaInput, originalTask, prodType, applicationName):
     """Add a task to the given prodType and applicatioName."""
-    eventsPerJob = originalTask.eventsPerJob
-    parameterDict = originalTask.parameterDict
-    sourceMetaDict = originalTask.meta
-
     options = defaultdict(list)
     nTasks = 0
     for option, value in self.applicationOptions[applicationName].items():
@@ -1058,7 +1048,14 @@ overlayEventType = %(overlayEventType)s
         gLogger.notice("Found option %s with values %s" % (optionName, pformat(options[optionName])))
         nTasks = len(options[optionName])
 
-    theTask = Task(metaInput, parameterDict, eventsPerJob, metaPrev=sourceMetaDict, dryRun=self._flags.dryRun)
+    theTask = Task(metaInput,
+                   parameterDict=originalTask.parameterDict,
+                   eventsPerJob=originalTask.eventsPerJob,
+                   metaPrev=originalTask.meta,
+                   dryRun=self._flags.dryRun,
+                   sinFile=originalTask.sinFile,
+                   nbTasks=originalTask.nbTasks,
+                   )
     theTask.sourceName = originalTask.taskName
     if not nTasks:
       taskDict[prodType].append(theTask)
@@ -1068,6 +1065,10 @@ overlayEventType = %(overlayEventType)s
     taskDict[prodType].extend(taskList)
     self.addTaskOptions(options, taskList)
     return
+
+  def addGenTask(self, taskDict, originalTask):
+    """Add a gen task with required options."""
+    return self._addTask(taskDict, metaInput={}, originalTask=originalTask, prodType='GEN', applicationName='Whizard2')
 
   def addRecTask(self, taskDict, metaInput, originalTask):
     """Add a reconstruction task."""

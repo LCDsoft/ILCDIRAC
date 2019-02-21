@@ -581,6 +581,86 @@ def test_addRecTask(theChain):
   assert taskDict['REC'][1].cliReco == '--Option=Value1'
 
 
+def test_addGenTask(theChain):
+  """Test adding gen task."""
+  taskDict = defaultdict(list)
+  theChain.addGenTask(taskDict, originalTask=Task({}, {}, 123))
+  assert len(taskDict['GEN']) == 1
+
+  taskDict = defaultdict(list)
+  theChain.applicationOptions['Whizard2']['FE.additionalName'] = ['1', '2']
+  theChain.applicationOptions['Whizard2']['steeringFile'] = ['original.sin']
+  theChain.addGenTask(taskDict, originalTask=Task({}, {}, 123))
+  assert len(taskDict['GEN']) == 2
+  assert taskDict['GEN'][0].taskName == '1'
+  assert taskDict['GEN'][1].taskName == '2'
+
+
+def test_createTaskDict_none(theChain):
+  """Test createTaskDict function."""
+  taskDict = theChain.createTaskDict(123456, 'ee_qq', 5000, 333, sinFile='file.sin', nbTasks=222,
+                                     eventsPerBaseFile=None)
+  for pType in ['GEN', 'SIM', 'REC', 'SPLIT']:
+    assert not taskDict[pType]
+
+
+def test_createTaskDict_gen(theChain):
+  """Test createTaskDict function."""
+  theChain._flags._gen = True
+  taskDict = theChain.createTaskDict(123456, 'ee_qq', 5000, 333, sinFile='file.sin', nbTasks=222,
+                                     eventsPerBaseFile=None)
+  assert len(taskDict['GEN']) == 1
+  assert taskDict['GEN'][0].sinFile == 'file.sin'
+  assert taskDict['GEN'][0].nbTasks == 222
+  assert taskDict['GEN'][0].meta == {'EvtType': 'ee_qq', 'ProdID': '123456',
+                                     'Machine': 'clic',
+                                     'NumberOfEvents': 333,
+                                     'Energy': '5000',
+                                     }
+
+
+def test_createTaskDict_sim(theChain):
+  """Test createTaskDict function."""
+  theChain._flags._sim = True
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 333, sinFile=None, nbTasks=None, eventsPerBaseFile=None)
+  assert len(taskDict['SIM']) == 1
+  assert taskDict['SIM'][0].sinFile is None
+  assert taskDict['SIM'][0].nbTasks is None
+  assert taskDict['SIM'][0].eventsPerJob == 333
+
+
+def test_createTaskDict_sim_split(theChain):
+  """Test createTaskDict function."""
+  theChain._flags._sim = True
+  theChain._flags._spl = True
+  # no need to split
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=25)
+  assert not taskDict['SPLIT']
+  assert len(taskDict['SIM']) == 1
+  # need to split
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=400)
+  assert len(taskDict['SPLIT']) == 1
+  assert not taskDict['SIM']
+
+
+def test_createTaskDict_nosplit(theChain):
+  """Test createTaskDict function."""
+  theChain._flags._spl = True
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=25)
+  assert not taskDict['SPLIT']
+  assert not taskDict['SIM']
+
+
+def test_createTaskDict_rec(theChain):
+  """Test createTaskDict function."""
+  theChain._flags._rec = True
+  theChain.applicationOptions['Marlin']['FE.QueryMachine'] = 'fccee, clic'
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=400)
+  assert len(taskDict['REC']) == 2
+  assert taskDict['REC'][0].meta['Machine'] == 'fccee'
+  assert taskDict['REC'][1].meta['Machine'] == 'clic'
+
+
 @pytest.fixture
 def theFlags():
   """Return the flags fixture."""
