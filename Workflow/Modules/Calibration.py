@@ -13,65 +13,34 @@ import glob
 import os
 import shutil
 
-from DIRAC.Core.Utilities.Subprocess import shellCall
-from DIRAC import S_OK, S_ERROR, gLogger
-
-from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
+from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile, getNewLDLibs
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames import resolveIFpaths, getProdFilename
 from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir import getSteeringFileDirName
+from ILCDIRAC.Workflow.Utilities.DD4hepMixin import DD4hepMixin
+from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationClient, CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.functions import xml_generate, updateSteeringFile
-from ILCDIRAC.Core.Utilities.WasteCPU import wasteCPUCycles
 
-
-__RCSID__ = "$Id$"
+__RCSID__ = '$Id$'
+LOG = gLogger.getSubLogger(__name__)
 
 
 class Calibration(MarlinAnalysis):
-  """Define the Marlin analysis part of the workflow
+  """Define the Calibration part of the workflow
   """
 
   def __init__(self):
     super(Calibration, self).__init__()
-    self.enable = True
+    self.applicationName = "Calibration"
     self.stepId = ''
     self.phaseId = ''
     self.iterationNumber = 0
-    self.log = gLogger.getSubLogger("Calibration")
-    self.result = S_ERROR()
-    self.applicationName = "Calibration"
-    self.eventstring = ['ProgressHandler', 'event']
-    self.envdict = {}
-    self.detectorModel = None
     self.calibrationID = 0
     self.workerID = 0
-    self.baseSteeringFile = None
     self.cali = CalibrationClient(self.calibrationID, self.workerID)
-
-  def applicationSpecificInputs(self):
-    """ Resolve all input variables for the module here.
-
-    :return: S_OK()
-    """
-
-    if 'ParametricInputSandbox' in self.workflow_commons:
-      paramsb = self.workflow_commons['ParametricInputSandbox']
-      if not isinstance(paramsb, list):
-        if len(paramsb):
-          paramsb = paramsb.split(";")
-        else:
-          paramsb = []
-
-      self.InputFile += paramsb
-
-    if not len(self.InputFile) and len(self.InputData):
-      for files in self.InputData:
-        if files.lower().find(".slcio") > -1:
-          self.InputFile.append(files)
-
-    return S_OK('Parameters resolved')
 
   def runIt(self):
     """
@@ -91,11 +60,11 @@ class Calibration(MarlinAnalysis):
     elif not self.applicationLog:
       self.result = S_ERROR('No Log file provided')
     if not self.result['OK']:
-      self.log.error("Failed to resolve input parameters:", self.result["Message"])
+      LOG.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
     #get the path to the detector model, either local or from the software
@@ -103,19 +72,19 @@ class Calibration(MarlinAnalysis):
     if self.detectorModel:
       resXML = self._getDetectorXML()
       if not resXML['OK']:
-        self.log.error("Could not obtain the detector XML file: ", resXML["Message"])
+        LOG.error("Could not obtain the detector XML file: ", resXML["Message"])
         return resXML
       compactFile = resXML['Value']
 
     res = getEnvironmentScript(self.platform, "marlin", self.applicationVersion, self.getEnvScript)
     if not res['OK']:
-      self.log.error("Failed to get the env script")
+      LOG.error("Failed to get the env script")
       return res
     env_script_path = res["Value"]
 
-    res = self.GetInputFiles()
+    res = self._getInputFiles()
     if not res['OK']:
-      self.log.error("Failed getting input files:", res['Message'])
+      LOG.error("Failed getting input files:", res['Message'])
       return res
     listofslcio = res['Value']
 
@@ -124,7 +93,7 @@ class Calibration(MarlinAnalysis):
     if res['OK']:
       steeringfiledirname = res['Value']
     else:
-      self.log.warn('Could not find the steering file directory', res['Message'])
+      LOG.warn('Could not find the steering file directory', res['Message'])
 
     ##Handle PandoraSettings.xml
     pandorasettings = 'PandoraSettings.xml'
@@ -134,10 +103,9 @@ class Calibration(MarlinAnalysis):
           shutil.copy(os.path.join(steeringfiledirname, pandorasettings),
                       os.path.join(os.getcwd(), pandorasettings))
         except EnvironmentError, x:
-          self.log.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
+          LOG.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
 
     ##Handle PandoraSettingsPhotonTraining.xml for photon training step
-    # FIXME to test this part of the code
     pandorasettings = 'PandoraSettingsPhotonTraining.xml'
     photontrainingfiledirname = os.path.join(steeringfiledirname, '../CalibrationPandoraSettings/')
     if not os.path.exists(pandorasettings):
@@ -465,60 +433,4 @@ fi
     script.write('exit $appstatus\n')
     script.close()
     return S_OK()
-
-  def GetInputFiles(self):
-    """ Resolve the input files. But not if in the application definition it was decided
-    that it should forget about the input.
-    """
-    if self.ignoremissingInput:
-      return S_OK("")
-    res = resolveIFpaths(self.InputFile)
-    if not res['OK']:
-      self.setApplicationStatus('%s: missing slcio file' % self.applicationName)
-      return S_ERROR('Missing slcio file!')
-    runonslcio = res['Value']
-
-    listofslcio = " ".join(runonslcio)
-
-    return S_OK(listofslcio)
-
-  def getEnvScript(self, sysconfig, appname, appversion):
-    """ Called if CVMFS is not available
-    """
-    res = getSoftwareFolder(sysconfig, appname, appversion)
-    if not res['OK']:
-      self.setApplicationStatus('Marlin: Could not find neither local area not shared area install')
-      return res
-
-    myMarlinDir = res['Value']
-
-    ##Remove libc
-    removeLibc(myMarlinDir + "/LDLibs")
-
-    ##Need to fetch the new LD_LIBRARY_PATH
-    new_ld_lib_path = getNewLDLibs(sysconfig, "marlin", appversion)
-
-    marlindll = ""
-    if os.path.exists("%s/MARLIN_DLL" % myMarlinDir):
-      for library in os.listdir("%s/MARLIN_DLL" % myMarlinDir):
-        marlindll = marlindll + "%s/MARLIN_DLL/%s" % (myMarlinDir, library) + ":"
-      marlindll = "%s" % (marlindll)
-    else:
-      self.log.error('MARLIN_DLL folder not found, cannot proceed')
-      return S_ERROR('MARLIN_DLL folder not found in %s' % myMarlinDir)
-
-    env_script_name = "MarlinEnv.sh"
-    script = open(env_script_name, "w")
-    script.write("#!/bin/sh\n")
-    script.write('##########################################################\n')
-    script.write('# Dynamically generated script to create env for Marlin. #\n')
-    script.write('##########################################################\n')
-    script.write("declare -x PATH=%s/Executable:$PATH\n" % myMarlinDir)
-    script.write('declare -x ROOTSYS=%s/ROOT\n' % (myMarlinDir))
-    script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n' % (myMarlinDir, new_ld_lib_path))
-    script.write("declare -x MARLIN_DLL=%s\n" % marlindll)
-    # FIXME line below will be incorrect at PhotonTraining step
-    script.write("declare -x PANDORASETTINGS=%s/Settings/PandoraSettings.xml" % myMarlinDir)
-    script.close()
-    #os.chmod(env_script_name, 0755)
-    return S_OK(os.path.abspath(env_script_name))
+  
