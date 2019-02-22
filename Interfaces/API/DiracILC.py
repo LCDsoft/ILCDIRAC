@@ -5,26 +5,15 @@ API to use to submit jobs in the ILC VO
 :author: Stephane Poss
 """
 
-import glob
 import os
-import shutil
 import string
-import sys
-import tarfile
-import tempfile
-import urllib
 
-from pprint import pformat
-
-import DIRAC
-from DIRAC.Core.Utilities.ModuleFactory import ModuleFactory
-from DIRAC.Core.Utilities.Subprocess import shellCall
-from DIRAC.Interfaces.API.Dirac                     import Dirac
-from DIRAC.DataManagementSystem.Client.DataManager  import DataManager
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations            import Operations
+from DIRAC.Interfaces.API.Dirac import Dirac
+from DIRAC.DataManagementSystem.Client.DataManager import DataManager
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC import gConfig, S_ERROR, S_OK, gLogger
 
-from ILCDIRAC.Core.Utilities.ProcessList            import ProcessList
+from ILCDIRAC.Core.Utilities.ProcessList import ProcessList
 
 __RCSID__ = "$Id$"
 
@@ -41,9 +30,7 @@ class DiracILC(Dirac):
   def __init__(self, withRepo = False, repoLocation = ''):
     """Internal initialization of the ILCDIRAC API.
     """
-    #self.dirac = Dirac(WithRepo=WithRepo, RepoLocation=RepoLocation)
     super(DiracILC, self).__init__(withRepo, repoLocation )
-    #Dirac.__init__(self, withRepo = withRepo, repoLocation = repoLocation)
     self.software_versions = {}
     self.checked = False
     self.processList = None
