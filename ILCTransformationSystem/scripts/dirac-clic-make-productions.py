@@ -131,11 +131,34 @@ from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithUnit, energyToInt
 from ILCDIRAC.Core.Utilities.Utilities import listify
 from ILCDIRAC.ILCTransformationSystem.Utilities.Utilities import Task
 
-PRODUCTION_PARAMETERS= 'Production Parameters'
-PP= 'Production Parameters'
+PRODUCTION_PARAMETERS = 'Production Parameters'
+PP = PRODUCTION_PARAMETERS
 APPLICATION_LIST = ['Marlin', 'DDSim', 'Overlay', 'Whizard2']
-LIST_ATTRIBUTES = ['ignoreMetadata']
-STRING_ATTRIBUTES = ['configPackage', 'configVersion', 'overlayEventType']
+LIST_ATTRIBUTES = ['ignoreMetadata',
+                   'whizard2SinFile',
+                   'energies',
+                   'eventsPerJobs',
+                   'numberOfTasks',
+                   'processes',
+                   'prodIDs',
+                   'eventsInSplitFiles',
+                   ]
+
+STRING_ATTRIBUTES = ['configPackage',
+                     'configVersion',
+                     'additionalName',
+                     'productionloglevel',
+                     'outputSE',
+                     'finalOutputSE',
+                     'whizard2Version',
+                     'MoveStatus',
+                     'MoveGroupSize',
+                     'prodGroup',
+                     'detectorModel',
+                     'softwareVersion',
+                     'overlayEvents',
+                     'overlayEventType',
+                     ]
 
 
 class Params(object):
@@ -327,12 +350,12 @@ MoveTypes = %(moveTypes)s
     self.ddsimSteeringFile = 'clic_steer.py'
     self.marlinSteeringFile = 'clicReconstruction.xml'
 
-    self.eventsPerJobs = ''
-    self.numberOfTasks = ''
-    self.energies = ''
-    self.processes = ''
-    self.prodIDs = ''
-    self.eventsInSplitFiles = ''
+    self.eventsPerJobs = []
+    self.numberOfTasks = []
+    self.energies = []
+    self.processes = []
+    self.prodIDs = []
+    self.eventsInSplitFiles = []
 
     # final destination for files once they have been used
     self.finalOutputSE = self._ops.getValue( 'Production/CLIC/FailOverSE' )
@@ -372,71 +395,32 @@ MoveTypes = %(moveTypes)s
     """Load parameters from config file."""
     if parameter.prodConfigFilename is not None:
       defaultValueDict = vars(self)
-      self._flags.updateDictWithFlags( defaultValueDict )
+      self._flags.updateDictWithFlags(defaultValueDict)
+      # we are passing all instance attributes as the default dict so generally we do not have to check
+      # if an option exists, also options are case insensitive and stored in lowercase
       config = ConfigParser.SafeConfigParser(defaults=defaultValueDict, dict_type=dict)
-      config.read( parameter.prodConfigFilename )
-      self._flags.loadFlags( config )
-
-      self.prodGroup = config.get(PP, 'prodGroup')
-      self.detectorModel = config.get(PP, 'detectorModel')
-      self.softwareVersion = config.get(PP, 'softwareVersion')
-      if config.has_option(PP, 'clicConfig'):
-        self.configVersion = config.get(PP, 'clicConfig')
-
-      if config.has_option(PP, 'MoveStatus'):
-        self.moveStatus = config.get(PP, 'MoveStatus')
-        if self.moveStatus not in ('Active', 'Stopped'):
-          raise AttributeError("MoveStatus can only be 'Active' or 'Stopped' not %r" % self.moveStatus)
-      self.moveGroupSize = config.get(PP, 'MoveGroupSize')
-
-
-      # Check if Whizard version is set, otherwise use default from CS
-      if config.has_option(PP, 'whizard2Version'):
-        self.whizard2Version = config.get(PP, 'whizard2Version')
-
-      if config.has_option(PP, 'whizard2SinFile'):
-        self.whizard2SinFile = listify(config.get(PP, 'whizard2SinFile'))
-
-      self.processes = listify(config.get(PP, 'processes'))
-      self.energies = listify(config.get(PP, 'energies'))
-      self.eventsPerJobs = listify(config.get(PP, 'eventsPerJobs'))
-      if config.has_option(PP, 'numberOfTasks'):
-        self.numberOfTasks = listify(config.get(PP, 'numberOfTasks'))
-      else:
-        self.numberOfTasks = []
-
-      self.productionLogLevel = config.get(PP, 'productionloglevel')
-      self.outputSE = config.get(PP, 'outputSE')
-
-      # final destination for files once they have been used
-      self.finalOutputSE = config.get(PP, 'finalOutputSE')
-
-      if config.has_option(PP, 'additionalName'):
-        self.additionalName = config.get(PP, 'additionalName')
-
-      if config.has_option(PP, 'cliReco'):
-        self.cliRecoOption = config.get(PP, 'cliReco')
+      config.read(parameter.prodConfigFilename)
+      self._flags.loadFlags(config)
 
       for attribute in LIST_ATTRIBUTES:
-        if config.has_option(PP, attribute):
-          setattr(self, attribute, listify(config.get(PP, attribute)))
+        setattr(self, attribute, listify(config.get(PP, attribute)))
 
       for attribute in STRING_ATTRIBUTES:
-        if config.has_option(PP, attribute):
-          setattr(self, attribute, config.get(PP, attribute))
+        setattr(self, attribute, config.get(PP, attribute))
 
-      self.overlayEvents = self.checkOverlayParameter(config.get(PP, 'overlayEvents')) \
-                           if config.has_option(PP, 'overlayEvents') else ''
+      # this parameter is deprecated and not part of the instance attributes so we need to check for existence
+      if config.has_option(PP, 'clicConfig'):
+        gLogger.warn('"clicConfig" parameter is deprected, please dump a new steering file!')
+        self.configVersion = config.get(PP, 'clicConfig')
 
+      # attribute and option names differ, special treatment
+      self.cliRecoOption = config.get(PP, 'cliReco')
+
+      if self.moveStatus not in ('Active', 'Stopped'):
+        raise AttributeError("MoveStatus can only be 'Active' or 'Stopped' not %r" % self.moveStatus)
+
+      self.overlayEvents = self.checkOverlayParameter(self.overlayEvents)
       self.overlayEventType = self.overlayEventType + self.overlayEvents.lower()
-
-      if config.has_option(PP, 'prodIDs'):
-        self.prodIDs = listify(config.get(PP, 'prodIDs'))
-      else:
-        self.prodIDs = []
-
-      ##for split only
-      self.eventsInSplitFiles = listify(config.get(PP, 'eventsInSplitFiles'))
 
       self.processes = [ process.strip() for process in self.processes if process.strip() ]
       self.energies = [ float(eng.strip()) for eng in self.energies if eng.strip() ]
@@ -474,7 +458,7 @@ MoveTypes = %(moveTypes)s
           raise AttributeError("Lengths of numberOfTasks, whizard2SinFile, and Energies do not match")
 
       self.eventsInSplitFiles = listify(self.eventsInSplitFiles, int)
-      self.eventsInSplitFiles = self.eventsInSplitFiles if self.eventsInSplitFiles else [ -1 for _ in self.energies ]
+      self.eventsInSplitFiles = self.eventsInSplitFiles if self.eventsInSplitFiles else [-1] * len(self.energies)
 
       if self._flags.spl and len(self.eventsInSplitFiles) != len(self.energies):
         raise AttributeError( "Length of eventsInSplitFiles does not match: %d vs %d" %(

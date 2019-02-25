@@ -47,11 +47,15 @@ def configDict():
           'eventsInSplitFiles': '5000, 6000',
           'ProdTypes': 'Gen, RecOver',
           'MoveTypes': '',
+          'MoveStatus': 'Stopped',
+          'MoveGroupSize': '10',
           'overlayEvents': '',
+          'overlayEventType': '',
           'cliReco': '--Config.Tracking=Tracked',
           'whizard2Version': 'myWhizardVersion',
           'whizard2SinFile': 'myWhizardSinFile1, myWhizardSinFile2',
           'numberOfTasks': '1, 2',
+          'ignoreMetadata': '',
           }
 
 
@@ -184,6 +188,7 @@ def test_loadParameters(theChain, cpMock):
        pytest.raises(AttributeError, match="Lengths of Processes"):
     c.loadParameters(parameter)
 
+  cpMock.thisConfigDict['prodIDs'] = ''
   cpMock.has_option = Mock()
   cpMock.has_option.return_value = False
   with patch(SCP, new=Mock(return_value=cpMock)):
