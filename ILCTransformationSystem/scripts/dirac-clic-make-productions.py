@@ -1108,4 +1108,4 @@ if __name__ == "__main__":
     CHAIN.createAllTransformations()
   except (AttributeError, RuntimeError) as excp:
     if str(excp) != '':
-      print "Failure to create transformations", repr(excp)
+      gLogger.exception('Failure to create transformations', lException=excp)
