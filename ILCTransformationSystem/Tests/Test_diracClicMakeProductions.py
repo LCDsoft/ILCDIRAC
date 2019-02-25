@@ -355,6 +355,7 @@ def test_createMovingTransformation(theChain):
   """Test creating the moving productions."""
   theChain.outputSE = "Source"
   theChain.finalOutputSE = "Target"
+  theChain.moveGroupSize = 13
   theChain._flags._rec = True
   theChain._flags._sim = True
   theChain._flags._moveDst = True
@@ -372,7 +373,7 @@ def test_createMovingTransformation(theChain):
                    metaValue=666,
                    extraData={'Datatype': 'DST'},
                    tGroup='several',
-                   groupSize=1,
+                   groupSize=13,
                    enable=True,
                    )
     moveMock.assert_called_once_with(**parDict)
@@ -387,7 +388,7 @@ def test_createMovingTransformation(theChain):
                    metaValue=666,
                    extraData={'Datatype': 'SIM'},
                    tGroup='several',
-                   groupSize=1,
+                   groupSize=13,
                    enable=True,
                    )
     moveMock.assert_called_once_with(**parDict)

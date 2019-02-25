@@ -23,6 +23,7 @@ Then modify the template to describe the productions::
     eventsPerJobs =           100
     MoveTypes = REC, GEN, SIM
     MoveStatus = Active
+    MoveGroupSize = 10
     move = True
     overlayEvents = 380GeV
     cliReco = --Config.Tracking=Conformal --MyDDMarlinPandora.D0TrackCut=%(DRC)s
@@ -65,6 +66,7 @@ Parameters in the steering file
 
   :ProdTypes: Which transformations to create: Gen, Split, Sim, Rec, RecOver
   :MoveTypes: Which output file types to move: Gen, Sim, Rec, Dst
+  :MoveGroupSize: The number of files to put in one replicationRequest
   :MoveStatus: The status of the Replication transformations: Active or Stopped
   :move: Whether or not to create the transformations to the output files to the finalOutputSE
 
@@ -320,6 +322,7 @@ MoveTypes = %(moveTypes)s
     self.productionLogLevel = 'VERBOSE'
     self.outputSE = 'CERN-DST-EOS'
     self.moveStatus = 'Stopped'
+    self.moveGroupSize = '10'
 
     self.ddsimSteeringFile = 'clic_steer.py'
     self.marlinSteeringFile = 'clicReconstruction.xml'
@@ -384,6 +387,8 @@ MoveTypes = %(moveTypes)s
         self.moveStatus = config.get(PP, 'MoveStatus')
         if self.moveStatus not in ('Active', 'Stopped'):
           raise AttributeError("MoveStatus can only be 'Active' or 'Stopped' not %r" % self.moveStatus)
+      self.moveGroupSize = config.get(PP, 'MoveGroupSize')
+
 
       # Check if Whizard version is set, otherwise use default from CS
       if config.has_option(PP, 'whizard2Version'):
@@ -557,6 +562,7 @@ outputSE = %(outputSE)s
 
 finalOutputSE = %(finalOutputSE)s
 MoveStatus = %(moveStatus)s
+MoveGroupSize = %(moveGroupSize)s
 
 ## optional additional name
 # additionalName = %(additionalName)s
@@ -938,7 +944,7 @@ overlayEventType = %(overlayEventType)s
                        metaValue=prodID,
                        extraData={'Datatype': dataType},
                        tGroup=self.prodGroup,
-                       groupSize=1,
+                       groupSize=int(self.moveGroupSize),
                        enable=not self._flags.dryRun,
                       )
         message = "Moving transformation with parameters"
