@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Test the DDSim WorkflowModule"""
 
+from __future__ import print_function
 import __builtin__
 import unittest
 import os
@@ -75,7 +76,7 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
     ## side effect for Script, userlibs, log, logAfter
     with patch("os.path.exists", new=Mock(side_effect=[False, False, False, True] ) ):
       res = self.ddsim.runIt()
-    print res
+    print(res)
     assertDiracSucceeds( res, self )
 
   @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh") ) )
@@ -577,7 +578,7 @@ class TestDDSimAnalysisDetXMLCS( TestDDSimAnalysis ):
     #only works for python 2
     with patch.object(__builtin__, 'open', mock_open(read_data="RoundTable")):
       res = self.ddsim._getDetectorXML()
-    print res
+    print(res)
     self.assertEqual( res['Value'], os.path.join( "Camelot", "Camelot.xml" ) )
 
 class TestDDSimAnalysisDetXMLTar( TestDDSimAnalysis ):
@@ -711,7 +712,7 @@ def runTests():
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysisASI ) )
 
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
 if __name__ == '__main__':
   runTests()

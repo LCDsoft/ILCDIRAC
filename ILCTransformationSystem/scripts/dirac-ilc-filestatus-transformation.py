@@ -10,6 +10,7 @@ Options:
    -x, --enable		Perform actions on tasks, requests and files
 """
 
+from __future__ import print_function
 __RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
@@ -68,7 +69,7 @@ def _runFSTAgent():
     dexit(1)
 
   if not res['Value']:
-    print "Transformation Not Found"
+    print("Transformation Not Found")
     dexit(1)
 
   trans = res['Value'][0]

@@ -2,6 +2,7 @@
 tests for InputFilesUtilities
 
 """
+from __future__ import print_function
 import unittest
 from mock import MagicMock as Mock, patch
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfEvents
@@ -112,4 +113,4 @@ class TestgetNumberOfEvents( unittest.TestCase ):
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestgetNumberOfEvents )
   TESTRESULT = unittest.TextTestRunner( verbosity = 2 ).run( SUITE )
-  print TESTRESULT
+  print(TESTRESULT)

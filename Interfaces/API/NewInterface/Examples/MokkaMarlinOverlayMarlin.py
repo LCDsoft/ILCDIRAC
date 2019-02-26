@@ -1,3 +1,5 @@
+"""Overlay with Marlin and Mokka."""
+from __future__ import print_function
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
@@ -26,7 +28,7 @@ for i in range(n_jobs):
   mo.setNbEvts(n_evts_per_job)
   res = j.append(mo)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     break
   ma = Marlin()
   ma.setVersion("v0111Prod")
@@ -35,7 +37,7 @@ for i in range(n_jobs):
   ma.setOutputDstFile("mydst_no_ov_%s.slcio"%i)
   res = j.append(ma)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     break
   ov  = OverlayInput()
   ov.setBXOverlay(60)
@@ -46,7 +48,7 @@ for i in range(n_jobs):
 
   res = j.append(ov)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     break
   ma2 = Marlin()
   ma2.setVersion("v0111Prod")
@@ -55,7 +57,7 @@ for i in range(n_jobs):
   ma2.setOutputDstFile("mydst_ov_%s.slcio"%i)
   res = j.append(ma2)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     break
   j.setOutputSandbox(["mydst_no_ov_%s.slcio"%i,"mydst_ov_%s.slcio"%i,"*.log"])
   j.setName("SingleElectron_%s"%i)

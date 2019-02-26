@@ -3,6 +3,7 @@ Tests for Interfaces.Utilities.JobHelpers
 
 """
 
+from __future__ import print_function
 import unittest
 
 from ILCDIRAC.Interfaces.Utilities import JobHelpers
@@ -47,7 +48,7 @@ def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestJobHelpers )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
 
 if __name__ == '__main__':

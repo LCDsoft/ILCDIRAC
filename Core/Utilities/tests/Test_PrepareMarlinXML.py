@@ -3,6 +3,7 @@ tests for PrepareOptionFiles
 
 """
 
+from __future__ import print_function
 import os
 import shutil
 import tempfile
@@ -72,9 +73,9 @@ class TestPrepareMarlinXMLFileBase( unittest.TestCase ):
       self.testedTree.findall( 'execute/processor' ), processorName )
 
     if expected:
-      print "found",processorName, "in expectedProcessors"
+      print("found", processorName, "in expectedProcessors")
     if tested:
-      print "found",processorName, "in testedProcessors"
+      print("found", processorName, "in testedProcessors")
 
     return expected == tested
 
@@ -94,9 +95,9 @@ class TestPrepareMarlinXMLFileBase( unittest.TestCase ):
             elif not parameterValue and not (param.attrib.get('value') or param.text):
               return True
             else:
-              print "Parameter",processorParameter,"value is", \
+              print("Parameter", processorParameter, "value is",
                 repr(param.attrib.get('value')), \
-                "or", repr(param.text)
+                    "or", repr(param.text))
 
     groups = self.testedTree.findall('group')
     for group in groups:
@@ -114,9 +115,9 @@ class TestPrepareMarlinXMLFileBase( unittest.TestCase ):
               elif not parameterValue and not (param.attrib.get('value') or param.text):
                 return True
               else:
-                print "Parameter",processorParameter,"value is", \
+                print("Parameter", processorParameter, "value is",
                   repr(param.attrib.get('value')), \
-                  "or", repr(param.text)
+                      "or", repr(param.text))
 
 
 
@@ -127,11 +128,11 @@ class TestPrepareMarlinXMLFileBase( unittest.TestCase ):
     """ check if global parameter has correct value in testedTree """
     parameterValue = str(parameterValue)
     params = self.testedTree.findall('global/parameter')
-    print "checking tag",parameterName
+    print("checking tag", parameterName)
     for param in params:
       if param.get('name') == parameterName:
         if param.get('value') == parameterValue or param.text == parameterValue:
-          print "found parameter", parameterName, "with",parameterValue
+          print("found parameter", parameterName, "with", parameterValue)
           return True,None
 
         message = "The parameter "+repr(parameterName)+" does not have the value " +repr(parameterValue)+" but "+ \
@@ -520,4 +521,4 @@ class TestPrepareClicProdXMLFile( TestPrepareMarlinXMLFileBase ):
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestPrepareClicProdXMLFile )
   TESTRESULT = unittest.TextTestRunner( verbosity = 2 ).run( SUITE )
-  print TESTRESULT
+  print(TESTRESULT)

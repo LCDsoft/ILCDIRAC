@@ -7,6 +7,7 @@ Update the process list, create the new tar ball, upload it, upload the new proc
 :author: sposs, sailer, strube
 """
 
+from __future__ import print_function
 __RCSID__ = "$Id$"
 
 from DIRAC import gConfig, gLogger, exit as dexit
@@ -51,7 +52,7 @@ def redirectLogOutput(dummy_fd, message):
   """ Needed to catch the log output of the shellCall below
   """
   sys.stdout.flush()
-  print message
+  print(message)
   
 def readPRCFile(prc):
   """ Read the prc file to create the process description
@@ -253,7 +254,7 @@ def doTheWhizardInstallation():
           inputlist[currprocess]["Generator"] = ""
           inputlist[currprocess]["Restrictions"] = ""
           for process in process_id.split():
-            print "Looking for detail of process %s" % (process)
+            print("Looking for detail of process %s" % (process))
             process_detail = getDetailsFromPRC("whizard.prc", process)  
             inputlist[currprocess]["Model"] = process_detail["Model"]
             inputlist[currprocess]["Generator"] = process_detail["Generator"]

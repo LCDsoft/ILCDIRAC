@@ -117,6 +117,7 @@ All attributes with a ``set`` method can be changed. See
 
 #pylint disable=wrong-import-position
 
+from __future__ import print_function
 from pprint import pformat
 from collections import defaultdict
 from copy import deepcopy
@@ -476,7 +477,7 @@ MoveTypes = %(moveTypes)s
           pass
 
     if parameter.dumpConfigFile:
-      print self
+      print(self)
       raise RuntimeError('')
 
   def _getProdInfoFromIDs(self):

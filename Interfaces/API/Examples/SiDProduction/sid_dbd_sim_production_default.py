@@ -5,6 +5,7 @@ Modified on Aug 17, 2012
 :author: Stephane Poss, Christian Grefe
 '''
 
+from __future__ import print_function
 from DIRAC.Core.Base import Script
 import sys
 
@@ -80,8 +81,8 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications     import SLIC, StdHepSp
 ##essential
 
 if not prodID or not process or not polarisation:
-  print '\tNeed to define at least production ID, process name and polarisation name.'
-  print '\tUse -h for help.'
+  print('\tNeed to define at least production ID, process name and polarisation name.')
+  print('\tUse -h for help.')
   sys.exit(2)
 
 # define a meta data dictionary for lookup in the file catalog
@@ -95,9 +96,9 @@ meta['DetectorType'] = detectorType
 meta['Polarisation'] = polarisation
 
 # give feedback on the meta data
-print 'Creating production using meta data query:'
+print('Creating production using meta data query:')
 for key in meta:
-    print '  %s:\t%s'%(key, meta[key])
+    print('  %s:\t%s' % (key, meta[key]))
 
 # confirm the meta data query
 res = ''
@@ -138,7 +139,7 @@ if activesplitstdhep and meta:
   pstdhepsplit.setProdType( 'Split' )
   res = pstdhepsplit.setInputDataQuery(meta)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pstdhepsplit.setOutputSE( outputSRM )
   wname = '%s_%s_%s_split' % (process, energy, polarisation )
@@ -150,7 +151,7 @@ if activesplitstdhep and meta:
   #Add the application
   res = pstdhepsplit.append(stdhepsplit)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pstdhepsplit.addFinalization( True, True, True, True )
   descrp = 'Splitting stdhep files'
@@ -160,10 +161,10 @@ if activesplitstdhep and meta:
   
   res = pstdhepsplit.createProduction()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
   res = pstdhepsplit.finalizeProd()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   # get the metadata for this production to define input for the next step
   meta = pstdhepsplit.getMetadata()
@@ -176,7 +177,7 @@ if sid_sim and meta:
   psl.setProdType( 'MCSimulation' )
   res = psl.setInputDataQuery( meta )
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   psl.setOutputSE( outputSRM )
   wname = '%s_%s_%s_%s_sim' % ( process, energy, polarisation, detectorModel )
@@ -187,7 +188,7 @@ if sid_sim and meta:
   #Add the application
   res = psl.append(slic)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   psl.addFinalization( True, True, True, True )
   descrp = '%s model' % ( detectorModel )
@@ -197,10 +198,10 @@ if sid_sim and meta:
 
   res = psl.createProduction()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
   res = psl.finalizeProd()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   # get the metadata for this production to define input for the next step
   meta = psl.getMetadata()
@@ -226,13 +227,13 @@ if replicateFiles and meta:
 
   res = Trans.addTransformation()
   if not res['OK']:
-    print res
+    print(res)
     sys.exit(0)
-  print res
+  print(res)
   Trans.setStatus( 'Active' )
   Trans.setAgentType( 'Automatic' )
   currtrans = Trans.getTransformationID()['Value']
   client = TransformationClient()
   res = client.createTransformationInputDataQuery( currtrans, meta )
-  print res['OK']
+  print(res['OK'])
 

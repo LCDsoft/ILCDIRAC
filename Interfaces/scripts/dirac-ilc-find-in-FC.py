@@ -27,6 +27,7 @@ to list only the directories containing the files use the "-D" flag::
 
 """
 
+from __future__ import print_function
 from DIRAC.Core.Base import Script
 from DIRAC import gLogger, S_OK
 from DIRAC.Core.Utilities.List import uniqueElements
@@ -213,7 +214,7 @@ def _findInFC():
     listToPrint = res['Value']
 
   for entry in listToPrint:
-    print entry
+    print(entry)
 
   dexit(0)
 

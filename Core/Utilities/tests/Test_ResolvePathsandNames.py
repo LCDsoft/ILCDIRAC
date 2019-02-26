@@ -1,5 +1,6 @@
 """ unit tests for resolvePathsAndNames module """
 
+from __future__ import print_function
 import unittest
 import os
 import tempfile
@@ -27,7 +28,7 @@ class ResolvePathsAndNamesTests(unittest.TestCase):
       os.remove(self.realloc)
       shutil.rmtree(bd)
     except:
-      print "failed to remove file"
+      print("failed to remove file")
     
   def test_getnames(self):
     """test ResolvePathsAndNames getNames..........................................................."""

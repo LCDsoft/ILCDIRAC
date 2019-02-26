@@ -7,6 +7,7 @@ Try some fancy splitting, DO NOT USE
 :author: sposs
 '''
 
+from __future__ import print_function
 __RCSID__ = "$Id$"
 
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfEvents
@@ -71,9 +72,9 @@ if __name__=="__main__":
 
   RES = FileCatalogClient().findFilesByMetadata({"ProdID":1978})
   if not RES['OK']:
-    print RES['Message']
+    print(RES['Message'])
     exit(1)
   LFNS = RES['Value']
   LFNS.sort()
   RES = SplitByFilesAndEvents(LFNS,70)
-  print RES['Value'][1]
+  print(RES['Value'][1])

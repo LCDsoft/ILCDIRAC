@@ -1,5 +1,6 @@
 """Job Information"""
 
+from __future__ import print_function
 from pprint import pformat
 from itertools import izip_longest
 from DIRAC import gLogger
@@ -154,11 +155,11 @@ class JobInfo( object ):
     try:
       self.taskID = int(jdlParameters.get( 'TaskID', None ))
     except ValueError:
-      print "*"*80
-      print "ERROR"
-      print jdlParameters.get( 'TaskID', None )
-      print self
-      print "*"*80
+      print("*" * 80)
+      print("ERROR")
+      print(jdlParameters.get('TaskID', None))
+      print(self)
+      print("*" * 80)
       raise
 
   def setJobDone( self , tInfo ):

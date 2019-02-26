@@ -1,3 +1,5 @@
+"""Akiyas script for replication."""
+from __future__ import print_function
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
@@ -32,15 +34,15 @@ from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 
 proxyinfo = getProxyInfo()
 if not proxyinfo['OK']:
-  print "Not allowed to create production, you need a ilc_prod proxy: use dirac-proxy-init -g ilc_prod"
+  print("Not allowed to create production, you need a ilc_prod proxy: use dirac-proxy-init -g ilc_prod")
   exit(1)
 if 'group' in proxyinfo['Value']:
   group = proxyinfo['Value']['group']
   if not group == "ilc_prod":
-    print "Not allowed to create production, you need a ilc_prod proxy: use dirac-proxy-init -g ilc_prod"
+    print("Not allowed to create production, you need a ilc_prod proxy: use dirac-proxy-init -g ilc_prod")
     exit(1)
 else:
-  print "Could not determine group, you do not have the right proxy: use dirac-proxy-init -g ilc_prod"
+  print("Could not determine group, you do not have the right proxy: use dirac-proxy-init -g ilc_prod")
   exit(1)
 
 fc = FileCatalogClient()
@@ -66,25 +68,25 @@ if machineparams:
 
 res = fc.findFilesByMetadata(meta)
 if not res['OK']:
-  print "Something went wrong when finding the files: %s" % res['Message']
+  print("Something went wrong when finding the files: %s" % res['Message'])
   exit(1)
 
 lfns = res['Value']
 if not len(lfns):
-  print "No files found with this meta data query:%s" % meta
+  print("No files found with this meta data query:%s" % meta)
   exit(1)
 
-print "Example file: %s" % lfns[0]
+print("Example file: %s" % lfns[0])
 
 answer = raw_input('Proceed and submit replication? (Y/N): ')
 if not answer.lower() in ('y', 'yes'):
-  print "Canceled"
+  print("Canceled")
   exit(1)
 
 trc = TransformationClient()
 res = trc.getTransformationStats(name_of_replication)
 if res['OK']:
-  print "Replication with name %s already exists! Cannot proceed." % name_of_replication
+  print("Replication with name %s already exists! Cannot proceed." % name_of_replication)
   exit(1)
   
 Trans = Transformation()
@@ -98,7 +100,7 @@ Trans.setSourceSE(source)
 Trans.setTargetSE(destination)
 res = Trans.addTransformation()
 if not res['OK']:
-  print "Failed to add Replication: %s" % res['Message']
+  print("Failed to add Replication: %s" % res['Message'])
   exit(1)
 Trans.setStatus("Active")
 Trans.setAgentType("Automatic")

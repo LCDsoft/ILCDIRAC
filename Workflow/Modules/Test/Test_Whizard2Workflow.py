@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Test the Whizard2 WorkflowModule"""
 
+from __future__ import print_function
 import __builtin__
 import unittest
 import os
@@ -71,7 +72,7 @@ class TestWhizard2AnalysisRunit( TestWhizard2Analysis ):
     ## side effect for Script, userlibs, log, logAfter
     with patch("os.path.exists", new=Mock(side_effect=[False, False, False, True] ) ):
       res = self.whiz.runIt()
-    print res
+    print(res)
     assertDiracSucceeds( res, self )
 
   @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("setup.sh") ) )
@@ -284,7 +285,7 @@ def runTests():
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestWhizard2AnalysisRunit ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestWhizard2AnalysisASI ) )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
 if __name__ == '__main__':
   runTests()

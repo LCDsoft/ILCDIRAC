@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """ Test the UserJobFinalization module """
 
+from __future__ import print_function
 import os
 import unittest
 from mock import patch, call, mock_open, MagicMock as Mock
@@ -522,7 +523,7 @@ def main():
   app_spec_suite = unittest.TestLoader().loadTestsFromTestCase( TestUserJobFinalization )
   execute_suite = unittest.TestLoader().loadTestsFromTestCase( TestExecute )
   userjobsuite = unittest.TestSuite( [ app_spec_suite, execute_suite ] )
-  print unittest.TextTestRunner( verbosity = 2 ).run( userjobsuite )
+  print(unittest.TextTestRunner(verbosity=2).run(userjobsuite))
 
 if __name__ == '__main__':
   main()

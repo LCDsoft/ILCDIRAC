@@ -3,6 +3,7 @@
 """
 Make a RemovalRequest for the new System
 """
+from __future__ import print_function
 __RCSID__ = "$Id$"
 
 from DIRAC.Core.Base import Script
@@ -37,10 +38,10 @@ def myRequest():
   if not isValid['OK']:
     raise RuntimeError( "Failover request is not valid: %s" % isValid['Message'] )
   else:
-    print "It is a GOGOGO"
+    print("It is a GOGOGO")
     requestClient = ReqClient()
     result = requestClient.putRequest( request )
-    print result
+    print(result)
 
 if __name__ == "__main__":
   myRequest()

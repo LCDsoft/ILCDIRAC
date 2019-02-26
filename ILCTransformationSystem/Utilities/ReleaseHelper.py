@@ -2,6 +2,7 @@
 Helper methods to create proper tarballs
 """
 
+from __future__ import print_function
 import os
 import commands
 import re
@@ -30,11 +31,11 @@ def getFiles( folder, ext ):
 
 def copyLibraries( files, targetFolder, ):
   """rsync all the files to the targetFolder """
-  print "Copying files to",targetFolder
+  print("Copying files to", targetFolder)
   listOfFiles = " ".join(files)
   status, copyOut = commands.getstatusoutput( RSYNCBASE+" -avzL  %s %s " % ( listOfFiles, targetFolder) )
   if status != 0:
-    print copyOut
+    print(copyOut)
     raise RuntimeError( "Error during rsync" )
 
 
@@ -43,13 +44,13 @@ def resolveLinks( targetFolder ):
   cwd = os.getcwd()
   os.chdir(targetFolder)
   files = getFiles( targetFolder, ".so" )
-  print files
+  print(files)
   files = [ os.path.basename(fil) for fil in files ]
-  print "files",files
+  print("files", files)
   for lib in files:
     matchingLib = next(( x for x in files if lib+"." in x), None)
     if matchingLib:
-      print "going to link",lib,"with", matchingLib
+      print("going to link", lib, "with", matchingLib)
       os.remove(lib)
       os.symlink( os.path.basename(matchingLib), os.path.basename(lib) )
   os.chdir(cwd)
@@ -61,14 +62,14 @@ def getLibraryPath( basePath ):
 def copyFolder( basePath, targetFolder ):
   """copy folder basePath to targetFolder """
   commandString = RSYNCBASE+" -avzL  %s %s " % ( basePath, targetFolder)
-  print commandString
+  print(commandString)
   try:
     os.makedirs( targetFolder )
   except OSError:
     pass
   status, copyOut = commands.getstatusoutput( commandString )
   if status != 0:
-    print copyOut
+    print(copyOut)
     raise RuntimeError( "Error during rsync" )
 
 def getPythonStuff( basePath, targetFolder ):
@@ -93,11 +94,11 @@ def removeSystemLibraries( folder ):
     for fil in files:
       if any( lib in fil for lib in systemLibraires):
         fullPath = os.path.join( root, fil )
-        print "Removing:",fullPath
+        print("Removing:", fullPath)
         try:
           os.remove( fullPath )
         except OSError:
-          print "Error to remove",fullPath
+          print("Error to remove", fullPath)
 
 
 
@@ -122,11 +123,11 @@ def getGeant4DataFolders( variable, targetFolder ):
 
 def getRootStuff( rootsys, targetFolder ):
   """copy the root stuff we need """
-  print "Copying Root"
+  print("Copying Root")
   status, copyOut = commands.getstatusoutput( RSYNCBASE+" -av %(rootsys)s/lib %(rootsys)s/etc %(rootsys)s/bin %(rootsys)s/cint  %(targetFolder)s" % dict( rootsys=rootsys,
                                                                                                                                                           targetFolder=targetFolder) )
   if status != 0:
-    print copyOut
+    print(copyOut)
     raise RuntimeError( "Error during rsync" )
 
   libraries = getFiles( targetFolder+"/lib", ".so" )

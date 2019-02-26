@@ -6,7 +6,7 @@ Get the overlay files
 :author: sposs
 '''
 
-
+from __future__ import print_function
 import glob
 import os
 import random
@@ -573,7 +573,7 @@ fi\n""" % (basename, lfile))
     if 'X509_USER_PROXY' in os.environ:
       comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s" % os.getuid()]
       res = subprocess.Popen(comm2, stdout = subprocess.PIPE).communicate()
-      print res
+      print(res)
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
     #logfile = file(self.applicationLog,"w")

@@ -4,7 +4,7 @@ Test Whizard2 module
 
 """
 
-
+from __future__ import print_function
 import linecache
 import unittest
 from mock import patch, MagicMock as Mock
@@ -250,7 +250,7 @@ def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( Whizard2TestCase )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
 if __name__ == '__main__':
   runTests()

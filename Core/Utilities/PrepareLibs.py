@@ -4,6 +4,8 @@ Remove any system library provided in the application tar ball
 :author: sposs
 :since: Jan 26, 2011
 '''
+
+from __future__ import print_function
 __RCSID__ = "$Id$"
 
 import os
@@ -49,13 +51,13 @@ def main():
   """ Main method, executed when this file is executed as a python script """
   import sys
   if not len(sys.argv)>1:
-    print "You need to pass the path"
+    print("You need to pass the path")
     return 1
   PATH = sys.argv[1]
-  print "Will remove from %s the files that look like %s" % (PATH, getLibsToIgnore())
+  print("Will remove from %s the files that look like %s" % (PATH, getLibsToIgnore()))
   
   if not removeLibc(PATH):
-    print "Could not clean libs"
+    print("Could not clean libs")
     return 1
   return 0
 

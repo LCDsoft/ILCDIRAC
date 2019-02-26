@@ -1,6 +1,7 @@
 """Contains general utility methods for unit testing.
 """
 
+from __future__ import print_function
 import os
 import pwd
 
@@ -35,8 +36,8 @@ def assertEqualsXml( elem1, elem2, assertobject ):
 def assertEqualsXmlTree( root1, root2, assertobject ):
   """ Asserts that the two passed XML trees and all their contained elements are equal.
   """
-  print 'root1 = %s, root2 = %s' % (root1, root2)
-  print 'kinder1 = %s, kinder2 = %s' % (list(root1), list(root2))
+  print('root1 = %s, root2 = %s' % (root1, root2))
+  print('kinder1 = %s, kinder2 = %s' % (list(root1), list(root2)))
   assertEqualsXml( root1, root2, assertobject )
   children1 = list( root1 )
   assertEqualsImproved( len( children1 ), len( list(root2) ), assertobject )

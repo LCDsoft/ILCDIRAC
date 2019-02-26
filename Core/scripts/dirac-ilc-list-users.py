@@ -10,6 +10,7 @@ Options:
 
 """
 
+from __future__ import print_function
 __RCSID__ = "$Id$"
 
 from DIRAC import S_OK, S_ERROR, gLogger, exit as dexit
@@ -19,7 +20,7 @@ from DIRAC.Core.Base import Script
 try:
   import suds #pylint: disable=W0611
 except ImportError:
-  print "Run [sudo] easy_install suds"
+  print("Run [sudo] easy_install suds")
   raise
 
 class Params(object):

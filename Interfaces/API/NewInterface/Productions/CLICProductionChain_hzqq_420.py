@@ -6,6 +6,7 @@ Created on Feb 8, 2012
 '''
 #pylint: skip-file
 #pylint: disable=C0103
+from __future__ import print_function
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
@@ -161,7 +162,7 @@ for proddict in prodlist:
   elif energy == 250.:
       spectrum = 20
   else:
-      print "No spectrum defined, cannot proceed"
+      print("No spectrum defined, cannot proceed")
       raise RuntimeError("1")
   
   
@@ -243,7 +244,7 @@ for proddict in prodlist:
     stdhepc = StdhepCut()
     stdhepc.setVersion("V7")
   if cut and not cutfile:
-      print "No cut file defined, cannot proceed"
+      print("No cut file defined, cannot proceed")
       raise RuntimeError("1")
   stdhepc.setSteeringFile(cutfile)
   stdhepc.setMaxNbEvts(n_keep)
@@ -263,7 +264,7 @@ for proddict in prodlist:
   elif energy in [3000., 1400.]:
     mo.setSteeringFile("clic_ild_cdr.steer")
   else:
-    print 'Detector Model for Mokka undefined for this energy'  
+    print('Detector Model for Mokka undefined for this energy')
   if detectormodel=='ild_00':
     mo.setSteeringFile("ild_00.steer")
 
@@ -305,7 +306,7 @@ for proddict in prodlist:
     overlay.setGGToHadInt(1.3)##When running at 1.4TeV
     overlay.setDetectorModel("CLIC_ILD_CDR")
   else:
-    print "Overlay ILD: No overlay parameters defined for this energy"  
+    print("Overlay ILD: No overlay parameters defined for this energy")
   
   ##Reconstruction ILD with overlay
   mao = Marlin()
@@ -328,7 +329,7 @@ for proddict in prodlist:
       mao.setSteeringFile("clic_ild_cdr_steering_overlay_1400.0.xml")
       mao.setGearFile('clic_ild_cdr.gear')
     else:
-      print "Marlin: No reconstruction suitable for this energy"
+      print("Marlin: No reconstruction suitable for this energy")
   
   
   ##Reconstruction w/o overlay
@@ -343,7 +344,7 @@ for proddict in prodlist:
       ma.setSteeringFile("clic_ild_cdr_steering.xml")
       ma.setGearFile('clic_ild_cdr.gear')
     else:
-      print "Marlin: No reconstruction suitable for this energy"
+      print("Marlin: No reconstruction suitable for this energy")
   
   ## SID Reco w/o overlay
   lcsim_prepandora = LCSIM()
@@ -383,7 +384,7 @@ for proddict in prodlist:
     overlay_sid.setBXOverlay(60)
     overlay_sid.setGGToHadInt(1.3)##When running at 1.4TeV
   else:
-    print "Overlay SID: No overlay parameters defined for this energy"  
+    print("Overlay SID: No overlay parameters defined for this energy")
   overlay_sid.setDetectorModel("CLIC_SID_CDR")
   
   
@@ -394,7 +395,7 @@ for proddict in prodlist:
   elif energy == 1400.0:   
     lcsim_prepandora_ov.setSteeringFile("clic_cdr_prePandoraOverlay_1400.0.lcsim")
   else:
-    print "LCSIM: No steering files defined for this energy"
+    print("LCSIM: No steering files defined for this energy")
     
   lcsim_prepandora_ov.setTrackingStrategy("defaultStrategies_clic_sid_cdr.xml")
   #lcsim_prepandora_ov.setDetectorModel('clic_sid_cdr')
@@ -434,13 +435,13 @@ for proddict in prodlist:
     pwh.setProdGroup(analysis+"_"+str(energy))
     res = pwh.append(wh)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     
     if cut:
         res = pwh.append(stdhepc)
         if not res['OK']:
-            print res['Message']
+            print(res['Message'])
             raise RuntimeError("1")
     
     pwh.addFinalization(True,True,True,True)
@@ -456,14 +457,14 @@ for proddict in prodlist:
     
     res = pwh.createProduction()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         
     pwh.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
                                  "EPA_B1":proddict['epa_b1'], "EPA_B2":proddict['epa_b2']})
     
     res = pwh.finalizeProd()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     pwh.setNbOfTasks(1)
     ##The production is created, one can now take care of the second step:
@@ -477,7 +478,7 @@ for proddict in prodlist:
     pstdhepsplit.setProdType('Split')
     res = pstdhepsplit.setInputDataQuery(meta)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     pstdhepsplit.setOutputSE("CERN-SRM")
     wname = process+"_"+str(energy)+"_split"
@@ -488,7 +489,7 @@ for proddict in prodlist:
     #Add the application
     res = pstdhepsplit.append(stdhepsplit)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     pstdhepsplit.addFinalization(True,True,True,True)
     descrp = "Splitting stdhep files"
@@ -500,14 +501,14 @@ for proddict in prodlist:
     
     res = pstdhepsplit.createProduction()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         
     pstdhepsplit.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
                                  "EPA_B1":proddict['epa_b1'], "EPA_B2":proddict['epa_b2']})
 
     res = pstdhepsplit.finalizeProd()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     #As before: get the metadata for this production to input into the next
     meta = pstdhepsplit.getMetadata()
@@ -521,7 +522,7 @@ for proddict in prodlist:
     pmo.setProdType('MCSimulation')
     res = pmo.setInputDataQuery(meta)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     pmo.setOutputSE("CERN-SRM")
     wname = process+"_"+str(energy)+"_ild_sim"
@@ -531,7 +532,7 @@ for proddict in prodlist:
     #Add the application
     res = pmo.append(mo)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     pmo.addFinalization(True,True,True,True)
     if energy >550.:
@@ -543,7 +544,7 @@ for proddict in prodlist:
     pmo.setDescription(descrp)
     res = pmo.createProduction()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         
     pmo.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
                                  "EPA_B1":proddict['epa_b1'], "EPA_B2":proddict['epa_b2']})
@@ -551,7 +552,7 @@ for proddict in prodlist:
         
     res = pmo.finalizeProd()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     #As before: get the metadata for this production to input into the next
     meta = pmo.getMetadata()
@@ -565,7 +566,7 @@ for proddict in prodlist:
     psl.setProdType('MCSimulation')
     res = psl.setInputDataQuery(meta)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     psl.setOutputSE("CERN-SRM")
     wname = process+"_"+str(energy)+"_sid_sim"
@@ -575,7 +576,7 @@ for proddict in prodlist:
     #Add the application
     res = psl.append(slic)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     psl.addFinalization(True,True,True,True)
     descrp = "CLIC_SID_CDR model"
@@ -585,14 +586,14 @@ for proddict in prodlist:
   
     res = psl.createProduction()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         
     psl.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
                                  "EPA_B1":proddict['epa_b1'], "EPA_B2":proddict['epa_b2']})    
             
     res = psl.finalizeProd()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     #As before: get the metadata for this production to input into the next
     meta = psl.getMetadata()
@@ -608,7 +609,7 @@ for proddict in prodlist:
     psplit.setDestination("LCG.CERN.ch")
     res = psplit.setInputDataQuery(meta)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     psplit.setOutputSE("CERN-SRM")
     wname = process+"_"+str(energy)+"_split"
@@ -619,7 +620,7 @@ for proddict in prodlist:
     #Add the application
     res = psplit.append(split)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     psplit.addFinalization(True,True,True,True)
     descrp = "Splitting slcio files"
@@ -629,13 +630,13 @@ for proddict in prodlist:
     
     res = psplit.createProduction()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
     psplit.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
                                     "EPA_B1":proddict['epa_b1'], "EPA_B2":proddict['epa_b2']})
     
     res = psplit.finalizeProd()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     #As before: get the metadata for this production to input into the next
     meta = psplit.getMetadata()
@@ -649,7 +650,7 @@ for proddict in prodlist:
     pma.setProdType('MCReconstruction')
     res = pma.setInputDataQuery(meta)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     pma.setOutputSE("CERN-SRM")
     wname = process+"_"+str(energy)+"_ild_rec"
@@ -660,7 +661,7 @@ for proddict in prodlist:
     #Add the application
     res = pma.append(ma)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     pma.addFinalization(True,True,True,True)
     if energy >550.:
@@ -673,13 +674,13 @@ for proddict in prodlist:
     
     res = pma.createProduction()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
     pma.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
                                  "EPA_B1":proddict['epa_b1'], "EPA_B2":proddict['epa_b2']})
     
     res = pma.finalizeProd()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
   
   if sid_rec and meta:
@@ -692,7 +693,7 @@ for proddict in prodlist:
     psidrec.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
     res = psidrec.setInputDataQuery(meta)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     psidrec.setOutputSE("CERN-SRM")
     wname = process+"_"+str(energy)+"_sid_rec"
@@ -701,15 +702,15 @@ for proddict in prodlist:
     psidrec.setProdGroup(analysis+"_"+str(energy))
     res = psidrec.append(lcsim_prepandora)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     res = psidrec.append(slicpandora)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     res = psidrec.append(lcsim_postpandora)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     psidrec.addFinalization(True,True,True,True)
     descrp = "CLIC_SID_CDR, No overlay"
@@ -719,14 +720,14 @@ for proddict in prodlist:
     
     res = psidrec.createProduction()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         
     psidrec.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
                                  "EPA_B1":proddict['epa_b1'], "EPA_B2":proddict['epa_b2']})
     
     res = psidrec.finalizeProd()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
   
   if ild_rec_ov and meta:
@@ -738,7 +739,7 @@ for proddict in prodlist:
     pmao.setProdType('MCReconstruction_Overlay')
     res = pmao.setInputDataQuery(meta)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     pmao.setOutputSE("CERN-SRM")
     wname = process+"_"+str(energy)+"_ild_rec_overlay"
@@ -749,12 +750,12 @@ for proddict in prodlist:
     #Add the application
     res = pmao.append(overlay)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     #Add the application
     res = pmao.append(mao)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     pmao.addFinalization(True,True,True,True)
     if energy >550.:
@@ -766,14 +767,14 @@ for proddict in prodlist:
     pmao.setDescription( descrp ) 
     res = pmao.createProduction()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         
     pmao.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
                                   "EPA_B1":proddict['epa_b1'], "EPA_B2":proddict['epa_b2']})
     
     res = pmao.finalizeProd()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
   
   if sid_rec_ov and meta:
@@ -786,7 +787,7 @@ for proddict in prodlist:
     psidreco.setBannedSites(['LCG.Bristol.uk','LCG.RAL-LCG2.uk'])
     res = psidreco.setInputDataQuery(meta)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     psidreco.setOutputSE("CERN-SRM")
     wname = process+"_"+str(energy)+"_sid_rec_overlay"
@@ -795,19 +796,19 @@ for proddict in prodlist:
     psidreco.setProdGroup(analysis+"_"+str(energy))
     res = psidreco.append(overlay_sid)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     res = psidreco.append(lcsim_prepandora_ov)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     res = psidreco.append(slicpandora_ov)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     res = psidreco.append(lcsim_postpandora_ov)
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
     psidreco.addFinalization(True,True,True,True)
     descrp = "CLIC_SID_CDR, overlay"
@@ -817,13 +818,13 @@ for proddict in prodlist:
     
     res = psidreco.createProduction()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
     psidreco.addMetadataToFinalFiles({"BeamParticle1":proddict['pname1'], "BeamParticle2":proddict['pname2'],
                                  "EPA_Beam1":proddict['epa_b1'], "EPA_Beam2":proddict['epa_b2']}) 
         
     res = psidreco.finalizeProd()
     if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         raise RuntimeError("1")
       
   ##In principle nothing else is needed.

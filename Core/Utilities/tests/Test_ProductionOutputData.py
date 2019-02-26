@@ -1,5 +1,6 @@
 """Tests for .Core.Utilities.ProductionData.constructProductionLFNs"""
 
+from __future__ import print_function
 import unittest
 from ILCDIRAC.Core.Utilities.ProductionData import constructProductionLFNs
 
@@ -72,7 +73,7 @@ def runTests():
   """runs all the tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( ProductionOutputDataTestCase )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
 if __name__ == '__main__':
   runTests()

@@ -10,6 +10,7 @@ This is currently done on the job definition side
 :author: Stephane Poss
 '''
 
+from __future__ import print_function
 from xml.etree.ElementTree                                import ElementTree, fromstring
 from ILCDIRAC.Core.Utilities.GeneratorModels              import GeneratorModels
 
@@ -806,9 +807,9 @@ def main():
   wh = WhizardOptions(model)
   res = wh.fromWhizardDotIn(fname)
   if not res['OK']:
-    print "Error:",res['Message']
+    print("Error:", res['Message'])
     if res['Message'].count("parameter_input"):
-      print "Maybe you are trying to set a mass that will be overwritten by a LesHouches file?"
+      print("Maybe you are trying to set a mass that will be overwritten by a LesHouches file?")
     return 1
 
   pp = pprint.PrettyPrinter(indent=2)

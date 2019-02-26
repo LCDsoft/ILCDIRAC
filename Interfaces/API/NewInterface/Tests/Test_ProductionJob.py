@@ -4,6 +4,7 @@ Test user jobfinalization
 
 """
 
+from __future__ import print_function
 import unittest
 from decimal import Decimal
 from mock import patch, mock_open, MagicMock as Mock
@@ -690,7 +691,7 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
 
   def hasAttrMocks( self, *args, **kwargs ): #pylint: disable=unused-argument
     """ mock the operations getConfig calls """
-    print "arguments",args, kwargs
+    print("arguments", args, kwargs)
     opsDict={
       'extraCLIArguments': False,
       'detectorModel': False,
@@ -706,7 +707,7 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
 
   def hasAttrMocks_2( self, *args, **kwargs ): #pylint: disable=unused-argument
     """ mock the operations getConfig calls """
-    print "arguments",args, kwargs
+    print("arguments", args, kwargs)
     opsDict={
       'extraCLIArguments': False,
       'detectorModel': False,
@@ -891,7 +892,7 @@ def runTests():
   alltests.addTest( unittest.makeSuite( ProductionJobSetInputDataQuery ) )
   alltests.addTest( unittest.makeSuite( ProductionJobJobSpecificParamsTest ) )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( alltests )
-  print testResult
+  print(testResult)
 
 if __name__ == '__main__':
   runTests()

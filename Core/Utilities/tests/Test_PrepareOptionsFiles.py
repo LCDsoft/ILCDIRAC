@@ -2,6 +2,7 @@
 tests for PrepareOptionFiles
 
 """
+from __future__ import print_function
 import unittest
 import os
 import filecmp
@@ -46,7 +47,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
       try:
         os.remove( rFile )
       except OSError as e:
-        print "Error removing %s: %s " % ( rFile, str(e) )
+        print("Error removing %s: %s " % (rFile, str(e)))
 
   def createInputMacFile(self):
     """create the input macfile for the test"""
@@ -95,7 +96,7 @@ class TestPrepareOptionsFile( unittest.TestCase ):
   def compareMacFiles(self):
     """create the new macfile with the expected one"""
     res = filecmp.cmp( self.outputmac, self.referenceMacfile )
-    print "Compare mac files" , res
+    print("Compare mac files", res)
     return res
 
   def test_prepMacFile1(self):
@@ -913,8 +914,8 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
       current_tree = TestPrepareOptionsFile.current_tree
       drivers = current_tree.findall('drivers/driver')
       flag = False
-      print 'in test'
-      print drivers
+      print('in test')
+      print(drivers)
       for d in drivers:
         if 'type' in d.attrib and d.attrib['type'] == 'org.lcsim.util.loop.LCIODriver' and d.attrib['name'] == 'RECWriter':
           expected_element = ET.Element('outputFilePath')
@@ -1564,4 +1565,4 @@ def create_testdict():
 if __name__ == "__main__":
   SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestPrepareOptionsFile )
   TESTRESULT = unittest.TextTestRunner( verbosity = 2 ).run( SUITE )
-  print TESTRESULT
+  print(TESTRESULT)
