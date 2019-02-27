@@ -195,7 +195,7 @@ class StdHepCutTestCase( unittest.TestCase ):
       self.assertFalse( remove_mock.called )
       shell_mock.assert_called_once_with( 0, 'sh -c "./my_test_script.sh"',
                                           callbackFunction = self.shc.redirectLogOutput, bufferLimit = 20971520 )
-      chmod_mock.assert_called_once_with( 'my_test_script.sh', 0755 )
+      chmod_mock.assert_called_once_with('my_test_script.sh', 0o755)
       prep_mock.assert_called_once_with( 'SoftDir' )
 
   def test_runit_missing_numbers( self ):

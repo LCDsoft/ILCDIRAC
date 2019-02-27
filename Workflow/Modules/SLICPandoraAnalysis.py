@@ -179,7 +179,7 @@ fi
     if os.path.exists(self.applicationLog): 
       os.remove(self.applicationLog)
 
-    os.chmod(scriptName, 0755)
+    os.chmod(scriptName, 0o755)
     comm = 'sh -c "./%s"' % (scriptName)
     self.setApplicationStatus('SLICPandora %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''
@@ -245,6 +245,6 @@ fi
       script.write('declare -x LD_LIBRARY_PATH=$ROOTSYS/lib:%s/LDLibs:%s\n' % (myslicPandoraDir, new_ld_lib_path))
       script.write('declare -x PANDORASETTINGSDIR=%s/Settings\n' % myslicPandoraDir)
       script.write("declare -x PATH=%s:$PATH\n" % prefixpath )
-    os.chmod(env_script_name, 0755)
+    os.chmod(env_script_name, 0o755)
     return S_OK(os.path.abspath(env_script_name))
 

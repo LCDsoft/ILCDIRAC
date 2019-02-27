@@ -133,7 +133,7 @@ class Whizard2Analysis(ModuleBase):
     if os.path.exists(self.applicationLog):
       os.remove(self.applicationLog)
 
-    os.chmod(scriptName, 0755)
+    os.chmod(scriptName, 0o755)
     comm = 'bash "./%s"' % scriptName
     self.setApplicationStatus('Whizard2 %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''

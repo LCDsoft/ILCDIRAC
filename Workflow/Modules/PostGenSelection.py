@@ -111,7 +111,7 @@ class PostGenSelection(ModuleBase):
     script.write('declare -x appstatus=$?\n')    
     script.write('exit $appstatus\n')
     script.close()
-    os.chmod(scriptName, 0755)
+    os.chmod(scriptName, 0o755)
     comm = 'sh -c "./%s"' % (scriptName)    
     self.setApplicationStatus('PostGenSelection_Read %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''
@@ -148,7 +148,7 @@ class PostGenSelection(ModuleBase):
     script.write('declare -x appstatus=$?\n')    
     script.write('exit $appstatus\n')
     script.close()
-    os.chmod(scriptName, 0755)
+    os.chmod(scriptName, 0o755)
     comm = 'sh -c "./%s"' % (scriptName)    
     self.setApplicationStatus('PostGenSelection_Write %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''

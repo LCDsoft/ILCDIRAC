@@ -343,7 +343,7 @@ class TestOverlayUnittests( unittest.TestCase ):
       shell_mock.assert_called_with( 600, 'sh -c "./overlayinput.sh"',
                                      bufferLimit = 20971520,
                                      callbackFunction = self.over.redirectLogOutput )
-      chmod_mock.assert_called_with( 'overlayinput.sh', 0755 )
+      chmod_mock.assert_called_with('overlayinput.sh', 0o755)
       if unlink_called:
         remove_mock.assert_called_with( 'overlayinput.sh' )
       else:

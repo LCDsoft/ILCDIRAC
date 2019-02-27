@@ -240,7 +240,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
       lines.append('source %s > /dev/null' % env_script_path)
       lines.append('echo $MARLIN_DLL')
       script.write("\n".join(lines))
-    os.chmod("temp.sh", 0755)
+    os.chmod("temp.sh", 0o755)
     res = shellCall(0, "./temp.sh")
     if not res['OK']:
       LOG.error("Could not get the MARLIN_DLL env")
@@ -383,7 +383,7 @@ fi
     if os.path.exists(self.applicationLog): 
       os.remove(self.applicationLog)
 
-    os.chmod(scriptName, 0755)
+    os.chmod(scriptName, 0o755)
     comm = 'sh -c "./%s"' % (scriptName)
     self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''

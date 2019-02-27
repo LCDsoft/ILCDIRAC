@@ -171,7 +171,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       call.getFile('mytestMODEL'), call.getFile('mytestMODEL') ]
     expected_getops = []
     expected_remove = []
-    expected_chmod = [ call( 'Whizard_myTestV1_Run_testStep12.sh', 0755 ) ]
+    expected_chmod = [call('Whizard_myTestV1_Run_testStep12.sh', 0o755)]
     expected_appstat = [ call( 'Whizard myTestV1 step testStep12'),
                          call( 'Whizard myTestV1 Successful' ) ]
     expected_exists = [ call( 'LesHouches.msugra_1.in' ),
@@ -747,7 +747,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
         'whizard --simulation_input \'write_events_file = \"myTestEvents\"\' extraTestCLIargs 2>/dev/null\n',
         'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       chmod_mock.assert_called_once_with( 'Whizard_myTestV1_Run_testStep12.sh',
-                                          0755 )
+                                          0o755)
       shell_mock.assert_called_once_with( 0, 'sh -c "./Whizard_myTestV1_Run_testStep12.sh"',
                                           callbackFunction = self.wha.redirectLogOutput,
                                           bufferLimit=209715200 )
@@ -841,7 +841,7 @@ class WhizardAnalysisTestCase( unittest.TestCase ):
       for (expected, handle) in zip( expected_calls, handles):
         assertEqualsImproved( handle.write.mock_calls, expected, self )
       chmod_mock.assert_called_once_with( 'Whizard_myTestV1_Run_testStep12.sh',
-                                          0755 )
+                                          0o755)
       shell_mock.assert_called_once_with( 0, 'sh -c "./Whizard_myTestV1_Run_testStep12.sh"',
                                           callbackFunction = self.wha.redirectLogOutput,
                                           bufferLimit=209715200 )
@@ -964,7 +964,7 @@ def check_logfiles( file_contents, assertobject ):
     for (expected, handle) in zip( expected_calls, handles ):
       assertEqualsImproved( handle.write.mock_calls, expected, assertobject )
     chmod_mock.assert_called_once_with( 'Whizard_myTestV1_Run_testStep12.sh',
-                                        0755 )
+                                        0o755)
     shell_mock.assert_called_once_with( 0, 'sh -c "./Whizard_myTestV1_Run_testStep12.sh"',
                                         callbackFunction = assertobject.wha.redirectLogOutput,
                                         bufferLimit=209715200 )

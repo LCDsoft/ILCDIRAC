@@ -58,7 +58,7 @@ class TestRootExecutableAnalysis( unittest.TestCase ):
         'env | sort >> localEnv.log\n', 'echo =============================\n',
         'my_testscript123.sh mytest args 123 extra test_args\n', 'declare -x appstatus=$?\n',
         'exit $appstatus\n' ], self )
-      chmod_mock.assert_called_once_with( 'Root_v123_Run_13.sh', 0755 )
+      chmod_mock.assert_called_once_with('Root_v123_Run_13.sh', 0o755)
       cmd_mock.assert_called_once_with( 0, 'sh -c "./Root_v123_Run_13.sh"',
                                         callbackFunction = self.rea.redirectLogOutput,
                                         bufferLimit = 20971520 )
@@ -131,7 +131,7 @@ class TestRootExecutableAnalysis( unittest.TestCase ):
         'env | sort >> localEnv.log\n', 'echo =============================\n', 'chmod u+x my_testscript123.sh\n',
         './my_testscript123.sh mytest args 123 extra test_args\n', 'declare -x appstatus=$?\n',
         'exit $appstatus\n' ], self )
-      chmod_mock.assert_called_once_with( 'Root_v123_Run_13.sh', 0755 )
+      chmod_mock.assert_called_once_with('Root_v123_Run_13.sh', 0o755)
       cmd_mock.assert_called_once_with( 0, 'sh -c "./Root_v123_Run_13.sh"',
                                         callbackFunction = self.rea.redirectLogOutput,
                                         bufferLimit = 20971520 )

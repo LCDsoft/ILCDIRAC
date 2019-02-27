@@ -110,7 +110,7 @@ class StdHepCut(ModuleBase):
 
     if os.path.exists(self.applicationLog): 
       os.remove(self.applicationLog)
-    os.chmod(self.scriptName, 0755)
+    os.chmod(self.scriptName, 0o755)
     comm = 'sh -c "./%s"' % (self.scriptName)    
     self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''

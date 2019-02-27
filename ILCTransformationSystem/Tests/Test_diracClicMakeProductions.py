@@ -310,7 +310,7 @@ def test_createSplitProduction(theChain, pMockMod):
   """Test creating the splitting production."""
   task = Task(metaInput={'ProdID': '23', 'Energy': '350'},
               parameterDict=theChain.getParameterDictionary('MI6')[0],
-              eventsPerJob=007,
+              eventsPerJob=0o07,
               eventsPerBaseFile=700,
               )
   with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=pMockMod):
@@ -499,7 +499,7 @@ def test_createTransformations_2(theChain):
 
   task = Task(metaInput={'ProdID': '23', 'Energy': '350'},
               parameterDict=theChain.getParameterDictionary('MI6')[0],
-              eventsPerJob=007,
+              eventsPerJob=0o07,
               eventsPerBaseFile=700,
               )
   taskDict = defaultdict(list)

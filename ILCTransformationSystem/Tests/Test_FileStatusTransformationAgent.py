@@ -32,16 +32,16 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.tClient.setTaskStatus = MagicMock()
     self.fstAgent.enabled = True
 
-    self.fakeTransID = 1L
+    self.fakeTransID = 1
 
     self.failedTask = {'TargetSE': 'DESY-SRM',
-                       'TransformationID': 400103L,
+                       'TransformationID': 400103,
                        'ExternalStatus': 'Failed',
                        'ExternalID': 0,
                        'TaskID': 0}
 
     self.doneTask = {'TargetSE': 'DESY-SRM',
-                     'TransformationID': 400103L,
+                     'TransformationID': 400103,
                      'ExternalID': 1,
                      'ExternalStatus': 'Done',
                      'TaskID': 1}

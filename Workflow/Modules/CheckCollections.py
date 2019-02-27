@@ -134,7 +134,7 @@ exit $$appstatus
 
     # Run code
 
-    os.chmod( scriptPath, 0755 )
+    os.chmod(scriptPath, 0o755)
 
     command = '"./%s"' % ( scriptPath )
 

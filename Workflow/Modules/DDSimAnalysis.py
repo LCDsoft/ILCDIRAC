@@ -176,7 +176,7 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     if os.path.exists(self.applicationLog):
       os.remove(self.applicationLog)
 
-    os.chmod(scriptName, 0755)
+    os.chmod(scriptName, 0o755)
     comm = 'bash "./%s"' % scriptName
     self.setApplicationStatus('DDSim %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''
@@ -271,7 +271,7 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
       scriptFile.write( "\n".join(script) )
       scriptFile.write( "\n" )
 
-    os.chmod(envName, 0755)
+    os.chmod(envName, 0o755)
     return S_OK(os.path.abspath(envName))
 
   def _determineRandomSeed(self):
