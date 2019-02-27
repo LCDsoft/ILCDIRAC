@@ -54,7 +54,7 @@ def main():
     LOG.error("You need to pass the path")
     return 1
   PATH = sys.argv[1]
-  LOG.info("Will remove from %s the files that look like %s" % (PATH, getLibsToIgnore()))
+  LOG.notice("Will remove from %s the files that look like %s" % (PATH, getLibsToIgnore()))
   
   if not removeLibc(PATH):
     LOG.error("Could not clean libs")

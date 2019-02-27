@@ -22,7 +22,7 @@ def getNewProxy( group = "ilc_prod" ):
   :param str group: dirac group of the proxy to get
   :returns: statuscode of the dirac-proxy-init call: 0 success, otherwise error!
   """
-  LOG.info('Getting production proxy ...')
+  LOG.notice('Getting production proxy ...')
   return call( [ 'dirac-proxy-init', '-g', group ] )
 
 def checkAndGetProdProxy():

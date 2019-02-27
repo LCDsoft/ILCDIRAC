@@ -79,4 +79,4 @@ if __name__=="__main__":
   LFNS = RES['Value']
   LFNS.sort()
   RES = SplitByFilesAndEvents(LFNS,70)
-  LOG.info(RES['Value'][1])
+  LOG.notice(RES['Value'][1])
