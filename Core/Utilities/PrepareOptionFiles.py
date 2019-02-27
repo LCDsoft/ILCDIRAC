@@ -478,7 +478,7 @@ def prepareLCSIMFile(inputlcsim, outputlcsim, numberofevents,
   try:
     tree.parse(inputlcsim)
   except Exception, x:
-    print("Found Exception %s %s" % (Exception, x))
+    LOG.error("Found Exception %s %s" % (Exception, x))
     return S_ERROR("Found Exception %s %s" % (Exception, x))
   if not inputslcio:
     return S_ERROR("Empty input file list")
@@ -750,7 +750,7 @@ def prepareTomatoSalad(inputxml, outputxml, inputSLCIO, outputFile, collection):
   try:
     tree.parse(inputxml)
   except Exception as x:
-    print("Found Exception %r" % x)
+    LOG.error("Found Exception %r" % x)
     return S_ERROR("Found Exception %r" % x)
   params = tree.findall('global/parameter')
   glob = tree.find('global')
