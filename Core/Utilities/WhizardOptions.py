@@ -14,7 +14,9 @@ from __future__ import print_function
 from xml.etree.ElementTree                                import ElementTree, fromstring
 from ILCDIRAC.Core.Utilities.GeneratorModels              import GeneratorModels
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
+
+LOG = gLogger.getSubLogger(__name__)
 
 def getDict():
   """ Get list of available fields in the whizard options.
@@ -807,9 +809,9 @@ def main():
   wh = WhizardOptions(model)
   res = wh.fromWhizardDotIn(fname)
   if not res['OK']:
-    print("Error:", res['Message'])
+    LOG.error(res['Message'])
     if res['Message'].count("parameter_input"):
-      print("Maybe you are trying to set a mass that will be overwritten by a LesHouches file?")
+      LOG.error("Maybe you are trying to set a mass that will be overwritten by a LesHouches file?")
     return 1
 
   pp = pprint.PrettyPrinter(indent=2)

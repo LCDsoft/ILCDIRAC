@@ -51,13 +51,13 @@ def main():
   """ Main method, executed when this file is executed as a python script """
   import sys
   if not len(sys.argv)>1:
-    print("You need to pass the path")
+    LOG.error("You need to pass the path")
     return 1
   PATH = sys.argv[1]
-  print("Will remove from %s the files that look like %s" % (PATH, getLibsToIgnore()))
+  LOG.info("Will remove from %s the files that look like %s" % (PATH, getLibsToIgnore()))
   
   if not removeLibc(PATH):
-    print("Could not clean libs")
+    LOG.error("Could not clean libs")
     return 1
   return 0
 

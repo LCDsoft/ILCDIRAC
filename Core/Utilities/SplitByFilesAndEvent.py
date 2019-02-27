@@ -11,7 +11,9 @@ from __future__ import print_function
 __RCSID__ = "$Id$"
 
 from ILCDIRAC.Core.Utilities.InputFilesUtilities import getNumberOfEvents
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
+
+LOG = gLogger.getSubLogger(__name__)
 
 def SplitByFilesAndEvents(listoffiles, evtsperjob):
   """ Group the input files to have equal number of events per job
@@ -72,9 +74,9 @@ if __name__=="__main__":
 
   RES = FileCatalogClient().findFilesByMetadata({"ProdID":1978})
   if not RES['OK']:
-    print(RES['Message'])
+    LOG.error(RES['Message'])
     exit(1)
   LFNS = RES['Value']
   LFNS.sort()
   RES = SplitByFilesAndEvents(LFNS,70)
-  print(RES['Value'][1])
+  LOG.info(RES['Value'][1])

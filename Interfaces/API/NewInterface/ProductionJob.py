@@ -424,7 +424,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     else: 
       res = Trans.addTransformation()
       if not res['OK']:
-        print(res['Message'])
+        LOG.error(res['Message'])
         return res
       self.transfid = Trans.getTransformationID()['Value']
 
@@ -473,7 +473,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     elif prodid:
       self.transfid = prodid
     if not self.transfid:
-      print("Not transformation defined earlier")
+      LOG.error("Not transformation defined earlier")
       return S_ERROR("No transformation defined")
     if metadata:
       self.inputBKSelection = metadata
@@ -505,7 +505,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     if prodid:
       currtrans = prodid
     if not currtrans:
-      print("Not transformation defined earlier")
+      LOG.error("Not transformation defined earlier")
       return S_ERROR("No transformation defined")
     if prodinfo:
       self.prodparameters = prodinfo
@@ -856,7 +856,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
 
     res = self.fc.getMetadataFields()
     if not res['OK']:
-      print("Could not contact File Catalog")
+      LOG.error("Could not contact File Catalog")
       return S_ERROR("Could not contact File Catalog")
     metaFCkeys = res['Value']['DirectoryMetaFields'].keys()
     if extendFileMeta:

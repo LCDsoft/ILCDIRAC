@@ -9,8 +9,10 @@ Checks and potentially provides production proxy, called from :mod:`~ILCDIRAC.In
 from __future__ import print_function
 from subprocess import call
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
+
+LOG = gLogger.getSubLogger(__name__)
 
 __RCSID__ = "$Id$"
 
@@ -20,7 +22,7 @@ def getNewProxy( group = "ilc_prod" ):
   :param str group: dirac group of the proxy to get
   :returns: statuscode of the dirac-proxy-init call: 0 success, otherwise error!
   """
-  print('Getting production proxy ...')
+  LOG.info('Getting production proxy ...')
   return call( [ 'dirac-proxy-init', '-g', group ] )
 
 def checkAndGetProdProxy():
@@ -48,9 +50,9 @@ def checkOrGetGroupProxy( group ):
     if result['Value']['group'] in groups:
       return S_OK(result['Value']['group'])
     else:
-      print("You don't have an %s proxy, trying to get one..." % group)
+      LOG.error("You don't have an %s proxy, trying to get one..." % group)
   else:
-    print("Error to get proxy information, trying to get proxy")
+    LOG.error("Error to get proxy information, trying to get proxy")
 
   if not len(groups) == 1:
     return S_ERROR("More than one proxy group possible, cannot continue, please get proper proxy")
@@ -64,10 +66,10 @@ def checkOrGetGroupProxy( group ):
     if result['Value']['group'] in groups:
       return S_OK(result['Value']['group'])
     else:
-      print('You do not have a valid group')
+      LOG.error('You do not have a valid group')
       return S_ERROR( "Could not obtain valid group" )
   elif result['OK'] and 'group' not in result['Value']:
     return S_ERROR( "Could not obtain group information from proxy" )
 
-  print('Could not obtain proxy information: %s' % result['Message'])
+  LOG.error('Could not obtain proxy information: %s' % result['Message'])
   return result

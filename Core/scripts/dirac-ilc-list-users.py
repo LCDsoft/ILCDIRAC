@@ -16,11 +16,13 @@ __RCSID__ = "$Id$"
 from DIRAC import S_OK, S_ERROR, gLogger, exit as dexit
 from DIRAC.Core.Base import Script
 
+LOG = gLogger.getSubLogger(__name__)
+
 ##Check if suds exists and print information how to install it
 try:
   import suds #pylint: disable=W0611
 except ImportError:
-  print("Run [sudo] easy_install suds")
+  LOG.error("Run [sudo] easy_install suds")
   raise
 
 class Params(object):
