@@ -22,7 +22,7 @@ LOG = gLogger.getSubLogger(__name__)
 try:
   import suds #pylint: disable=W0611
 except ImportError:
-  LOG.error("Run [sudo] easy_install suds")
+  LOG.error("Run pip install suds_jurko")
   raise
 
 class Params(object):
