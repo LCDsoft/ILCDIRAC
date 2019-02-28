@@ -1,10 +1,10 @@
 """Job Information"""
 
-from __future__ import print_function
 from pprint import pformat
 from itertools import izip_longest
 from DIRAC import gLogger
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class TaskInfoException( Exception ):
@@ -83,8 +83,8 @@ class JobInfo( object ):
       try:
         taskDict = tasksDict[ lfnTaskDict[self.inputFile] ]
       except KeyError as ke:
-        gLogger.error("ERROR for key:", str(ke))
-        gLogger.error("Failed to get taskDict", "%s, %s: %s" % (self.taskID, self.inputFile, pformat(lfnTaskDict)))
+        LOG.error('ERROR for key:', str(ke))
+        LOG.error('Failed to get taskDict', '%s, %s: %s' % (self.taskID, self.inputFile, pformat(lfnTaskDict)))
         raise
       self.otherTasks = lfnTaskDict[self.inputFile]
     else:
@@ -134,8 +134,8 @@ class JobInfo( object ):
       self.inputFile = lfn
       return
     if isinstance(lfn, list):
-      gLogger.warn('InputFile is a list: %s' % self)
-      gLogger.warn('InputFile is a list: %r' % lfn)
+      LOG.warn('InputFile is a list: %s' % self)
+      LOG.warn('InputFile is a list: %r' % lfn)
       if len(lfn) == 1:
         self.inputFile = lfn[0]
         return
@@ -143,17 +143,16 @@ class JobInfo( object ):
 
 
   def __getTaskID( self, jdlParameters ):
-    """get the taskID """
+    """Get the taskID."""
     if 'TaskID' not in jdlParameters:
       return
     try:
-      self.taskID = int(jdlParameters.get( 'TaskID', None ))
+      self.taskID = int(jdlParameters.get('TaskID', None))
     except ValueError:
-      print("*" * 80)
-      print("ERROR")
-      print(jdlParameters.get('TaskID', None))
-      print(self)
-      print("*" * 80)
+      LOG.warn('*' * 80)
+      LOG.warn('TaskID broken?: %r' % jdlParameters.get('TaskID', None))
+      LOG.warn(self)
+      LOG.warn('*' * 80)
       raise
 
   def setJobDone( self , tInfo ):
