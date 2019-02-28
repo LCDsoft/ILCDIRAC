@@ -1,6 +1,7 @@
 """Tests for the ArchiveFiles Operation"""
 
 from functools import partial
+import logging
 import os
 
 import pytest
@@ -12,6 +13,9 @@ from DIRAC.RequestManagementSystem.Client.Operation import Operation
 from DIRAC.RequestManagementSystem.Client.Request import Request
 
 from ILCDIRAC.DataManagementSystem.Agent.RequestOperations import ArchiveFiles
+
+logging.basicConfig(level=logging.WARNING, format='%(levelname)-5s - %(name)-8s: %(message)s')
+LOG = logging.getLogger('TestArchiveFiles')
 
 MODULE = 'ILCDIRAC.DataManagementSystem.Agent.RequestOperations.ArchiveFiles'
 FILE_NAME = 'fileName'
@@ -63,10 +67,10 @@ def multiRetVal(*args, **kwargs):
   for index, lfn in enumerate(lfns):
     if str(kwargs.get('Index', 5)) in lfn:
       retVal['Value']['Failed'][lfn] = kwargs.get('Error', 'Failed to do X')
-      print "Error for ", lfn, retVal['Value']['Failed'][lfn]
+      LOG.error('Error for %s %s', lfn, retVal['Value']['Failed'][lfn])
     else:
       retVal['Value']['Successful'][lfn] = kwargs.get('Success', True)
-      print "Success for ", lfn, retVal['Value']['Successful'][lfn]
+      LOG.info('Success for %s %s', lfn, retVal['Value']['Successful'])
   return retVal
 
 
@@ -151,7 +155,7 @@ def test_run_IgnoreMissingFiles(archiveFiles, myMocker, listOfLFNs):
                                              destinationDir=os.path.join(DEST_DIR, 'MyRequest', 'vo'),
                                              sourceSE='SOURCE-SE')
   for index, opFile in enumerate(archiveFiles.operation):
-    print opFile
+    LOG.debug('%s', opFile)  # lazy evaluation of the argument!
     if index == 5:
       assert opFile.Status == 'Done'
     else:
@@ -237,6 +241,7 @@ def test_checkArchiveLFN(archiveFiles):
   # tarball does not exist
   archiveFiles._checkArchiveLFN()
   archiveFiles.fc.isFile.assert_called_with(archiveLFN)
+
 
 def test_checkArchiveLFN_Fail(archiveFiles):
   archiveLFN = '/vo/tars/myTar.tar'
