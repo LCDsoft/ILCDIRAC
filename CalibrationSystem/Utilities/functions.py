@@ -168,6 +168,7 @@ def makeParameterTable(inFile='testing/FCCee_PfoAnalysis_AAAA_SN_BBBB.xml'):
 
 def updateSteeringFile(inFileName, outFileName, parametersToSetup):
   #FIXME throw error when required parameter is not found in the file
+  #TODO rewrite function: use XPath functionaluty. e.g.: root.find("./processor/[@name='OuterPlanarDigiProcessor']/parameter[@name='IsStrip']")
   tree = et.parse(inFileName)
   root = tree.getroot()
 

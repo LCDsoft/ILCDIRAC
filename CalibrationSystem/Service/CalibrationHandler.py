@@ -5,6 +5,7 @@ distribute reconstruction workloads among them
 """
 
 import os
+import glob
 
 from collections import defaultdict
 import xml.etree.ElementTree as ET
@@ -12,6 +13,7 @@ from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
+from ILCDIRAC.Workflow.Modules.Calibration import Calibration
 
 __RCSID__ = "$Id$"
 
@@ -66,11 +68,13 @@ class CalibrationRun(object):
   the results of each step.
   """
 
-  def __init__(self, steeringFile, ilcsoftPath, inputFiles, numberOfJobs):
+  def __init__(self, calibrationID, steeringFile, ilcsoftPath, inputFiles, numberOfJobs):
+    self.calibrationID = calibrationID
     self.steeringFile = steeringFile
     self.ilcsoftPath = ilcsoftPath
     self.inputFiles = inputFiles
     self.stepResults = defaultdict(CalibrationResult)
+    self.currentStage = 1
     self.currentPhase = CalibrationPhase.ECalDigi
     self.currentStep = 0
     self.currentParameterSet = None
@@ -111,7 +115,7 @@ class CalibrationRun(object):
       curJob.setJobGroup('CalibrationService_calib_job')
 
       # TODO check if the name of module (Calibration) is correct
-      calib = Calibration()
+      calib = Calibration(calibrationID, curWorkerID)
       # FIXME provide marlinVersion and detectorModel
       calib.setVersion(marlinVersion)
       calib.setDetectorModel(detectorModel)
@@ -125,7 +129,7 @@ class CalibrationRun(object):
         return S_ERROR('Failed to setup Calibration worklow module. CalibrationID = %s; WorkerID = %s' % (calibrationID, curWorkerID))
 
       # FIXME should we set any time limit at all?
-      curJob.setCPUTime(3600)
+      curJob.setCPUTime(60 * 60 * 24)
       # FIXME allow user to specify xml-files. CLIC detector have different name of PandoraLikelihhod file than CLD
       inputSB = ['GearOutput.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
       # FIXME implement distribution of slcio files of each category (MUON, KAON, PHOTON) among the jobs
@@ -184,7 +188,7 @@ class CalibrationRun(object):
     if self.currentStep > stepIDOnWorker:
       return S_OK(self.currentParameterSet)
     else:
-      return S_OK('No new parameter set available yet. Current step in service: %s, step on worker: %s' % (self.currentStep, stepIDOnWorker))
+      return S_ERROR('No new parameter set available yet. Current step in service: %s, step on worker: %s' % (self.currentStep, stepIDOnWorker))
 
   def endCurrentStep(self):
     """ Calculates the new parameter set based on the results from the computations and prepares the object
@@ -195,6 +199,7 @@ class CalibrationRun(object):
     self.__calculateNewParamsRoot( self.currentStep )
     self.currentStep += 1
     #if self.currentStep > 15: #FIXME: Implement real stopping criterion
+    #TODO Implement real stopping criterion
     if self.currentStep > 1:  # FIXME: replace with line above after testing
       self.calibrationFinished = True
       #FIXME: Decide how a job finishing should be handled - set this flag to True and have user poll, do something actively here, etc...
@@ -244,9 +249,34 @@ class CalibrationRun(object):
       result[i] = result[i] / float(number_of_elements)
     return result
 
-  def __calculateNewParamsRoot(self, stepID):
+  def __mergePandoraLikelihoodXmlFiles(self, fileNamePattern):
+    folder = "calib%s/stage%s/phase%s/" % (self.calibrationID, self.currentStage, self.currentPhase))
+        filesToMerge=glob.glob(folder + "**/*.xml")
+        outFileName="newPandoraLikelihoodData.xml"
+
+        #TODO how to get platform (e.g. x86_64-slc5-gcc43-opt) and appversion (e.g. ILCSoft-2019-02-20_gcc62)?
+        likelihoodMergeScriptPath=self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
+                                                                                               'pandora_calibration_scripts',
+                                                                                               appversion), None)
+        likelihoodMergeScript=os.path.join(mergeScriptPath, 'MergePandoraLikelihoodData.py')
+
+        import imp
+        mergeModule=imp.load_source('main', likelihoodMergeScript)
+        mergeModule.main(inputFiles = filesToMerge, outputFile = outFileName)
+
+        return binaryFileToString(folder + '/' + outFileName)
+
+        def __calculateNewParamsRoot(self, stepID):
     """ run the pandora executable over the existing root files from the workers for given phase and step """
-    folder = "phase%s/step%s" % (self.currentPhase, stepID)
+        folder="calib%s/stage%s/phase%s/step%s" % (self.calibrationID, self.currentStage, self.currentPhase, stepID))
+        fileNamePattern='pfoanalysis_w*.root'
+        if self.currentStage == 2:
+        fileNamePatter="PandoraLikelihoodDataPhotonTraining_w*.xml"
+        mergedPhotonLikelihoodFile=__mergePandoraLikelihoodXmlFiles(folder + "/" + fileNamePatter)
+        self.currentParameterSet=mergedPhotonLikelihoodFile
+
+
+
 
 
   @executeWithUserProxy
@@ -291,8 +321,8 @@ class CalibrationHandler(RequestHandler):
     """
     CalibrationHandler.calibrationCounter += 1
     calibrationID = CalibrationHandler.calibrationCounter
-    newRun = CalibrationRun(steeringFile, ilcsoftPath, inputFiles, numberOfJobs)
-    CalibrationHandler.activeCalibrations[calibrationID] = newRun
+    newRun=CalibrationRun(calibrationID, steeringFile, ilcsoftPath, inputFiles, numberOfJobs)
+    CalibrationHandler.activeCalibrations[calibrationID]=newRun
     #newRun.submitJobs( calibrationID )
     #return S_OK( calibrationID )
     #FIXME: Check if lock is necessary.(Race condition?)
@@ -304,16 +334,13 @@ class CalibrationHandler(RequestHandler):
       return ret_val
     return S_OK((calibrationID, res))
 
-  auth_submitResult = ['all']
-  types_submitResult = [int, int, int, int, list]
-
-  auth_submitResult = ['authenticated']
-  types_submitResult = [int, int, int, int, basestring]
-
-  def export_submitResult(self, calibrationID, phaseID, stepID, workerID, rootFileContent):
+        auth_submitResult=['authenticated']
+        types_submitResult=[int, int, int, int, int, basestring]
+        def export_submitResult(self, calibrationID, stageID, phaseID, stepID, workerID, rootFileContent):
     """ Called from the worker node to report the result of the calibration to the service
 
     :param int calibrationID: ID of the current calibration run
+    :param int phaseID: ID of the stage the calibration is currently in
     :param int phaseID: ID of the phase the calibration is currently in
     :param int stepID: ID of the step in this calibration
     :param int workerID: ID of the reporting worker
@@ -323,17 +350,22 @@ class CalibrationHandler(RequestHandler):
     :rtype: dict
     """
     #TODO: Fix race condition(if it exists)
+    #TODO: different calibrations will use the same directory?
     calibration = CalibrationHandler.activeCalibrations.get( calibrationID, None )
     if not calibration:
       return S_ERROR( 'Calibration with ID %d not found.' % calibrationID )
-    # Only add result if it belongs to current step. Else ignore (it's ok)
-    if phaseID is calibration.currentPhase and stepID is calibration.currentStep:
+    if stepID is calibration.currentStep:  # Only add result if it belongs to current step. Else ignore (it's ok)
       ## FIXME: use mkdir -p like implementation
       try:
-        os.makedirs("phase%s/step%s" % (phaseID, stepID))
+        os.makedirs("calib%s/stage%s/phase%s/step%s" % (calibrationID, stageID, phaseID, stepID))
       except OSError:
         pass
-      newFilename = "phase%s/step%s/pfoanalysis_%s_%s.root" % (phaseID, stepID, phaseID, stepID)
+      #FIXME filename depends from step (pfoanalysis either PandoraPhotonLikelihood)
+      newFilename="calib%s/stage%s/phase%s/step%s/pfoanalysis_w%s.root" % (
+                                                                           calibrationID, stageID, phaseID, stepID, workerID)
+      if stageID == 2:
+        newFilename="calib%s/stage%s/phase%s/step%s/PandoraLikelihoodDataPhotonTraining_w%s.xml" % (
+                                                                                                    calibrationID, stageID, phaseID, stepID, workerID)
       stringToBinaryFile(rootFileContent, newFilename)
 
       calibration.addResult(stepID, workerID, newFilename)
@@ -355,9 +387,8 @@ class CalibrationHandler(RequestHandler):
         calibration.endCurrentStep()
     return S_OK()
 
-  finishedJobsForNextStep = 0.8 # X% of all jobs must have finished in order for the next step to begin.
-
-  def finalInterimResultReceived(self, calibration, stepID):
+        finishedJobsForNextStep=0.9  # X% of all jobs must have finished in order for the next step to begin.
+        def finalInterimResultReceived(self, calibration, stepID):
     """ Called periodically. Checks for the given calibration if we now have enough results to compute
     a new ParameterSet.
 
@@ -390,9 +421,9 @@ class CalibrationHandler(RequestHandler):
       result = S_ERROR(
           "calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished" % calibrationID)
       return result
-    res = cal.getNewParameters(stepIDOnWorker)
-    res['current_phase'] = cal.currentPhase
-    res['current_step'] = cal.currentStep
+                                                                   res=cal.getNewParameters(stepIDOnWorker)
+                                                                   res['currentPhase']=cal.currentPhase
+                                                                   res['currentStage']=cal.currentStage
     return res
 
   auth_resubmitJobs = ['authenticated']

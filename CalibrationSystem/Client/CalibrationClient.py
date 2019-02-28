@@ -19,13 +19,13 @@ class CalibrationPhase(object):
   """ Represents the different phases a calibration can be in.
   Since Python 2 does not have enums, this is hardcoded for the moment.
   Should this solution not be sufficient any more, one can make a better enum implementation by hand or install a backport of the python3 implementation from PyPi."""
-  ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy = range(6)
+  ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining = range(7)
 
   @staticmethod
   def phaseIDFromString(phase_name):
     """ Returns the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: ID of this phase
     :rtype: int
     """
@@ -41,6 +41,8 @@ class CalibrationPhase(object):
       return 4
     elif phase_name == 'HadronicEnergy':
       return 5
+    elif phase_name == 'PhotonTraining':
+      return 6
     else:
       raise ValueError('There is no CalibrationPhase with the name %s' % phase_name)
 
@@ -48,7 +50,7 @@ class CalibrationPhase(object):
   def fileKeyFromPhase(phaseID):
     """ Returns the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: file key for this phase
     :rtype: str
     """
@@ -64,6 +66,8 @@ class CalibrationPhase(object):
       return "GAMMA"
     elif phaseID == CalibrationPhase.HadronicEnergy:
       return "KAON"
+    elif phaseID == CalibrationPhase.PhotonTraining:
+      return "ZUDS"
     else:
       raise ValueError('There is no CalibrationPhase with the ID %s' % phaseID)
 
@@ -87,6 +91,8 @@ class CalibrationPhase(object):
       return 'ElectroMagEnergy'
     elif phaseID == 5:
       return 'HadronicEnergy'
+    elif phaseID == 6:
+      return 'PhotonTraining'
     else:
       raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)
 
@@ -105,8 +111,9 @@ class CalibrationClient(object):
     """
     self.calibrationID = calibrationID
     self.workerID = workerID
+    self.currentStep = -1  # counter of how much Marlin have been run on worker nodes
     self.currentPhase = CalibrationPhase.ECalDigi
-    self.currentStep = -1
+    self.currentStage = 1
     self.calibrationService = RPCClient('Calibration/Calibration')
     self.parameterSet = None
     self.log = gLogger.getSubLogger("CalibrationClient")
@@ -122,37 +129,41 @@ class CalibrationClient(object):
     if res['OK']:
       if isinstance(res['Value'], basestring):
         return res
-      self.currentPhase = res['current_phase']
-      self.currentStep = res['current_step']
+      self.currentPhase = res['currentPhase']
+      self.currentStage = res['currentStage']
       return res['Value']
     else:
       return None  # No new parameters computed yet. Wait a bit and try again.
 
-  def jumpToStep(self, phaseID, stepID):
+  #TODO do we need this functionality?
+  def jumpToStep(self, stageID, phaseID, stepID):
     """ Jumps to the passed step and phase.
 
+    :param int stageID: ID of the stage to jump to
     :param int phaseID: ID of the phase to jump to, see CalibrationPhase
     :param int stepID: ID of the step to jump to
     :returns: nothing
     :rtype: None
     """
+    self.currentStage = stageID
     self.currentPhase = phaseID
     self.currentStep = stepID
 
   MAXIMUM_REPORT_TRIES = 10
 
-  def reportResult(self, rootFileName):
-    """ Sends the root file from PfoAnalysis back to the service
+  def reportResult(self, outFileName):
+    """ Sends the root file from PfoAnalysis or PandoraLikelihoodDataPhotonTraining.xml from photon training back to the service procedure
 
-    :param rootFileName: The histogram as computed by the calibration step run
+    :param outFileName: Output file from one calibration iteration
     :returns: None
     """
     attempt = 0
 
-    resultString = binaryFileToString(rootFileName)
+    resultString = binaryFileToString(outFileName)
+    self.currentStep = self.currentStep + 1
 
     while attempt < CalibrationClient.MAXIMUM_REPORT_TRIES:
-      res = self.calibrationService.submitResult(self.calibrationID, self.currentPhase,
+      res = self.calibrationService.submitResult(self.calibrationID, self.currentStage, self.currentPhase,
                                                  self.currentStep, self.workerID, resultString)
       if res['OK']:
         return S_OK()
@@ -160,34 +171,6 @@ class CalibrationClient(object):
       attempt += 1
 
     return S_ERROR('Could not report result back to CalibrationService.')
-
-#FIXME: UNUSED, DELETE
-
-
-def runCalibration(calibrationID, workerID, command):
-  res = subprocess.check_output(['echo', 'Hello World!'])
-  gLogger.warn('printed: %s', res)
-
-#FIXME: UNUSED, DELETE
-def runCalibration2( calibrationID, workerID, command ):
-  """ Executes the calibration on this worker.
-
-  :param string command: The command to start the calibration, when one appends the current histogram to it.
-  :returns: exit code of the calibration, 0 in case of success
-  :rtype: int
-  """
-  calibration_client = CalibrationClient(calibrationID, workerID)
-  current_step = 1
-  while True:  # FIXME: Find stoppig criterion
-    try:
-      current_params = calibration_client.requestNewParameters(current_step)
-    except ValueError:
-      gLogger.warn('Ending calibration run on this worker.')
-      break
-    subprocess.check_output([command, current_params])  # FIXME: Ensure this is how we can pass the new parameter
-    #FIXME: This currently lacks the information at which offset the worker performs the calibration.
-    #Suggested fix: Write class WorkerInfo as a wrapper for the offset+the histogram+anything else this might need
-    current_step = calibration_client.currentStep
 
 
 def createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs):
@@ -206,19 +189,14 @@ def createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs):
     gLogger.error("inputFiles is not a dictionary")
     return S_ERROR("badParameter")
 
-  if not all(key in inputFiles for key in ("GAMMA", "KAON", "MUON")):
+  if not all(key in inputFiles for key in ("GAMMA", "KAON", "MUON", "ZUDS")):
     gLogger.error("Missing mandatory key in inputFiles dictionary ")
     return S_ERROR("missing key")
 
-  #FIXME: move username check to service
-  res = getProxyInfo()
-  if not res['OK'] or 'group' not in res['Value'] or 'username' not in res['Value']:
-    err = S_ERROR('Problem with the proxy, need to know user and group: %s' % res)
-    return err
-  calibrationService = RPCClient('Calibration/Calibration')
-  return calibrationService.createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs,
-                                              res['Value']['username'], res['Value']['group'])
+  return self.calibrationService.createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs,
+                                                   res['Value']['username'], res['Value']['group'])
 
+#FIXME is this for testing?
 if __name__ == '__main__':
   if len(sys.argv) < 4:
     print 'Not enogh arguments!\nUsage: calibrationID workerID command\nPassed parameters were %s' % sys.argv

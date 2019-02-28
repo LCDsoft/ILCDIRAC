@@ -32,15 +32,13 @@ class Calibration(MarlinAnalysis):
   """Define the Calibration part of the workflow
   """
 
-  def __init__(self):
+  def __init__(self, _calibrationID, _workerID):
     super(Calibration, self).__init__()
     self.applicationName = "Calibration"
-    self.stepId = ''
-    self.phaseId = ''
-    self.iterationNumber = 0
-    self.calibrationID = 0
-    self.workerID = 0
-    self.cali = CalibrationClient(self.calibrationID, self.workerID)
+    self.currentStep = -1  # internal counter of worker node of how much times Marlin was run
+    self.currentPhase = None
+    self.currentStage = None
+    self.cali = CalibrationClient(_calibrationID, _workerID)
 
   def runIt(self):
     """
@@ -107,7 +105,8 @@ class Calibration(MarlinAnalysis):
 
     ##Handle PandoraSettingsPhotonTraining.xml for photon training step
     pandorasettings = 'PandoraSettingsPhotonTraining.xml'
-    photontrainingfiledirname = os.path.join(steeringfiledirname, '../CalibrationPandoraSettings/')
+    photontrainingfiledirname = os.path.join(
+        steeringfiledirname, '../CalibrationPandoraSettings/')  # FIXME is this path wrong?
     if not os.path.exists(pandorasettings):
       if photontrainingfiledirname and os.path.exists(os.path.join(photontrainingfiledirname, pandorasettings)):
         try:
@@ -119,7 +118,7 @@ class Calibration(MarlinAnalysis):
               "algorithm[@type='PhotonReconstruction']/HistogramFile").text = 'PandoraLikelihoodDataPhotonTraining.xml'
           tree.write(fullPathPandoraSettings)
         except EnvironmentError, x:
-          self.log.warn('Could not copy and prepare PandoraSettingsPhotonTraining.xml, exception: %s' % x)
+          LOG.warn('Could not copy and prepare PandoraSettingsPhotonTraining.xml, exception: %s' % x)
 
     if self.inputGEAR:
       self.inputGEAR = os.path.basename(self.inputGEAR)
@@ -133,11 +132,11 @@ class Calibration(MarlinAnalysis):
         if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
           self.SteeringFile = os.path.join(steeringfiledirname, self.SteeringFile)
     if not self.SteeringFile:
-      self.log.error("Steering file not defined, shouldn't happen!")
+      LOG.error("Steering file not defined, shouldn't happen!")
       return S_ERROR("Could not find steering file")
 
     #  eventsPerBackgroundFile=self.workflow_commons.get("OI_eventsPerBackgroundFile", 0)
-    #  self.log.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
+    #  LOG.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
     #
     #  res = prepareXMLFile(self.baseSteeringFile, self.SteeringFile, self.inputGEAR, listofslcio,
     #                       self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST,
@@ -146,13 +145,13 @@ class Calibration(MarlinAnalysis):
     #                       eventsPerBackgroundFile=eventsPerBackgroundFile,
     #                      )
     #  if not res['OK']:
-    #    self.log.error('Something went wrong with XML generation because %s' % res['Message'])
+    #    LOG.error('Something went wrong with XML generation because %s' % res['Message'])
     #    self.setApplicationStatus('Marlin: something went wrong with XML generation')
     #    return res
 
     res = self.prepareMARLIN_DLL(env_script_path)
     if not res['OK']:
-      self.log.error('Failed building MARLIN_DLL:', res['Message'])
+      LOG.error('Failed building MARLIN_DLL:', res['Message'])
       self.setApplicationStatus('Failed to setup MARLIN_DLL')
       return S_ERROR('Something wrong with software installation')
     marlin_dll = res["Value"]
@@ -162,28 +161,28 @@ class Calibration(MarlinAnalysis):
 
       calibrationParameters = self.cali.requestNewParameters()
       while calibrationParameters is None:
-        self.log.notice("Waiting for new parameters set")
+        LOG.notice("Waiting for new parameters set")
         wasteCPUCycles(10)
         calibrationParameters = self.cali.requestNewParameters()
 
       if not calibrationParameters['OK']:
-        self.log.notice("Calibration finished")
+        LOG.notice("Calibration finished")
         break
 
-      self.phaseID = calibrationParameters['phaseID']
-      self.stepID = calibrationParameters['stepID']
-      self.iterationNumber = self.iterationNumber + 1
+      self.currentPhase = calibrationParameters['currentPhase']
+      self.currentStage = calibrationParameters['currentStage']
+      self.currentStep = self.currentStep + 1
       parameterList = calibrationParameters['parameters']
       resolveInputSlcioFilesAndAddToParameterList(listofslcio, parameterList)
 
-      steeringFileToRun = 'marlinSteeringFile_%s_%s_%s.xml' % (self.stepID, self.phaseID, self.iterationNumber)
+      steeringFileToRun = 'marlinSteeringFile_%s_%s_%s.xml' % (self.currentStage, self.currentPhase, self.currentStep)
       updateSteeringFile(self.SteeringFile, steeringFileToRun, parameterList)
       # TODO clean up Marlin steering file - we don't need a lot of processors for calibration
-      self.log.notice("new set of calibration parameters: %r" % parameterList)
+      LOG.notice("new set of calibration parameters: %r" % parameterList)
 
       self.result = self.runScript(steeringFileToRun, env_script_path, marlin_dll)
       if not self.result['OK']:
-        self.log.error('Something wrong during running:', self.result['Message'])
+        LOG.error('Something wrong during running:', self.result['Message'])
         self.setApplicationStatus('Error during running %s' % self.applicationName)
         return S_ERROR('Failed to run %s' % self.applicationName)
 
@@ -191,7 +190,7 @@ class Calibration(MarlinAnalysis):
       #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
       resultTuple = self.result['Value']
       if not os.path.exists(self.applicationLog):
-        self.log.error("Something went terribly wrong, the log file is not present")
+        LOG.error("Something went terribly wrong, the log file is not present")
         self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
         if not self.ignoreapperrors:
           return S_ERROR('%s did not produce the expected log' % (self.applicationName))
@@ -199,18 +198,18 @@ class Calibration(MarlinAnalysis):
       status = resultTuple[0]
       # stdOutput = resultTuple[1]
       # stdError = resultTuple[2]
-      self.log.info("Status after the application execution is:", str(status))
+      LOG.info("Status after the application execution is:", str(status))
 
       outFile = "pfoAnalysis.root"
-      if stepID == 2:
+      if self.currentStage == 2:
         outFile = 'PandoraLikelihoodDataPhotonTraining.xml'
 
       self.cali.reportResult(outFile)
 
     return self.finalStatusReport(status)
 
-  def resolveInputFilesAndUpdateParameterList(allSlcioFiles, parameterList):
-  """ Add PandoraSettings-file and input slcio files which corresponds to current stepID and phaseID to the parameterList
+  def resolveInputSlcioFilesAndAddToParameterList(allSlcioFiles, parameterList):
+  """ Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the parameterList
 
   :param list basestring allSlcioFiles: List of all slcio-files in the node
   :param list basestring parameterList: list of parameters and their values
@@ -223,11 +222,10 @@ class Calibration(MarlinAnalysis):
 
   patternToSearchFor = ''
   pandoraSettingsFile = ''
-  if self.stepID in [1, 3]:  # FIXME hardcoded values are bad...
-      patternToSearchFor = fileKeyFromPhase(self.phaseID).lower()
+  patternToSearchFor = fileKeyFromPhase(self.currentPhase).lower()
+  if self.currentStage in [1, 3]:  # FIXME hardcoded values are bad...
       pandoraSettingsFile = 'PandoraSettings.xml'
     else:
-      patternToSearchFor = 'zuds'
       pandoraSettingsFile = 'PandoraSettingsPhotonTraining.xml'
 
     filesToRunOn = [x for x in allSlcioFiles if patternToSearchFor in x.lower()]
@@ -236,7 +234,9 @@ class Calibration(MarlinAnalysis):
 
     parameterList.append('global,None,LCIOInputFiles,%s' % (filesToRunOn))
     parameterList.append('processor,MyDDMarlinPandora,PandoraSettingsXmlFile,%s' % (pandoraSettingsFile))
-    parameterList.append('processor,MyDDMarlinPandora,RootFile,pfoAnalysis.root')
+    #TODO should one use different steering file for photon training? if no one need to append line below during all steps
+    if self.currentStage in [1,3]: 
+      parameterList.append('processor,MyDDMarlinPandora,RootFile,pfoAnalysis.root')
     return S_OK()
 
   def prepareMARLIN_DLL(self, env_script_path):
@@ -252,14 +252,14 @@ class Calibration(MarlinAnalysis):
     os.chmod("temp.sh", 0755)
     res = shellCall(0, "./temp.sh")
     if not res['OK']:
-      self.log.error("Could not get the MARLIN_DLL env")
+      LOG.error("Could not get the MARLIN_DLL env")
       return S_ERROR("Failed getting the MARLIN_DLL")
     marlindll = res["Value"][1].rstrip()
     marlindll = marlindll.rstrip(":")
     try:
       os.remove('temp.sh')
     except EnvironmentError, e:
-      self.log.warn("Failed to delete the temp file", str(e))
+      LOG.warn("Failed to delete the temp file", str(e))
 
     if not marlindll:
       return S_ERROR("Empty MARLIN_DLL env variable!")
@@ -283,7 +283,7 @@ class Calibration(MarlinAnalysis):
 
     for lib1, path1 in lib1d.items():
       if lib1 in libuser:
-        self.log.verbose("Duplicated lib found, removing %s" % path1)
+        LOG.verbose("Duplicated lib found, removing %s" % path1)
         try:
           temp.remove(path1)
         except ValueError:
@@ -323,8 +323,8 @@ class Calibration(MarlinAnalysis):
       finallist[plusPos], finallist[lcfiPos] = finallist[lcfiPos], finallist[plusPos]
 
     marlindll = ":".join(finallist)
-    self.log.verbose("Final MARLIN_DLL is:", marlindll)
-
+    LOG.verbose("Final MARLIN_DLL is:", marlindll)
+    
     return S_OK(marlindll)
 
   def runScript(self, marlinSteeringFile, env_script_path, marlin_dll):
@@ -410,7 +410,7 @@ fi
 
     if not os.path.exists(marlinSteeringFile):
       script.close()
-      self.log.error("Steering file missing: %s" % (marlinSteeringFile))
+      LOG.error("Steering file missing: %s" % (marlinSteeringFile))
       return S_ERROR("SteeringFile is missing: %s" % (marlinSteeringFile))
     #check
     script.write('Marlin -c %s %s\n' % (marlinSteeringFile, self.extraCLIarguments))
@@ -424,7 +424,7 @@ fi
     script = open(scriptName, 'a')
 
     # TODO implement Pandora related stuff
-    if self.stepID in [1,3]:
+    if self.currentStage in [1,3]:
       pass
 
     # TODO rename output root or xml file
