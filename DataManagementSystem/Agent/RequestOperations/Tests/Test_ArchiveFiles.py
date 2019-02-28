@@ -1,5 +1,7 @@
 """Tests for the ArchiveFiles Operation"""
 
+# pylint: disable=protected-access, redefined-outer-name
+
 from functools import partial
 import logging
 import os
@@ -33,7 +35,7 @@ def listOfLFNs():
 
 
 @pytest.fixture
-def myMocker(mocker):
+def _myMocker(mocker):
   """Mock call to external libraries."""
   mocker.patch(MODULE + '.shutil.make_archive')
   mocker.patch(MODULE + '.shutil.rmtree')
@@ -64,7 +66,7 @@ def multiRetVal(*args, **kwargs):
   lfns = args[0]
   if isinstance(lfns, basestring):
     lfns = [lfns]
-  for index, lfn in enumerate(lfns):
+  for _index, lfn in enumerate(lfns):
     if str(kwargs.get('Index', 5)) in lfn:
       retVal['Value']['Failed'][lfn] = kwargs.get('Error', 'Failed to do X')
       LOG.error('Error for %s %s', lfn, retVal['Value']['Failed'][lfn])
@@ -120,7 +122,7 @@ def archiveFiles(mocker, archiveRequestAndOp, multiRetValOK):
   return af
 
 
-def test_constructor(archiveFiles, mocker):
+def test_constructor(archiveFiles):
   assert archiveFiles.cacheFolder is None
   assert archiveFiles.parameterDict == {}
   assert archiveFiles.lfns == []
@@ -128,7 +130,7 @@ def test_constructor(archiveFiles, mocker):
   assert archiveFiles.workDirectory == '/Some/Local/Folder'
 
 
-def test_run_OK(archiveFiles, myMocker, listOfLFNs):
+def test_run_OK(archiveFiles, _myMocker, listOfLFNs):
   archiveFiles._run()
   archiveFiles.dm.getFile.assert_called_with(listOfLFNs[9],
                                              destinationDir=os.path.join(DEST_DIR, 'MyRequest', 'vo'),
@@ -137,7 +139,7 @@ def test_run_OK(archiveFiles, myMocker, listOfLFNs):
     assert opFile.Status == 'Done'
 
 
-def test_run_Fail(archiveFiles, myMocker, listOfLFNs):
+def test_run_Fail(archiveFiles, _myMocker, listOfLFNs):
   archiveFiles.dm.getFile.side_effect = partial(multiRetVal, Index=5)
   with pytest.raises(RuntimeError, match='Completely failed to download file'):
     archiveFiles._run()
@@ -148,7 +150,7 @@ def test_run_Fail(archiveFiles, myMocker, listOfLFNs):
     assert opFile.Status == 'Waiting'
 
 
-def test_run_IgnoreMissingFiles(archiveFiles, myMocker, listOfLFNs):
+def test_run_IgnoreMissingFiles(archiveFiles, _myMocker, listOfLFNs):
   archiveFiles.dm.getFile.side_effect = partial(multiRetVal, Index=5, Error='No such file or directory')
   archiveFiles._run()
   archiveFiles.dm.getFile.assert_called_with(listOfLFNs[9],
@@ -162,7 +164,7 @@ def test_run_IgnoreMissingFiles(archiveFiles, myMocker, listOfLFNs):
       assert opFile.Status == 'Done'
 
 
-def test_checkFilePermissions(archiveFiles, myMocker):
+def test_checkFilePermissions(archiveFiles, _myMocker):
   archiveFiles.waitingFiles = archiveFiles.getWaitingFilesList()
   archiveFiles.lfns = [opFile.LFN for opFile in archiveFiles.waitingFiles]
   assert len(archiveFiles.lfns) == N_FILES
@@ -176,22 +178,22 @@ def test_checkFilePermissions(archiveFiles, myMocker):
       assert opFile.Status == 'Waiting'
 
 
-def test_checkFilePermissions_breaks(archiveFiles, myMocker):
+def test_checkFilePermissions_breaks(archiveFiles, _myMocker):
   archiveFiles.waitingFiles = archiveFiles.getWaitingFilesList()
   archiveFiles.lfns = [opFile.LFN for opFile in archiveFiles.waitingFiles]
   assert len(archiveFiles.lfns) == N_FILES
   archiveFiles.fc.hasAccess.return_value = S_ERROR('Break')
   with pytest.raises(RuntimeError, match='^Could not resolve permissions$'):
     archiveFiles._checkFilePermissions()
-  for index, opFile in enumerate(archiveFiles.operation):
+  for opFile in archiveFiles.operation:
     assert opFile.Status == 'Waiting'
 
 
-def test_uploadTarBall_breaks(archiveFiles, myMocker, listOfLFNs):
+def test_uploadTarBall_breaks(archiveFiles, _myMocker, listOfLFNs):
   archiveFiles.dm.putAndRegister.return_value = S_ERROR('Break')
   with pytest.raises(RuntimeError, match='^Failed to upload tarball: Break$'):
     archiveFiles._run()
-  for index, opFile in enumerate(archiveFiles.operation):
+  for opFile in archiveFiles.operation:
     assert opFile.Status == 'Waiting'
   archiveFiles.dm.getFile.assert_called_with(listOfLFNs[9],
                                              destinationDir=os.path.join(DEST_DIR, 'MyRequest', 'vo'),
@@ -201,9 +203,9 @@ def test_uploadTarBall_breaks(archiveFiles, myMocker, listOfLFNs):
                                                     'TARBALL-SE')
 
 
-def test_call(archiveFiles, myMocker, listOfLFNs):
+def test_call(archiveFiles, _myMocker, listOfLFNs):
   archiveFiles()
-  for index, opFile in enumerate(archiveFiles.operation):
+  for opFile in archiveFiles.operation:
     assert opFile.Status == 'Done'
   archiveFiles.dm.getFile.assert_called_with(listOfLFNs[9],
                                              destinationDir=os.path.join(DEST_DIR, 'MyRequest', 'vo'),
@@ -213,10 +215,10 @@ def test_call(archiveFiles, myMocker, listOfLFNs):
                                                     'TARBALL-SE')
 
 
-def test_call_withError(archiveFiles, myMocker, listOfLFNs):
+def test_call_withError(archiveFiles, _myMocker, listOfLFNs):
   archiveFiles.dm.putAndRegister.return_value = S_ERROR('Break')
   archiveFiles()
-  for index, opFile in enumerate(archiveFiles.operation):
+  for opFile in archiveFiles.operation:
     assert opFile.Status == 'Waiting'
   archiveFiles.dm.getFile.assert_called_with(listOfLFNs[9],
                                              destinationDir=os.path.join(DEST_DIR, 'MyRequest', 'vo'),
