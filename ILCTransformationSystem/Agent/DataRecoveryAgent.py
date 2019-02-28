@@ -252,7 +252,7 @@ class DataRecoveryAgent( AgentModule ):
     self.addressTo = self.am_getOption('MailTo', ["ilcdirac-admin@cern.ch"])
     self.addressFrom = self.am_getOption( 'MailFrom', "ilcdirac-admin@cern.ch" )
     self.subject = "DataRecoveryAgent"
-
+    self.startTime = time.time()
     
     #############################################################################
   def beginExecution(self):
@@ -329,6 +329,7 @@ class DataRecoveryAgent( AgentModule ):
     tasksDict=None
     lfnTaskDict=None
 
+    self.startTime = time.time()
     if not transInfoDict['Type'].startswith("MCGeneration"):
       self.log.notice('Getting tasks...')
       tasksDict = tInfo.checkTasksStatus()
@@ -356,7 +357,9 @@ class DataRecoveryAgent( AgentModule ):
     self.log.notice('Collecting LFNs...')
     lfnExistence = {}
     lfnCache = []
-    for job in jobs.values():
+    for counter, job in enumerate(jobs.values()):
+      if counter % self.printEveryNJobs == 0:
+        self.log.notice('Getting JobInfo: %d/%d: %3.1fs' % (counter, len(jobs), float(time.time() - self.startTime)))
       while True:
         try:
           job.getJobInformation(self.diracILC)
@@ -409,15 +412,13 @@ class DataRecoveryAgent( AgentModule ):
     """run over all jobs and do checks"""
     fileJobDict = defaultdict(list)
     counter = 0
-    startTime = time.time()
     nJobs = len(jobs)
     self.setPendingRequests(jobs)
     lfnExistence = self.getLFNStatus(jobs)
     self.log.notice('Running over all the jobs')
-    for job in jobs.values():
-      counter += 1
+    for counter, job in enumerate(jobs.values()):
       if counter % self.printEveryNJobs == 0:
-        self.log.notice( "%d/%d: %3.1fs " % (counter, nJobs, float(time.time() - startTime) ) )
+        self.log.notice('%d/%d: %3.1fs' % (counter, nJobs, float(time.time() - self.startTime)))
       while True:
         try:
           if job.pendingRequest:
