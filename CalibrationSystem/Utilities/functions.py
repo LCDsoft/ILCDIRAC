@@ -144,120 +144,67 @@ def validatePandoraSettingsFile(pandoraSettingsFileName):
   return validateExistenceOfWordsInFile(pandoraSettingsFileName, parametersToValidate)
 
 
-def makeParameterTable(inFile='testing/FCCee_PfoAnalysis_AAAA_SN_BBBB.xml'):
-  tree = et.parse(inFile)
-  root = tree.getroot()
-
-  outList = []
-  for child in root:
-    for grandChild in child:
-      if grandChild.text == None:
-        continue
-      if 'XXXX' in grandChild.text:
-        grandChild.text = "".join(grandChild.text.split())
-        parentType = child.tag
-        parentName = child.attrib.get('name')
-        childName = grandChild.attrib.get('name')
-        #  outStr = '%s,%s,%s,DUMMY' % (parentType, parentName, childName)
-        outStr = '%s,%s,%s' % (parentType, parentName, childName)
-        print (outStr)
-        outList.append(outStr)
-
-  return outList
-
-
 def updateSteeringFile(inFileName, outFileName, parametersToSetup):
-  #FIXME throw error when required parameter is not found in the file
-  #TODO rewrite function: use XPath functionaluty. e.g.: root.find("./processor/[@name='OuterPlanarDigiProcessor']/parameter[@name='IsStrip']")
+  """ Read input xml-file, update values given be dictionary and write result to a new file
+
+  :param basestring inFileName: name of input xml-file
+  :param basestring outFileName: name of output xml-file
+  :param dict parametersToSetup: dict which contains values which have to be updated. Keys of dictionary are XPath-string. E.g.: {"processor/[@name='OuterPlanarDigiProcessor']/parameter[@name='IsStrip']": True}
+
+  :returns: S_OK or S_ERROR
+  :rtype: dict
+    """
   tree = et.parse(inFileName)
-  root = tree.getroot()
 
-  parTable = [x.split(',') for x in parametersToSetup]
-  #  print parTable
-
-  parameterDict = {}
-  for x in parTable:
-    parameterDict['%s,%s,%s' % (x[0], x[1], x[2])] = x[3]
-
+  #FIXME redirect log messegage to LOG class?
   print("Updating following values:")
-
-  for child in root:
-    if child.tag not in [x[0] for x in parTable]:
-      continue
-    for grandChild in child:
-      if grandChild.text == None:
-        continue
-
-      parentType = child.tag
-      parentName = child.attrib.get('name')
-      childName = grandChild.attrib.get('name')
-      formattedStr = '%s,%s,%s' % (parentType, parentName, childName)
-
-      if formattedStr in parameterDict:
-        if grandChild.text != parameterDict[formattedStr]:
-          print('%s:\t"%s" --> "%s"' % (childName, grandChild.text, parameterDict[formattedStr]))
-          grandChild.text = parameterDict[formattedStr]
+  for iPar, iVal in parametersToSetup.items():
+    iElement = tree.find(iPar)
+    if iElement is None:
+      return S_ERROR("Cannot update parameter in the steering file! Parameter: %s; inFileName: %s; outFileName: %s" % (iPar, inFileName, outFileName))
+    else:
+      print('%s:\t"%s" --> "%s"' % (iPar, iElement.text, iVal))
+      iElement.text = iVal
 
   tree.write(outFileName)
+  return S_OK()
 
 
-def readParameterTable(inFile='testing/test.csv'):
-  outList = []
-  with open(inFile, mode='r') as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
-    line_count = 0
-    for row in csv_reader:
-      if line_count == 0:
-        line_count += 1
-        continue
-      else:
-        outList.append('%s,%s,%s' % (row[0], row[1], row[2]))
-        line_count += 1
+def readParameterDict(inFile='testing/parameterListMarlinSteeringFile.txt'):
+  outList = {}
+  with open(inFile, 'r') as f:
+    for iLine in f:
+      outList[iLine.split('\n')[0]] = None
   return outList
 
 
-def readParametersFromSteeringFile(inFileName, parameterTable):
-  outList = []
+def readParametersFromSteeringFile(inFileName, parameterDict):
   tree = et.parse(inFileName)
   root = tree.getroot()
 
-  parameterTableInternal = list(parameterTable)
+  for iPar, _ in parameterDict.items():
+    iElement = tree.find(iPar)
+    if iElement is None:
+      return S_ERROR("Cannot read parameter from the steering file! Parameter: %s; inFileName: %s" % (iPar, inFileName))
+    else:
+      parameterDict[iPar] = iElement.text
 
-  for child in root:
-    for grandChild in child:
-      if grandChild.text == None:
-        continue
-
-      parentType = child.tag
-      parentName = child.attrib.get('name')
-      childName = grandChild.attrib.get('name')
-      formattedStr = '%s,%s,%s' % (parentType, parentName, childName)
-
-      if formattedStr in parameterTableInternal:
-        parameterTableInternal.remove(formattedStr)
-        grandChild.text = "".join(grandChild.text.split())  # remove spaces. TODO make it optional?
-        outList.append(formattedStr + ',' + grandChild.text)
-
-  if len(parameterTableInternal) != 0:
-    print("Some parameters are not found:")
-    print parameterTableInternal
-    return None
-
-  return outList
+  return S_OK()
 
 
 def testUpdateOfSteeringFileWithNewParameters():
   inFileName = 'testing/in1.xml'
+
+  parDict = readParameterDict()
+  print parDict
+  currentParameters = readParametersFromSteeringFile(inFileName, parDict)
+  print parDict
+
   outFileName = 'testing/out1.xml'
+  res = updateSteeringFile(inFileName, outFileName, {
+                           "processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']": "dummyRootFile.root", "global/parameter[@name='LCIOInputFiles']": "in1.slcio, in2.slcio"})
+  print res
 
-  parTable = readParameterTable()
-  currentParameters = readParametersFromSteeringFile(inFileName, parTable)
-
-  updateSteeringFile(inFileName, outFileName, currentParameters)
-
-  outFileName = 'testing/out2.xml'
-  updateSteeringFile(inFileName, outFileName, ['processor,MyPfoAnalysis,RootFile,dummyRootFile.root'])
-
-  inFileName = 'testing/inAndOut1.xml'
-  outFileName = inFileName
-  updateSteeringFile(inFileName, outFileName, ['processor,MyPfoAnalysis,RootFile,DUMMY.root'])
+  res = updateSteeringFile(inFileName, outFileName, {"processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']": "dummyRootFile.root",
+                                                     "global/parameter[@name='LCIOInputFiles']": "in1.slcio, in2.slcio", "processor[@name='MyPfoAnalysis2']/parameter[@name='RootFile']": "wrong.root"})
+  print res

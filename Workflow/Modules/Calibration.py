@@ -172,13 +172,19 @@ class Calibration(MarlinAnalysis):
       self.currentPhase = calibrationParameters['currentPhase']
       self.currentStage = calibrationParameters['currentStage']
       self.currentStep = self.currentStep + 1
-      parameterList = calibrationParameters['parameters']
-      resolveInputSlcioFilesAndAddToParameterList(listofslcio, parameterList)
+      parameterDict = calibrationParameters['parameters']
+      resolveInputSlcioFilesAndAddToParameterDict(listofslcio, parameterDict)
 
       steeringFileToRun = 'marlinSteeringFile_%s_%s_%s.xml' % (self.currentStage, self.currentPhase, self.currentStep)
-      updateSteeringFile(self.SteeringFile, steeringFileToRun, parameterList)
-      # TODO clean up Marlin steering file - we don't need a lot of processors for calibration
-      LOG.notice("new set of calibration parameters: %r" % parameterList)
+      updateSteeringFile(self.SteeringFile, steeringFileToRun, parameterDict)
+      # add PfoAnalysis processor to steering file
+      #TODO introduce the flag below: if user didn't provide a steering file himself
+      if (useDefaulSteeringFile):
+        addPfoAnalysisProcessor(steeringFileToRun)
+        updateSteeringFile(steeringFileToRun, steeringFileToRun, {
+                           "processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']": "pfoAnalysis.root"})
+      #TODO clean up Marlin steering file - we don't need a lot of processors for calibration
+      LOG.notice("new set of calibration parameters: %r" % parameterDict)
 
       self.result = self.runScript(steeringFileToRun, env_script_path, marlin_dll)
       if not self.result['OK']:
@@ -208,11 +214,30 @@ class Calibration(MarlinAnalysis):
 
     return self.finalStatusReport(status)
 
-  def resolveInputSlcioFilesAndAddToParameterList(allSlcioFiles, parameterList):
-  """ Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the parameterList
+  def addPfoAnalysisProcessor(self, mainSteeringMarlinRecoFile):
+    mainTree = et.parse(mainSteeringMarlinRecoFile)
+    mainRoot = mainTree.getroot()
+
+    #FIXME TODO properly find path to the file
+    # this file should contain only PfoAnalysis processor
+    pfoAnalysisProcessoeFile = '/afs/cern.ch/user/v/viazlo/pyDevs/dirac_developerGuide/ILCDIRAC/CalibrationSystem/Utilities/testing/pfoAnalysis.xml'
+    tmpTree = et.parse(pfoAnalysisProcessoeFile)
+    elementToAdd = tmpTree.getroot()
+
+    if 'MyPfoAnalysis' not in (iEl.attrib['name'] for iEl in mainRoot.iter('processor')):
+      tmp1 = mainRoot.find('execute')
+      c = et.Element("processor name=\"MyPfoAnalysis\"")
+      tmp1.append(c)
+      mainRoot.append(elementToAdd)
+      mainTree.write(mainSteeringMarlinRecoFile)
+
+    return S_OK()
+
+  def resolveInputSlcioFilesAndAddToParameterDict(self, allSlcioFiles, parameterDict):
+  """ Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the parameterDict
 
   :param list basestring allSlcioFiles: List of all slcio-files in the node
-  :param list basestring parameterList: list of parameters and their values
+  :param dict parameterDict: dict of parameters and their values
 
   :returns: S_OK or S_ERROR
   :rtype: dict
@@ -232,11 +257,12 @@ class Calibration(MarlinAnalysis):
     if len(filesToRunOn) == 0:
       return s_ERROR('empty list of input slcio-files')
 
-    parameterList.append('global,None,LCIOInputFiles,%s' % (filesToRunOn))
-    parameterList.append('processor,MyDDMarlinPandora,PandoraSettingsXmlFile,%s' % (pandoraSettingsFile))
+    parameterDict["global/parameter[@name='LCIOInputFiles']"] = ', '.join(filesToRunOn)
+    parameterDict["processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']"] = pandoraSettingsFile
+
     #TODO should one use different steering file for photon training? if no one need to append line below during all steps
     if self.currentStage in [1,3]: 
-      parameterList.append('processor,MyDDMarlinPandora,RootFile,pfoAnalysis.root')
+      parameterDict["processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']"] = pandoraSettingsFile
     return S_OK()
 
   def prepareMARLIN_DLL(self, env_script_path):

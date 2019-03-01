@@ -14,6 +14,7 @@ from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 from ILCDIRAC.Workflow.Modules.Calibration import Calibration
+from DIRAC.Core.Utilities.Subprocess import shellCall
 
 __RCSID__ = "$Id$"
 
@@ -80,6 +81,15 @@ class CalibrationRun(object):
     self.currentParameterSet = None
     self.numberOfJobs = numberOfJobs
     self.calibrationFinished = False
+    #  /cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-02-07/x86_64-slc6-gcc7-opt
+    self.platform = ''
+    self.appversion = ''
+    if len(ilcsoftPath.split('/')) >= 7:
+      self.platform = ilcsoftPath.split('/')[6]
+      self.appversion = ilcsoftPath.split('/')[5]
+    self.calibrationBinariesDir = os.path.join(ilcsoftPath, "PandoraAnalysis/HEAD/bin/")
+
+
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
     #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs to be accessed by the agent in the case of resubmission
@@ -255,29 +265,33 @@ class CalibrationRun(object):
         outFileName="newPandoraLikelihoodData.xml"
 
         #TODO how to get platform (e.g. x86_64-slc5-gcc43-opt) and appversion (e.g. ILCSoft-2019-02-20_gcc62)?
+        #FIXME maybe one can use here ilcsoftpath? or is it better to extract path from Configuration Service?
         likelihoodMergeScriptPath=self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
                                                                                                'pandora_calibration_scripts',
                                                                                                appversion), None)
         likelihoodMergeScript=os.path.join(mergeScriptPath, 'MergePandoraLikelihoodData.py')
 
-        import imp
-        mergeModule=imp.load_source('main', likelihoodMergeScript)
-        mergeModule.main(inputFiles = filesToMerge, outputFile = outFileName)
+        comm='python %s "main([%s],\'%s\')"' % (likelihoodMergeScript, ', '.join(("'%s'" % (ifile))
+                                                                                 for iFile in filesToMergeString), outFileName)
+        self.stdError=''
+        res=shellCall(timeout = 0, comm)
 
         return binaryFileToString(folder + '/' + outFileName)
 
+        def __calculateNewCalibConstants(self):
+
+
         def __calculateNewParamsRoot(self, stepID):
-    """ run the pandora executable over the existing root files from the workers for given phase and step """
-        folder="calib%s/stage%s/phase%s/step%s" % (self.calibrationID, self.currentStage, self.currentPhase, stepID))
-        fileNamePattern='pfoanalysis_w*.root'
+        """ run the pandora executable over the existing root files from the workers for given phase and step """
+        folder="calib%s/stage%s/phase%s/step%s/" % (self.calibrationID, self.currentStage, self.currentPhase, stepID))
         if self.currentStage == 2:
-        fileNamePatter="PandoraLikelihoodDataPhotonTraining_w*.xml"
-        mergedPhotonLikelihoodFile=__mergePandoraLikelihoodXmlFiles(folder + "/" + fileNamePatter)
+        fileNamePattern="PandoraLikelihoodDataPhotonTraining_w*.xml"
+        mergedPhotonLikelihoodFile=__mergePandoraLikelihoodXmlFiles(folder + fileNamePattern)
         self.currentParameterSet=mergedPhotonLikelihoodFile
-
-
-
-
+        else:
+        fileNamePattern='pfoanalysis_w*.root'
+        #TODO implement me
+        pass
 
   @executeWithUserProxy
   def resubmitJob(self, workerID):
