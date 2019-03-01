@@ -54,3 +54,12 @@ class CheckMigration(OperationHandlerBase):
       if migrated:
         self.log.notice('File %r has been migrated.' % opFile.LFN)
         opFile.Status = 'Done'
+
+  def setOperation(self, operation):  # pylint: disable=useless-super-delegation
+    """Set Operation and request setter.
+
+    :param ~DIRAC.RequestManagementSystem.Client.Operation.Operation operation: operation instance
+    :raises TypeError: if ``operation`` in not an instance
+        of :class:`~DIRAC.RequestManagementSystem.Client.Operation.Operation`
+    """
+    super(CheckMigration, self).setOperation(operation)
