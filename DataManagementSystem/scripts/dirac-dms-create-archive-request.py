@@ -33,6 +33,7 @@ __RCSID__ = '$Id$'
 MAX_SIZE = 2 * 1024 * 1024 * 1024  # 2 GB
 MAX_FILES = 2000
 
+
 class CreateArchiveRequest(object):
   """Create the request to archive files."""
 
