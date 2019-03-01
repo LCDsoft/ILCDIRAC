@@ -12,7 +12,6 @@ DIRAC_ARCHIVE_CACHE
 
 import os
 import shutil
-from pprint import pformat
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Utilities import DEncode
@@ -122,7 +121,6 @@ class ArchiveFiles(OperationHandlerBase):
 
   def _downloadFiles(self):
     """Download the files."""
-    self._checkFileSizes()
     self._checkFilePermissions()
 
     for index, opFile in enumerate(self.waitingFiles):
@@ -156,12 +154,11 @@ class ArchiveFiles(OperationHandlerBase):
           raise RuntimeError('Completely failed to download file: %s' % errorString)
     return
 
-  def _checkFileSizes(self):
-    """Check the files for total file size and return error if too large."""
-    return
-
   def _checkFilePermissions(self):
-    """Check that the request owner has permission to read and remove the files."""
+    """Check that the request owner has permission to read and remove the files.
+
+    Otherwise the error might show up after considerable time was spent.
+    """
     permissions = self.fc.hasAccess(self.lfns, 'removeFile')
     if not permissions['OK']:
       raise RuntimeError('Could not resolve permissions')
