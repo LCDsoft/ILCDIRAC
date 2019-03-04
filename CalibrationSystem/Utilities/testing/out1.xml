@@ -59,7 +59,7 @@
 
 
   <global>
-    <parameter name="LCIOInputFiles">slcio_XXXX</parameter>
+    <parameter name="LCIOInputFiles">in1.slcio, in2.slcio</parameter>
     
     <parameter name="MaxRecordNumber" value="-1" />
     <parameter name="SkipNEvents" value="0" />
@@ -73,7 +73,8 @@
     
     
     <parameter name="EncodingStringParameter"> GlobalTrackerReadoutID </parameter>
-    <parameter name="DD4hepXMLFile" type="string">COMPACTXML_XXXX</parameter>
+    <parameter name="DD4hepXMLFile" type="string">COMPACTXML_XXXX
+    </parameter>
   </processor>
 
   <processor name="Config" type="CLICRecoConfig">
@@ -515,9 +516,9 @@
     
     <parameter name="ECALTimeWindowMin" type="float">-1 </parameter>
     
-    <parameter name="ECALBarrelTimeWindowMax" type="float">ECALBarrelTimeWindowMax_XXXX</parameter>
+    <parameter name="ECALBarrelTimeWindowMax" type="float">ECALBarrelTimeWindowMax_XXXX </parameter>
     
-    <parameter name="ECALEndcapTimeWindowMax" type="float">ECALEndcapTimeWindowMax_XXXX</parameter>
+    <parameter name="ECALEndcapTimeWindowMax" type="float">ECALEndcapTimeWindowMax_XXXX </parameter>
     
     <parameter name="ECALSimpleTimingCut" type="bool">true </parameter>
      
@@ -592,9 +593,9 @@
     
     <parameter name="HCALTimeWindowMin" type="float">-1 </parameter>
     
-    <parameter name="HCALBarrelTimeWindowMax" type="float">HCALBarrelTimeWindowMax_XXXX</parameter>
+    <parameter name="HCALBarrelTimeWindowMax" type="float">HCALBarrelTimeWindowMax_XXXX </parameter>
     
-    <parameter name="HCALEndcapTimeWindowMax" type="float">HCALEndcapTimeWindowMax_XXXX</parameter>
+    <parameter name="HCALEndcapTimeWindowMax" type="float">HCALEndcapTimeWindowMax_XXXX </parameter>
     
     <parameter name="HCALSimpleTimingCut" type="bool">true </parameter>
       
@@ -1007,7 +1008,7 @@
     
     <parameter name="Printing" type="int">0 </parameter>
     
-    <parameter name="RootFile" type="string">pfoAnalysis_XXXX.root</parameter>
+    <parameter name="RootFile" type="string">dummyRootFile.root</parameter>
     
     
   </processor>

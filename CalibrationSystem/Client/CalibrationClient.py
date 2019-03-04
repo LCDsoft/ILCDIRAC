@@ -19,13 +19,13 @@ class CalibrationPhase(object):
   """ Represents the different phases a calibration can be in.
   Since Python 2 does not have enums, this is hardcoded for the moment.
   Should this solution not be sufficient any more, one can make a better enum implementation by hand or install a backport of the python3 implementation from PyPi."""
-  ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining = range(7)
+  ECalDigi, HCalDigi, MuonAndHCalOtherDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining = range(6)
 
   @staticmethod
   def phaseIDFromString(phase_name):
     """ Returns the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, MuonAndHCalOtherDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: ID of this phase
     :rtype: int
     """
@@ -33,16 +33,14 @@ class CalibrationPhase(object):
       return 0
     elif phase_name == 'HCalDigi':
       return 1
-    elif phase_name == 'HCalOtherDigi':
+    elif phase_name == 'MuonAndHCalOtherDigi':
       return 2
-    elif phase_name == 'MuonDigi':
-      return 3
     elif phase_name == 'ElectroMagEnergy':
-      return 4
+      return 3
     elif phase_name == 'HadronicEnergy':
-      return 5
+      return 4
     elif phase_name == 'PhotonTraining':
-      return 6
+      return 5
     else:
       raise ValueError('There is no CalibrationPhase with the name %s' % phase_name)
 
@@ -58,9 +56,7 @@ class CalibrationPhase(object):
       return "GAMMA"
     elif phaseID == CalibrationPhase.HCalDigi:
       return "KAON"
-    elif phaseID == CalibrationPhase.HCalDigi:
-      return "MUON"
-    elif phaseID == CalibrationPhase.MuonDigi:
+    elif phaseID == CalibrationPhase.MuonAndHCalDigi:
       return "MUON"
     elif phaseID == CalibrationPhase.ElectroMagEnergy:
       return "GAMMA"
@@ -68,6 +64,30 @@ class CalibrationPhase(object):
       return "KAON"
     elif phaseID == CalibrationPhase.PhotonTraining:
       return "ZUDS"
+    else:
+      raise ValueError('There is no CalibrationPhase with the ID %s' % phaseID)
+
+  #TODO read these energies from CS or from users input
+  @staticmethod
+  def sampleEnergyFromPhase(phaseID):
+    """ Returns energy of provided sample of the given CalibrationPhase, passed as a float.
+
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :returns: file key for this phase
+    :rtype: str
+    """
+    if phaseID == CalibrationPhase.ECalDigi:
+      return 10.0
+    elif phaseID == CalibrationPhase.HCalDigi:
+      return 50.0
+    elif phaseID == CalibrationPhase.MuonAndHCalDigi:
+      return 10.0
+    elif phaseID == CalibrationPhase.ElectroMagEnergy:
+      return 10.0
+    elif phaseID == CalibrationPhase.HadronicEnergy:
+      return 50.0
+    elif phaseID == CalibrationPhase.PhotonTraining:
+      return 200.0
     else:
       raise ValueError('There is no CalibrationPhase with the ID %s' % phaseID)
 
@@ -84,14 +104,12 @@ class CalibrationPhase(object):
     elif phaseID == 1:
       return 'HCalDigi'
     elif phaseID == 2:
-      return 'HCalOtherDigi'
+      return 'MuonAndHCalOtherDigi'
     elif phaseID == 3:
-      return 'MuonDigi'
-    elif phaseID == 4:
       return 'ElectroMagEnergy'
-    elif phaseID == 5:
+    elif phaseID == 4:
       return 'HadronicEnergy'
-    elif phaseID == 6:
+    elif phaseID == 5:
       return 'PhotonTraining'
     else:
       raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)

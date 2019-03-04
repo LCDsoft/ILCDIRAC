@@ -74,6 +74,15 @@ class CalibrationRun(object):
     self.steeringFile = steeringFile
     self.ilcsoftPath = ilcsoftPath
     self.inputFiles = inputFiles
+    #TODO ask user to provide these... or read it from CS
+    self.ecalBarrelCosThetaRange = [0.0, 1.0]
+    self.ecalEndcapCosThetaRange = [0.0, 1.0]
+    self.hcalBarrelCosThetaRange = [0.0, 1.0]
+    self.hcalEndcapCosThetaRange = [0.0, 1.0]
+    #TODO make these three value below configurable
+    self.nHcalLayers = 44
+    self.digitisationAccuracy = 0.05
+    self.pandoraPFAAccuracy = 0.005
     self.stepResults = defaultdict(CalibrationResult)
     self.currentStage = 1
     self.currentPhase = CalibrationPhase.ECalDigi
@@ -87,7 +96,8 @@ class CalibrationRun(object):
     if len(ilcsoftPath.split('/')) >= 7:
       self.platform = ilcsoftPath.split('/')[6]
       self.appversion = ilcsoftPath.split('/')[5]
-    self.calibrationBinariesDir = os.path.join(ilcsoftPath, "PandoraAnalysis/HEAD/bin/")
+    #TODO use either line below or take it from configuration service
+    #  self.calibrationBinariesDir = os.path.join(ilcsoftPath, "PandoraAnalysis/HEAD/bin/")
 
 
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
@@ -259,39 +269,124 @@ class CalibrationRun(object):
       result[i] = result[i] / float(number_of_elements)
     return result
 
-  def __mergePandoraLikelihoodXmlFiles(self, fileNamePattern):
+  def __mergePandoraLikelihoodXmlFiles(self):
     folder = "calib%s/stage%s/phase%s/" % (self.calibrationID, self.currentStage, self.currentPhase))
-        filesToMerge=glob.glob(folder + "**/*.xml")
-        outFileName="newPandoraLikelihoodData.xml"
+    filesToMerge=glob.glob(folder + "**/*.xml")
+    outFileName="newPandoraLikelihoodData.xml"
 
-        #TODO how to get platform (e.g. x86_64-slc5-gcc43-opt) and appversion (e.g. ILCSoft-2019-02-20_gcc62)?
-        #FIXME maybe one can use here ilcsoftpath? or is it better to extract path from Configuration Service?
-        likelihoodMergeScriptPath=self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
-                                                                                               'pandora_calibration_scripts',
-                                                                                               appversion), None)
-        likelihoodMergeScript=os.path.join(mergeScriptPath, 'MergePandoraLikelihoodData.py')
+    #TODO how to get platform (e.g. x86_64-slc5-gcc43-opt) and appversion (e.g. ILCSoft-2019-02-20_gcc62)?
+    #FIXME maybe one can use here ilcsoftpath? or is it better to extract path from Configuration Service?
+    likelihoodMergeScriptPath=self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
+                                                                         'pandora_calibration_scripts',
+                                                                         appversion), None)
+    likelihoodMergeScript=os.path.join(mergeScriptPath, 'MergePandoraLikelihoodData.py')
 
-        comm='python %s "main([%s],\'%s\')"' % (likelihoodMergeScript, ', '.join(("'%s'" % (ifile))
-                                                                                 for iFile in filesToMergeString), outFileName)
-        self.stdError=''
-        res=shellCall(timeout = 0, comm)
+    comm='python %s "main([%s],\'%s\')"' % (likelihoodMergeScript, ', '.join(("'%s'" % (ifile))
+                          for iFile in filesToMergeString), outFileName)
+    res=shellCall(timeout = 0, comm)
 
-        return binaryFileToString(folder + '/' + outFileName)
+    return binaryFileToString(folder + '/' + outFileName)
 
-        def __calculateNewCalibConstants(self):
+  def __calculateNewCalibConstants(self, stepID):
+    fileNamePattern='pfoanalysis_w*.root'
+    fileDir="calib%s/stage%s/phase%s/step%s/" % (self.calibrationID, self.currentStage, self.currentPhase, stepID))
+    inputFilesPattern=os.path.join(fileDir + fileNamePattern)
+
+    # TODO ask Andre to add separate entry for the directory with binaries from $ILCSOFT/PandoraAnalysis/HEAD/bin
+    scriptPath=self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
+                                                                         'pandora_calibration_scripts',
+                                                                         appversion), None)
+
+    if self.currentPhase == CalibrationPhase.ECalDigi:
+      binary=os.path.join(mergeScriptPath, 'ECalDigitisation_ContainedEvents')
+      truthEnergy=CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ECalDigi)
+
+      res=convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
+                                   '-c', digitisationAccuracy, '-d', fileDir, '-e', '90',
+                                   '-g', 'Barrel', '-i' ecalBarrelCosThetaRange[0], '-j' ecalBarrelCosThetaRange[1]] )
+
+      res = convert_and_execute( [ binary, '-a', inputFilesPattern, '-b', truthEnergy,
+                                   '-c', digitisationAccuracy, '-d', fileDir, '-e', '90',
+                                   '-g', 'EndCap', '-i' ecalEndcapCosThetaRange[0], '-j' ecalEndcapCosThetaRange[1]] )
+
+      #TODO extract calib constants (see lines 381-392 in Calibrate.sh script)
 
 
-        def __calculateNewParamsRoot(self, stepID):
-        """ run the pandora executable over the existing root files from the workers for given phase and step """
-        folder="calib%s/stage%s/phase%s/step%s/" % (self.calibrationID, self.currentStage, self.currentPhase, stepID))
-        if self.currentStage == 2:
-        fileNamePattern="PandoraLikelihoodDataPhotonTraining_w*.xml"
-        mergedPhotonLikelihoodFile=__mergePandoraLikelihoodXmlFiles(folder + fileNamePattern)
-        self.currentParameterSet=mergedPhotonLikelihoodFile
-        else:
-        fileNamePattern='pfoanalysis_w*.root'
-        #TODO implement me
-        pass
+    elif self.currentPhase == CalibrationPhase.HCalDigi:
+      binary = os.path.join(mergeScriptPath, 'ECalDigitisation_ContainedEvents')
+      truthEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HCalDigi)
+      comm = '%s -a "%s" -b "%s" -c "%s" -d "%s" -e 90 -g "Barrel" -i "%s" -j "%s"' % (binary, inputFilesPattern, truthEnergy, digitisationAccuracy,
+                                                                                       fileDir, hcalBarrelCosThetaRange[0], hcalBarrelCosThetaRange[1])
+      res = shellCall(timeout = 0, comm)
+      comm = '%s -a "%s" -b "%s" -c "%s" -d "%s" -e 90 -g "EndCap" -i "%s" -j "%s"' % (binary, inputFilesPattern, truthEnergy, digitisationAccuracy,
+                                                                                      fileDir, hcalEndcapCosThetaRange[0], hcalEndcapCosThetaRange[1])
+      res = shellCall(timeout = 0, comm)
+      #TODO extract calib constants (see lines 381-392 in Calibrate.sh script)
+
+    elif self.currentPhase == CalibrationPhase.MuonAndHCalOtherDigi:
+    #  INFO CalibrationPhase.MuonAndHCalDigi is the only phase without loop
+      truthEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.MuonAndHCalOtherDigi)
+      binary = os.path.join(mergeScriptPath, 'SimCaloHitEnergyDistribution')
+      comm = '%s -a "%s" -b "%s" -c "%s"' % (binary, inputFilesPattern, truthEnergy, fileDir)
+      res = shellCall(timeout = 0, comm)
+
+      # this steps requires files from previous step (which means previous phase as well, since this step is done only once)
+      fileDir = "calib%s/stage%s/phase%s/step%s/" % (self.calibrationID, self.currentStage, CalibrationPhase.HCalDigi, stepID-1) )
+      inputFilesPattern= os.path.join(fileDir + fileNamePattern)
+      truthEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HCalDigi)
+      binary = os.path.join(mergeScriptPath, 'HCalDigitisation_DirectionCorrectionDistribution')
+      comm = '%s -a "%s" -b "%s" -c "%s"' % (binary, inputFilesPattern, truthEnergy, fileDir)
+      res = shellCall(timeout = 0, comm)
+      #TODO extract calib constants (see lines 381-392 in Calibrate.sh script)
+      
+    elif self.currentPhase == CalibrationPhase.ElectroMagEnergy:
+      binary = os.path.join(mergeScriptPath, 'PandoraPFACalibrate_EMScale')
+      truthEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ElectroMagEnergy)
+      comm = '%s -a "%s" -b "%s" -c "%s" -d "%s" -e "90"' % (binary, inputFilesPattern, truthEnergy, pandoraPFAAccuracy, fileDir)
+      res = shellCall(timeout = 0, comm)
+      #TODO extract calib constants (see lines 381-392 in Calibrate.sh script)
+
+    elif self.currentPhase == CalibrationPhase.HadronicEnergy:
+      binary = os.path.join(mergeScriptPath, 'PandoraPFACalibrate_HadronicScale_ChiSquareMethod')
+      truthEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HadronicEnergy)
+      comm = '%s -a "%s" -b "%s" -c "%s" -d "%s" -e "%s"' % (binary, inputFilesPattern, truthEnergy, pandoraPFAAccuracy, fileDir, nHcalLayers)
+      res = shellCall(timeout = 0, comm)
+      #TODO extract calib constants (see lines 381-392 in Calibrate.sh script)
+
+    #TODO implement logic on how to decide if one can go to next phase/stage or not
+
+  def __calculateNewParamsRoot( self, stepID ):
+    """ run the pandora executable over the existing root files from the workers for given phase and step """
+    if self.currentStage == 2:
+      mergedPhotonLikelihoodFile = __mergePandoraLikelihoodXmlFiles()
+      self.currentParameterSet = mergedPhotonLikelihoodFile 
+    else:
+      __calculateNewCalibConstants(stepID)
+      #TODO implement me
+      pass
+
+def _convert_to_str( non_str_list ):
+  """ Takes a list and converts each entry to str and returns this new list.
+
+  :param non_str_list: A list which contains a mixture of strings and non-strings, which can all be converted to strings.
+  :returns: List with all entries converted to str
+  :rtype: list
+  """
+  result = []
+  for entry in non_str_list:
+    result.append( str( entry ) )
+  return result
+
+def convert_and_execute( command_list ):
+  """ Takes a list, casts every entry of said list to string and executes it in a subprocess.
+
+  :param list command_list: List for a subprocess to execute, that may contain castable non-strings
+  :returns: output of the command
+  :rtype: basestring
+  """
+  call_list = _convert_to_str( command_list )
+  #TODO check if shellCall function accept list or it waits for one string as a command to execute
+  return shellCall(timeout = 0, call_list)
 
   @executeWithUserProxy
   def resubmitJob(self, workerID):
