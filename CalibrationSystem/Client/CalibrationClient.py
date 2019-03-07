@@ -18,14 +18,16 @@ __RCSID__ = "$Id$"
 class CalibrationPhase(object):
   """ Represents the different phases a calibration can be in.
   Since Python 2 does not have enums, this is hardcoded for the moment.
-  Should this solution not be sufficient any more, one can make a better enum implementation by hand or install a backport of the python3 implementation from PyPi."""
+  Should this solution not be sufficient any more, one can make a better enum implementation by hand or install
+  a backport of the python3 implementation from PyPi."""
   ECalDigi, HCalDigi, MuonAndHCalOtherDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining = range(6)
 
   @staticmethod
   def phaseIDFromString(phase_name):
     """ Returns the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, MuonAndHCalOtherDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
+    ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: ID of this phase
     :rtype: int
     """
@@ -48,7 +50,8 @@ class CalibrationPhase(object):
   def fileKeyFromPhase(phaseID):
     """ Returns the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi,
+    MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: file key for this phase
     :rtype: str
     """
@@ -67,12 +70,13 @@ class CalibrationPhase(object):
     else:
       raise ValueError('There is no CalibrationPhase with the ID %s' % phaseID)
 
-  #TODO read these energies from CS or from users input
+  # TODO read these energies from CS or from users input
   @staticmethod
   def sampleEnergyFromPhase(phaseID):
     """ Returns energy of provided sample of the given CalibrationPhase, passed as a float.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi, MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi,
+    MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: file key for this phase
     :rtype: str
     """
@@ -114,12 +118,10 @@ class CalibrationPhase(object):
     else:
       raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)
 
-
 class CalibrationClient(object):
   """ Handles the workflow of the worker nodes. Fetches the necessary data from the service,
   calls the calibration software to be run and reports the results back.
   """
-
   def __init__(self, calibrationID, workerID):
     """ Initializes the client
 

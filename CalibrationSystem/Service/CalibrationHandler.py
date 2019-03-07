@@ -21,7 +21,6 @@ __RCSID__ = "$Id$"
 
 class WorkerInfo(object):
   """ Wrapper class to store information needed by workers to compute their result. """
-
   def __init__(self, parameterSet, offset):
     """ Creates a new WorkerInfo object, passed to the worker nodes to enable them to compute their results.
 
@@ -34,13 +33,11 @@ class WorkerInfo(object):
   def getInfo(self):
     return (self.parameterSet, self.offset)
 
+
 #pylint: disable=no-self-use
-
-
 class CalibrationResult(object):
   """ Wrapper class to store information about calibration computation interim results. Stores results
   from all worker nodes from a single step. """
-
   def __init__(self):
     self.results = dict()
 
@@ -68,7 +65,6 @@ class CalibrationRun(object):
   Includes files, current parameter set, software version, the workers running as well as
   the results of each step.
   """
-
   def __init__(self, calibrationID, steeringFile, ilcsoftPath, inputFiles, numberOfJobs):
     self.calibrationID = calibrationID
     self.steeringFile = steeringFile
@@ -93,16 +89,17 @@ class CalibrationRun(object):
     #  /cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-02-07/x86_64-slc6-gcc7-opt
     self.platform = ''
     self.appversion = ''
+    self.calibrationConstantsDict = defaultdict()
     if len(ilcsoftPath.split('/')) >= 7:
       self.platform = ilcsoftPath.split('/')[6]
       self.appversion = ilcsoftPath.split('/')[5]
     #TODO use either line below or take it from configuration service
     #  self.calibrationBinariesDir = os.path.join(ilcsoftPath, "PandoraAnalysis/HEAD/bin/")
 
-
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
-    #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs to be accessed by the agent in the case of resubmission
+    #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs
+    #to be accessed by the agent in the case of resubmission
 
   @executeWithUserProxy
   def submitJobs(self, calibrationID, idsOfWorkerNodesToSubmitTo=None):
@@ -110,13 +107,15 @@ class CalibrationRun(object):
     Use a specially crafted application that runs repeated Marlin reconstruction steps
 
     :param int calibrationID: ID of this calibration. Needed for the jobName parameter
-    :param idsOfWorkerNodesToSubmitTo: list of integers representing IDs of worker nodes to submit jobs to; if None submit to all allocated nodes
+    :param idsOfWorkerNodesToSubmitTo: list of integers representing IDs of worker nodes to submit jobs to;
+                                       if None submit to all allocated nodes
     :returns: S_OK or S_ERROR
     :rtype: dict
     """
     usernameAndGroup = _getUsernameAndGroup()
     if not username['OK']:
-        return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s; WorkerID = %s' % (calibrationID, curWorkerID))
+        return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s; WorkerID = %s'
+                       % (calibrationID, curWorkerID))
     proxyUsername = usernameAndGroup['username']
     proxyUserGroup = usernameAndGroup['group']
 
@@ -127,7 +126,7 @@ class CalibrationRun(object):
     self.init_files()
     listOfNodesToSubmitTo = xrange(0, self.numberOfJobs)
     if idsOfWorkerNodesToSubmitTo is not None:
-        listOfNodesToSubmitTo = idsOfWorkerNodesToSubmitTo
+      listOfNodesToSubmitTo = idsOfWorkerNodesToSubmitTo
     for curWorkerID in listOfNodesToSubmitTo:
       curJob = UserJob()
       curJob.check = False  # Necessary to turn off user confirmation
@@ -142,11 +141,14 @@ class CalibrationRun(object):
       #  calib.setNbEvts(nEvts+1)
       #  calib.setProcessorsToUse([])
       calib.setSteeringFile(recoSteeringFileName)
-      #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"  --Output_DST.LCIOOutputFile="+outputFile+"  --constant.CalorimeterIntegrationTimeWindow="+str(calorimeterIntegrationTimeWindow))
+      #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"
+      #                             --Output_DST.LCIOOutputFile="+outputFile+"
+      #                             --constant.CalorimeterIntegrationTimeWindow="+str(calorimeterIntegrationTimeWindow))
       res = curJob.append(calib)
       if not res['OK']:
         print res['Message']
-        return S_ERROR('Failed to setup Calibration worklow module. CalibrationID = %s; WorkerID = %s' % (calibrationID, curWorkerID))
+        return S_ERROR('Failed to setup Calibration worklow module. CalibrationID = %s; WorkerID = %s'
+                       % (calibrationID, curWorkerID))
 
       # FIXME should we set any time limit at all?
       curJob.setCPUTime(60 * 60 * 24)
@@ -155,8 +157,8 @@ class CalibrationRun(object):
       # FIXME implement distribution of slcio files of each category (MUON, KAON, PHOTON) among the jobs
       # FIXME treat case when number of input files in one of category is less than number of jobs...
       lcioFile = None
-      #  key = CalibrationPhase.fileKeyFromPhase( self.currentPhase )
-      #  lcioFile = _getLCIOInputFiles( self.inputFiles[key][ i ] )
+      #  key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
+      #  lcioFile = _getLCIOInputFiles(self.inputFiles[key][i])
 
       curJob.setInputData(lcioFile)
       curJob.setInputSandbox(inputSB)
@@ -181,7 +183,7 @@ class CalibrationRun(object):
     MUON_FILES = execute_and_return_output(['python', 'Xml_Generation/countMatches.py',
                                             MUON_PATH, SLCIO_FORMAT]).split(' ')
     KAON_FILES = execute_and_return_output(['python', 'Xml_Generation/countMatches.py',
-                                            KAON_PATH, SLCIO_FORMAT]).split(' ')
+                                              KAON_PATH, SLCIO_FORMAT]).split(' ')
 
   def addResult(self, stepID, workerID, result):
     """ Add a reconstruction result to the list of other results
@@ -200,7 +202,8 @@ class CalibrationRun(object):
     """ Returns the current parameters
 
     :param int stepIDOnWorker: The ID of the step the worker just completed.
-    :returns: If the computation is finished, returns S_OK containing a success message string. If there is a new parameter set, a S_OK dict containing the updated parameter set. Else a S_ERROR
+    :returns: If the computation is finished, returns S_OK containing a success message string. If there is a new
+              parameter set, a S_OK dict containing the updated parameter set. Else a S_ERROR
     :rtype: dict
     """
     if self.calibrationFinished:
@@ -208,7 +211,8 @@ class CalibrationRun(object):
     if self.currentStep > stepIDOnWorker:
       return S_OK(self.currentParameterSet)
     else:
-      return S_ERROR('No new parameter set available yet. Current step in service: %s, step on worker: %s' % (self.currentStep, stepIDOnWorker))
+      return S_ERROR('No new parameter set available yet. Current step in service: %s, step on worker: %s'
+                     % (self.currentStep, stepIDOnWorker))
 
   def endCurrentStep(self):
     """ Calculates the new parameter set based on the results from the computations and prepares the object
@@ -216,13 +220,14 @@ class CalibrationRun(object):
 
     :returns: None
     """
-    self.__calculateNewParamsRoot( self.currentStep )
+    self.__calculateNewParamsRoot(self.currentStep)
     self.currentStep += 1
     #if self.currentStep > 15: #FIXME: Implement real stopping criterion
     #TODO Implement real stopping criterion
     if self.currentStep > 1:  # FIXME: replace with line above after testing
       self.calibrationFinished = True
-      #FIXME: Decide how a job finishing should be handled - set this flag to True and have user poll, do something actively here, etc...
+      #FIXME: Decide how a job finishing should be handled - set this flag to True and have user poll, do something
+      #       actively here, etc...
     #self.activeWorkers = dict()
     #FIXME: implement following logic:
     # Check if error small enough. If yes, set step to 0 and phase to $nextphase
@@ -237,7 +242,7 @@ class CalibrationRun(object):
     :type list1: `python:list`
     :param list2: Other list that should be added element-wise
     :type list2: `python:list`
-    :returns: The list [ list1[0]+list2[0], list1[1]+list2[1], ... ]
+    :returns: The list [list1[0]+list2[0], list1[1]+list2[1], ...]
     :rtype: list
     """
     if len(list1) != len(list2):
@@ -270,134 +275,58 @@ class CalibrationRun(object):
     return result
 
   def __mergePandoraLikelihoodXmlFiles(self):
-    folder = "calib%s/stage%s/phase%s/" % (self.calibrationID, self.currentStage, self.currentPhase))
-    filesToMerge=glob.glob(folder + "**/*.xml")
-    outFileName="newPandoraLikelihoodData.xml"
+    folder = "calib%s/stage%s/phase%s/" % (self.calibrationID, self.currentStage, self.currentPhase)
+    filesToMerge = glob.glob(folder + "**/*.xml")
+    outFileName = "newPandoraLikelihoodData.xml"
 
     #TODO how to get platform (e.g. x86_64-slc5-gcc43-opt) and appversion (e.g. ILCSoft-2019-02-20_gcc62)?
     #FIXME maybe one can use here ilcsoftpath? or is it better to extract path from Configuration Service?
-    likelihoodMergeScriptPath=self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
-                                                                         'pandora_calibration_scripts',
-                                                                         appversion), None)
-    likelihoodMergeScript=os.path.join(mergeScriptPath, 'MergePandoraLikelihoodData.py')
+    likelihoodMergeScriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
+                                                                                             'pandora_calibration_scripts', appversion), None)
+    likelihoodMergeScript = os.path.join(mergeScriptPath, 'MergePandoraLikelihoodData.py')
 
-    comm='python %s "main([%s],\'%s\')"' % (likelihoodMergeScript, ', '.join(("'%s'" % (ifile))
-                          for iFile in filesToMergeString), outFileName)
-    res=shellCall(timeout = 0, comm)
+    comm = 'python %s "main([%s],\'%s\')"' % (likelihoodMergeScript, ', '.join(("'%s'" % (ifile))
+                                                                               for iFile in filesToMergeString), outFileName)
+    res = shellCall(timeout=0, comm)
 
     return binaryFileToString(folder + '/' + outFileName)
 
   def __calculateNewCalibConstants(self, stepID):
-    fileNamePattern='pfoanalysis_w*.root'
-    fileDir="calib%s/stage%s/phase%s/step%s/" % (self.calibrationID, self.currentStage, self.currentPhase, stepID))
-    inputFilesPattern=os.path.join(fileDir + fileNamePattern)
+    fileNamePattern = 'pfoanalysis_w*.root'
+    fileDir = "calib%s/stage%s/phase%s/step%s/" % (self.calibrationID, self.currentStage, self.currentPhase, stepID)
+    inputFilesPattern = os.path.join(fileDir + fileNamePattern)
 
     # TODO ask Andre to add separate entry for the directory with binaries from $ILCSOFT/PandoraAnalysis/HEAD/bin
-    scriptPath=self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
-                                                                         'pandora_calibration_scripts',
-                                                                         appversion), None)
+    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
+                                                                              'pandora_calibration_scripts', appversion), None)
+
+    truthEnergy = CalibrationPhase.sampleEnergyFromPhase(self.currentPhase)
 
     if self.currentPhase == CalibrationPhase.ECalDigi:
-      binary=os.path.join(mergeScriptPath, 'ECalDigitisation_ContainedEvents')
-      truthEnergy=CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ECalDigi)
-
-      res=convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                   '-c', digitisationAccuracy, '-d', fileDir, '-e', '90',
-                                   '-g', 'Barrel', '-i' ecalBarrelCosThetaRange[0], '-j' ecalBarrelCosThetaRange[1]] )
-
-      res = convert_and_execute( [ binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                   '-c', digitisationAccuracy, '-d', fileDir, '-e', '90',
-                                   '-g', 'EndCap', '-i' ecalEndcapCosThetaRange[0], '-j' ecalEndcapCosThetaRange[1]] )
-
-      #TODO extract calib constants (see lines 381-392 in Calibrate.sh script)
-
-
-    elif self.currentPhase == CalibrationPhase.HCalDigi:
       binary = os.path.join(mergeScriptPath, 'ECalDigitisation_ContainedEvents')
-      truthEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HCalDigi)
-      comm = '%s -a "%s" -b "%s" -c "%s" -d "%s" -e 90 -g "Barrel" -i "%s" -j "%s"' % (binary, inputFilesPattern, truthEnergy, digitisationAccuracy,
-                                                                                       fileDir, hcalBarrelCosThetaRange[0], hcalBarrelCosThetaRange[1])
-      res = shellCall(timeout = 0, comm)
-      comm = '%s -a "%s" -b "%s" -c "%s" -d "%s" -e 90 -g "EndCap" -i "%s" -j "%s"' % (binary, inputFilesPattern, truthEnergy, digitisationAccuracy,
-                                                                                      fileDir, hcalEndcapCosThetaRange[0], hcalEndcapCosThetaRange[1])
-      res = shellCall(timeout = 0, comm)
-      #TODO extract calib constants (see lines 381-392 in Calibrate.sh script)
 
-    elif self.currentPhase == CalibrationPhase.MuonAndHCalOtherDigi:
-    #  INFO CalibrationPhase.MuonAndHCalDigi is the only phase without loop
-      truthEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.MuonAndHCalOtherDigi)
-      binary = os.path.join(mergeScriptPath, 'SimCaloHitEnergyDistribution')
-      comm = '%s -a "%s" -b "%s" -c "%s"' % (binary, inputFilesPattern, truthEnergy, fileDir)
-      res = shellCall(timeout = 0, comm)
+      res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
+                                 '-c', digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'Barrel',
+                                 '-i', ecalBarrelCosThetaRange[0], '-j', ecalBarrelCosThetaRange[1]])
 
-      # this steps requires files from previous step (which means previous phase as well, since this step is done only once)
-      fileDir = "calib%s/stage%s/phase%s/step%s/" % (self.calibrationID, self.currentStage, CalibrationPhase.HCalDigi, stepID-1) )
-      inputFilesPattern= os.path.join(fileDir + fileNamePattern)
-      truthEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HCalDigi)
-      binary = os.path.join(mergeScriptPath, 'HCalDigitisation_DirectionCorrectionDistribution')
-      comm = '%s -a "%s" -b "%s" -c "%s"' % (binary, inputFilesPattern, truthEnergy, fileDir)
-      res = shellCall(timeout = 0, comm)
-      #TODO extract calib constants (see lines 381-392 in Calibrate.sh script)
-      
-    elif self.currentPhase == CalibrationPhase.ElectroMagEnergy:
-      binary = os.path.join(mergeScriptPath, 'PandoraPFACalibrate_EMScale')
-      truthEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ElectroMagEnergy)
-      comm = '%s -a "%s" -b "%s" -c "%s" -d "%s" -e "90"' % (binary, inputFilesPattern, truthEnergy, pandoraPFAAccuracy, fileDir)
-      res = shellCall(timeout = 0, comm)
-      #TODO extract calib constants (see lines 381-392 in Calibrate.sh script)
+      res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
+                                 '-c', digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'EndCap',
+                                 '-i', ecalEndcapCosThetaRange[0], '-j', ecalEndcapCosThetaRange[1]])
 
-    elif self.currentPhase == CalibrationPhase.HadronicEnergy:
-      binary = os.path.join(mergeScriptPath, 'PandoraPFACalibrate_HadronicScale_ChiSquareMethod')
-      truthEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HadronicEnergy)
-      comm = '%s -a "%s" -b "%s" -c "%s" -d "%s" -e "%s"' % (binary, inputFilesPattern, truthEnergy, pandoraPFAAccuracy, fileDir, nHcalLayers)
-      res = shellCall(timeout = 0, comm)
-      #TODO extract calib constants (see lines 381-392 in Calibrate.sh script)
+      calibConstBarrel = float(execute_and_convert(['python', 'ECal_Digi_Extract.py', CALIBRATION_FILE,
+                                                    truthEnergy, CALIBR_ECAL, 'Calibration_Constant', 'Barrel']))
+      calibConstEndcap = float(execute_and_convert(['python', 'ECal_Digi_Extract.py', CALIBRATION_FILE,
+                                                    truthEnergy, CALIBR_ECAL, 'Calibration_Constant', 'Endcap']))
+      meanBarrel = float(execute_and_convert(['python', 'ECal_Digi_Extract.py', CALIBRATION_FILE,
+                                              truthEnergy, CALIBR_ECAL, 'Mean', 'Barrel']))
+      meanEndcap = float(execute_and_convert(['python', 'ECal_Digi_Extract.py', CALIBRATION_FILE,
+                                              truthEnergy, CALIBR_ECAL, 'Mean', 'Endcap']))
 
-    #TODO implement logic on how to decide if one can go to next phase/stage or not
+      fractionalError = max(abs(meanBarrel - truthEnergy), abs(meanEndcap - truthEnergy)) / truthEnergy
 
-  def __calculateNewParamsRoot( self, stepID ):
-    """ run the pandora executable over the existing root files from the workers for given phase and step """
-    if self.currentStage == 2:
-      mergedPhotonLikelihoodFile = __mergePandoraLikelihoodXmlFiles()
-      self.currentParameterSet = mergedPhotonLikelihoodFile 
-    else:
-      __calculateNewCalibConstants(stepID)
-      #TODO implement me
-      pass
+      calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"]
+      calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='ECALEndcapCorrectionFactor']"]
 
-def _convert_to_str( non_str_list ):
-  """ Takes a list and converts each entry to str and returns this new list.
-
-  :param non_str_list: A list which contains a mixture of strings and non-strings, which can all be converted to strings.
-  :returns: List with all entries converted to str
-  :rtype: list
-  """
-  result = []
-  for entry in non_str_list:
-    result.append( str( entry ) )
-  return result
-
-def convert_and_execute( command_list ):
-  """ Takes a list, casts every entry of said list to string and executes it in a subprocess.
-
-  :param list command_list: List for a subprocess to execute, that may contain castable non-strings
-  :returns: output of the command
-  :rtype: basestring
-  """
-  call_list = _convert_to_str( command_list )
-  #TODO check if shellCall function accept list or it waits for one string as a command to execute
-  return shellCall(timeout = 0, call_list)
-
-  @executeWithUserProxy
-  def resubmitJob(self, workerID):
-    """ Resubmits a job to the worker with the given ID, passing the current parameterSet.
-    This is caused by a worker node crashing/a job failing.
-
-    :param int workerID: ID of the worker where the job failed
-    :returns: None
-    """
-    #TODO: Implement Resubmit job, receive information what the failed job was working on somehow.
-    pass
 
 
 class CalibrationHandler(RequestHandler):
@@ -416,7 +345,6 @@ class CalibrationHandler(RequestHandler):
 
   auth_createCalibration = ['authenticated']
   types_createCalibration = [basestring, basestring, dict, int, basestring, basestring]
-
   def export_createCalibration(self, steeringFile, ilcsoftPath, inputFiles, numberOfJobs):
     """ Called by users to create a calibration run (series of calibration iterations)
 
@@ -430,12 +358,12 @@ class CalibrationHandler(RequestHandler):
     """
     CalibrationHandler.calibrationCounter += 1
     calibrationID = CalibrationHandler.calibrationCounter
-    newRun=CalibrationRun(calibrationID, steeringFile, ilcsoftPath, inputFiles, numberOfJobs)
-    CalibrationHandler.activeCalibrations[calibrationID]=newRun
-    #newRun.submitJobs( calibrationID )
-    #return S_OK( calibrationID )
+    newRun = CalibrationRun(calibrationID, steeringFile, ilcsoftPath, inputFiles, numberOfJobs)
+    CalibrationHandler.activeCalibrations[calibrationID] = newRun
+    #newRun.submitJobs(calibrationID)
+    #return S_OK(calibrationID)
     #FIXME: Check if lock is necessary.(Race condition?)
-    res = newRun.submitJobs(calibrationID)  # , executionLock = False ) #pylint: disable=unexpected-keyword-arg
+    res = newRun.submitJobs(calibrationID)  # , executionLock = False) #pylint: disable=unexpected-keyword-arg
     if _calibration_creation_failed(res):
       # FIXME: This should be treated, since the successfully submitted jobs will still run
       ret_val = S_ERROR('Submitting at least one of the jobs failed')
@@ -443,9 +371,9 @@ class CalibrationHandler(RequestHandler):
       return ret_val
     return S_OK((calibrationID, res))
 
-        auth_submitResult=['authenticated']
-        types_submitResult=[int, int, int, int, int, basestring]
-        def export_submitResult(self, calibrationID, stageID, phaseID, stepID, workerID, rootFileContent):
+  auth_submitResult = ['authenticated']
+  types_submitResult = [int, int, int, int, int, basestring]
+  def export_submitResult(self, calibrationID, stageID, phaseID, stepID, workerID, rootFileContent):
     """ Called from the worker node to report the result of the calibration to the service
 
     :param int calibrationID: ID of the current calibration run
@@ -455,14 +383,15 @@ class CalibrationHandler(RequestHandler):
     :param int workerID: ID of the reporting worker
     :param rootFileContent: The binary string content of the root file containing the result of the reconstruction run
     :type rootFile: binary data string
-    :returns: S_OK in case of success or if the submission was ignored (since it belongs to an older step), S_ERROR if the requested calibration can not be found.
+    :returns: S_OK in case of success or if the submission was ignored (since it belongs to an older step),
+              S_ERROR if the requested calibration can not be found.
     :rtype: dict
     """
     #TODO: Fix race condition(if it exists)
     #TODO: different calibrations will use the same directory?
-    calibration = CalibrationHandler.activeCalibrations.get( calibrationID, None )
+    calibration = CalibrationHandler.activeCalibrations.get(calibrationID, None)
     if not calibration:
-      return S_ERROR( 'Calibration with ID %d not found.' % calibrationID )
+      return S_ERROR('Calibration with ID %d not found.' % calibrationID)
     if stepID is calibration.currentStep:  # Only add result if it belongs to current step. Else ignore (it's ok)
       ## FIXME: use mkdir -p like implementation
       try:
@@ -470,11 +399,12 @@ class CalibrationHandler(RequestHandler):
       except OSError:
         pass
       #FIXME filename depends from step (pfoanalysis either PandoraPhotonLikelihood)
-      newFilename="calib%s/stage%s/phase%s/step%s/pfoanalysis_w%s.root" % (
-                                                                           calibrationID, stageID, phaseID, stepID, workerID)
+      newFilename = "calib%s/stage%s/phase%s/step%s/pfoanalysis_w%s.root" % (calibrationID, stageID, phaseID, stepID,
+                                                                             workerID)
       if stageID == 2:
-        newFilename="calib%s/stage%s/phase%s/step%s/PandoraLikelihoodDataPhotonTraining_w%s.xml" % (
-                                                                                                    calibrationID, stageID, phaseID, stepID, workerID)
+        newFilename = "calib%s/stage%s/phase%s/step%s/PandoraLikelihoodDataPhotonTraining_w%s.xml" % (calibrationID,
+                                                                                                      stageID, phaseID,
+                                                                                                      stepID, workerID)
       stringToBinaryFile(rootFileContent, newFilename)
 
       calibration.addResult(stepID, workerID, newFilename)
@@ -482,7 +412,6 @@ class CalibrationHandler(RequestHandler):
 
   auth_checkForStepIncrement = ['authenticated']
   types_checkForStepIncrement = []
-
   def export_checkForStepIncrement(self):
     """ Should only be called by the agent. Periodically checks whether there are any running
     Calibrations that received enough results to start the next step.
@@ -496,8 +425,9 @@ class CalibrationHandler(RequestHandler):
         calibration.endCurrentStep()
     return S_OK()
 
-        finishedJobsForNextStep=0.9  # X% of all jobs must have finished in order for the next step to begin.
-        def finalInterimResultReceived(self, calibration, stepID):
+  finishedJobsForNextStep = 0.9  # X% of all jobs must have finished in order for the next step to begin.
+
+  def finalInterimResultReceived(self, calibration, stepID):
     """ Called periodically. Checks for the given calibration if we now have enough results to compute
     a new ParameterSet.
 
@@ -514,7 +444,6 @@ class CalibrationHandler(RequestHandler):
 
   auth_getNewParameters = ['authenticated']
   types_getNewParameters = [int, int]
-
   def export_getNewParameters(self, calibrationID, stepIDOnWorker):
     """ Called by the worker node to retrieve the parameters for the next iteration of the calibration
 
@@ -527,23 +456,22 @@ class CalibrationHandler(RequestHandler):
       gLogger.error("CalibrationID is not in active calibrations:",
                     "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
                                                                calibrationID))
-      result = S_ERROR(
-          "calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished" % calibrationID)
+      result = S_ERROR("calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
+                       % calibrationID)
       return result
-                                                                   res=cal.getNewParameters(stepIDOnWorker)
-                                                                   res['currentPhase']=cal.currentPhase
-                                                                   res['currentStage']=cal.currentStage
+    res = cal.getNewParameters(stepIDOnWorker)
+    res['currentPhase'] = cal.currentPhase
+    res['currentStage'] = cal.currentStage
     return res
 
   auth_resubmitJobs = ['authenticated']
   types_resubmitJobs = [list]
-
   def export_resubmitJobs(self, failedJobs):
     """ Takes a list of workerIDs and resubmits a job with the current parameterset there
 
     :param failedJobs: List of pairs of the form (calibrationID, workerID)
     :type failedJobs: `python:list`
-    :returns: S_OK if successful, else a S_ERROR with a pair ( errorstring, list_of_failed_id_pairs )
+    :returns: S_OK if successful, else a S_ERROR with a pair (errorstring, list_of_failed_id_pairs)
     :rtype: dict
     """
     failedPairs = []
@@ -567,10 +495,9 @@ class CalibrationHandler(RequestHandler):
     else:
       return S_OK()
 
-  #  auth_getNumberOfJobsPerCalibration = [ 'authenticated' ]
+  #  auth_getNumberOfJobsPerCalibration = ['authenticated']
   auth_getNumberOfJobsPerCalibration = ['all']
   types_getNumberOfJobsPerCalibration = []
-
   def export_getNumberOfJobsPerCalibration(self):
     """ Returns a dictionary that maps active calibration IDs to the number of initial jobs they submitted.
     Used by the agent to determine when to resubmit jobs.
@@ -585,7 +512,7 @@ class CalibrationHandler(RequestHandler):
 
   def _getUsernameAndGroup(self):
     """ Returns name of the group and name of the user of the proxy the user is currently having
-    Implementation is taken from DIRAC/Core/Security/BaseSecurity.py 
+    Implementation is taken from DIRAC/Core/Security/BaseSecurity.py
 
     :returns: S_OK with value being dict with 'group' and 'username' entries or S_ERROR
     :rtype: `python:dict`
@@ -615,7 +542,6 @@ class CalibrationHandler(RequestHandler):
 
   auth_resetService = ['all']  # FIXME: Restrict to test usage only
   types_resetService = []
-
   def export_resetService(self):
     """ Called only by test methods! Resets the service so it can be tested.
 
@@ -628,7 +554,6 @@ class CalibrationHandler(RequestHandler):
 
   auth_getInternals = ['all']  # FIXME: Restrict to test usage only
   types_getInternals = []
-
   def export_getInternals(self):
     """ Called only by test methods! Returns the class variables of this service,
     exposing its internals and making it testable.
@@ -646,7 +571,6 @@ class CalibrationHandler(RequestHandler):
 
   auth_setRunValues = ['all']
   types_setRunValues = [int, int, object, bool]
-
   def export_setRunValues(self, calibrationID, currentStep, parameterSet, calFinished):
     """ Sets the values of the calibration with ID calibrationID. It is put to step currentStep,
     gets the parameterSet as current parameter set and the stepFinished status.
@@ -668,7 +592,6 @@ class CalibrationHandler(RequestHandler):
 
   auth_getopts = ['all']
   types_getopts = [basestring]
-
   def export_getopts(self, option):
     """ Returns the value of the option stored in the gConfig that this service accesses.
 
@@ -681,7 +604,6 @@ class CalibrationHandler(RequestHandler):
 
   auth_getproxy_info = ['all']
   types_getproxy_info = []
-
   def export_getproxy_info(self):
     """ Returns the info of the proxy this service is using.
 
@@ -703,7 +625,6 @@ def _calibration_creation_failed(results):
   for job_result in results:
     success = success and job_result['OK']
   return not success
-
 
 def _getLCIOInputFiles(xml_file):
   """ Extracts the LCIO input file from the given marlin input xml
