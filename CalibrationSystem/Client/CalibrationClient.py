@@ -9,7 +9,6 @@ import sys
 from DIRAC.Core.DISET.RPCClient import RPCClient
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
-from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 
 __RCSID__ = "$Id$"
@@ -139,19 +138,21 @@ class CalibrationClient(object):
     self.log = gLogger.getSubLogger("CalibrationClient")
 
   def requestNewParameters(self):
-    """ Fetches the new parameter set from the service and updates the step counter in this object with the new value. Throws a ValueError if the calibration ended already.
+    """ Fetches the new parameter set from the service and updates the step counter in this object with the new value.
+    Throws a ValueError if the calibration ended already.
 
-    :returns: A string if the calibration is finished and this job should stop, else the parameter set for the new step, or None if no new parameters are available yet
+    :returns: A string if the calibration is finished and this job should stop, else the parameter set for the new step,
+    or None if no new parameters are available yet
     :rtype: list
     """
-    # FIXME return value has to be dictionary which contains keys: stepID, phaseID and parameters (list of strings in form which is accepted by updateSteeringFile function from CalibrationSystem/Utilities/functions.py)
     res = self.calibrationService.getNewParameters(self.calibrationID, self.currentStep)
     if res['OK']:
-      if isinstance(res['Value'], basestring):
+      if isinstance(res['Value'], dict):
+        self.currentPhase = res['currentPhase']
+        self.currentStage = res['currentStage']
+        return res['Value']
+      else:
         return res
-      self.currentPhase = res['currentPhase']
-      self.currentStage = res['currentStage']
-      return res['Value']
     else:
       return None  # No new parameters computed yet. Wait a bit and try again.
 

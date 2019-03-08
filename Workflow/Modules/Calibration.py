@@ -1,7 +1,7 @@
 '''
 Run Marlin
 
-ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent. 
+ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent.
 
 :since: Feb 9, 2010
 
@@ -23,10 +23,10 @@ from ILCDIRAC.Workflow.Utilities.DD4hepMixin import DD4hepMixin
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationClient, CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.functions import xml_generate, updateSteeringFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
 
 __RCSID__ = '$Id$'
 LOG = gLogger.getSubLogger(__name__)
-
 
 class Calibration(MarlinAnalysis):
   """Define the Calibration part of the workflow
@@ -103,22 +103,22 @@ class Calibration(MarlinAnalysis):
         except EnvironmentError, x:
           LOG.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
 
-    ##Handle PandoraSettingsPhotonTraining.xml for photon training step
+    ##Handle PandoraSettingsPhotonTraining.xml which is used for photon training stage
     pandorasettings = 'PandoraSettingsPhotonTraining.xml'
-    photontrainingfiledirname = os.path.join(
-        steeringfiledirname, '../CalibrationPandoraSettings/')  # FIXME is this path wrong?
     if not os.path.exists(pandorasettings):
+      # FIXME is this path wrong?
+      photontrainingfiledirname = os.path.join(steeringfiledirname, '../CalibrationPandoraSettings/')
       if photontrainingfiledirname and os.path.exists(os.path.join(photontrainingfiledirname, pandorasettings)):
         try:
           fullPathPandoraSettings = os.path.join(os.getcwd(), pandorasettings)
           shutil.copy(os.path.join(photontrainingfiledirname, pandorasettings),
                       fullPathPandoraSettings)
-          tree = et.parse(fullPathPandoraSettings)
-          tree.find(
-              "algorithm[@type='PhotonReconstruction']/HistogramFile").text = 'PandoraLikelihoodDataPhotonTraining.xml'
-          tree.write(fullPathPandoraSettings)
         except EnvironmentError, x:
           LOG.warn('Could not copy and prepare PandoraSettingsPhotonTraining.xml, exception: %s' % x)
+    # rename output xml-file from photon training stage
+    tree = et.parse(pandorasettings)
+    tree.find("algorithm[@type='PhotonReconstruction']/HistogramFile").text = 'PandoraLikelihoodDataPhotonTraining.xml'
+    tree.write(fullPathPandoraSettings)
 
     if self.inputGEAR:
       self.inputGEAR = os.path.basename(self.inputGEAR)
@@ -131,6 +131,8 @@ class Calibration(MarlinAnalysis):
       if steeringfiledirname:
         if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
           self.SteeringFile = os.path.join(steeringfiledirname, self.SteeringFile)
+          # default steering file doesn't have PfoAnalysis processor
+          self.addPfoAnalysisProcessor(self.SteeringFile)
     if not self.SteeringFile:
       LOG.error("Steering file not defined, shouldn't happen!")
       return S_ERROR("Could not find steering file")
@@ -156,16 +158,24 @@ class Calibration(MarlinAnalysis):
       return S_ERROR('Something wrong with software installation')
     marlin_dll = res["Value"]
 
-    #FIXME cross check if using 'True' for this while loop will bring expected result
     while True:
-
-      calibrationParameters = self.cali.requestNewParameters()
+      calibrationParameters = defaultdict()
+      if self.currentStep == -1:
+        calibrationParameters['currentPhase'] = CalibrationPhase.ECalDigi
+        calibrationParameters['currentStage'] = 1
+        # TODO copy this file to workdir first
+        parListFileName = 'parameterListMarlinSteeringFile.txt'
+        parDict = readParameterDict(parListFileName)
+        readParametersFromSteeringFile(self.SteeringFile, parDict)
+        calibrationParameters['parameters'] = parDict
+      else:
+        calibrationParameters = self.cali.requestNewParameters()
       while calibrationParameters is None:
         LOG.notice("Waiting for new parameters set")
         wasteCPUCycles(10)
         calibrationParameters = self.cali.requestNewParameters()
 
-      if not calibrationParameters['OK']:
+      if calibrationParameters['OK']:  # dict will contain element with key 'OK' only when calibration is finishd
         LOG.notice("Calibration finished")
         break
 
@@ -177,12 +187,7 @@ class Calibration(MarlinAnalysis):
 
       steeringFileToRun = 'marlinSteeringFile_%s_%s_%s.xml' % (self.currentStage, self.currentPhase, self.currentStep)
       updateSteeringFile(self.SteeringFile, steeringFileToRun, parameterDict)
-      # add PfoAnalysis processor to steering file
-      #TODO introduce the flag below: if user didn't provide a steering file himself
-      if (useDefaulSteeringFile):
-        addPfoAnalysisProcessor(steeringFileToRun)
-        updateSteeringFile(steeringFileToRun, steeringFileToRun, {
-                           "processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']": "pfoAnalysis.root"})
+
       #TODO clean up Marlin steering file - we don't need a lot of processors for calibration
       LOG.notice("new set of calibration parameters: %r" % parameterDict)
 
@@ -220,8 +225,8 @@ class Calibration(MarlinAnalysis):
 
     #FIXME TODO properly find path to the file
     # this file should contain only PfoAnalysis processor
-    pfoAnalysisProcessoeFile = '/afs/cern.ch/user/v/viazlo/pyDevs/dirac_developerGuide/ILCDIRAC/CalibrationSystem/Utilities/testing/pfoAnalysis.xml'
-    tmpTree = et.parse(pfoAnalysisProcessoeFile)
+    pfoAnalysisProcessorFile = '/afs/cern.ch/user/v/viazlo/pyDevs/dirac_developerGuide/ILCDIRAC/CalibrationSystem/Utilities/testing/pfoAnalysis.xml'
+    tmpTree = et.parse(pfoAnalysisProcessorFile)
     elementToAdd = tmpTree.getroot()
 
     if 'MyPfoAnalysis' not in (iEl.attrib['name'] for iEl in mainRoot.iter('processor')):
@@ -261,8 +266,8 @@ class Calibration(MarlinAnalysis):
     parameterDict["processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']"] = pandoraSettingsFile
 
     #TODO should one use different steering file for photon training? if no one need to append line below during all steps
-    if self.currentStage in [1,3]: 
-      parameterDict["processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']"] = pandoraSettingsFile
+    if self.currentStage in [1, 3]: 
+      parameterDict["processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']"] = 'pfoAnalysis.root'
     return S_OK()
 
   def prepareMARLIN_DLL(self, env_script_path):
@@ -459,4 +464,3 @@ fi
     script.write('exit $appstatus\n')
     script.close()
     return S_OK()
-  
