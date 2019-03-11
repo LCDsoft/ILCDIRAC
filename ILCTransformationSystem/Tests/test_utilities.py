@@ -25,8 +25,21 @@ def test_Constructor():
   assert theTask.meta['ProdID'] == 124
   assert theTask.meta['NumberOfEvents'] == eventsPerJob
 
-  theTask = Task(metaInput, parameterDict, eventsPerJob=0, metaPrev=metaPrev, dryRun=False)
+  theTask = Task(metaInput, parameterDict, None, metaPrev, dryRun=True)
+  assert theTask.meta['ProdID'] == 124
   assert theTask.meta.get('NumberOfEvents') is None
 
-  theTask = Task(metaInput, parameterDict, eventsPerJob=0, metaPrev=metaPrev, dryRun=True)
+  theTask = Task(metaInput, parameterDict, eventsPerJob=0, metaPrev=metaPrev, dryRun=False)
   assert theTask.meta.get('NumberOfEvents') == 0
+  assert theTask.meta.get('ProdID') == 124
+
+  # expect eventsPerBaseFile
+  theTask = Task(metaInput, parameterDict, eventsPerJob=0, metaPrev=metaPrev, dryRun=True, eventsPerBaseFile=333)
+  assert theTask.meta.get('NumberOfEvents') == 333
+
+
+def test_repr():
+  """Test the str and repr functions for Task."""
+  task = Task({}, {}, 1)
+  expectation = '{' + ',\n'.join('%r:%r' % (p, val) for p, val in sorted(vars(task).items())) + '}'
+  assert repr(task).replace(' ', '') == expectation.replace(' ', '')

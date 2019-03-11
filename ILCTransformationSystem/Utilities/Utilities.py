@@ -22,7 +22,6 @@ class Task(object):
     self.cliReco = ''
     self.taskName = ''
     self.sourceName = ''
-
     self._updateMeta(self.meta, self.metaPrev, self.eventsPerJob)
 
   def __str__(self):
@@ -38,15 +37,15 @@ class Task(object):
 
     Fake the input dataquery result in dryRun mode.
     """
-    if eventsPerJob:
+    if eventsPerJob is not None:
       outputDict['NumberOfEvents'] = eventsPerJob
-    if not self.dryRun:
-      return
+    if self.eventsPerBaseFile:
+      outputDict['NumberOfEvents'] = self.eventsPerBaseFile
+    if self.dryRun:  # pass the input values to the output
+      for key, value in inputDict.iteritems():
+        if key not in outputDict:
+          outputDict[key] = value
 
-    for key, value in inputDict.iteritems():
-      if key not in outputDict:
-        outputDict[key] = value
-    outputDict['NumberOfEvents'] = eventsPerJob
 
   def getProdName(self, *args):
     """Create the production name."""

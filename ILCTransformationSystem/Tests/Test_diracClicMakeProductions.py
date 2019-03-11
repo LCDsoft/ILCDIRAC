@@ -313,6 +313,7 @@ def test_createSplitProduction(theChain, pMockMod):
               eventsPerJob=0o07,
               eventsPerBaseFile=700,
               )
+  assert task.meta['NumberOfEvents'] == 700
   with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=pMockMod):
     retMeta = theChain.createSplitProduction(task)
   assert retMeta == {}
