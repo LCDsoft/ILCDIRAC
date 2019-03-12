@@ -14,12 +14,12 @@ cannot be (and should not be) used like the
 from __future__ import print_function
 import os
 import shutil
-import pprint
 
 from collections import defaultdict
 from decimal import Decimal
 
 from DIRAC                                                  import S_OK, S_ERROR, gLogger
+from DIRAC.Core.Utilities.ReturnValues import returnSingleResult
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
 from DIRAC.Core.Security.ProxyInfo                          import getProxyInfo
 from DIRAC.Core.Workflow.Module                             import ModuleDefinition
@@ -458,7 +458,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       LOG.error("Not transformation defined earlier")
       return S_ERROR("No transformation defined")
     if self.inputBKSelection and self.plugin not in  ['Limited', 'SlicedLimited']:
-      LOG.error("Meta data selection activated, should not specify the number of jobs")
+      LOG.error('Metadata selection activated, should not specify the number of jobs')
       return S_ERROR()
     self.nbtasks = nbtasks
     self.currtrans.setMaxNumberOfTasks(self.nbtasks) #pylint: disable=E1101
@@ -571,89 +571,103 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
 
     res = self._registerMetadata()
     if not res['OK']:
-      LOG.error("Could not register the following directories :", "%s" % str(res))
-    return S_OK()  
-  #############################################################################
-  
-  def _registerMetadata(self):
-    """ Private method
-      
-      Register path and metadata before the production actually runs. This allows for the definition of the full 
-      chain in 1 go. 
+      LOG.error('Could not register the following directories:', res['Message'])
+      return res
+    return S_OK()
+
+  def _createDirectory(self, path, failed, mode=0o775):
+    """Create the directory at path if it does not exist.
+
+    :param str path: path to check
+    :param list failed: list of failed paths
+    :param int mode: mode to set for directory
     """
-    
-    prevent_registration = self.ops.getValue("Production/PreventMetadataRegistration", False)
-    
-    if self.dryrun or prevent_registration:
-      LOG.notice("Would have created and registered the following\n",
-                      "\n ".join( [ " * %s: %s" %( par, val ) for par,val in self.finalMetaDict.iteritems() ] ) )
-      LOG.notice("Would have set this as non searchable metadata", str(self.finalMetaDictNonSearch))
+    exists = returnSingleResult(self.fc.isDirectory(path))
+    if exists['OK'] and exists['Value']:
+      LOG.verbose('Directory already exists:', path)
       return S_OK()
-    
-    failed = []
-    for path, meta in self.finalMetaDict.items():
-      result = self.fc.createDirectory(path)
-      if result['OK']:
-        if result['Value']['Successful']:
-          if path in result['Value']['Successful']:
-            LOG.verbose("Successfully created directory:", "%s" % path)
-            res = self.fc.changePathMode({ path : 0o775 }, False)
-            if not res['OK']:
-              LOG.error(res['Message'])
-              failed.append(path)
-        elif result['Value']['Failed']:
-          if path in result['Value']['Failed']:
-            LOG.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
-            failed.append(path)
-      else:
-        LOG.error('Failed to create directory:', result['Message'])
-        failed.append(path)
+    result = returnSingleResult(self.fc.createDirectory(path))
+    if not result['OK']:
+      LOG.error('Failed to create directory:', '%s: %s' % (path, result['Message']))
+      failed[path].append(result['Message'])
+      return S_ERROR()
+    LOG.verbose('Successfully created directory:', path)
+    res = self.fc.changePathMode({path: mode}, False)
+    if not res['OK']:
+      LOG.error(res['Message'])
+      failed[path].append(res['Message'])
+      return S_ERROR()
+    LOG.verbose('Successfully changed mode:', path)
+    return S_OK()
 
-      ## Get existing metadata, if it is the same don't set it again, otherwise throw error
-      existingMetadata = self.fc.getDirectoryUserMetadata( path.rstrip("/") )
+  def _checkMetadata(self, path, metaCopy):
+    """Get existing metadata, if it is the same do not set it again, otherwise return error."""
+    existingMetadata = self.fc.getDirectoryUserMetadata(path.rstrip('/'))
+    if not existingMetadata['OK']:
+      return S_OK()
+    failure = False
+    for key, value in existingMetadata['Value'].iteritems():
+      if key in metaCopy and metaCopy[key] != value:
+        LOG.error('Metadata values for folder %s disagree for key %s: Existing(%r), new(%r)' %
+                  (path, key, value, metaCopy[key]))
+        failure = True
+      elif key in metaCopy and metaCopy[key] == value:
+        LOG.verbose('Meta entry is unchanged', '%s = %s' % (key, value))
+        metaCopy.pop(key, None)
+    if failure:
+      return S_ERROR('Error when setting new metadata, already existing metadata disagrees!')
+    return S_OK()
+
+  def _registerMetadata(self):
+    """Set metadata for given folders.
+
+    Register path and metadata before the production actually runs. This allows for the definition
+    of the full chain in 1 go.
+    """
+    prevent_registration = self.ops.getValue('Production/PreventMetadataRegistration', False)
+
+    if self.dryrun or prevent_registration:
+      LOG.notice('Would have created and registered the following\n',
+                 '\n '.join([' * %s: %s' % (fPath, val) for fPath, val in self.finalMetaDict.iteritems()]))
+      LOG.notice('Would have set this as non searchable metadata', str(self.finalMetaDictNonSearch))
+      return S_OK()
+
+    failed = defaultdict(list)
+    for path, meta in sorted(self.finalMetaDict.items()):
+      res = self._createDirectory(path, failed)
+      if not res['OK']:
+        continue
+      LOG.verbose('Checking to set metadata:', meta)
       metaCopy = dict(meta)
-      if existingMetadata['OK']:
-        failure = False
-        for key, value in existingMetadata['Value'].iteritems():
-          if key in meta and meta[key] != value:
-            LOG.error("Metadata values for folder %s disagree for key %s: Existing(%r), new(%r)" %
-                      (path, key, value, meta[key]))
-            failure = True
-          elif key in meta and meta[key] == value:
-            metaCopy.pop(key, None)
-        if failure:
-          return S_ERROR( "Error when setting new metadata, already existing metadata disagrees!" )
+      res = self._checkMetadata(path, metaCopy)
+      if not res['OK']:
+        return res
+      if not metaCopy:
+        LOG.verbose('No new metadata to set')
+        continue
 
-      result = self.fc.setMetadata(path.rstrip("/"), metaCopy)
+      LOG.verbose('Setting metadata information: ', '%s: %s' % (path, metaCopy))
+      result = self.fc.setMetadata(path.rstrip('/'), metaCopy)
       if not result['OK']:
-        LOG.error("Could not preset metadata", "%s" % str(metaCopy))
-        LOG.error("Could not preset metadata", result['Message'])
+        LOG.error('Could not preset metadata', str(metaCopy))
+        LOG.error('Could not preset metadata', result['Message'])
+        failed[path].append(result['Message'])
 
-    for path, meta in self.finalMetaDictNonSearch.items():
-      result = self.fc.createDirectory(path)
-      if result['OK']:
-        if result['Value']['Successful']:
-          if path in result['Value']['Successful']:
-            LOG.verbose("Successfully created directory:", "%s" % path)
-            res = self.fc.changePathMode({ path: 0o775}, False)
-            if not res['OK']:
-              LOG.error(res['Message'])
-              failed.append(path)
-        elif result['Value']['Failed']:
-          if path in result['Value']['Failed']:
-            LOG.error('Failed to create directory:', "%s" % str(result['Value']['Failed'][path]))
-            failed.append(path)
-      else:
-        LOG.error('Failed to create directory:', result['Message'])
-        failed.append(path)
-      result = self.fc.setMetadata(path.rstrip("/"), meta)
+    for path, meta in sorted(self.finalMetaDictNonSearch.items()):
+      res = self._createDirectory(path, failed)
+      if not res['OK']:
+        continue
+      LOG.verbose('Setting non searchable metadata information: ', '%s: %s' % (path, meta))
+      result = self.fc.setMetadata(path.rstrip('/'), meta)
       if not result['OK']:
-        LOG.error("Could not preset metadata", str(meta))
+        LOG.error('Could not preset non searchable metadata', str(meta))
+        LOG.error('Could not preset non searchable metadata', result['Message'])
+        failed[path].append(result['Message'])
 
     if failed:
-      return  { 'OK' : False, 'Failed': failed}
+      return S_ERROR('Failed to register some metadata: %s' % dict(failed))
     return S_OK()
-  
+
   def getMetadata(self):
     """ Return the corresponding metadata of the last step
     """
