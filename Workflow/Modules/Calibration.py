@@ -23,7 +23,8 @@ from ILCDIRAC.Workflow.Utilities.DD4hepMixin import DD4hepMixin
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationClient, CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.functions import xml_generate, updateSteeringFile
-from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
+from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict, readValueFromSteeringFile
+from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 
 __RCSID__ = '$Id$'
 LOG = gLogger.getSubLogger(__name__)
@@ -187,6 +188,21 @@ class Calibration(MarlinAnalysis):
 
       steeringFileToRun = 'marlinSteeringFile_%s_%s_%s.xml' % (self.currentStage, self.currentPhase, self.currentStep)
       updateSteeringFile(self.SteeringFile, steeringFileToRun, parameterDict)
+
+      if self.currentStage == 3 and not os.path.exists('newPhotonLikelihood.xml'):
+        newPhotonLikelihood = self.cali.requestNewPhotonLikelihood()
+        while newPhotonLikelihood is None:
+          LOG.notice("Waiting for new photon likelihood file for stage 3")
+          wasteCPUCycles(10)
+          newPhotonLikelihood = self.cali.requestNewPhotonLikelihood()
+        stringToBinaryFile(newPhotonLikelihood, 'newPhotonLikelihood.xml')
+        # TODO this depends from the name inside steering file... And it's even more difficult for FCCee case
+        pandoraSettingsFile = readValueFromSteeringFile(
+            self.SteeringFile, "processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']")
+        updateSteeringFile(
+            pandoraSettingsFile, pandoraSettingsFile,
+            {"processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']":
+             "newPhotonLikelihood.xml"})
 
       #TODO clean up Marlin steering file - we don't need a lot of processors for calibration
       LOG.notice("new set of calibration parameters: %r" % parameterDict)

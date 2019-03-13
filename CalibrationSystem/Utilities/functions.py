@@ -5,6 +5,7 @@ import os
 from DIRAC import S_OK, S_ERROR
 import csv
 from xml.etree import ElementTree as et
+from DIRAC.Core.Utilities.Subprocess import shellCall
 
 #pylint: disable=invalid-name,too-many-locals,too-many-statements
 
@@ -144,6 +145,7 @@ def validatePandoraSettingsFile(pandoraSettingsFileName):
   return validateExistenceOfWordsInFile(pandoraSettingsFileName, parametersToValidate)
 
 
+
 def updateSteeringFile(inFileName, outFileName, parametersToSetup):
   """ Read input xml-file, update values given be dictionary and write result to a new file
 
@@ -170,6 +172,23 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup):
   return S_OK()
 
 
+def readValueFromSteeringFile(fileName, xPath):
+  """ Read value of the node from xml-file
+
+  :param basestring fileName: name of xml-file to read
+  :param basestring xPath: xParh of the node to read. E.g.: "processor/[@name='OuterPlanarDigiProcessor']/parameter[@name='IsStrip']"
+
+  :returns: basestring or None
+  :rtype: basestring 
+    """
+  tree = et.parse(fileName)
+  iElement = tree.find(xPath)
+  if iElement:
+    return iElement.text
+  else:
+    return None
+
+
 def readParameterDict(inFile='testing/parameterListMarlinSteeringFile.txt'):
   outList = {}
   with open(inFile, 'r') as f:
@@ -180,7 +199,6 @@ def readParameterDict(inFile='testing/parameterListMarlinSteeringFile.txt'):
 
 def readParametersFromSteeringFile(inFileName, parameterDict):
   tree = et.parse(inFileName)
-  root = tree.getroot()
 
   for iPar, _ in parameterDict.items():
     iElement = tree.find(iPar)
@@ -208,3 +226,16 @@ def testUpdateOfSteeringFileWithNewParameters():
   res = updateSteeringFile(inFileName, outFileName, {"processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']": "dummyRootFile.root",
                                                      "global/parameter[@name='LCIOInputFiles']": "in1.slcio, in2.slcio", "processor[@name='MyPfoAnalysis2']/parameter[@name='RootFile']": "wrong.root"})
   print res
+
+
+def convert_and_execute(command_list):
+  """ Takes a list, casts every entry of said list to string and executes it in a subprocess.
+
+  :param list command_list: List for a subprocess to execute, that may contain castable non-strings
+  :returns: output of the command
+  :rtype: basestring
+  """
+  callString = ''
+  for iWord in command_list:
+    callString += str(iWord)
+  return shellCall(callString)

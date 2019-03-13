@@ -156,6 +156,13 @@ class CalibrationClient(object):
     else:
       return None  # No new parameters computed yet. Wait a bit and try again.
 
+  def requestNewPhotonLikelihood(self):
+   res = self.calibrationService.getNewPhotonLikelihood(self.calibrationID)
+   if res['OK']:
+     return res['Value']
+   else:
+     return None
+
   #TODO do we need this functionality?
   def jumpToStep(self, stageID, phaseID, stepID):
     """ Jumps to the passed step and phase.
