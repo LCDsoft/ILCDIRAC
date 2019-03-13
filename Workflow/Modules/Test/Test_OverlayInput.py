@@ -386,6 +386,7 @@ class TestOverlayExecute( unittest.TestCase ):
          patch('%s.os.mkdir' % MODULE_NAME, new=Mock(return_value = True)), \
          patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value = True)), \
          patch('%s.DataManager.getFile' % MODULE_NAME, new=Mock(return_value=S_OK('Nothing'))), \
+         patch('%s.random.randrange' % MODULE_NAME, new=Mock(side_effect=[0, 0, 1, 1])), \
          patch('%s.wasteCPUCycles' % MODULE_NAME):
       result = self.over.execute()
       assertDiracSucceedsWith_equals( result, 'OverlayInput finished successfully', self )
