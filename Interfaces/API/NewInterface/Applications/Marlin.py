@@ -85,6 +85,16 @@ class Marlin( DDInterfaceMixin, LCApplication ):
     if os.path.exists(gearFile) or gearFile.lower().count("lfn:"):
       self.inputSB.append(gearFile)
 
+  def setKeepRecFile(self, val):
+    """Set the ``keepRecFile`` flag.
+
+    Only relevant for ProductionJobs
+
+    :param bool val: If ``False`` REC file is not stored
+    """
+    self._checkArgs({'val': types.BooleanType})
+    self.keepRecFile = val
+
   def setOutputRecFile(self, outputRecFile, path = None):
     """Optional: Define output rec file for Marlin. Used only in production
     context. Use :func:`UserJob.setOutputData

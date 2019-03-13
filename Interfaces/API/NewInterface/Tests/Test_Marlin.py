@@ -30,6 +30,17 @@ class MarlinTestCase( unittest.TestCase ):
     self.assertFalse( self.mar._errorDict )
     self.assertIn( 'lfn:/my/gear/file.txt', self.mar.inputSB )
 
+  def test_setKeepRecFile(self):
+    """Tests for behaviour with KeepRecFile True/False."""
+    self.assertTrue(self.mar.keepRecFile)
+    self.mar.setKeepRecFile(False)
+    self.assertFalse(self.mar._errorDict)
+    self.mar.setKeepRecFile(True)
+    self.assertTrue(self.mar.keepRecFile)
+    self.assertFalse(self.mar._errorDict)
+    self.mar.setKeepRecFile(123)
+    self.assertIn('val = 123', str(self.mar._errorDict))
+
   def test_setoutputrec( self ):
     self.mar.setOutputRecFile( 'my/file.outputrec', 'mytestPath' )
     assertEqualsImproved( self.mar.outputRecPath, 'mytestPath', self )
