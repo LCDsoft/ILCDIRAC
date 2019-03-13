@@ -255,16 +255,16 @@ class Calibration(MarlinAnalysis):
     return S_OK()
 
   def resolveInputSlcioFilesAndAddToParameterDict(self, allSlcioFiles, parameterDict):
-  """ Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the parameterDict
+    """ Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the parameterDict
 
-  :param list basestring allSlcioFiles: List of all slcio-files in the node
-  :param dict parameterDict: dict of parameters and their values
+    :param list basestring allSlcioFiles: List of all slcio-files in the node
+    :param dict parameterDict: dict of parameters and their values
 
-  :returns: S_OK or S_ERROR
-  :rtype: dict
-  """
-  #FIXME TODO implementation assumes that slcio file names should containt a specific word among: ['muon','kaon','gamma','zuds']
-  #           this require adding functionality of renaming of the input files at some point
+    :returns: S_OK or S_ERROR
+    :rtype: dict
+    """
+    #FIXME TODO implementation assumes that slcio file names should containt a specific word among: ['muon','kaon','gamma','zuds']
+    #           this require adding functionality of renaming of the input files at some point
 
   patternToSearchFor = ''
   pandoraSettingsFile = ''

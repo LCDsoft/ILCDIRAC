@@ -117,6 +117,7 @@ class CalibrationPhase(object):
     else:
       raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)
 
+
 class CalibrationClient(object):
   """ Handles the workflow of the worker nodes. Fetches the necessary data from the service,
   calls the calibration software to be run and reports the results back.

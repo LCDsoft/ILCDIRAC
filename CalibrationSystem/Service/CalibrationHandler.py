@@ -18,6 +18,7 @@ from DIRAC.Core.Utilities.Subprocess import shellCall
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.functions import convert_and_execute
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
 __RCSID__ = "$Id$"
 
@@ -93,10 +94,14 @@ class CalibrationRun(object):
     self.platform = ''
     self.appversion = ''
     self.newPhotonLikelihood = None
+    self.ops = Operations()
     self.calibrationConstantsDict = defaultdict()
+    self.softwareVersion = ''
     if len(ilcsoftPath.split('/')) >= 7:
       self.platform = ilcsoftPath.split('/')[6]
       self.appversion = ilcsoftPath.split('/')[5]
+    self.proxyUserName = ''
+    self.proxyUserGroup = ''
     #TODO use either line below or take it from configuration service
     #  self.calibrationBinariesDir = os.path.join(ilcsoftPath, "PandoraAnalysis/HEAD/bin/")
 
@@ -116,12 +121,13 @@ class CalibrationRun(object):
     :returns: S_OK or S_ERROR
     :rtype: dict
     """
-    usernameAndGroup = _getUsernameAndGroup()
+    usernameAndGroup = self._getUsernameAndGroup()
     if not usernameAndGroup['OK']:
-        return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s; WorkerID = %s'
-                       % (calibrationID, curWorkerID))
-    proxyUsername = usernameAndGroup['username']
-    proxyUserGroup = usernameAndGroup['group']
+        return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
+                       % (calibrationID))
+    # TODO do we want to do any checks of user proxy?
+    self.proxyUserName = usernameAndGroup['username']
+    self.proxyUserGroup = usernameAndGroup['group']
 
     from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
     from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
@@ -166,7 +172,8 @@ class CalibrationRun(object):
 
       curJob.setInputData(lcioFile)
       curJob.setInputSandbox(inputSB)
-      curJob.setOutputSandbox(['*.log'])
+      # TODO files to redirect for output: newPhotonLikelihood.xml, finalSteeringFile
+      curJob.setOutputSandbox(['*.log', '*.xml', '*.txt'])
       res = curJob.submit(dirac)
       results.append(res)
 
@@ -283,9 +290,6 @@ class CalibrationRun(object):
       self.newPhotonLikelihood = binaryFileToString(outFileName)
     return res
 
-  # TODO implement photon training stage
-  # import ILCDIRAC.CalibrationSystem.Utilities as u
-  # u.__path__ - to get path
   def endCurrentStep(self):
     """ Calculates the new parameter set based on the results from the computations and prepares the object
     for the next step. (StepCounter increased, ...)
@@ -300,11 +304,11 @@ class CalibrationRun(object):
     calibrationFile = os.path.join(fileDir, "Calibration.txt")  # as hardcoded in calibration binaries
 
     # TODO ask Andre to add separate entry for the directory with binaries from $ILCSOFT/PandoraAnalysis/HEAD/bin
-    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (self.platform,
-                                                                              'pandora_calibration_scripts', self.appversion), None)
-    # TODO ask Andre to add separate entry for the directory with binaries from $ILCSOFT/PandoraAnalysis/HEAD/bin
-    pythonReadScriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (self.platform,
-                                                                                        'pandora_calibration_scripts', self.appversion), None)
+    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/pandoraAnalysisHeadBin" % (self.platform,
+                                                                                           'pandora_calibration_scripts', self.appversion), None)
+
+    import ILCDIRAC.CalibrationSystem.Utilities as utilities
+    pythonReadScriptPath = os.path.join(utilities.__path__, 'Python_Read_Scripts')
 
     truthEnergy = CalibrationPhase.sampleEnergyFromPhase(self.currentPhase)
 
@@ -424,7 +428,8 @@ class CalibrationRun(object):
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Direction_Corrections_Extract.py')
       directionCorrectionRatio = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
                                                             kaonTruthEnergy]))
-      calibHcalEndcap = self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"]
+      calibHcalEndcap = self.calibrationConstantsDict[
+          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"]
       # one need to access hcalMeanEndcap again (as in previous phase. Read it again from calibration file...
       # but it will also write output from script execution to the file again
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Digi_Extract.py')
@@ -510,6 +515,7 @@ class CalibrationRun(object):
           self.currentPhase += 1
         elif self.currentStage == 3:
           self.calibrationFinished = True
+          # TODO collect all final results and put them into final files
         else:
           return S_ERROR('%s' % self.currentStage)
     elif self.currentPhase == CalibrationPhase.PhotonTraining and self.currentStage == 2:
@@ -543,9 +549,12 @@ class CalibrationHandler(RequestHandler):
     """
     pass
 
+  # TODO this function has different number of arguments here and in tests. Figure out the logic of the test
   auth_createCalibration = ['authenticated']
   types_createCalibration = [basestring, basestring, dict, int, basestring, basestring]
-  def export_createCalibration(self, steeringFile, ilcsoftPath, inputFiles, numberOfJobs):
+  #  def export_createCalibration(self, steeringFile, ilcsoftPath, inputFiles, numberOfJobs):
+
+  def export_createCalibration(self, steeringFile, ilcsoftPath, inputFiles, numberOfJobs, marlinversion, _):
     """ Called by users to create a calibration run (series of calibration iterations)
 
     :param basestring steeringFile: Steering file used in the calibration, LFN
@@ -762,6 +771,50 @@ class CalibrationHandler(RequestHandler):
 #         Testcode, not to be used by production code              #
 #                                                                  #
 ####################################################################
+
+  auth_testGetInitVals = ['all']  # FIXME: Restrict to test usage only
+  types_testGetInitVals = []
+
+  def export_testGetInitVals(self):
+    """ Called only by test methods! Resets the service so it can be tested.
+
+    :returns: S_OK on success. (Should always succeed)
+    :rtype: dict
+    """
+    return S_OK((self.activeCalibrations, self.calibrationCounter))
+
+  auth_testGetVals = ['all']  # FIXME: Restrict to test usage only
+  types_testGetVals = []
+
+  def export_testGetVals(self):
+    """ Called only by test methods! Resets the service so it can be tested.
+
+    :returns: S_OK on success. (Should always succeed)
+    :rtype: dict
+    """
+    platform = 'x86_64-slc5-gcc43-opt'
+    appversion = 'ILCSoft-2019-02-20_gcc62'
+    ops = Operations()
+    scriptPath = ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
+                                                                         'pandora_calibration_scripts', appversion), None)
+    tmp2 = ops.getValue("/AvailableTarBalls/%s/%s/%s/pandoraAnalysisHeadBin" % (platform,
+                                                                                'pandora_calibration_scripts', appversion), None)
+
+    return S_OK((scriptPath, tmp2))
+
+  auth_testCreateRun = ['all']  # FIXME: Restrict to test usage only
+  types_testCreateRun = []
+
+  def export_testCreateRun(self):
+    """ Called only by test methods! Resets the service so it can be tested.
+
+    :returns: S_OK on success. (Should always succeed)
+    :rtype: dict
+    """
+    newRun = CalibrationRun(1, 'dummy.txt', 'dummyIlcSoftPath', "dummyInFile.slcio", 1)
+    #  newRun = CalibrationRun()
+
+    return S_OK(newRun)
 
   auth_resetService = ['all']  # FIXME: Restrict to test usage only
   types_resetService = []

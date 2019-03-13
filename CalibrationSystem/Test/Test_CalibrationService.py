@@ -82,9 +82,9 @@ class CalibrationHandlerTest(unittest.TestCase):
 
   def test_resubmitjobs(self):
     calIDsWorkIDs = [(138, 1249), (123, 1357), (498626, 4368)]
-    CalibrationHandler.activeCalibrations[138] = CalibrationRun('', '', [], 0)
-    CalibrationHandler.activeCalibrations[123] = CalibrationRun('', '', [], 0)
-    CalibrationHandler.activeCalibrations[498626] = CalibrationRun('', '', [], 0)
+    CalibrationHandler.activeCalibrations[138] = CalibrationRun(1, '', '', [], 0)
+    CalibrationHandler.activeCalibrations[123] = CalibrationRun(2, '', '', [], 0)
+    CalibrationHandler.activeCalibrations[498626] = CalibrationRun(3, '', '', [], 0)
     with patch.object(CalibrationRun, 'resubmitJob', new=Mock()) as resubmit_mock:
       assertDiracSucceeds(self.calh.export_resubmitJobs(calIDsWorkIDs), self)
       assertEqualsImproved(resubmit_mock.mock_calls, [call(1249, proxyUserGroup='', proxyUserName=''),
@@ -124,21 +124,21 @@ class CalibrationHandlerTest(unittest.TestCase):
                                            954692: 0, 29485: 1040}, self)
 
   def test_getnewparams_calculationfinished(self):
-    testRun = CalibrationRun('', '', [], 13)
+    testRun = CalibrationRun(1, '', '', [], 13)
     testRun.calibrationFinished = True
     CalibrationHandler.activeCalibrations[2489] = testRun
     assertDiracSucceedsWith(self.calh.export_getNewParameters(2489, 193),
                             'Calibration finished! End job now', self)
 
   def test_getnewparams_nonewparamsyet(self):
-    testRun = CalibrationRun('', '', [], 13)
+    testRun = CalibrationRun(1, '', '', [], 13)
     testRun.currentStep = 149
     CalibrationHandler.activeCalibrations[2489] = testRun
     assertDiracFailsWith(self.calh.export_getNewParameters(2489, 149),
                          'No new parameter set available yet', self)
 
   def test_getnewparams_newparams(self):
-    testRun = CalibrationRun('', '', [], 13)
+    testRun = CalibrationRun(1, '', '', [], 13)
     testRun.currentStep = 36
     testRun.currentParameterSet = 982435
     CalibrationHandler.activeCalibrations[2489] = testRun
@@ -157,7 +157,7 @@ class CalibrationHandlerTest(unittest.TestCase):
     result1 = [1, 2.3, 5]
     result2 = [0, 0.2, -0.5]
     result3 = [-10, -5.4, 2]
-    obj = CalibrationRun('file', 'v123', 'input', 123)
+    obj = CalibrationRun(1, 'file', 'v123', 'input', 123)
     res = CalibrationResult()
     res.addResult(2384, result1)
     res.addResult(742, result2)
@@ -189,12 +189,12 @@ class CalibrationHandlerTest(unittest.TestCase):
 
   def test_endcurrentstep_not_finished(self):
     from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
-    with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
-      self.calh.export_createCalibration('', '', [], 0, '', '')
-    self.calh.activeCalibrations[1].currentStep = 14
-    result1 = [1, 2.3, 5]
-    result2 = [0, 0.2, -0.5]
-    result3 = [-10, -5.4, 2]
+    with patch.object( CalibrationRun, 'submitJobs', new=Mock()):
+      self.calh.export_createCalibration('', '', [], 0, '', '' )
+    self.calh.activeCalibrations[ 1 ].currentStep = 14
+    result1 = [ 1, 2.3, 5 ]
+    result2 = [ 0, 0.2, -0.5 ]
+    result3 = [ -10, -5.4, 2 ]
     res = CalibrationResult()
     res.addResult(2384, result1)
     res.addResult(742, result2)
@@ -208,7 +208,7 @@ class CalibrationHandlerTest(unittest.TestCase):
     # Simple case
     test_list_1 = [1, 148]
     test_list_2 = [-3, 0.2]
-    testobj = CalibrationRun('', '', [], 0)
+    testobj = CalibrationRun(1, '', '', [], 0)
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([-2, 148.2], res, self)
 
@@ -216,7 +216,7 @@ class CalibrationHandlerTest(unittest.TestCase):
     # More complex case
     test_list_1 = [9013, -137.25, 90134, 4278, -123, 'abc', ['a', False]]
     test_list_2 = [0, 93, -213, 134, 98245, 'aifjg', ['some_entry', {}]]
-    testobj = CalibrationRun('', '', [], 0)
+    testobj = CalibrationRun(1, '', '', [], 0)
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([9013, -44.25, 89921, 4412, 98122, 'abcaifjg',
                           ['a', False, 'some_entry', {}]], res, self)
@@ -224,20 +224,20 @@ class CalibrationHandlerTest(unittest.TestCase):
   def test_addlists_empty(self):
     test_list_1 = []
     test_list_2 = []
-    testobj = CalibrationRun('', '', [], 0)
+    testobj = CalibrationRun(1, '', '', [], 0)
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([], res, self)
 
   def test_addlists_incompatible(self):
     test_list_1 = [1, 83, 0.2, -123]
     test_list_2 = [1389, False, '']
-    testobj = CalibrationRun('', '', [], 0)
+    testobj = CalibrationRun(1, '', '', [], 0)
     with pytest.raises(ValueError) as ve:
       testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertInImproved('the two lists do not have the same number of elements', ve.__str__().lower(), self)
 
   def test_calcnewparams_no_values(self):
-    testrun = CalibrationRun('', '', [], 0)
+    testrun = CalibrationRun(1, '', '', [], 0)
     with pytest.raises(ValueError) as ve:
       testrun._CalibrationRun__calculateNewParams(1)
     assertInImproved('no step results provided', ve.__str__().lower(), self)
