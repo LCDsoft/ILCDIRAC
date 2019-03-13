@@ -145,20 +145,18 @@ class MarlinTestCase( unittest.TestCase ):
       self.assertNotIn( keyword, self.mar.prodparameters )
     assertEqualsImproved( self.mar.gearFile, 'myGearOutput.mock', self )
 
+  def test_resolvelinkedparams(self):
+    """Test _resolveLinkedStepParameters with something happening."""
+    step_mock = Mock()
+    input_mock = Mock()
+    input_mock.getType.return_value = {'abc': False}
+    self.mar._linkedidx = 3
+    self.mar._jobsteps = [None, None, None, input_mock]
+    assertDiracSucceeds(self.mar._resolveLinkedStepParameters(step_mock), self)
+    step_mock.setLink.assert_called_once_with('InputFile', {'abc': False}, 'OutputFile')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  def test_resolvelinkedparams_noinputstep(self):
+    """Call _resolveLinkedStep function, which does nothing."""
+    self.mar._linkedidx = None
+    self.mar._inputappstep = []
+    assertDiracSucceeds(self.mar._resolveLinkedStepParameters(None), self)
