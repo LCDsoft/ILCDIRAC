@@ -9,6 +9,8 @@ import unittest
 from decimal import Decimal
 from mock import patch, mock_open, MagicMock as Mock
 
+from parameterized import parameterized
+
 from DIRAC import gLogger, S_OK, S_ERROR
 from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 from ILCDIRAC.Interfaces.API.NewInterface.ProductionJob import ProductionJob
@@ -790,6 +792,31 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     with patch('%s.hasattr' % MODULE_NAME, new=hasAttrMock, create=True):
       self.myapp.detectortype = 'application_detectortype'
       assertDiracSucceeds( self.prodJob.append(self.myapp), self )
+
+  @parameterized.expand([(True, ['/vo/prod/250gev/fake/awesome/REC', '/vo/prod/250gev/fake/awesome/DST']),
+                         (False, ['/vo/prod/250gev/fake/awesome/DST'])])
+  def test_jobSpecificParams_rec_and_dst(self, keep, finalPaths):
+    """Test if disabling rec file works."""
+    self.myapp.setOutputSE.return_value = S_OK(True)
+    self.prodJob.evttype = ''
+    self.prodJob.basepath = '/vo/prod/'
+    self.prodJob.basename = 'basename'
+    self.myapp.eventType = 'fake'
+    self.myapp.detectortype = 'awesome'
+    self.myapp.willBeCut = False
+    self.myapp.outputFile = False
+    self.myapp.extraCLIArguments = ''
+    self.myapp.keepRecFile = keep
+    self.myapp.setOutputRecFile = Mock(name='RecFile')
+    self.myapp.setOutputDstFile = Mock(name='DstFile')
+    with patch('%s.ProductionJob._updateProdParameters' % MODULE_NAME, new=Mock(return_value=S_OK())):
+      assertDiracSucceeds(self.prodJob.append(self.myapp), self)
+    if keep:
+      self.myapp.setOutputRecFile.assert_called_once()
+    else:
+      self.myapp.setOutputRecFile.assert_not_called()
+    self.myapp.setOutputDstFile.assert_called_once()
+    assert self.prodJob.finalpaths == finalPaths
 
   def test_setters_1( self ):
     import random
