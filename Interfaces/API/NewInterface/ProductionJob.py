@@ -782,21 +782,26 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     ###Need to resolve file names and paths
     if self.energy:
       self.finalMetaDict[self.basepath + energypath] = {"Energy":str(self.energy)}
+
     if hasattr(application, "setOutputRecFile") and not application.willBeCut:
-      path = self.basepath + energypath + evttypepath + application.detectortype + "/REC"
-      self.finalMetaDict[self.basepath + energypath + evttypepath] = {"EvtType":self.evttype}
-      self.finalMetaDict[self.basepath + energypath + evttypepath + application.detectortype] = {"DetectorType" : application.detectortype}
-      self.finalMetaDict[self.basepath + energypath + evttypepath + application.detectortype + "/REC"] = {'Datatype':"REC"}
-      fname = self.basename+"_rec.slcio"
-      application.setOutputRecFile(fname, path)  
-      LOG.info("Will store the files under", "%s" % path)
-      self.finalpaths.append(path)
-      path = self.basepath + energypath + evttypepath + application.detectortype + "/DST"
-      self.finalMetaDict[self.basepath + energypath + evttypepath + application.detectortype + "/DST"] = {'Datatype':"DST"}
-      fname = self.basename + "_dst.slcio"
+      evtPath = self.basepath + energypath + evttypepath
+      self.finalMetaDict[evtPath] = {'EvtType': self.evttype}
+      detPath = evtPath + application.detectortype
+      self.finalMetaDict[detPath] = {'DetectorType': application.detectortype}
+      if application.keepRecFile:
+        path = self.basepath + energypath + evttypepath + application.detectortype + '/REC'
+        self.finalMetaDict[path] = {'Datatype': 'REC'}
+        fname = self.basename + '_rec.slcio'
+        application.setOutputRecFile(fname, path)
+        LOG.info('Will store the files under', path)
+        self.finalpaths.append(path)
+      path = self.basepath + energypath + evttypepath + application.detectortype + '/DST'
+      self.finalMetaDict[path] = {'Datatype': 'DST'}
+      fname = self.basename + '_dst.slcio'
       application.setOutputDstFile(fname, path)  
-      LOG.info("Will store the files under", "%s" % path)
+      LOG.info('Will store the files under', path)
       self.finalpaths.append(path)
+
     elif hasattr(application, "outputFile") and hasattr(application, 'datatype') and not application.outputFile and not application.willBeCut:
       path = self.basepath + energypath + evttypepath
       self.finalMetaDict[path] = {"EvtType" : self.evttype}
