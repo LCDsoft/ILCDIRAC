@@ -628,7 +628,11 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     self.prodJob = None
     self.myapp = None
 
-  def test_jobsSecificParams( self ):
+  def test_jobSpecificParams(self):
+    """Test jobSpecificParams inside the append call.
+
+    Does nothing basically.
+    """
     res = self.prodJob.append(self.myapp)
     assertDiracSucceeds( res, self )
 
