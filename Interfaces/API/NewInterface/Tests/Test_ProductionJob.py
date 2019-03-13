@@ -833,6 +833,8 @@ class ProductionJobJobSpecificParamsTest( ProductionJobTestCase ):
     self.prodJob.setNbEvtsPerSlice(13)
     assertEqualsImproved( self.prodJob.slicesize, 13, self )
     myprodtype = random.choice( ALLOWED_PRODTYPES )
+    self.prodJob.setDescription("It's green")
+    assert self.prodJob.description[-5:] == 'green'
     self.prodJob.setProdType( myprodtype )
     assertEqualsImproved( self.prodJob.type, myprodtype, self )
     self.prodJob.setWorkflowName( 'mysuperworkflow' )
