@@ -87,7 +87,7 @@ class CalibrationRun(object):
     self.currentStage = 1
     self.currentPhase = CalibrationPhase.ECalDigi
     self.currentStep = 0
-    self.currentParameterSet = None
+    self.currentParameterSet = defaultdict()
     self.numberOfJobs = numberOfJobs
     self.calibrationFinished = False
     #  /cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-02-07/x86_64-slc6-gcc7-opt
@@ -109,6 +109,14 @@ class CalibrationRun(object):
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
     #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs
     #to be accessed by the agent in the case of resubmission
+
+  # TODO this function is only for debugging purpose
+  def dumpSelfArguments(self):
+    for iEl in dir(self):
+      if "__" not in iEl:
+        iElVal = eval("self." + iEl)
+        if isinstance(iElVal, (float, int, basestring, list, dict, tuple)):
+          print("%s: %s" % (iEl, eval("self." + iEl)))
 
   @executeWithUserProxy
   def submitJobs(self, calibrationID, idsOfWorkerNodesToSubmitTo=None):
@@ -296,6 +304,10 @@ class CalibrationRun(object):
 
     :returns: None
     """
+
+    if self.calibrationFinished:
+      return S_ERROR('Calibration is finished. Do not call endCurrentStep() anymore!')
+
     fileNamePattern = 'pfoanalysis_w*.root'
     fileDir = "calib%s/stage%s/phase%s/step%s/" % (self.calibrationID, self.currentStage, self.currentPhase,
                                                    self.currentStep)
@@ -308,9 +320,13 @@ class CalibrationRun(object):
                                                                                            'pandora_calibration_scripts', self.appversion), None)
 
     import ILCDIRAC.CalibrationSystem.Utilities as utilities
-    pythonReadScriptPath = os.path.join(utilities.__path__, 'Python_Read_Scripts')
+    pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
 
     truthEnergy = CalibrationPhase.sampleEnergyFromPhase(self.currentPhase)
+
+    #  print('self.currentPhase', self.currentPhase)
+    #  print('CalibrationPhase.ECalDigi', CalibrationPhase.ECalDigi)
+    #  print('convert_and_execute', convert_and_execute())
 
     if self.currentPhase == CalibrationPhase.ECalDigi:
       binary = os.path.join(scriptPath, 'ECalDigitisation_ContainedEvents')
@@ -340,6 +356,9 @@ class CalibrationRun(object):
       meanEndcap = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
                                               truthEnergy, prevStepCalibConstEndcap, 'Mean', 'Endcap']))
 
+      # TODO remove this. this is for debugging
+      #  print('calibConstBarrel', calibConstBarrel)
+
       self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"] = calibConstBarrel
       self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='ECALEndcapCorrectionFactor']"] = (
           calibConstEndcap / calibConstBarrel)
@@ -361,7 +380,7 @@ class CalibrationRun(object):
 
       prevStepCalibConstBarrel = self.calibrationConstantsDict[
           "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALBarrel']"]
-      prevStepCalibConstEndcap = prevStepCalibConstBarrel[
+      prevStepCalibConstEndcap = self.calibrationConstantsDict[
           "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"]
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Digi_Extract.py')
@@ -466,7 +485,7 @@ class CalibrationRun(object):
                                             truthEnergy, prevStepCalibConstEcalToEm, 'Calibration_Constant']))
       hcalToEm = ecalToEm
       emMean = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                    truthEnergy, prevStepCalibConstBarrel, 'Mean']))
+                                          truthEnergy, prevStepCalibConstEcalToEm, 'Mean']))
 
       self.calibrationConstantsDict[
           "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToEMGeVCalibration']"] = ecalToEm
@@ -521,10 +540,10 @@ class CalibrationRun(object):
     elif self.currentPhase == CalibrationPhase.PhotonTraining and self.currentStage == 2:
       self.__mergePandoraLikelihoodXmlFiles()
       self.currentStage += 1
-      self.currentPhase += CalibrationPhase.ECalDigi
+      self.currentPhase = CalibrationPhase.ECalDigi
     else:
       return S_ERROR('Error in the execution sequence. Dump current ids\nstageID: %s, phaseID: %s, stepID: %s'
-                     % (self.currentStage, self.curentPhase, self.currentStep))
+                     % (self.currentStage, self.currentPhase, self.currentStep))
 
     self.currentStep += 1
 

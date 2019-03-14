@@ -58,7 +58,7 @@ class CalibrationPhase(object):
       return "GAMMA"
     elif phaseID == CalibrationPhase.HCalDigi:
       return "KAON"
-    elif phaseID == CalibrationPhase.MuonAndHCalDigi:
+    elif phaseID == CalibrationPhase.MuonAndHCalOtherDigi:
       return "MUON"
     elif phaseID == CalibrationPhase.ElectroMagEnergy:
       return "GAMMA"
@@ -83,7 +83,7 @@ class CalibrationPhase(object):
       return 10.0
     elif phaseID == CalibrationPhase.HCalDigi:
       return 50.0
-    elif phaseID == CalibrationPhase.MuonAndHCalDigi:
+    elif phaseID == CalibrationPhase.MuonAndHCalOtherDigi:
       return 10.0
     elif phaseID == CalibrationPhase.ElectroMagEnergy:
       return 10.0
