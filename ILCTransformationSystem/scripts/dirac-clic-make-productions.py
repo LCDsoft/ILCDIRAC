@@ -968,6 +968,8 @@ overlayEventType = %(overlayEventType)s
       setterFunc = 'set' + option
       if not hasattr(app, setterFunc):
         raise AttributeError("Cannot set %s for %s, check spelling!" % (option, appName))
+      if value.lower() in ('false', 'true'):
+        value = value.lower() == 'true'
       getattr(app, setterFunc)(value)
 
   def createTransformations(self, taskDict):
