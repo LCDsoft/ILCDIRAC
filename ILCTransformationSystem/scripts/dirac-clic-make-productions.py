@@ -702,6 +702,7 @@ overlayEventType = %(overlayEventType)s
     marlin.setVersion( self.softwareVersion )
     marlin.setDetectorModel( self.detectorModel )
     marlin.detectortype = self.detectorModel
+    marlin.setKeepRecFile(False)
 
     if over:
       self.addOverlayOptionsToMarlin( energy )
