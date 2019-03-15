@@ -695,7 +695,7 @@ overlayEventType = %(overlayEventType)s
     return overlay
 
   def createMarlinApplication(self, energy, cliReco, over):
-    """Create Marlin Application without overlay."""
+    """Create Marlin application with or without overlay."""
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
     marlin = Marlin()
     marlin.setDebug()
