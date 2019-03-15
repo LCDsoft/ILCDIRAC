@@ -13,6 +13,11 @@ import glob
 import os
 import shutil
 
+from ILCDIRAC.Core.Utilities.WasteCPU import wasteCPUCycles
+from collections import defaultdict
+from DIRAC.Core.Utilities.Subprocess import shellCall
+from DIRAC import S_OK, S_ERROR, gLogger
+
 from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript
 from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile, getNewLDLibs
@@ -24,6 +29,7 @@ from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationClient, CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.functions import xml_generate, updateSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict, readValueFromSteeringFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 
 __RCSID__ = '$Id$'
@@ -117,9 +123,8 @@ class Calibration(MarlinAnalysis):
         except EnvironmentError, x:
           LOG.warn('Could not copy and prepare PandoraSettingsPhotonTraining.xml, exception: %s' % x)
     # rename output xml-file from photon training stage
-    tree = et.parse(pandorasettings)
-    tree.find("algorithm[@type='PhotonReconstruction']/HistogramFile").text = 'PandoraLikelihoodDataPhotonTraining.xml'
-    tree.write(fullPathPandoraSettings)
+    updateSteeringFile(pandorasettings, pandorasettings,
+                       {"algorithm[@type='PhotonReconstruction']/HistogramFile": 'PandoraLikelihoodDataPhotonTraining.xml'})
 
     if self.inputGEAR:
       self.inputGEAR = os.path.basename(self.inputGEAR)
@@ -127,7 +132,6 @@ class Calibration(MarlinAnalysis):
          and os.path.exists(os.path.join(steeringfiledirname, self.inputGEAR)):
         self.inputGEAR = os.path.join(steeringfiledirname, self.inputGEAR)
 
-    self.SteeringFile = os.path.basename(self.SteeringFile)
     if not os.path.exists(self.SteeringFile):
       if steeringfiledirname:
         if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
@@ -135,22 +139,8 @@ class Calibration(MarlinAnalysis):
           # default steering file doesn't have PfoAnalysis processor
           self.addPfoAnalysisProcessor(self.SteeringFile)
     if not self.SteeringFile:
-      LOG.error("Steering file not defined, shouldn't happen!")
+      LOG.error("Steering file not defined, this shouldn't happen!")
       return S_ERROR("Could not find steering file")
-
-    #  eventsPerBackgroundFile=self.workflow_commons.get("OI_eventsPerBackgroundFile", 0)
-    #  LOG.info( "Number of Events per BackgroundFile: %d " % eventsPerBackgroundFile )
-    #
-    #  res = prepareXMLFile(self.baseSteeringFile, self.SteeringFile, self.inputGEAR, listofslcio,
-    #                       self.NumberOfEvents, self.OutputFile, self.outputREC, self.outputDST,
-    #                       self.debug,
-    #                       dd4hepGeoFile=compactFile,
-    #                       eventsPerBackgroundFile=eventsPerBackgroundFile,
-    #                      )
-    #  if not res['OK']:
-    #    LOG.error('Something went wrong with XML generation because %s' % res['Message'])
-    #    self.setApplicationStatus('Marlin: something went wrong with XML generation')
-    #    return res
 
     res = self.prepareMARLIN_DLL(env_script_path)
     if not res['OK']:
@@ -165,7 +155,10 @@ class Calibration(MarlinAnalysis):
         calibrationParameters['currentPhase'] = CalibrationPhase.ECalDigi
         calibrationParameters['currentStage'] = 1
         # TODO copy this file to workdir first
-        parListFileName = 'parameterListMarlinSteeringFile.txt'
+
+        import ILCDIRAC.CalibrationSystem.Utilities as utilities
+        # FIXME this path will be different in production version probably... update it
+        parListFileName = os.path.join(utilities.__path__[0], 'testing/parameterListMarlinSteeringFile.txt')
         parDict = readParameterDict(parListFileName)
         readParametersFromSteeringFile(self.SteeringFile, parDict)
         calibrationParameters['parameters'] = parDict
@@ -176,7 +169,7 @@ class Calibration(MarlinAnalysis):
         wasteCPUCycles(10)
         calibrationParameters = self.cali.requestNewParameters()
 
-      if calibrationParameters['OK']:  # dict will contain element with key 'OK' only when calibration is finishd
+      if 'OK' in list(calibrationParameters.keys()):  # dict will contain element with key 'OK' only when calibration is finishd
         LOG.notice("Calibration finished")
         break
 
@@ -184,7 +177,7 @@ class Calibration(MarlinAnalysis):
       self.currentStage = calibrationParameters['currentStage']
       self.currentStep = self.currentStep + 1
       parameterDict = calibrationParameters['parameters']
-      resolveInputSlcioFilesAndAddToParameterDict(listofslcio, parameterDict)
+      self.resolveInputSlcioFilesAndAddToParameterDict(listofslcio, parameterDict)
 
       steeringFileToRun = 'marlinSteeringFile_%s_%s_%s.xml' % (self.currentStage, self.currentPhase, self.currentStep)
       updateSteeringFile(self.SteeringFile, steeringFileToRun, parameterDict)
@@ -233,15 +226,20 @@ class Calibration(MarlinAnalysis):
 
       self.cali.reportResult(outFile)
 
-    return self.finalStatusReport(status)
+    # TODO implement me
+    #  return self.finalStatusReport(status)
+    return S_OK()
 
   def addPfoAnalysisProcessor(self, mainSteeringMarlinRecoFile):
     mainTree = et.parse(mainSteeringMarlinRecoFile)
     mainRoot = mainTree.getroot()
 
     #FIXME TODO properly find path to the file
-    # this file should contain only PfoAnalysis processor
-    pfoAnalysisProcessorFile = '/afs/cern.ch/user/v/viazlo/pyDevs/dirac_developerGuide/ILCDIRAC/CalibrationSystem/Utilities/testing/pfoAnalysis.xml'
+    # this file should only contains PfoAnalysis processor
+    import ILCDIRAC.CalibrationSystem.Utilities as utilities
+    pfoAnalysisProcessorFile = os.path.join(utilities.__path__[0], 'testing/pfoAnalysis.xml')
+    if not os.path.exists(pfoAnalysisProcessorFile):
+      return S_ERROR("cannot find xml file with pfoAnalysis processor")
     tmpTree = et.parse(pfoAnalysisProcessorFile)
     elementToAdd = tmpTree.getroot()
 
@@ -266,17 +264,17 @@ class Calibration(MarlinAnalysis):
     #FIXME TODO implementation assumes that slcio file names should containt a specific word among: ['muon','kaon','gamma','zuds']
     #           this require adding functionality of renaming of the input files at some point
 
-  patternToSearchFor = ''
-  pandoraSettingsFile = ''
-  patternToSearchFor = fileKeyFromPhase(self.currentPhase).lower()
-  if self.currentStage in [1, 3]:  # FIXME hardcoded values are bad...
+    patternToSearchFor = ''
+    pandoraSettingsFile = ''
+    patternToSearchFor = CalibrationPhase.fileKeyFromPhase(self.currentPhase).lower()
+    if self.currentStage in [1, 3]:  # FIXME hardcoded values are bad...
       pandoraSettingsFile = 'PandoraSettings.xml'
     else:
       pandoraSettingsFile = 'PandoraSettingsPhotonTraining.xml'
 
     filesToRunOn = [x for x in allSlcioFiles if patternToSearchFor in x.lower()]
     if len(filesToRunOn) == 0:
-      return s_ERROR('empty list of input slcio-files')
+      return S_ERROR('empty list of input slcio-files')
 
     parameterDict["global/parameter[@name='LCIOInputFiles']"] = ', '.join(filesToRunOn)
     parameterDict["processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']"] = pandoraSettingsFile
@@ -289,7 +287,7 @@ class Calibration(MarlinAnalysis):
   def prepareMARLIN_DLL(self, env_script_path):
     """ Prepare the run time environment: MARLIN_DLL in particular.
     """
-    #to fix the MARLIN_DLL, we need to get it first
+    #TODO to fix the MARLIN_DLL, we need to get it first
     with open("temp.sh", 'w') as script:
       script.write("#!/bin/bash\n")
       lines = []
@@ -384,26 +382,23 @@ class Calibration(MarlinAnalysis):
     :returns: FIXME S_OK or S_ERROR
     :rtype: dict
     """
-    res = self._prepareMarlinPartOfTheScript(marlinSteeringFile, env_script_path, marlin_dll)
-    if not res['OK']:
-      return res
-    res = self._preparePandoraPartOfTheScript()
+    res = self._prepareRunScript(marlinSteeringFile, env_script_path, marlin_dll)
     if not res['OK']:
       return res
 
-    scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
+    scriptName = res['Value']
 
     if os.path.exists(self.applicationLog):
       os.remove(self.applicationLog)
 
     os.chmod(scriptName, 0755)
     comm = 'sh -c "./%s"' % (scriptName)
-    self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER))
+    self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.currentStep))
     self.stdError = ''
     res = shellCall(0, comm, callbackFunction=self.redirectLogOutput, bufferLimit=20971520)
     return res
 
-  def _prepareMarlinPartOfTheScript(self, marlinSteeringFile, env_script_path, marlin_dll):
+  def _prepareRunScript(self, marlinSteeringFile, env_script_path, marlin_dll):
     """ Returns the current parameters
 
     :param marlinSteeringFile: steering file to use for Marlin reconstruction. E.g.: 'fccReconstruction.xml'
@@ -413,7 +408,7 @@ class Calibration(MarlinAnalysis):
     :returns: S_OK or S_ERROR
     :rtype: dict
     """
-    scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
+    scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.currentStep)
     if os.path.exists(scriptName):
       os.remove(scriptName)
     script = open(scriptName, 'w')
@@ -463,20 +458,7 @@ fi
     script.write('Marlin -c %s %s\n' % (marlinSteeringFile, self.extraCLIarguments))
     #real run
     script.write('Marlin %s %s\n' % (marlinSteeringFile, self.extraCLIarguments))
-    script.close()
-    return S_OK()
-
-  def _preparePandoraPartOfTheScript(self):
-    scriptName = '%s_%s_Run_%s.sh' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER)
-    script = open(scriptName, 'a')
-
-    # TODO implement Pandora related stuff
-    if self.currentStage in [1,3]:
-      pass
-
-    # TODO rename output root or xml file
-
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')
     script.close()
-    return S_OK()
+    return S_OK(scriptName)

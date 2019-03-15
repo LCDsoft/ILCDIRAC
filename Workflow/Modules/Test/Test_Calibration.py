@@ -3,6 +3,7 @@ Unit tests for the Calibration.py file
 """
 
 import unittest
+import pytest
 import os
 from mock import mock_open, patch, MagicMock as Mock
 from ILCDIRAC.Workflow.Modules.Calibration import Calibration
@@ -18,39 +19,57 @@ __RCSID__ = "$Id$"
 MODULE_NAME = 'ILCDIRAC.Workflow.Modules.Calibration'
 
 
-class CalibrationFixture(object):
-  """ Contains the commonly used setUp and tearDown methods of the Tests"""
+@pytest.fixture
+def calib():
+  calib = Calibration(1, 1)
+  calib.applicationName = "Testing"
+  calib.applicationVersion = "vTest"
+  calib.debug = True
+  calib.platform = 'dummy_platform'
+  calib.applicationLog = 'dummy_applicationLog'
 
-  def setUp(self):
-    """set up the objects"""
-    self.calib = Calibration()
-    self.calib.applicationName = "Testing"
-    self.calib.applicationVersion = "vTest"
-    self.calib.STEP_NUMBER = 666
-    self.calib.debug = True
+  import ILCDIRAC.CalibrationSystem.Utilities as utilities
+  # FIXME this path will be different in production version probably... update it
+  calib.SteeringFile = os.path.join(utilities.__path__[0], 'testing/in1.xml')
 
-  def tearDown(self):
-    """Clean up test objects"""
-    del self.calib
+  yield calib  # provide the fixture value
+  scriptName = '%s_%s_Run_%s.sh' % (calib.applicationName, calib.applicationVersion, calib.currentStep)
+  scriptName = os.path.join(os.path.dirname(os.path.realpath(__file__)), scriptName)
+  del calib
+  try:
+    os.remove(scriptName)
+  except EnvironmentError, e:
+    print("Failed to delete file: %s" % scriptName, str(e))
 
-#pylint: disable=too-many-public-methods
+
+def test_runScript_properInputArguments(calib, mocker):
+  mocker.patch('DIRAC.Core.Utilities.Subprocess.shellCall', new=Mock(return_value=S_OK()))
+  mocker.patch('os.remove', new=Mock(return_value=True))
+  inputxml = 'file1.xml'
+  env_script_path = '/dummy/env/path'
+  marlin_dll = '/dummy/marlin/dll'
+  errorMessageToTest = "steeringfile is missing: %s" % inputxml
+  res = calib.runScript(inputxml, env_script_path, marlin_dll)
+  assert not res['OK']
+  assert res['Message'].lower() == errorMessageToTest.lower()
+
+  mocker.patch('%s.os.path.exists' % MODULE_NAME, return_value=True)
+  res = calib.runScript(inputxml, env_script_path, marlin_dll)
+  assert res['OK']
 
 
-class CalibrationTestCase(CalibrationFixture, unittest.TestCase):
-  """ Base class for the ProductionJob test cases
-  """
-  @patch('DIRAC.Core.Utilities.Subprocess.shellCall', new=Mock(return_value=S_OK()))
-  @patch('os.remove', new=Mock(return_value=True))
-  def test_runScript_properInputArguments(self):
-    inputxml = ['file1.xml', 'file2.xml']
-    env_script_path = '/dummy/env/path'
-    marlin_dll = '/dummy/marlin/dll'
-    errorMessageToTest = "One or more marlin steering files are missing"
-    assertDiracFailsWith(self.calib.runScript(inputxml, env_script_path, marlin_dll), errorMessageToTest, self)
+def test_runIt(calib, mocker):
+  mocker.patch('DIRAC.Core.Utilities.Subprocess.shellCall', new=Mock(return_value=S_OK()))
+  mocker.patch('%s.os.remove' % MODULE_NAME, return_value=True)
+  mocker.patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value={'OK': True, 'Value': 'dummy_EnvScript'}))
+  mocker.patch('%s.updateSteeringFile' % MODULE_NAME, new=Mock(return_value=True))
+  mocker.patch('%s.os.path.exists' % MODULE_NAME, return_value=True)
+  mocker.patch.object(calib.cali, 'requestNewParameters', return_value={'OK': True, 'Value': 'dummy'})
+  mocker.patch.object(calib.cali, 'requestNewPhotonLikelihood', return_value='dummy_NewPhotonLikelihood')
+  mocker.patch.object(calib.cali, 'reportResult', return_value=True)
+  calib.prepareMARLIN_DLL = Mock(return_value={'OK': True, 'Value': 'dummy_MARLIN_DLL'})
 
-    inputxml.append('file3.xml')
-    errorMessageToTest = "SteeringFile is missing"
-    assertDiracFailsWith(self.calib.runScript(inputxml, env_script_path, marlin_dll), errorMessageToTest, self)
-
-    with patch('%s.os.path.exists' % MODULE_NAME, return_value=True):
-      assertDiracSucceeds(self.calib.runScript(inputxml, env_script_path, marlin_dll), self)
+  calib.runIt()
+  print('currentStep: %s' % calib.currentStep)
+  assert calib.currentStep == 0
+  #  assert False

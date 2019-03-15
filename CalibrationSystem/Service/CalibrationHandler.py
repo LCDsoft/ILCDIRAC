@@ -625,8 +625,7 @@ class CalibrationHandler(RequestHandler):
       try:
         os.makedirs("calib%s/stage%s/phase%s/step%s" % (calibrationID, stageID, phaseID, stepID))
       except OSError:
-        pass
-      #FIXME filename depends from step (pfoanalysis either PandoraPhotonLikelihood)
+        pass  # FIXME error message?
       newFilename = "calib%s/stage%s/phase%s/step%s/pfoanalysis_w%s.root" % (calibrationID, stageID, phaseID, stepID,
                                                                              workerID)
       if stageID == 2:

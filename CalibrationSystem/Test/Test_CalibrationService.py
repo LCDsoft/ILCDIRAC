@@ -45,7 +45,7 @@ def mimic_convert_and_execute(inList):
     return 6.66
 
 
-def test_endCurrentStepBasicWorkflow(mocker, readParameterDict):
+def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
   from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationRun
 
   opsMock = Mock(name='instance')
@@ -76,6 +76,11 @@ def test_endCurrentStepBasicWorkflow(mocker, readParameterDict):
   assert stepIDSequence == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11]
   assert calibFinishedSequence == [False, False, False, False,
                                    False, False, False, False, False, False, False, True, True]
+
+
+def test_export_getNewParameters(mocker):
+  pass
+
 
 #pylint: disable=protected-access,too-many-public-methods,,no-member
 
