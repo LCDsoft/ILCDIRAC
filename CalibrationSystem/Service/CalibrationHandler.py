@@ -19,6 +19,7 @@ from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.functions import convert_and_execute
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
+from ILCDIRAC.CalibrationSystem.Utilities.functions import searchFilesWithPattern
 
 __RCSID__ = "$Id$"
 
@@ -282,7 +283,7 @@ class CalibrationRun(object):
 
   def __mergePandoraLikelihoodXmlFiles(self):
     folder = "calib%s/stage%s/phase%s/" % (self.calibrationID, self.currentStage, self.currentPhase)
-    filesToMerge = glob.glob(folder + "**/*.xml")
+    filesToMerge = searchFilesWithPattern(folder, '*.xml')
     outFileName = "calib%s/newPandoraLikelihoodData.xml" % (self.calibrationID)
 
     #TODO how to get platform (e.g. x86_64-slc5-gcc43-opt) and appversion (e.g. ILCSoft-2019-02-20_gcc62)?
@@ -293,7 +294,7 @@ class CalibrationRun(object):
 
     comm = 'python %s "main([%s],\'%s\')"' % (likelihoodMergeScript, ', '.join(("'%s'" % (iFile))
                                                                                for iFile in filesToMerge), outFileName)
-    res = shellCall(comm)
+    res = shellCall(0, comm)
     if res['OK']:
       self.newPhotonLikelihood = binaryFileToString(outFileName)
     return res

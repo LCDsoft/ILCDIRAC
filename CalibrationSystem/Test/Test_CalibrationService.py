@@ -39,6 +39,16 @@ def calibHandler():
   calibHandler = CalibrationHandler({}, Mock())
   calibHandler.initialize()
   yield calibHandler
+
+  # clean up output directory
+  for iCalID in list(CalibrationHandler.activeCalibrations.keys()):
+    try:
+      import shutil
+      dirToDelete = 'calib%s' % iCalID
+      shutil.rmtree(dirToDelete)
+    except EnvironmentError as e:
+      print("Failed to delete directory: %s" % dirToDelete, str(e))
+      assert False
   CalibrationHandler.activeCalibrations = {}
   CalibrationHandler.calibrationCounter = 0
 
@@ -93,50 +103,104 @@ def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
 #    print(CalibrationHandler.activeCalibrations)
 #    assert False
 
-def test_export_submitResult(calibHandler, mocker):
-  mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
-  calibHandler.export_createCalibration('', '', [], 0, '', '')
+#  def test_export_submitResult(calibHandler, mocker):
+#    mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
+#    calibHandler.export_createCalibration( '', '', [], 0, '', '' )
+#
+#    import ILCDIRAC.CalibrationSystem.Utilities as utilities
+#    fileDir = utilities.__path__[0]
+#    fileToRead = os.path.join(fileDir, 'testing/pfoAnalysis.xml')
+#    from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
+#    tmpFile = binaryFileToString(fileToRead)
+#
+#    calibID = 1
+#    stageID = 2
+#    phaseID = 0
+#    stepID = 0
+#    workerID = 8234
+#
+#    res = calibHandler.export_submitResult(calibID, stageID, phaseID, stepID, workerID, tmpFile)
+#    assert res['OK'] == True
+#
+#    outFile = CalibrationHandler.activeCalibrations[calibID].stepResults[stepID].results[workerID]
+#    assert os.path.exists(outFile)
+#    print(outFile)
+#
+#    import filecmp
+#    assert filecmp.cmp(fileToRead, outFile)
 
+def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
   fileDir = utilities.__path__[0]
-  fileToRead = os.path.join(fileDir, 'testing/pfoAnalysis.xml')
+
+  mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
+  opsMock = Mock(name='instance')
+  opsMock.getValue.return_value = os.path.join(fileDir, 'testing')
+  mocker.patch('%s.Operations' % MODULE_NAME, new=Mock(return_value=opsMock, name='Class'))
+
+  calibHandler.export_createCalibration('', '', [], 0, '', '')
+
+  fileToRead = os.path.join(fileDir, 'testing/PandoraLikelihoodData9EBin.xml')
   from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
   tmpFile = binaryFileToString(fileToRead)
 
   calibID = 1
-  stageID = 1
+  stageID = 2
   phaseID = 0
   stepID = 0
-  workerID = 8234
+  workerID = 654
+
+  CalibrationHandler.activeCalibrations[calibID].currentStage = stageID
+  CalibrationHandler.activeCalibrations[calibID].currentPhase = phaseID
+  CalibrationHandler.activeCalibrations[calibID].currentStep = stepID
 
   res = calibHandler.export_submitResult(calibID, stageID, phaseID, stepID, workerID, tmpFile)
-  assert res['OK'] == True
+  nFilesToMerge = 3
+  for _ in range(0, nFilesToMerge - 1):
+    workerID += 1
+    res = calibHandler.export_submitResult(calibID, stageID, phaseID, stepID, workerID, tmpFile)
 
-  outFile = CalibrationHandler.activeCalibrations[calibID].stepResults[stepID].results[workerID]
-  assert os.path.exists(outFile)
-  print(outFile)
+  res = CalibrationHandler.activeCalibrations[calibID]._CalibrationRun__mergePandoraLikelihoodXmlFiles()
 
-  import filecmp
-  assert filecmp.cmp(fileToRead, outFile)
+  mergedFile = 'calib%s/newPandoraLikelihoodData.xml' % calibID
+  assert os.path.exists(mergedFile)
 
-  # clean up output directory
-  try:
-    os.remove(outFile)
-  except EnvironmentError, e:
-    print("Failed to delete file: %s" % outFile, str(e))
-    assert False
+  from ILCDIRAC.CalibrationSystem.Utilities.functions import searchFilesWithPattern
+  inFileList = searchFilesWithPattern('calib%s/stage%s' % (calibID, stageID), '*.xml')
 
-  try:
-    import shutil
-    dirToDelete = 'calib%s' % calibID
-    shutil.rmtree(dirToDelete)
-  except EnvironmentError, e:
-    print("Failed to delete directory: %s" % dirToDelete, str(e))
-    assert False
+  import re
+  diffLines = None
+  with open(mergedFile) as file1:
+    with open(inFileList[0]) as file2:
+      diffLines = set(file1).symmetric_difference(file2)
+  diffLines = list(diffLines)
+  diffLines = [re.split('\>|\<', iLine) for iLine in diffLines]
 
+  # since we merge a few copies of the same file, likelihood functions has to be identical in input and output files
+  # the only difference has to be in the number of events in NSignalEvents and NBackgroundEvents fields (lines)
+  # this is why there should be 2 unique lines in input and output files --> 4 lines in total
+  assert len(diffLines) == 4
 
-def test_mergePandoraLikelihoodXmlFiles():
-  pass
+  # sum numbers from NSignalEvents and NBackgroundEvents nodes for input and output files
+  nSignalEvents = []
+  nBackgroundEvents = []
+  for iList in diffLines:
+    if iList[1] == 'NSignalEvents':
+      nSignalEvents.append(sum([int(iEl) for iEl in iList[2].split()]))
+    elif iList[1] == 'NBackgroundEvents':
+      nBackgroundEvents.append(sum([int(iEl) for iEl in iList[2].split()]))
+    else:
+      pass
+
+  # NSignalEvents_output = nFilesToMerge * NSignalEvents_input
+  # NBackgroundEvents_output = nFilesToMerge * NBackgroundEvents_input
+  assert ((nSignalEvents[0] == nFilesToMerge * nSignalEvents[1])
+          or (nSignalEvents[1] == nFilesToMerge * nSignalEvents[0]))
+  assert ((nBackgroundEvents[0] == nFilesToMerge * nBackgroundEvents[1])
+          or (nBackgroundEvents[1] == nFilesToMerge * nBackgroundEvents[0]))
+
+  #  print('nSignalEvents: %s' % nSignalEvents)
+  #  print('nBackgroundEvents: %s' % nBackgroundEvents)
 
 
 #pylint: disable=protected-access,too-many-public-methods,,no-member

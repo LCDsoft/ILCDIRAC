@@ -2,6 +2,7 @@
 
 import re
 import os
+import fnmatch
 from DIRAC import S_OK, S_ERROR
 import csv
 from xml.etree import ElementTree as et
@@ -239,3 +240,11 @@ def convert_and_execute(command_list):
   for iWord in command_list:
     callString += str(iWord)
   return shellCall(callString)
+
+
+def searchFilesWithPattern(dirName, filePattern):
+  matches = []
+  for root, dirnames, filenames in os.walk(dirName):
+    for filename in fnmatch.filter(filenames, filePattern):
+      matches.append(os.path.join(root, filename))
+  return matches
