@@ -6,6 +6,7 @@ Installs properly ILD soft and SiD soft, and all dependencies
 :author: Przemyslaw Majewski
 """
 import os
+import tarfile
 import zipfile
 import DIRAC
 
@@ -379,3 +380,23 @@ def unzip_file_into_dir(myfile, mydir):
   """
   zfobj = zipfile.ZipFile(myfile)
   zfobj.extractall(path=mydir)
+
+
+def extractTarball(tarball, directory):
+  """Extract tarball into directory.
+
+  :param str tarball: path to the tarball
+  :param str directory: path to the directory
+  :returns: ``S_OK``, ``S_ERROR``
+  """
+  LOG.info('Extracting files', 'from %r to %r' % (tarball, directory))
+  try:
+    if tarball.endswith(('.tar', 'tar.gz')):
+      tarball = tarfile.open(tarball, mode='r:*')
+    else:
+      return S_ERROR('Unknown tarball format')
+    tarball.extractall(directory)
+  except (RuntimeError, OSError) as e:
+    LOG.error('Failed to extract tarball', repr(e))
+    return S_ERROR('Failed to extract tarball')
+  return S_OK()
