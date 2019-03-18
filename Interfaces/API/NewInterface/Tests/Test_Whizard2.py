@@ -11,6 +11,7 @@ from mock import patch, MagicMock as Mock
 from mock import mock_open
 from mock import mock as mock_module
 
+from parameterized import parameterized
 
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard2
@@ -46,6 +47,7 @@ class Whizard2TestCase( unittest.TestCase ):
   def setUp(self):
     """set up the objects"""
     self.whiz = Whizard2( {} )
+    self.whiz._ops = Mock(name='OpsMock')
 
   def test_setrandomseed( self ):
     self.assertFalse( self.whiz._errorDict )
@@ -64,10 +66,14 @@ class Whizard2TestCase( unittest.TestCase ):
     self.assertFalse( self.whiz._errorDict )
     assertEqualsImproved( self.whiz.eventType, 'ee->ff', self )
 
-  def test_setEvtType_fail( self ):
-    self.assertFalse( self.whiz._errorDict )
-    self.whiz.setEvtType( 15 )
-    self.assertIn( '_checkArgs', self.whiz._errorDict )
+  @parameterized.expand([(15, False, '_checkArgs'),
+                         ('tt', True, 'setEvtType'),
+                         ])
+  def test_setEvtType_fail(self, evtType, addedToJob, errorMessage):
+    self.assertFalse(self.whiz._errorDict)
+    self.whiz.addedtojob = addedToJob
+    self.whiz.setEvtType(evtType)
+    self.assertIn(errorMessage, self.whiz._errorDict)
 
   @patch( 'os.path.isfile', new = Mock(return_value=True ) )
   @patch( '__builtin__.open', mock_open(read_data='process decay_proc = "A", "A" => "b", "B"'))
@@ -77,10 +83,13 @@ class Whizard2TestCase( unittest.TestCase ):
     self.assertFalse( self.whiz._errorDict )
     assertEqualsImproved( self.whiz.whizard2SinFile, 'process decay_proc = "A", "A" => "b", "B"', self )
 
-  @patch( "os.path.isfile", new = Mock(return_value=True ) )
-  @patch('__builtin__.open', mock_open(read_data='process decay_proc = "A", "A" => "b", "B"\n n_events'))
-  def test_setSinFile_fails2( self ):
-    assertDiracFailsWith( self.whiz.setSinFile('/some/path') , 'Do not set n_events', self )
+  @parameterized.expand([(True, 'Do not set n_events'),
+                         (False, 'does not exist'),
+                         ])
+  def test_setSinFile_fails2(self, exists, errorMessage):
+    with patch('os.path.isfile', new=Mock(return_value=exists)), \
+        patch('__builtin__.open', mock_open(read_data='process decay_proc = "A", "A" => "b", "B"\n n_events')):
+      assertDiracFailsWith(self.whiz.setSinFile('/some/path'), errorMessage, self)
 
   @patch( "os.path.isfile", new = Mock(return_value=True ) )
   @patch('__builtin__.open', mock_open(read_data='process decay_proc = "A", "A" => "b", "B"\n seed'))
@@ -244,6 +253,26 @@ class Whizard2TestCase( unittest.TestCase ):
     ret = self.whiz.setProcessVariables({'  decay_proc  ': 'decay_another   '})
     self.assertFalse(ret['OK'])
     self.assertIn('Cannot handle', ret.get('Message'))
+
+  def test_setIntegratedProcess_lfn(self):
+    lfn = 'lfn:/vo/user/u/username/mytar.tar.gz'
+    ret = self.whiz.setIntegratedProcess(lfn)
+    self.assertTrue(ret['OK'])
+    self.assertEqual('', self.whiz._integratedProcess)
+    self.assertIn(lfn, self.whiz.inputSB)
+
+  @parameterized.expand([(True, '3.1.4', S_OK({'tt': 'tt.tar.gz'})),
+                         (False, '', None),  # no version defined
+                         (False, '3.1.4', S_OK({'nottt': 'nottt.tar.gz'})),
+                       ])
+  def test_setIntegratedProcess_config(self, success, version, knownProc):
+    proc = 'tt'
+    self.whiz.version = version
+    with patch.object(self.whiz._ops, 'getOptionsDict', new=Mock(return_value=knownProc)):
+      ret = self.whiz.setIntegratedProcess(proc)
+    self.assertEqual(ret['OK'], success)
+    if success:
+      self.assertEqual(proc, self.whiz._integratedProcess)
 
 
 def runTests():

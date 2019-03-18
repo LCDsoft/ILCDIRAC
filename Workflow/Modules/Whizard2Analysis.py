@@ -8,9 +8,10 @@ Run Whizard2
 import os
 
 from DIRAC.Core.Utilities.Subprocess                      import shellCall
+from DIRAC.DataManagementSystem.Client.DataManager import DataManager
 from DIRAC                                                import S_OK, S_ERROR, gLogger
 from ILCDIRAC.Workflow.Modules.ModuleBase                 import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript, extractTarball
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames         import getProdFilename
 
 __RCSID__ = '$Id$'
@@ -32,6 +33,8 @@ class Whizard2Analysis(ModuleBase):
     self.whizard2SinFile = ''
     self.eventstring = ['+++ Generating event']
     self.decayProc = ['decay_proc']
+    self.integratedProcess = ''
+    self.datMan = DataManager()
 
   def applicationSpecificInputs(self):
     """ Resolve all input variables for the module here.
@@ -48,6 +51,46 @@ class Whizard2Analysis(ModuleBase):
                                        )
 
     return S_OK('Parameters resolved')
+
+  def resolveIntegratedProcess(self):
+    """Check if integrated process is set and act accordingly.
+
+    If the integrated process was given as a tarball it should already be available in the working directory and we do
+    nothing.
+    """
+    if not self.integratedProcess:
+      return S_OK()
+
+    # integratedProcess is set, check CVMFS or filecatalog
+    processes = self.ops.getOptionsDict('/AvailableTarBalls/%s/whizard2/%s/integrated_processes/processes' %
+                                        ('x86_64-slc5-gcc43-opt', self.applicationVersion))
+
+    if not processes['OK']:
+      LOG.error('Could not resolve known integrated processes', processes['Message'])
+      return processes
+
+    options = self.ops.getOptionsDict('/AvailableTarBalls/%s/whizard2/%s/integrated_processes' %
+                                      ('x86_64-slc5-gcc43-opt', self.applicationVersion))
+    if not options['OK']:
+      LOG.error('Failed to get integrated processes options', options['Message'])
+      return options
+
+    cvmfsPath = options['Value'].get('CVMFSPath', '')
+    tarballURL = options['Value'].get('TarBallURL', '')
+    processTarball = processes['Value'].get(self.integratedProcess, '')
+
+    localTarball = os.path.join(cvmfsPath, processTarball)
+    if os.path.exists(localTarball):
+      LOG.info('Tarball found on cvmfs: %r' % localTarball)
+      return extractTarball(localTarball, os.getcwd())
+
+    tarballLFN = os.path.join(tarballURL, processTarball)
+    LOG.info('Trying to download tarball', tarballLFN)
+    getFile = self.datMan.getFile(tarballLFN)
+    if not getFile['OK']:
+      LOG.error('Failed to download tarball', getFile['Message'])
+      return getFile
+    return extractTarball(os.path.split(tarballLFN)[1], os.getcwd())
 
   def runIt(self):
     """
@@ -73,13 +116,16 @@ class Whizard2Analysis(ModuleBase):
       LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('Whizard2 should not proceed as previous step did not end properly')
 
+    resIntProc = self.resolveIntegratedProcess()
+    if not resIntProc['OK']:
+      return resIntProc
+
     # get the enviroment script
     res = getEnvironmentScript(self.platform, self.applicationName, self.applicationVersion, S_ERROR("No init script provided in CVMFS!"))
     if not res['OK']:
       LOG.error("Could not obtain the environment script: ", res["Message"])
       return res
     envScriptPath = res["Value"]
-
 
     whizard2SteerName = 'Whizard2_%s_Steer_%s.sin'  % (self.applicationVersion, self.STEP_NUMBER)
     if os.path.exists(whizard2SteerName):
