@@ -4,6 +4,7 @@ Unit tests for the CalibrationService
 
 import unittest
 import pytest
+import os
 from mock import call, patch, MagicMock as Mock
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler, \
@@ -30,6 +31,16 @@ def readParameterDict():
     parDict[iKey] = 1.0
   return parDict
 
+
+@pytest.fixture
+def calibHandler():
+  CalibrationHandler.initializeHandler(None)
+  RequestHandler._rh__initializeClass(Mock(), Mock(), Mock(), Mock())
+  calibHandler = CalibrationHandler({}, Mock())
+  calibHandler.initialize()
+  yield calibHandler
+  CalibrationHandler.activeCalibrations = {}
+  CalibrationHandler.calibrationCounter = 0
 
 def mimic_convert_and_execute(inList):
   from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
@@ -78,7 +89,53 @@ def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
                                    False, False, False, False, False, False, False, True, True]
 
 
-def test_export_getNewParameters(mocker):
+#  def test_export_getNewParameters(calibHandler, mocker):
+#    print(CalibrationHandler.activeCalibrations)
+#    assert False
+
+def test_export_submitResult(calibHandler, mocker):
+  mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
+  calibHandler.export_createCalibration('', '', [], 0, '', '')
+
+  import ILCDIRAC.CalibrationSystem.Utilities as utilities
+  fileDir = utilities.__path__[0]
+  fileToRead = os.path.join(fileDir, 'testing/pfoAnalysis.xml')
+  from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
+  tmpFile = binaryFileToString(fileToRead)
+
+  calibID = 1
+  stageID = 1
+  phaseID = 0
+  stepID = 0
+  workerID = 8234
+
+  res = calibHandler.export_submitResult(calibID, stageID, phaseID, stepID, workerID, tmpFile)
+  assert res['OK'] == True
+
+  outFile = CalibrationHandler.activeCalibrations[calibID].stepResults[stepID].results[workerID]
+  assert os.path.exists(outFile)
+  print(outFile)
+
+  import filecmp
+  assert filecmp.cmp(fileToRead, outFile)
+
+  # clean up output directory
+  try:
+    os.remove(outFile)
+  except EnvironmentError, e:
+    print("Failed to delete file: %s" % outFile, str(e))
+    assert False
+
+  try:
+    import shutil
+    dirToDelete = 'calib%s' % calibID
+    shutil.rmtree(dirToDelete)
+  except EnvironmentError, e:
+    print("Failed to delete directory: %s" % dirToDelete, str(e))
+    assert False
+
+
+def test_mergePandoraLikelihoodXmlFiles():
   pass
 
 
@@ -108,12 +165,6 @@ class CalibrationHandlerTest(unittest.TestCase):
 
 # FIXME: Change tests to reflect new way of starting calibration creation
 
-  #  def test_submitresult( self ):
-  #    with patch.object( CalibrationRun, 'submitJobs', new=Mock()):
-  #      self.calh.export_createCalibration( '', '', [], 0, '', '' )
-  #    assertDiracSucceeds( self.calh.export_submitResult( 1, 0, 8234, [ 12.2, 1.2, .3 ] ), self )
-  #    assertEqualsImproved( CalibrationHandler.activeCalibrations[ 1 ].stepResults[ 0 ].results[ 8234 ],
-  #                          [ 12.2, 1.2, 0.3 ], self )
   #
   #  def test_submitresult_old_stepid( self ):
   #    with patch.object( CalibrationRun, 'submitJobs', new=Mock()):
