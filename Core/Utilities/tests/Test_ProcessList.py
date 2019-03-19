@@ -97,8 +97,11 @@ class ProcessListComplexTestCase( unittest.TestCase ):
                                              } )
     exists_dict = { '/temp/dir' : False, '/temp/dir/mytempfile.txt' : True, '/my/folder/testpath.xml' : True }
     fhandle_mock = Mock()
+
+    file_mock = Mock(return_value=fhandle_mock)
     with patch('tempfile.mkstemp', new=Mock(return_value=('handle', '/temp/dir/mytempfile.txt'))), \
-         patch('__builtin__.open', new=Mock(return_value=fhandle_mock)) as file_mock, \
+         patch('__builtin__.file', new=file_mock), \
+         patch('__builtin__.open', new=file_mock), \
          patch('os.makedirs') as mkdir_mock, \
          patch('os.path.exists', new=Mock(side_effect=lambda path: exists_dict[path])), \
          patch('shutil.move') as move_mock, \
