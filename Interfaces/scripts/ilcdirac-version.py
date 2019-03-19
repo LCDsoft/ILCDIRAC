@@ -12,6 +12,7 @@ Mandatory when submitting support requests
 :author: A. Sailer
 """
 
+from __future__ import print_function
 import pprint
 import os
 
@@ -52,7 +53,7 @@ def getInfo():
 
   ret = getProxyInfo(disableVOMS=False)
   if ret['OK']:
-    print pprint.pformat(ret)
+    print(pprint.pformat(ret))
     if 'group' in ret['Value']:
       vo = getVOForGroup(ret['Value']['group'])
     else:

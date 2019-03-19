@@ -1,3 +1,5 @@
+"""This is a Marlin example."""
+from __future__ import print_function
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
@@ -23,7 +25,7 @@ ma.setOutputRecFile(outrec)
 
 res = j.append(ma)
 if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   
 j.setOutputData([outdst,outrec],"some/path","KEK-SRM")

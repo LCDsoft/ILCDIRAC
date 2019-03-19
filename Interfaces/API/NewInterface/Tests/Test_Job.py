@@ -4,6 +4,7 @@ Test the ILCDIRAC job module
 
 """
 
+from __future__ import print_function
 import types
 import unittest
 
@@ -283,19 +284,19 @@ class IntrospectJob( Job ):
     """ Method that uses the _checkArgs method so it can be tested.
     """
     self._checkArgs( { 'arg_to_check' : argtype } )
-    print arg_to_check
+    print(arg_to_check)
 
   def indirection_2_for_checkArgs( self, arg_to_check, argtype ):
     """ Method that uses the _checkArgs method so it can be tested.
     """
     # Intentional 'typo'
     self._checkArgs( { 'arg_t_check' : argtype } )
-    print arg_to_check
+    print(arg_to_check)
 
   def indirection_for_getargsdict( self, arg1, arg2, arg3 ):
     """ Method that uses the getArgsDict method so it can be tested.
     """
-    print '%s %s %s' % (arg1,arg2,arg3)
+    print('%s %s %s' % (arg1, arg2, arg3))
     return self._getArgsDict()
 
 

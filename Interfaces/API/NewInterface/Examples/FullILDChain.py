@@ -1,3 +1,5 @@
+"""Create Full Chain."""
+from __future__ import print_function
 from DIRAC.Core.Base import Script
 Script.parseCommandLine()
 
@@ -24,7 +26,7 @@ wh.setParameterDict(params)
 wh.setModel("sm")
 res = j.append(wh)
 if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     dexit(1)
 
 
@@ -36,7 +38,7 @@ mo.setNbEvts(1)
 mo.setOutputFile("somefile.slcio")
 res = j.append(mo)
 if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     dexit(1)
 
 
@@ -48,7 +50,7 @@ ov.setNbSigEvtsPerJob(1)
 ov.setBkgEvtType("gghad")
 res = j.append(ov)
 if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     dexit(1)
 
 
@@ -60,7 +62,7 @@ ma.getInputFromApp(mo)
 ma.setDebug(True)
 res = j.append(ma)
 if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     dexit(1)
 #print appplication's attributes.
 ma.listAttributes()
@@ -70,7 +72,7 @@ j.setOutputSandbox("*.log")
 
 res = dirac.checkparams(j)
 if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     dexit(1)
 
 

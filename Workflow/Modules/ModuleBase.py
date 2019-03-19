@@ -8,6 +8,7 @@ Stolen by S. Poss from LHCbSystem.Workflow.Modules
 :author: S. Paterson
 """
 
+from __future__ import print_function
 import os
 import re
 import shutil
@@ -595,12 +596,12 @@ class ModuleBase(object):
       self.eventstring = [self.eventstring]
 
     if self.eventstring is None:
-      print message
+      print(message)
 
     elif self.eventstring and self.eventstring[0]:
       for mystring in self.eventstring:
         if re.search(re.escape(mystring), message):
-          print message
+          print(message)
           break
 
     if not self.applicationLog:

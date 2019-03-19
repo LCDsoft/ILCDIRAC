@@ -36,11 +36,11 @@ class TestDRA( unittest.TestCase ):
   def tearDown ( self ):
     pass
 
-  def getTestMock( self, nameID=0):
+  def getTestMock(self, nameID=0, jobID=1234567):
     """create a JobInfo object with mocks"""
     from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import JobInfo
     testJob = Mock ( name = "jobInfoMock_%s" % nameID, spec=JobInfo )
-    testJob.jobID = 1234567
+    testJob.jobID = jobID
     testJob.tType = "testType"
     testJob.otherTasks = None
     testJob.inputFileExists = True
@@ -726,22 +726,13 @@ class TestDRA( unittest.TestCase ):
     tInfoMock = Mock( name = "tInfoMock", spec=TransformationInfo )
     mockJobs = dict([ (i, self.getTestMock() ) for i in xrange(11) ] )
     mockJobs[2].pendingRequest = True
-    mockJobs[3].getJobInformation = Mock( side_effect = ( RuntimeError("ARGJob1"), None ) )
-    mockJobs[4].getTaskInfo = Mock( side_effect = ( TaskInfoException("ARG1"), None ) )
+    mockJobs[3].getJobInformation = Mock(side_effect=(RuntimeError('ARGJob1'), None))
+    mockJobs[4].getTaskInfo = Mock(side_effect=(TaskInfoException('ARG1'), None))
     taskDict = True
     lfnTaskDict = True
     self.dra.checkAllJobs( mockJobs, tInfoMock, taskDict, lfnTaskDict )
     self.dra.log.error.assert_any_call( MatchStringWith('+++++ Exception'), 'ARGJob1')
     self.dra.log.error.assert_any_call( MatchStringWith("Skip Task, due to TaskInfoException: ARG1") )
-    self.dra.log.reset_mock()
-
-    ### test without additional task dicts
-    mockJobs = dict([ (i, self.getTestMock() ) for i in xrange(5) ] )
-    mockJobs[2].pendingRequest = True
-    mockJobs[3].getJobInformation = Mock( side_effect = ( RuntimeError("ARGJob2"), None ) )
-    tInfoMock.reset_mock()
-    self.dra.checkAllJobs( mockJobs, tInfoMock )
-    self.dra.log.error.assert_any_call( MatchStringWith('+++++ Exception'), 'ARGJob2')
     self.dra.log.reset_mock()
 
     ### test inputFile None
@@ -752,6 +743,21 @@ class TestDRA( unittest.TestCase ):
     tInfoMock.reset_mock()
     self.dra.checkAllJobs( mockJobs, tInfoMock, taskDict, lfnTaskDict = True )
     self.dra.log.notice.assert_any_call( MatchStringWith( "Failing job hard" ) )
+
+  def test_checkAllJob_2(self):
+    """Test where failJobHard fails (via cleanOutputs)."""
+    from ILCDIRAC.ILCTransformationSystem.Utilities.TransformationInfo import TransformationInfo
+    tInfoMock = Mock(name='tInfoMock', spec=TransformationInfo)
+    mockJobs = dict([(i, self.getTestMock()) for i in xrange(5)])
+    mockJobs[2].pendingRequest = True
+    mockJobs[3].getTaskInfo = Mock(side_effect=(TaskInfoException('ARGJob3'), None))
+    mockJobs[3].inputFile = None
+    self.dra._DataRecoveryAgent__failJobHard = Mock(side_effect=(RuntimeError('ARGJob4'), None), name='FJH')
+    self.dra.checkAllJobs(mockJobs, tInfoMock, tasksDict=True, lfnTaskDict=True)
+    mockJobs[3].getTaskInfo.assert_called()
+    self.dra._DataRecoveryAgent__failJobHard.assert_called()
+    self.dra.log.error.assert_any_call(MatchStringWith('+++++ Exception'), 'ARGJob4')
+    self.dra.log.reset_mock()
 
   def test_execute( self ):
     """test for DataRecoveryAgent execute .........................................................."""
@@ -831,7 +837,75 @@ class TestDRA( unittest.TestCase ):
     self.dra.notesToSend = "Note This"
     self.dra.printSummary()
 
+  def test_setPendingRequests_1(self):
+    """Check the setPendingRequests function."""
+    mockJobs = dict((i, self.getTestMock(jobID=i)) for i in xrange(11))
+    reqMock = Mock()
+    reqMock.Status = "Done"
+    reqClient = Mock(name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient)
+    reqClient.readRequestsForJobs.return_value = S_OK({"Successful": {}})
+    self.dra.reqClient = reqClient
+    self.dra.setPendingRequests(mockJobs)
+    for _index, mj in mockJobs.items():
+      self.assertFalse(mj.pendingRequest)
 
-if __name__ == "__main__":
-  SUITE = unittest.defaultTestLoader.loadTestsFromTestCase( TestDRA )
-  TESTRESULT = unittest.TextTestRunner( verbosity = 3 ).run( SUITE )
+  def test_setPendingRequests_2(self):
+    """Check the setPendingRequests function."""
+    mockJobs = dict((i, self.getTestMock(jobID=i)) for i in xrange(11))
+    reqMock = Mock()
+    reqMock.RequestID = 666
+    reqClient = Mock(name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient)
+    reqClient.readRequestsForJobs.return_value = S_OK({"Successful": {6: reqMock}})
+    reqClient.getRequestStatus.return_value = {'Value': 'Done'}
+    self.dra.reqClient = reqClient
+    self.dra.setPendingRequests(mockJobs)
+    for _index, mj in mockJobs.items():
+      self.assertFalse(mj.pendingRequest)
+    reqClient.getRequestStatus.assert_called_once_with(666)
+
+  def test_setPendingRequests_3(self):
+    """Check the setPendingRequests function."""
+    mockJobs = dict((i, self.getTestMock(jobID=i)) for i in xrange(11))
+    reqMock = Mock()
+    reqMock.RequestID = 555
+    reqClient = Mock(name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient)
+    reqClient.readRequestsForJobs.return_value = S_OK({'Successful': {5: reqMock}})
+    reqClient.getRequestStatus.return_value = {'Value': 'Pending'}
+    self.dra.reqClient = reqClient
+    self.dra.setPendingRequests(mockJobs)
+    for index, mj in mockJobs.items():
+      if index == 5:
+        self.assertTrue(mj.pendingRequest)
+      else:
+        self.assertFalse(mj.pendingRequest)
+    reqClient.getRequestStatus.assert_called_once_with(555)
+
+  def test_setPendingRequests_Fail(self):
+    """Check the setPendingRequests function."""
+    mockJobs = dict((i, self.getTestMock(jobID=i)) for i in xrange(11))
+    reqMock = Mock()
+    reqMock.Status = "Done"
+    reqClient = Mock(name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient)
+    reqClient.readRequestsForJobs.side_effect = (S_ERROR('Failure'), S_OK({'Successful': {}}))
+    self.dra.reqClient = reqClient
+    self.dra.setPendingRequests(mockJobs)
+    for _index, mj in mockJobs.items():
+      self.assertFalse(mj.pendingRequest)
+
+  def test_getLFNStatus(self):
+    """Check the getLFNStatus function."""
+    mockJobs = dict((i, self.getTestMock(jobID=i)) for i in xrange(11))
+    self.dra.fcClient.exists.return_value = S_OK({'Successful':
+                                                  {'/my/stupid/file.lfn': True,
+                                                   '/my/stupid/file2.lfn': True}})
+    lfnExistence = self.dra.getLFNStatus(mockJobs)
+    self.assertEqual(lfnExistence, {'/my/stupid/file.lfn': True,
+                                    '/my/stupid/file2.lfn': True})
+
+    self.dra.fcClient.exists.side_effect = (S_ERROR('args'),
+                                            S_OK({'Successful':
+                                                  {'/my/stupid/file.lfn': True,
+                                                   '/my/stupid/file2.lfn': True}}))
+    lfnExistence = self.dra.getLFNStatus(mockJobs)
+    self.assertEqual(lfnExistence, {'/my/stupid/file.lfn': True,
+                                    '/my/stupid/file2.lfn': True})

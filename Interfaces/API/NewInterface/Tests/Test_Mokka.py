@@ -4,6 +4,7 @@ Test Mokka module
 
 """
 
+from __future__ import print_function
 import unittest
 from mock import patch, MagicMock as Mock
 
@@ -34,7 +35,7 @@ class MokkaTestCase( unittest.TestCase ):
     self.mok.setStartFrom( { 'myset', False } )
     self.mok.setProcessID( 129843 )
     self.mok.setDbSlice( 'lfn:/inval/dir/myDB.slice' )
-    print self.mok._errorDict
+    print(self.mok._errorDict)
     assertEqualsImproved( len( self.mok._errorDict['_checkArgs'] ), 5, self )
     assertEqualsImproved( self.mok.inputSB, [
       'lfn:/inval/dir/somefile.mac', 'lfn:/inval/dir/myDB.slice' ], self )

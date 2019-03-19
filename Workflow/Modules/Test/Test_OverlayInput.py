@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Test the OverlayInput WorkflowModule"""
 
+from __future__ import print_function
 import os
 import shutil
 import tempfile
@@ -67,8 +68,8 @@ class TestOverlayEos( unittest.TestCase ):
     """ test success when getting an lfn to copy from eos """
     testLFN = "/lfn/to/overlay/overlayFile.slcio"
     res = self.over.getEOSFile( testLFN )
-    print res
-    print "self result", self.over.result
+    print(res)
+    print("self result", self.over.result)
     assertDiracSucceedsWith_equals( res, os.path.basename( testLFN ), self )
     with open("overlayinput.sh") as overscript:
       self.assertIn( "xrdcp -s root://eospublic.cern.ch//eos/experiment/clicdp/grid%s" % testLFN , overscript.read() )
@@ -78,8 +79,8 @@ class TestOverlayEos( unittest.TestCase ):
     """ test that we don't predent if we get a fullpath for eos, however that might happen"""
     testLFN = "/eos/experiment/clicdp/grid/lfn/to/overlay/overlayFile.slcio"
     res = self.over.getEOSFile( testLFN )
-    print res
-    print "self result", self.over.result
+    print(res)
+    print("self result", self.over.result)
     assertDiracSucceedsWith_equals( res, os.path.basename( testLFN ), self )
     with open("overlayinput.sh") as overscript:
       self.assertIn( "xrdcp -s root://eospublic.cern.ch/%s" % testLFN , overscript.read() )
@@ -89,8 +90,8 @@ class TestOverlayEos( unittest.TestCase ):
     """ test failure of copy command, that is no ouputfile present after copying """
     testLFN = "/lfn/to/overlay/overlayFile.slcio"
     res = self.over.getEOSFile( testLFN )
-    print res
-    print "self result", self.over.result
+    print(res)
+    print("self result", self.over.result)
     assertDiracFailsWith( res, 'Failed', self )
     with open("overlayinput.sh") as overscript:
       self.assertIn( "xrdcp -s root://eospublic.cern.ch//eos/experiment/clicdp/grid%s" % testLFN , overscript.read() )
@@ -342,7 +343,7 @@ class TestOverlayUnittests( unittest.TestCase ):
       shell_mock.assert_called_with( 600, 'sh -c "./overlayinput.sh"',
                                      bufferLimit = 20971520,
                                      callbackFunction = self.over.redirectLogOutput )
-      chmod_mock.assert_called_with( 'overlayinput.sh', 0755 )
+      chmod_mock.assert_called_with('overlayinput.sh', 0o755)
       if unlink_called:
         remove_mock.assert_called_with( 'overlayinput.sh' )
       else:
@@ -385,6 +386,7 @@ class TestOverlayExecute( unittest.TestCase ):
          patch('%s.os.mkdir' % MODULE_NAME, new=Mock(return_value = True)), \
          patch('%s.os.chdir' % MODULE_NAME, new=Mock(return_value = True)), \
          patch('%s.DataManager.getFile' % MODULE_NAME, new=Mock(return_value=S_OK('Nothing'))), \
+         patch('%s.random.randrange' % MODULE_NAME, new=Mock(side_effect=[0, 0, 1, 1])), \
          patch('%s.wasteCPUCycles' % MODULE_NAME):
       result = self.over.execute()
       assertDiracSucceedsWith_equals( result, 'OverlayInput finished successfully', self )
@@ -612,17 +614,17 @@ def runTests():
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestOverlayEos )
 
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestOverlayUnittests )
 
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestOverlayExecute )
 
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
 
 if __name__ == '__main__':

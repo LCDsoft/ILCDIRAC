@@ -3,6 +3,7 @@
 compile the release notes
 
 """
+from __future__ import print_function
 import os
 import re
 import sys
@@ -14,7 +15,7 @@ def doit( tag=None ):
   """compile release notes rst file"""
   res = __generateReleaseNotes( tag )
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     return 1
   return 0
 
@@ -149,7 +150,7 @@ def __generateRSTFile( releaseData, rstFileName, pkgVersion, singleVersion ):
           rstData.append( " - %s" % entry )
         rstData.append( "" )
     if pkgVersion is None and singleVersion:
-      print "Just taking the first entry in releaseNotes"
+      print("Just taking the first entry in releaseNotes")
       break
   #Write releasenotes.rst
   try:
@@ -164,8 +165,8 @@ def __generateRSTFile( releaseData, rstFileName, pkgVersion, singleVersion ):
   
   
 if __name__=="__main__":
-  print "args",sys.argv
+  print("args", sys.argv)
   TAG = sys.argv[1] if len(sys.argv) > 1 else None
   TAG = os.environ.get( "CI_COMMIT_TAG", TAG )
-  print "Tag found?:", TAG
+  print("Tag found?:", TAG)
   exit( doit( TAG ))

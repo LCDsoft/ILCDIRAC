@@ -8,6 +8,7 @@ Stops at any error.
 :author: sposs
 '''
 
+from __future__ import print_function
 import unittest
 import os
 import pwd
@@ -119,7 +120,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_mokka(self):
     """create test for mokka"""
-    print "mokka test"
+    print("mokka test")
     jobs = self.myTests.createMokkaTest()
     assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
@@ -132,7 +133,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_ddsim(self):
     """create tests for ddsim"""
-    print "ddsimtest"
+    print("ddsimtest")
     # First run, all files available
     jobs = self.myTests.createDDSimTest()
     assertDiracSucceeds( jobs, self )
@@ -156,7 +157,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_marlin(self):
     """create test for marlin"""
-    print "marlin test"
+    print("marlin test")
     jobs = self.myTests.createMarlinTest()
     assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
@@ -169,7 +170,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_marlin2(self):
     """create test for marlin"""
-    print "marlin test2"
+    print("marlin test2")
     jobs = self.myTests.createMarlinTest( True )
     assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
@@ -182,7 +183,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_whizard(self):
     """create test for whizard"""
-    print "whizard test"
+    print("whizard test")
     jobs = self.myTests.createWhizardTest()
     assertDiracSucceeds( jobs, self )
     theseJobs = jobs['Value']
@@ -196,7 +197,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_utilities(self):
     """create test for utilities"""
-    print "Utilities test"
+    print("Utilities test")
     jobs = self.myTests.createUtilityTests()
     assertDiracSucceeds( jobs, self )
     theseJobs = jobs['Value']
@@ -210,7 +211,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_root(self):
     """create test for root 1"""
-    print "test root"
+    print("test root")
     jobs = self.myTests.createRootScriptTest()
     assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
@@ -223,7 +224,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_root2(self):
     """create test for root 2"""
-    print "test root2"
+    print("test root2")
     jobs = self.myTests.createRootHaddTest()
     assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
@@ -236,7 +237,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_root3(self):
     """create test for root 3"""
-    print "test root3"
+    print("test root3")
     jobs = self.myTests.createRootMacroTest()
     assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
@@ -249,7 +250,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_fccsw(self):
     """create test for fccsw"""
-    print "fccsw test"
+    print("fccsw test")
     jobs = self.myTests.createFccSwTest()
     assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
@@ -262,7 +263,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_fccanalysis(self):
     """create test for fccanalysis"""
-    print "fccanalysis test"
+    print("fccanalysis test")
     jobs = self.myTests.createFccAnalysisTest()
     assertDiracSucceeds( jobs, self )
     thisJob = jobs['Value']
@@ -274,7 +275,7 @@ class JobTestCase( unittest.TestCase ):
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_whizard2(self):
     """create tests for whizard2"""
-    print "whizard2test"
+    print("whizard2test")
     # First run, all files available
     jobs = self.myTests.createWhizard2Test()
     assertDiracSucceeds( jobs, self )
@@ -290,7 +291,7 @@ def runTests():
 
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( JobTestCase )
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
-  print testResult
+  print(testResult)
 
 
 def runUtilitiesTest():
@@ -302,7 +303,7 @@ def runUtilitiesTest():
   suite = unittest.TestSuite()
   suite.addTest(JobTestCase('test_utilities'))
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
-  print testResult
+  print(testResult)
 
 def runMokkaTest():
   """runs the utilities test only"""
@@ -313,7 +314,7 @@ def runMokkaTest():
   suite = unittest.TestSuite()
   suite.addTest(JobTestCase('test_mokka'))
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
-  print testResult
+  print(testResult)
 
 def runDDSimTest():
   """runs the ddsim test only"""
@@ -321,7 +322,7 @@ def runDDSimTest():
   suite = unittest.TestSuite()
   suite.addTest(JobTestCase('test_ddsim'))
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
-  print testResult
+  print(testResult)
 
 # TO UNCOMMENT when Detector folder of FCCSW will be on CVMFS
 #def runFccSwTest():
@@ -344,7 +345,7 @@ def runWhizard2Test():
   suite = unittest.TestSuite()
   suite.addTest(JobTestCase('test_whizard2'))
   testResult = unittest.TextTestRunner( verbosity = 1 ).run( suite )
-  print testResult
+  print(testResult)
 
 if __name__ == '__main__':
   runTests()

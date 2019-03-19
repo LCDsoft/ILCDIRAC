@@ -2,6 +2,7 @@
 Unit tests for the UploadLogFile module
 """
 
+from __future__ import print_function
 import sys
 import unittest
 from mock import patch, MagicMock as Mock
@@ -191,4 +192,4 @@ class UploadLogFileTestCase( unittest.TestCase ):
 if __name__ == '__main__':
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( UploadLogFileTestCase )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)

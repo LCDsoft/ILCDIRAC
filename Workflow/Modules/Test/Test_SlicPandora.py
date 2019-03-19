@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Test user jobfinalization"""
+from __future__ import print_function
 __RCSID__ = "$Id$"
 
 import unittest
@@ -54,7 +55,7 @@ class TestSlicPandoraAnalysis( unittest.TestCase ):
         break
       except urllib2.URLError as e:
         attempts += 1
-        print type(e),str(e)
+        print(type(e), str(e))
 
   def tearDown(self):
     os.chdir(self.curdir)
@@ -74,7 +75,7 @@ def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestSlicPandoraAnalysis )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
 
 if __name__ == '__main__':

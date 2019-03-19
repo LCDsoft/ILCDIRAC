@@ -5,6 +5,7 @@ ILD DBD specific  job utility
 :since: Jul 01, 2012
 """
 
+from __future__ import print_function
 import string
 import pprint
 from decimal import Decimal
@@ -66,7 +67,7 @@ class ILDProductionJobDBD( ProductionJob ):
         """ EvtType missing in input lfn: i have no privileges to set metadata on those files
         """
         self.evttype = evttype
-        print '[debug tino] Set self.evttype to %s '%self.evttype
+        print('[debug tino] Set self.evttype to %s ' % self.evttype)
 
     def setGenProcName( self, genprocname ):
         """ ILD convention add gen process name in the basename of LFN's
@@ -92,7 +93,7 @@ class ILDProductionJobDBD( ProductionJob ):
         """
 
         for key,val in metadata.iteritems():
-            print "[0] meta[%s] %s"%(key,val)
+            print("[0] meta[%s] %s" % (key, val))
 
         retMetaKey = self._checkMetaKeys( metadata.keys(), extendFileMeta = True)
         if not retMetaKey['OK']:
@@ -112,12 +113,12 @@ class ILDProductionJobDBD( ProductionJob ):
 
         compatmeta = {}
 
-        print 'dirs found: %d' %len(dirs)
+        print('dirs found: %d' % len(dirs))
         # for d in dirs:
         #     print '%s'%d
         dir_found = False
         if self.matchToInput:
-            print 'Will try to match dir with %s' %self.matchToInput
+            print('Will try to match dir with %s' % self.matchToInput)
         for mdir in dirs:
             if self.matchToInput:
                 if self.matchToInput not in mdir:
@@ -128,22 +129,22 @@ class ILDProductionJobDBD( ProductionJob ):
                     continue
 
             dir_found = True
-            print '[debug tino] Found mdir %s' %mdir
+            print('[debug tino] Found mdir %s' % mdir)
             res = self.fc.getDirectoryUserMetadata( mdir )
             if not res['OK']:
                 return self._reportError( "Error looking up the catalog for directory metadata: %s" % res['Message'] )
             compatmeta = res['Value'] # this reset compatmeta for each iteration (do we want this?)
             compatmeta.update( metadata )
-            print '[tino debug] Updated compatmeta to: %s' %compatmeta
+            print('[tino debug] Updated compatmeta to: %s' % compatmeta)
                 
            
         if not dir_found:
             if self.dryrun:
-                print 'We could not find our target dir: please try w/o dryrun (maybe target dir still not registered)'
+                print('We could not find our target dir: please try w/o dryrun (maybe target dir still not registered)')
             else:
-                print 'We could not find our target dir and this is not a dryrun: please check'
+                print('We could not find our target dir and this is not a dryrun: please check')
             
-        print 'self.fc.findFilesByMetadata( %s, "/ilc/prod/ilc" ) '%metadata
+        print('self.fc.findFilesByMetadata( %s, "/ilc/prod/ilc" ) ' % metadata)
         # get all the files available, if any
         res = self.fc.findFilesByMetadata( metadata, '/ilc/prod/ilc' )
         # res = self.fc.findFilesByMetadata( metadata, '/ilc/user/c/calanchac/stdhep' )
@@ -159,22 +160,22 @@ class ILDProductionJobDBD( ProductionJob ):
             if not res['OK']:
                 return self._reportError( 'Failed to get file metadata, cannot build filename: %s' % res['Message'] )
             compatmeta.update( res['Value'] )
-            print '[tino debug] Updated compatmeta to: %s' %compatmeta
+            print('[tino debug] Updated compatmeta to: %s' % compatmeta)
 
             for key,val in self.compatmeta.iteritems():
-                print "my_lfn %s compatmeta[%s] %s"%(my_lfn, key, val)
+                print("my_lfn %s compatmeta[%s] %s" % (my_lfn, key, val))
 
         else:
             if not self.dryrun:
-                print res
+                print(res)
                 self._reportError( "No files matching the metadata: Metadata is wrong or files are not under "
                                    "/ilc/prod/ilc directory" )
                 
 
         if not len(compatmeta):
-            print 'ERROR, compatmeta is empty: this is expected when dryrun = True'
+            print('ERROR, compatmeta is empty: this is expected when dryrun = True')
 
-        print 'compatmeta contains ProcessID? (%s) See below:'%compatmeta
+        print('compatmeta contains ProcessID? (%s) See below:' % compatmeta)
         pprint.pprint(self.compatmeta)
 
         self.log.verbose( "Using %s to build path" % str( compatmeta ) )
@@ -224,7 +225,7 @@ class ILDProductionJobDBD( ProductionJob ):
         self.basename = ''
 #
         if not self.energycat:# FIXME
-            print "Printing metadata before exit:"
+            print("Printing metadata before exit:")
             pprint.pprint( self.compatmeta )
             return self._reportError("ERROR::ILDProductionJobDBD.py: self.energycat is null")
 
@@ -351,7 +352,7 @@ class ILDProductionJobDBD( ProductionJob ):
                 self.finalMetaDict[ metaPath ] = { 'ILDConfig': self.prodparameters['ILDConfigVersion'] }
 
                 fname = "%s_%s.slcio" % ( self.basename, outType.lower() )
-                print '+++Output %s Filename: %s' %( outType, fname )
+                print('+++Output %s Filename: %s' % (outType, fname))
                 getattr(application, 'setOutput%sFile' % outType.capitalize())( fname, metaPath )
                 self.finalpaths.append( metaPath )
                 path = metaPath
@@ -415,7 +416,7 @@ class ILDProductionJobDBD( ProductionJob ):
                 extension = 'slcio'
             fname = self.basename + "_%s" % ( application.datatype.lower() ) + "." + extension
             application.setOutputFile( fname, path_gen_or_sim )    
-            print "+++Output SIM/GEN Filename", fname
+            print("+++Output SIM/GEN Filename", fname)
 
         ## Applied for all productions, these are the metadata at the production level
         metap = {}
@@ -426,7 +427,7 @@ class ILDProductionJobDBD( ProductionJob ):
                       'BeamParticle1','BeamParticle2',
                       'PolarizationB1','PolarizationB2']:
             if imeta in self.compatmeta:
-                print 'Updating final metadata with {"%s":"%s"}' %(imeta,self.compatmeta[imeta])
+                print('Updating final metadata with {"%s":"%s"}' % (imeta, self.compatmeta[imeta]))
                 metap.update( {imeta : self.compatmeta[imeta]} )
 
         ## Add software to non-searchable metadata
@@ -438,7 +439,7 @@ class ILDProductionJobDBD( ProductionJob ):
           self.prodparameters["SWPackages"] = curpackage
 
         softmeta = application.appname + "." + application.version
-        print "++++Software meta for", application.appname, "=", softmeta
+        print("++++Software meta for", application.appname, "=", softmeta)
         metap.update( { "SoftwareTag": softmeta } )
 
         self.prodMetaDict.update( metap )

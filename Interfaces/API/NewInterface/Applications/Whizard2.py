@@ -18,9 +18,12 @@ import os
 import re
 
 from ILCDIRAC.Interfaces.API.NewInterface.LCApplication import LCApplication
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Workflow.Parameter import Parameter
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations  import Operations
+
+
+LOG = gLogger.getSubLogger(__name__)
 
 __RCSID__ = "$Id$"
 
@@ -40,6 +43,7 @@ class Whizard2( LCApplication ):
     self._paramsToExclude.extend( [ "outputDstPath", "outputRecPath", "OutputDstFile", "OutputRecFile" ] )
     self._ops = Operations()
     self._decayProc = ['decay_proc']
+    self._integratedProcess = ''
 
   def setRandomSeed(self, randomSeed):
     """ Optional: Define random seed to use. Default is the jobID.
@@ -116,6 +120,59 @@ class Whizard2( LCApplication ):
       return self._reportError('Do not call "simulate ()" in the sin file, this is done by iLCDirac')
 
     return None
+
+  def setIntegratedProcess(self, integrationTarball):
+    """Make whizard2 use an already integrated process.
+
+    .. warning :: It is the responsibility of the user to ensure that the sindarin file is compatible with
+                  the integrated process
+
+    The integrationTarball has to be a tarball (zip, tar.gz, tgz), either an LFN, or a process defined in the
+    configuration system.
+
+    Use `getKnownProcesses` to see the list of defined processes
+
+    >>> whizard2.setIntegratedProcess('bbcbbc_3tev_negPol') # processes defined in the configuration
+
+    >>> whizard2.setIntegratedProcess('LFN:/ilc/user/u/username/bbcbbc_3tev_negPol.tar.gz') # tarball on the grid
+
+    :param str integrationTarball: integrated process to be used for event generation
+
+    """
+    self._checkArgs({'integrationTarball': types.StringTypes})
+
+    # file on the grid
+    if integrationTarball.lower().startswith('lfn:'):
+      LOG.info('Integrated process file is an LFN, adding it to the sandbox')
+      self.inputSB.append(integrationTarball)
+      # as the tarball is automatically extracted during the workflow, we do not have to do anything
+      self._integratedProcess = ''
+      return S_OK()
+
+    knownProcesses = self.getKnownProcesses()
+    if not knownProcesses['OK']:
+      return self._reportError('Failed to get known integrated processes: %s' % knownProcesses['Message'])
+    elif integrationTarball in knownProcesses['Value']:
+      self._integratedProcess = integrationTarball
+    else:
+      return self._reportError('Unknown integrated process in %s: %s (available are: %s)' %
+                               (self.appname, integrationTarball, ', '.join(knownProcesses['Value'].keys())))
+    return S_OK()
+
+  def getKnownProcesses(self, version=None):
+    """Return a list of known integrated processes.
+
+    :param str version: Optional: Software version for which to print the integrated processes.
+       If not given the version of the application instance is used.
+    :returns: S_OK with list of integrated processes known for this software version, S_ERROR
+    """
+    if version is None and not self.version:
+      return S_ERROR('No software version defined')
+    version = self.version if version is None else version
+    processes = self._ops.getOptionsDict('/AvailableTarBalls/%s/whizard2/%s/integrated_processes/processes' %
+                                         ('x86_64-slc5-gcc43-opt', self.version))
+    return processes
+
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -197,6 +254,7 @@ class Whizard2( LCApplication ):
     md1.addParameter(Parameter("debug",            False,   "bool", "", "", False, False, "debug mode"))
     md1.addParameter(Parameter("whizard2SinFile",     '', "string", "", "", False, False, "Whizard2 steering options"))
     md1.addParameter(Parameter("decayProc", [], "list", "", "", False, False, "processses to simulate"))
+    md1.addParameter(Parameter('integratedProcess', '', 'string', '', '', False, False, 'Integrated Process to use'))
     return md1
 
   def _applicationModuleValues(self, moduleinstance):
@@ -204,6 +262,7 @@ class Whizard2( LCApplication ):
     moduleinstance.setValue("debug",           self.debug)
     moduleinstance.setValue("whizard2SinFile", self.whizard2SinFile)
     moduleinstance.setValue("decayProc", self._decayProc)
+    moduleinstance.setValue('integratedProcess', self._integratedProcess)
 
   def _checkWorkflowConsistency(self):
     return self._checkRequiredApp()

@@ -5,10 +5,12 @@ import unittest
 import os
 from mock import patch, MagicMock as Mock
 
+import pytest
+
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import CombinedSoftwareInstallation, \
   getSharedAreaLocation, createSharedArea, getLocalAreaLocation, getSoftwareFolder, \
-  getEnvironmentScript, checkCVMFS
+  getEnvironmentScript, checkCVMFS, extractTarball
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
   assertDiracSucceeds, assertDiracSucceedsWith_equals, assertMockCalls
 
@@ -484,3 +486,21 @@ class TestSharedLocation( unittest.TestCase ):
 
 CLASS_NAME = 'CombinedSoftwareInstallation'
 MODULE_NAME = 'ILCDIRAC.Core.Utilities.%s' % CLASS_NAME
+
+
+@pytest.mark.parametrize('success, filename, throw',
+                         [(False, 'myfile', False),
+                          (True, 'my.tar', False),
+                          (True, 'my.tar.gz', False),
+                          (False, 'noFile.tar.gz', True)])
+def test_extractTarball(success, filename, throw, mocker):
+  """Test the extractTarball function."""
+  tarModule = Mock(name='TarModule')
+  tarball = Mock(name='TarBall')
+  tarModule.open.return_value = tarball
+  if throw:
+    tarModule.open.side_effect = RuntimeError('Nope')
+  mocker.patch('%s.tarfile' % MODULE_NAME, tarModule)
+  assert extractTarball(filename, 'dir')['OK'] == success
+  if success:
+    tarball.extractall.assert_called_once_with('dir')

@@ -74,7 +74,7 @@ class TestJI( unittest.TestCase ):
                   'IS_PROD': "True",
                   'CPUTime': 300000,
                   'OwnerDN': "/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=sailer/CN=683529/CN=Andre Sailer",
-                  'JobGroup': 00006326,
+                  'JobGroup': 0o0006326,
                   'OutputSandbox': [ "std.err",
                                      "std.out",
                                    ],
@@ -142,7 +142,7 @@ class TestJI( unittest.TestCase ):
                              'IS_PROD': "True",
                              'CPUTime': 300000,
                              'OwnerDN': "/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=sailer/CN=683529/CN=Andre Sailer",
-                             'JobGroup': 00006326,
+                             'JobGroup': 0o0006326,
                              'OutputSandbox': [ "std.err",
                                                 "std.out",
                                               ],
@@ -446,87 +446,42 @@ class TestJI( unittest.TestCase ):
     jdlList = self.jbi._JobInfo__getJDL( self.diracILC )
     with self.assertRaises( ValueError ):
       self.jbi._JobInfo__getTaskID( jdlList )
-    self.assertIn( "*"*80 , out.getvalue() )
-    self.assertIn( "ERROR" , out.getvalue() )
 
   def test_getInputFile( self ):
-    ## singleLFN
-    self.diracILC.getJobJDL.return_value = S_OK( self.jdl1 )
-    jdlList = self.jbi._JobInfo__getJDL( self.diracILC )
-    self.jbi._JobInfo__getInputFile( jdlList )
-    self.assertEqual( self.jbi.inputFile , "/ilc/prod/clic/3tev/e1e1_o/gen/00006300/004/e1e1_o_gen_6300_4077.stdhep" )
+    """Test the extraction of the inputFile from the JDL parameters."""
+    # singleLFN
+    self.jbi._JobInfo__getInputFile({'InputData': '/single/lfn2'})
+    self.assertEqual(self.jbi.inputFile, '/single/lfn2')
 
-  def test_checkRequests( self ):
-    """ILCTransformation.Utilities.JobInfo.checkRequests............................................"""
+    # list with singleLFN
+    self.jbi._JobInfo__getInputFile({'InputData': ['/single/lfn1']})
+    self.assertEqual(self.jbi.inputFile, '/single/lfn1')
 
-    ## no request
-    reqMock = Mock()
-    reqMock.Status = "Done"
-    reqClient = Mock( name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient )
-    reqClient.readRequestsForJobs.return_value = S_OK( {"Successful":{ } } )
-    self.jbi.jobID = 1234
-    self.jbi.checkRequests( reqClient )
-    self.assertFalse( self.jbi.pendingRequest )
+    # list with two LFN
+    with self.assertRaisesRegexp(TaskInfoException, 'InputFile is terrible'):
+      self.jbi._JobInfo__getInputFile({'InputData': ['/lfn1', '/lfn2']})
 
-    ## no pending request
-    reqMock = Mock()
-    reqMock.Status = "Done"
-    reqClient = Mock( name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient )
-    reqClient.readRequestsForJobs.return_value = S_OK( {"Successful":{1234: reqMock } } )
-    reqClient.getRequestStatus.return_value = S_OK( 'Done' )
-    self.jbi.jobID = 1234
-    self.jbi.checkRequests( reqClient )
-    self.assertFalse( self.jbi.pendingRequest )
+    # list with two LFN
+    with self.assertRaisesRegexp(TaskInfoException, 'InputFile is terrible'):
+      self.jbi._JobInfo__getInputFile({'InputData': 124})
 
-    ## pending request
-    reqMock = Mock()
-    reqMock.Status = "Waiting"
-    reqClient = Mock( name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient )
-    reqClient.readRequestsForJobs.return_value = S_OK( {"Successful":{1234: reqMock } } )
-    self.jbi.jobID = 1234
-    self.jbi.checkRequests( reqClient )
-    self.assertTrue( self.jbi.pendingRequest )
-
-    ## Failed to get Request
-    reqMock = Mock()
-    reqMock.Status = "Waiting"
-    reqClient = Mock( name="reqMock", spec=DIRAC.RequestManagementSystem.Client.ReqClient.ReqClient )
-    reqClient.readRequestsForJobs.return_value = S_ERROR( "Request Denied" )
-    with self.assertRaises( RuntimeError) as cme:
-      self.jbi.checkRequests( reqClient )
-    self.assertIn( "Failed to check Requests" , str(cme.exception) )
-
-  def test_checkFileExistance( self ):
+  def test_checkFileExistence(self):
     """ILCTransformation.Utilities.JobInfo.checkFileExistance......................................."""
-    fcMock = Mock( name="fcMock", spec=DIRAC.Resources.Catalog.FileCatalogClient.FileCatalogClient )
-
     ## input and output files
-    repStatus = { "Successful": { "inputFile": True, "outputFile1": False, "outputFile2": True } }
+    repStatus = {'inputFile': True, 'outputFile1': False, 'outputFile2': True}
     self.jbi.inputFile = "inputFile"
     self.jbi.outputFiles = ["outputFile1", "outputFile2", "unknownFile"]
-    fcMock.exists = Mock( return_value = S_OK( repStatus ) )
-    self.jbi.checkFileExistance( fcMock )
+    self.jbi.checkFileExistence(repStatus)
     self.assertTrue( self.jbi.inputFileExists )
     self.assertEqual( self.jbi.outputFileStatus, ["Missing", "Exists", "Unknown"] )
 
     ## just output files
     self.setUp()
-    repStatus = { "Successful": { "inputFile": True, "outputFile1": False, "outputFile2": True } }
+    repStatus = {'inputFile': True, 'outputFile1': False, 'outputFile2': True}
     self.jbi.inputFile = ""
     self.jbi.outputFiles = ["outputFile1", "outputFile2", "unknownFile"]
-    fcMock.exists.return_value = S_OK( repStatus )
-    self.jbi.checkFileExistance( fcMock )
+    self.jbi.checkFileExistence(repStatus)
     self.assertEqual( self.jbi.outputFileStatus, ["Missing", "Exists", "Unknown"] )
-
-    ## fcClient Error
-    self.setUp()
-    repStatus = { "Successful": { "inputFile": True, "outputFile1": False, "outputFile2": True } }
-    self.jbi.inputFile = ""
-    self.jbi.outputFiles = ["outputFile1", "outputFile2", "unknownFile"]
-    fcMock.exists.return_value = S_ERROR( "No FC" )
-    with self.assertRaises( RuntimeError ) as cme:
-      self.jbi.checkFileExistance( fcMock )
-    self.assertIn( "Failed to check existance: No FC", str(cme.exception) )
 
 
   def test__str__( self ):

@@ -54,7 +54,7 @@ variables:
     - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
-    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock flake8 psutil flake8-docstrings flake8-commas
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock flake8 psutil flake8-docstrings flake8-commas caniusepython3 parameterized
     - cd ..
   artifacts:
      paths:
@@ -107,6 +107,7 @@ code_quality:
   before_script: []
   after_script: []
   dependencies: []
+  <<: *retry_policy
 
 
 .unittest_template: &unittest
@@ -186,6 +187,24 @@ pylint:CC7:
   <<: *pylint
   dependencies:
     - install:CC7
+
+
+pylint:PY3K:
+  <<: *sl6docker
+  stage: integration
+  variables:
+    GIT_STRATEGY: none
+  except:
+    - tags
+  script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - unset PYTHONOPTIMIZE
+    - .gitlab-ci.d/run-pylint-py3k.sh
+  <<: *retry_policy
+  dependencies:
+   - install:SL6
 
 
 .jobTests_template: &jobTests

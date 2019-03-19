@@ -4,6 +4,7 @@ Created on Feb 10, 2012
 :author: Stephane Poss
 '''
 
+from __future__ import print_function
 from DIRAC.Core.Base import Script
 
 import sys
@@ -98,47 +99,47 @@ if dataType:
 fc = FileCatalogClient()
 res = fc.getCompatibleMetadata( meta )
 if not res['OK']:
-  print "Error looking up the catalog for metadata"
+  print("Error looking up the catalog for metadata")
   exit(2)
 
 metaValues = res['Value']
 #print metaValues
 
-print 'Meta data for production', prodID, ':'
+print('Meta data for production', prodID, ':')
 for key, value in metaValues.iteritems():
   if not len(value) == 0:
-    print '\t', key, ':', value[0]
+    print('\t', key, ':', value[0])
 
 if dataType:
-  print '\t', 'Datatype :', dataType
+  print('\t', 'Datatype :', dataType)
 
 if not eventType:
   eventType = metaValues['EvtType'][0]
 else:
-  print '\t', 'EvtType :', eventType
+  print('\t', 'EvtType :', eventType)
   
 if not energy:
   energy = metaValues['Energy'][0]
 else:
-  print '\t', 'Energy :', energy
+  print('\t', 'Energy :', energy)
   
-print 'SLIC version:', slicVersion
-print 'LCSim version:', lcsimVers
-print 'SLICPandora version:', pandoraVers
-print 'CPU limit:', cpuLimit, 'sec'
+print('SLIC version:', slicVersion)
+print('LCSim version:', lcsimVers)
+print('SLICPandora version:', pandoraVers)
+print('CPU limit:', cpuLimit, 'sec')
 
 
 if not prodGroup:
   prodGroup = eventType+'_'+energy+'_cdr'  
-print 'Production group:', prodGroup
+print('Production group:', prodGroup)
 
 if not workflowName:
   workflowName = eventType+'_'+energy  
-print 'Workflow name:', workflowName
+print('Workflow name:', workflowName)
 
 if not workflowDescription:
   workflowDescription = eventType+' at '+energy
-print 'Workflow description:', workflowDescription
+print('Workflow description:', workflowDescription)
 
 
 if checkMeta:
@@ -211,7 +212,7 @@ pslic = ProductionJob()
 pslic.setInputDataQuery(meta)
 res = pslic.append(slic)
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 pslic.addFinalization(True,True,True,True)
 
@@ -223,11 +224,11 @@ pslic.setOutputSE("CERN-SRM")
 pslic.setDescription('Simulating '+workflowDescription)
 res = pslic.createProduction()
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 res = pslic.finalizeProd()
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 
 meta = pslic.getMetadata() ##This is needed to link Sim and Rec
@@ -238,15 +239,15 @@ plcsim = ProductionJob()
 plcsim.setInputDataQuery(meta)
 res = plcsim.append(lcsim_prepandora)
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 res = plcsim.append(slicpandora)
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 res = plcsim.append(lcsim_postpandora)
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 plcsim.addFinalization(True,True,True,True)
 
@@ -258,11 +259,11 @@ plcsim.setOutputSE("CERN-SRM")
 plcsim.setDescription('Reconstructing '+workflowDescription)
 res = plcsim.createProduction()
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 res = plcsim.finalizeProd()
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 
 
@@ -272,19 +273,19 @@ plcsim_ov.setInputDataQuery(meta)
 
 res = plcsim_ov.append(overlay)
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 res = plcsim_ov.append(lcsim_prepandora_ov)
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 res = plcsim_ov.append(slicpandora_ov)
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 res = plcsim_ov.append(lcsim_postpandora_ov)
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 plcsim_ov.addFinalization(True,True,True,True)
 
@@ -296,10 +297,10 @@ plcsim_ov.setOutputSE("CERN-SRM")
 plcsim_ov.setDescription('Reconstructing with overlay '+workflowDescription)
 res = plcsim_ov.createProduction()
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 res = plcsim_ov.finalizeProd()
 if not res['OK']:
-  print res['Message']
+  print(res['Message'])
   exit(1)
 

@@ -1,5 +1,5 @@
 """module collecting functions needed to run tests on local machine"""
-
+from __future__ import print_function
 __RCSID__ ="$Id$"
 
 
@@ -959,7 +959,7 @@ class JobCreater(object):
       testfiledir = 'Testfiles'
       for fileName in ['input.root', 'input2.root']:
         shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )
-        print os.path.join( curdir, "input2.root"), os.getcwd()
+        print(os.path.join(curdir, "input2.root"), os.getcwd())
       if specialName in jobName.lower():
         for fileName in filesForJob[specialName]:
           shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )

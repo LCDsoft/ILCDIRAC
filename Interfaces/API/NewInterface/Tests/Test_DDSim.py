@@ -4,6 +4,7 @@ Test DDSim module
 
 """
 
+from __future__ import print_function
 import inspect
 import unittest
 from mock import create_autospec, patch, MagicMock as Mock
@@ -257,10 +258,10 @@ def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSim )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( DDSimTestCase )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
 
 if __name__ == '__main__':

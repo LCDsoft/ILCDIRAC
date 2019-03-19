@@ -9,7 +9,7 @@ Create Chain of productions for ILD
 
 #pylint: disable=invalid-name, wrong-import-position, bad-whitespace, line-too-long
 #pylint: disable=bad-indentation
-
+from __future__ import print_function
 import os
 import pprint
 
@@ -191,14 +191,14 @@ if activesplitstdhep:
   if selectedfile > 0:
     meta['SelectedFile'] = selectedfile
   else:
-    print 'ERROR: stdhepsplit requires SelectedFile in the metadata to prevent output being used as input.'
+    print('ERROR: stdhepsplit requires SelectedFile in the metadata to prevent output being used as input.')
     exit(1)
 else:
   if prodid:
     meta['ProdID'] = prodid
   if selectedfile > 0:
     meta['SelectedFile'] = selectedfile
-    print 'Warning: SelectedFile meta field active: this should only happen when debugging.'
+    print('Warning: SelectedFile meta field active: this should only happen when debugging.')
 
 #Do Sim
 ild_sim  = True
@@ -219,17 +219,19 @@ nbtasks_rec_ov = 3 # See comment on nbtasks_sim
 ild_rec       = False # please, use WITH OVERLAY
 nbtasks_rec = -1 # See comment on nbtasks_sim
 
-print "####################################################################################"
+print("####################################################################################")
 if activesplitstdhep:
-  print "matchToInput_stdhepsplit (input)      = " + matchToInput_stdhepsplit + '  (Valid when stdhep production is included)'
-  print "stdhepsplit_basepath (output)         = " + stdhepsplit_basepath + '  (Valid when stdhep production is included)'
+  print("matchToInput_stdhepsplit (input)      = %s  (Valid when stdhep production is included)"
+        % matchToInput_stdhepsplit)
+  print("stdhepsplit_basepath (output)         = %s  (Valid when stdhep production is included)"
+        % stdhepsplit_basepath)
 
-print "matchToInput_mokka (input)            = " + matchToInput_mokka
-print "matchToInput_marlin (input)           = " + matchToInput_marlin
-print "Basepath for sim&rec (output)         = " + basepath
-print "Diskpath for stdhepsplit&dst (output) = " + diskpath
-print "Outtput SE : stdhepsplit(%s), SUM(%s), psplit(%s), REC&DST(%s)" %  (SE_stdhepsplit, SE_sim, SE_psplit, SE_rec)
-print "####################################################################################"
+print("matchToInput_mokka (input)            = " + matchToInput_mokka)
+print("matchToInput_marlin (input)           = " + matchToInput_marlin)
+print("Basepath for sim&rec (output)         = " + basepath)
+print("Diskpath for stdhepsplit&dst (output) = " + diskpath)
+print("Outtput SE : stdhepsplit(%s), SUM(%s), psplit(%s), REC&DST(%s)" % (SE_stdhepsplit, SE_sim, SE_psplit, SE_rec))
+print("####################################################################################")
 ##############################################################################################
 ## [PART2] Below is not to be touched
 ##############################################################################################
@@ -288,7 +290,7 @@ elif energy == 250.:
   overlay.setBkgEvtType("aa_lowpt")
 
 else:
-  print "Overlay ILD: No overlay parameters defined for this energy"
+  print("Overlay ILD: No overlay parameters defined for this energy")
 
 ##Reconstruction ILD with overlay
 mao = Marlin()
@@ -304,7 +306,7 @@ if ild_rec_ov:
       mao.setSteeringFile("bbudsc_3evt_stdreco.xml")
       mao.setGearFile("GearOutput.xml")
   else:
-    print "Marlin: No reconstruction suitable for this energy"
+    print("Marlin: No reconstruction suitable for this energy")
 
 
 ##Reconstruction ILD w/o overlay
@@ -322,13 +324,13 @@ if ild_rec:
       ma.setSteeringFile("bbudsc_3evt_stdreco.xml")
       ma.setGearFile("GearOutput.xml")
   else:
-    print "Marlin: No reconstruction suitable for this energy %g"%(energy)
+    print("Marlin: No reconstruction suitable for this energy %g" % (energy))
 
 
 ###################################################################################
 ### HERE WE DEFINE THE PRODUCTIONS
 if activesplitstdhep and meta:
-  print "################## Createing a production for stdhepsplit. Input meta is"
+  print("################## Createing a production for stdhepsplit. Input meta is")
   pprint.pprint(meta)
   pstdhepsplit = ILDProductionJobOpt2017()
   pstdhepsplit.basepath = stdhepsplit_basepath # Sailer suggestion
@@ -349,11 +351,11 @@ if activesplitstdhep and meta:
   tmp_softwaretag_val = ''
   if 'SoftwareTag' in meta:
     tmp_softwaretag_val = meta.pop('SoftwareTag')
-    print "'SoftwareTag' found in metadata for pstdhepsplit module: excluded from input data query"
+    print("'SoftwareTag' found in metadata for pstdhepsplit module: excluded from input data query")
 
   res = pstdhepsplit.setInputDataQuery(meta)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pstdhepsplit.setOutputSE(SE_stdhepsplit)
   wname = process+"_"+str(energy)+"_split"
@@ -364,7 +366,7 @@ if activesplitstdhep and meta:
   #Add the application
   res = pstdhepsplit.append(stdhepsplit)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pstdhepsplit.addFinalization(True, True, True, True)
   descrp = "Splitting stdhep files"
@@ -374,15 +376,15 @@ if activesplitstdhep and meta:
 
   res = pstdhepsplit.createProduction()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
 
   res = pstdhepsplit.setProcessIDInFinalPath()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
 
   res = pstdhepsplit.finalizeProd()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pstdhepsplit.setNbOfTasks(nbtasks_split)
   #As before: get the metadata for this production to input into the next
@@ -390,12 +392,12 @@ if activesplitstdhep and meta:
   if tmp_softwaretag_val: # reinsert SoftwareTag: used in path construction
     meta.update({'SoftwareTag' : tmp_softwaretag_val})
 
-  print "### Following meta data were created for subsequent simulation production"
+  print("### Following meta data were created for subsequent simulation production")
   pprint.pprint(meta)
-  print "### Done With Stdhepsplit", "\n"*5
+  print("### Done With Stdhepsplit", "\n" * 5)
 
 if ild_sim and meta:
-  print "################## Createing a production for simulation. Input meta is"
+  print("################## Createing a production for simulation. Input meta is")
   pprint.pprint(meta)
   ####################
   ##Define the second production (simulation). Notice the setInputDataQuery call
@@ -417,7 +419,7 @@ if ild_sim and meta:
 
   res = pSim.setInputDataQuery(meta)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pSim.setOutputSE(SE_sim)
   wname = process+"_"+str(energy)+"_ild_sim"
@@ -430,7 +432,7 @@ if ild_sim and meta:
   else:
     res = pSim.append(mo)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pSim.addFinalization(True, True, True, True)
   descrp = "%s model" % detectorModel
@@ -440,25 +442,25 @@ if ild_sim and meta:
   pSim.setDescription(descrp)
   res = pSim.createProduction()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
 
   res = pSim.setProcessIDInFinalPath()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
 
   res = pSim.finalizeProd()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pSim.setNbOfTasks(nbtasks_sim)
   #As before: get the metadata for this production to input into the next
   meta = pSim.getMetadata()
 
-  print "### Done With a creation of ild_sim transformation", "\n"*5
+  print("### Done With a creation of ild_sim transformation", "\n" * 5)
 
 ##Split at slcio level (after sim)
 if activesplit and meta:
-  print "################## Creating a prduction for sim-slcio split: input meta is"
+  print("################## Creating a prduction for sim-slcio split: input meta is")
   pprint.pprint(meta)
   #######################
   ## Split the input files.
@@ -470,7 +472,7 @@ if activesplit and meta:
   psplit.setInputSandbox(input_sand_box)
   res = psplit.setInputDataQuery(meta)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   psplit.setOutputSE(SE_psplit)
   wname = process+"_"+str(energy)+"_split"
@@ -481,7 +483,7 @@ if activesplit and meta:
   #Add the application
   res = psplit.append(split)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   psplit.addFinalization(True, True, True, True)
   descrp = "Splitting slcio files"
@@ -491,17 +493,17 @@ if activesplit and meta:
 
   res = psplit.createProduction()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
 
   res = psplit.finalizeProd()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   #As before: get the metadata for this production to input into the next
   meta = psplit.getMetadata()
 
 if ild_rec and meta:
-  print "################## Creating a production for reconstruction WITHOUT overlay. Input meta is"
+  print("################## Creating a production for reconstruction WITHOUT overlay. Input meta is")
   pprint.pprint(meta)
   #######################
   #Define the reconstruction prod
@@ -519,7 +521,7 @@ if ild_rec and meta:
 
   res = pma.setInputDataQuery(meta)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
 
   pma.setOutputSE(SE_rec)
@@ -531,7 +533,7 @@ if ild_rec and meta:
   #Add the application
   res = pma.append(ma)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pma.addFinalization(True, True, True, True)
   descrp = "%s, No overlay" % detectorModel
@@ -541,15 +543,15 @@ if ild_rec and meta:
 
   res = pma.createProduction()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
   res = pma.finalizeProd()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pma.setNbOfTasks(nbtasks_rec)
 
 if ild_rec_ov and meta:
-  print "################## Creating a production for reconstruction WITH overlay. Input meta is"
+  print("################## Creating a production for reconstruction WITH overlay. Input meta is")
   pprint.pprint(meta)
   #######################
   #Define the reconstruction prod
@@ -569,7 +571,7 @@ if ild_rec_ov and meta:
 
   res = pmao.setInputDataQuery(meta)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pmao.setOutputSE(SE_rec)
   wname = process+"_"+str(energy)+"_ild_rec_overlay"
@@ -580,12 +582,12 @@ if ild_rec_ov and meta:
   #Add the application
   res = pmao.append(overlay)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   #Add the application
   res = pmao.append(mao)
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pmao.addFinalization(True, True, True, True)
   descrp = "%s, Overlay" % detectorModel
@@ -595,14 +597,14 @@ if ild_rec_ov and meta:
   pmao.setDescription(descrp)
   res = pmao.createProduction()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
 
   res = pmao.setProcessIDInFinalPath()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
 
   res = pmao.finalizeProd()
   if not res['OK']:
-    print res['Message']
+    print(res['Message'])
     exit(1)
   pmao.setNbOfTasks(nbtasks_rec_ov)

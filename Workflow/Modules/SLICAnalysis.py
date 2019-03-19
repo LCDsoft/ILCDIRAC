@@ -165,7 +165,7 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     if os.path.exists(self.applicationLog): 
       os.remove(self.applicationLog)
 
-    os.chmod(scriptName, 0755)
+    os.chmod(scriptName, 0o755)
     comm = 'sh -c "./%s"' % scriptName
     self.setApplicationStatus('SLIC %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''
@@ -236,5 +236,5 @@ class SLICAnalysis(CompactMixin, ModuleBase):
     script.write('declare -x PATH=%s/packages/slic/%s/bin/Linux-g++/:$PATH\n' %(mySoftwareRoot, 
                                                                                 os.environ['SLIC_VERSION'])) 
     script.close()
-    os.chmod(env_name, 0755)
+    os.chmod(env_name, 0o755)
     return S_OK(os.path.abspath(env_name))

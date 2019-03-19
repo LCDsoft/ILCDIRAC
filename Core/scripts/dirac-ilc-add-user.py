@@ -13,13 +13,15 @@ To figure out the commands available from WSDL::
   print client
 
 """
+
+from __future__ import print_function
 __RCSID__ = "$Id$"
 
 try:
   import suds
   from suds.client import Client
 except ImportError:
-  print "suds module missing: Install it with [sudo] easy_install suds"
+  print("suds module missing: Install it with [sudo] easy_install suds")
   raise
 
 from DIRAC.Core.Base import Script

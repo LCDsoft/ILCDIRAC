@@ -2,6 +2,7 @@
 """ Test the ILCDIRAC Application module
 """
 
+from __future__ import print_function
 import inspect
 import unittest
 from mock import MagicMock as Mock, patch
@@ -151,7 +152,7 @@ def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestApplication )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
 
 if __name__ == '__main__':

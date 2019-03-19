@@ -14,6 +14,7 @@ The LFN path is given in the CS, Operations, under Transformations/BaseLogLFN
 :author: sailer
 '''
 
+from __future__ import print_function
 from DIRAC.Core.Base.AgentModule                                import AgentModule
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations        import Operations
 from DIRAC.TransformationSystem.Client.TransformationClient     import TransformationClient
@@ -257,7 +258,7 @@ class TarTheProdLogsAgent( AgentModule ):
     """ make a tarBall out of the list of folders"""
     cmd = ['tar','cjf',outputFileName, '--remove-files']
     cmd = cmd + listOfFolders
-    print "Creating",outputFileName
+    print("Creating", outputFileName)
     result = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     outAndErr = result.communicate()
     self.log.error( "Error from Tar\n%s" %outAndErr[1])
@@ -267,7 +268,7 @@ class TarTheProdLogsAgent( AgentModule ):
     cmd = ['find', basefolder, '-type','d', '-empty' ,'-print', '-delete']
     result = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = result.communicate()
-    print "Removed folders\n", out
+    print("Removed folders\n", out)
     if len (err):
       self.log.error("Errors in find\n",err)
 

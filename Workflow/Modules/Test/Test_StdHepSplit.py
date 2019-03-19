@@ -144,7 +144,7 @@ exit $?
       open_mock.close.assert_called_once_with()
       open_mock.write.assert_called_once_with( expected_script )
       remove_mock.assert_called_once_with( 'StdHepSplit_12_Run_4.tcl' )
-      chmod_mock.assert_called_once_with( 'StdHepSplit_12_Run_4.tcl', 0755 )
+      chmod_mock.assert_called_once_with('StdHepSplit_12_Run_4.tcl', 0o755)
       shell_mock.assert_called_once_with( 0, '"./StdHepSplit_12_Run_4.tcl"',
                                           callbackFunction = self.shs.redirectLogOutput, bufferLimit = 20971520 )
 
@@ -188,7 +188,7 @@ exit $?
       open_mock.close.assert_called_once_with()
       open_mock.write.assert_called_once_with( expected_script )
       remove_mock.assert_called_once_with( 'StdHepSplit_V3_Run_4.tcl' )
-      chmod_mock.assert_called_once_with( 'StdHepSplit_V3_Run_4.tcl', 0755 )
+      chmod_mock.assert_called_once_with('StdHepSplit_V3_Run_4.tcl', 0o755)
       shell_mock.assert_called_once_with( 0, '"./StdHepSplit_V3_Run_4.tcl"',
                                           callbackFunction = self.shs.redirectLogOutput, bufferLimit = 20971520 )
 

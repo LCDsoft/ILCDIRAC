@@ -113,7 +113,7 @@ class RootMacroAnalysis(RootMixin, ModuleBase):
     if os.path.exists(self.applicationLog): 
       os.remove(self.applicationLog)
 
-    os.chmod(scriptName, 0755)
+    os.chmod(scriptName, 0o755)
     comm = 'sh -c "./%s"' % (scriptName)
     self.setApplicationStatus('ROOT %s step %s' % (self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''

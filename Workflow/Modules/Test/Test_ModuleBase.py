@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """ Test the ModuleBase module """
 
+from __future__ import print_function
 from StringIO import StringIO
 import sys
 import unittest
@@ -504,7 +505,7 @@ class ModuleBaseTestCase( unittest.TestCase ): #pylint: disable=too-many-public-
          patch('%s.ModuleBase.applicationSpecificInputs' % MODULE_NAME, new=Mock(return_value=S_OK('bla'))):
       result = mb.resolveInputVariables()
       assertDiracSucceedsWith_equals( result, 'Parameters resolved', self )
-      print self.log_mock.mock_calls
+      print(self.log_mock.mock_calls)
       self.log_mock.warn.assert_called_once_with(
           'Failed to get NumberOfEvents from FileCatalog, but this is not a production job')
 

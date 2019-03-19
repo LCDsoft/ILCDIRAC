@@ -1,6 +1,7 @@
 """
 Test upload/replication/download/removal for different StorageElements
 """
+from __future__ import print_function
 import filecmp
 import os
 import shutil
@@ -99,7 +100,7 @@ class SETestCase( unittest.TestCase ):
     Script.parseCommandLine()
     user = ProxyInfo.getProxyInfo()['Value']['username']
     SETestCase.lfntestfilepath += '%s/%s/setests/%s/' % (user[0], user, randomFolder())
-    print "Using lfn %s" % SETestCase.lfntestfilepath
+    print("Using lfn %s" % SETestCase.lfntestfilepath)
     SETestCase.lfntestfile = SETestCase.lfntestfilepath + SETestCase.lfntestfilename
 
   def setUp( self ):
@@ -107,7 +108,7 @@ class SETestCase( unittest.TestCase ):
     # Check if file exists already
     try:
       subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile]+self.options)
-      print "WARN Warning: file already existed on SE:", self.lfntestfile
+      print("WARN Warning: file already existed on SE:", self.lfntestfile)
     except subprocess.CalledProcessError:
       sys.exc_clear()
 
@@ -214,7 +215,7 @@ class SETestCase( unittest.TestCase ):
       result = subprocess.check_output( cmd )
       self.assertOperationSuccessful(result, "Failed replicating file")
     except subprocess.CalledProcessError as err:
-      print err.output
+      print(err.output)
       raise RuntimeError( "Command %s failed " % cmd )
 
   def removeFileAllowFailing ( self ):
@@ -232,4 +233,4 @@ class SETestCase( unittest.TestCase ):
       try:
         os.unlink ( self.lfntestfilename )
       except EnvironmentError as err:
-        print "failed to remove lfn", repr(err)
+        print("failed to remove lfn", repr(err))

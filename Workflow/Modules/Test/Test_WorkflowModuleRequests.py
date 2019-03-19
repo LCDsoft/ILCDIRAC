@@ -4,6 +4,7 @@ Test WorkflowModules
 """
 #pylint: disable=too-many-public-methods, protected-access, too-many-lines
 
+from __future__ import print_function
 import unittest
 import copy
 import os
@@ -270,7 +271,7 @@ class TestModuleBase( ModulesTestCase ):
                   '/ilc/prod/clic/1.4tev/h_nunu/GEN/00004191/000/h_nunu_gen_4191_0007.stdhep']
     dummy_fileMask = None
     result = self.mbase.getCandidateFiles(outputList, outputLFNs, dummy_fileMask)
-    print result
+    print(result)
     resDict = [ os.path.basename(lfn) in result['Value'] for lfn in outputLFNs ]
     gLogger.debug("Result: %s" % result)
     gLogger.debug("ResDict: %s" % resDict)

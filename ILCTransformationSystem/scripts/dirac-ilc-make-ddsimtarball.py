@@ -8,6 +8,7 @@ The script takes ``ddsim`` from the current environment.
 
 """
 
+from __future__ import print_function
 import sys
 import os
 import tarfile
@@ -215,7 +216,7 @@ class DDSimTarMaker( object ):
     ### remote root and geant4 libraries, we pick them up from
     allLibs = set( [ lib for lib in allLibs if not ( "/geant4/" in lib.lower() or "/root/" in lib.lower()) ] )
 
-    print allLibs
+    print(allLibs)
 
     copyLibraries( libraries, targetFolder+"/lib" )
     copyLibraries( allLibs, targetFolder+"/lib" )
@@ -235,7 +236,7 @@ class DDSimTarMaker( object ):
     resolveLinks( realTargetFolder+"/lib" )
     removeSystemLibraries( realTargetFolder+"/lib" )
     #removeSystemLibraries( realTargetFolder+"/ROOT/lib" )
-    print self.detmodels
+    print(self.detmodels)
 
 
     self.createTarBall( realTargetFolder )
@@ -244,11 +245,11 @@ class DDSimTarMaker( object ):
 
 if __name__=="__main__":
   Script.parseCommandLine( ignoreErrors = False )
-  print "Creating Tarball for DDSim"
+  print("Creating Tarball for DDSim")
   try:
     DDSIMMAKER = DDSimTarMaker()
     DDSIMMAKER.createDDSimTarBall()
   except RuntimeError as e:
-    print "ERROR during tarball creation: %s " % e
+    print("ERROR during tarball creation: %s " % e)
     exit(1)
   exit(0)

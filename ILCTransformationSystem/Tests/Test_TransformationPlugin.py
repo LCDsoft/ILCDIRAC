@@ -4,6 +4,7 @@
 
  """
  
+from __future__ import print_function
 import sys
 import unittest
 from mock import patch, MagicMock as Mock
@@ -184,7 +185,7 @@ class TransformationPluginTestCase( unittest.TestCase ):
     result = self.tfp.run()
     assertDiracSucceeds( result, self )
     to_check = result[ 'Value' ]
-    print result
+    print(result)
     assertEqualsImproved(
       ( len( to_check ), to_check[0][0], to_check[1][0], len( to_check[0][1] ), len( to_check[1][1] ) ),
       ( 2, '', '', 1, 1 ), self ) # Checks that two tasks are added, that the two tasks have the form ('', [ a ])

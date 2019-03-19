@@ -260,7 +260,7 @@ class UploadLogFile(ModuleBase):
     # Set proper permissions
     LOG.info('PopulateLogDir: Changing log directory %s permissions to 0755' % self.logdir)
     try:
-      os.chmod(self.logdir, 0755)
+      os.chmod(self.logdir, 0o755)
     except OSError as x:
       LOG.error('PopulateLogDir: Could not set logdir permissions to 0755:', '%s (%s)' % (self.logdir, str(x)))
     # Populate the temporary directory
@@ -320,7 +320,7 @@ class UploadLogFile(ModuleBase):
       for toChange in os.listdir(logDir):
         if not os.path.islink('%s/%s' % (logDir, toChange)):
           LOG.debug('Changing permissions of %s/%s to 0755' % (logDir, toChange))
-          os.chmod('%s/%s' % (logDir, toChange), 0755)
+          os.chmod('%s/%s' % (logDir, toChange), 0o755)
     except OSError as x:
       LOG.error('Problem changing shared area permissions', str(x))
       return S_ERROR(x)

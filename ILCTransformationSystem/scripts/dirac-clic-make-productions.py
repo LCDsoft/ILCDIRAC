@@ -23,6 +23,7 @@ Then modify the template to describe the productions::
     eventsPerJobs =           100
     MoveTypes = REC, GEN, SIM
     MoveStatus = Active
+    MoveGroupSize = 10
     move = True
     overlayEvents = 380GeV
     cliReco = --Config.Tracking=Conformal --MyDDMarlinPandora.D0TrackCut=%(DRC)s
@@ -65,6 +66,7 @@ Parameters in the steering file
 
   :ProdTypes: Which transformations to create: Gen, Split, Sim, Rec, RecOver
   :MoveTypes: Which output file types to move: Gen, Sim, Rec, Dst
+  :MoveGroupSize: The number of files to put in one replicationRequest
   :MoveStatus: The status of the Replication transformations: Active or Stopped
   :move: Whether or not to create the transformations to the output files to the finalOutputSE
 
@@ -115,6 +117,7 @@ All attributes with a ``set`` method can be changed. See
 
 #pylint disable=wrong-import-position
 
+from __future__ import print_function
 from pprint import pformat
 from collections import defaultdict
 from copy import deepcopy
@@ -129,11 +132,34 @@ from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithUnit, energyToInt
 from ILCDIRAC.Core.Utilities.Utilities import listify
 from ILCDIRAC.ILCTransformationSystem.Utilities.Utilities import Task
 
-PRODUCTION_PARAMETERS= 'Production Parameters'
-PP= 'Production Parameters'
+PRODUCTION_PARAMETERS = 'Production Parameters'
+PP = PRODUCTION_PARAMETERS
 APPLICATION_LIST = ['Marlin', 'DDSim', 'Overlay', 'Whizard2']
-LIST_ATTRIBUTES = ['ignoreMetadata']
-STRING_ATTRIBUTES = ['configPackage', 'configVersion', 'overlayEventType']
+LIST_ATTRIBUTES = ['ignoreMetadata',
+                   'whizard2SinFile',
+                   'energies',
+                   'eventsPerJobs',
+                   'numberOfTasks',
+                   'processes',
+                   'prodIDs',
+                   'eventsInSplitFiles',
+                   ]
+
+STRING_ATTRIBUTES = ['configPackage',
+                     'configVersion',
+                     'additionalName',
+                     'productionloglevel',
+                     'outputSE',
+                     'finalOutputSE',
+                     'whizard2Version',
+                     'MoveStatus',
+                     'MoveGroupSize',
+                     'prodGroup',
+                     'detectorModel',
+                     'softwareVersion',
+                     'overlayEvents',
+                     'overlayEventType',
+                     ]
 
 
 class Params(object):
@@ -320,16 +346,17 @@ MoveTypes = %(moveTypes)s
     self.productionLogLevel = 'VERBOSE'
     self.outputSE = 'CERN-DST-EOS'
     self.moveStatus = 'Stopped'
+    self.moveGroupSize = '10'
 
     self.ddsimSteeringFile = 'clic_steer.py'
     self.marlinSteeringFile = 'clicReconstruction.xml'
 
-    self.eventsPerJobs = ''
-    self.numberOfTasks = ''
-    self.energies = ''
-    self.processes = ''
-    self.prodIDs = ''
-    self.eventsInSplitFiles = ''
+    self.eventsPerJobs = []
+    self.numberOfTasks = []
+    self.energies = []
+    self.processes = []
+    self.prodIDs = []
+    self.eventsInSplitFiles = []
 
     # final destination for files once they have been used
     self.finalOutputSE = self._ops.getValue( 'Production/CLIC/FailOverSE' )
@@ -369,69 +396,32 @@ MoveTypes = %(moveTypes)s
     """Load parameters from config file."""
     if parameter.prodConfigFilename is not None:
       defaultValueDict = vars(self)
-      self._flags.updateDictWithFlags( defaultValueDict )
+      self._flags.updateDictWithFlags(defaultValueDict)
+      # we are passing all instance attributes as the default dict so generally we do not have to check
+      # if an option exists, also options are case insensitive and stored in lowercase
       config = ConfigParser.SafeConfigParser(defaults=defaultValueDict, dict_type=dict)
-      config.read( parameter.prodConfigFilename )
-      self._flags.loadFlags( config )
-
-      self.prodGroup = config.get(PP, 'prodGroup')
-      self.detectorModel = config.get(PP, 'detectorModel')
-      self.softwareVersion = config.get(PP, 'softwareVersion')
-      if config.has_option(PP, 'clicConfig'):
-        self.configVersion = config.get(PP, 'clicConfig')
-
-      if config.has_option(PP, 'MoveStatus'):
-        self.moveStatus = config.get(PP, 'MoveStatus')
-        if self.moveStatus not in ('Active', 'Stopped'):
-          raise AttributeError("MoveStatus can only be 'Active' or 'Stopped' not %r" % self.moveStatus)
-
-      # Check if Whizard version is set, otherwise use default from CS
-      if config.has_option(PP, 'whizard2Version'):
-        self.whizard2Version = config.get(PP, 'whizard2Version')
-
-      if config.has_option(PP, 'whizard2SinFile'):
-        self.whizard2SinFile = listify(config.get(PP, 'whizard2SinFile'))
-
-      self.processes = listify(config.get(PP, 'processes'))
-      self.energies = listify(config.get(PP, 'energies'))
-      self.eventsPerJobs = listify(config.get(PP, 'eventsPerJobs'))
-      if config.has_option(PP, 'numberOfTasks'):
-        self.numberOfTasks = listify(config.get(PP, 'numberOfTasks'))
-      else:
-        self.numberOfTasks = []
-
-      self.productionLogLevel = config.get(PP, 'productionloglevel')
-      self.outputSE = config.get(PP, 'outputSE')
-
-      # final destination for files once they have been used
-      self.finalOutputSE = config.get(PP, 'finalOutputSE')
-
-      if config.has_option(PP, 'additionalName'):
-        self.additionalName = config.get(PP, 'additionalName')
-
-      if config.has_option(PP, 'cliReco'):
-        self.cliRecoOption = config.get(PP, 'cliReco')
+      config.read(parameter.prodConfigFilename)
+      self._flags.loadFlags(config)
 
       for attribute in LIST_ATTRIBUTES:
-        if config.has_option(PP, attribute):
-          setattr(self, attribute, listify(config.get(PP, attribute)))
+        setattr(self, attribute, listify(config.get(PP, attribute)))
 
       for attribute in STRING_ATTRIBUTES:
-        if config.has_option(PP, attribute):
-          setattr(self, attribute, config.get(PP, attribute))
+        setattr(self, attribute, config.get(PP, attribute))
 
-      self.overlayEvents = self.checkOverlayParameter(config.get(PP, 'overlayEvents')) \
-                           if config.has_option(PP, 'overlayEvents') else ''
+      # this parameter is deprecated and not part of the instance attributes so we need to check for existence
+      if config.has_option(PP, 'clicConfig'):
+        gLogger.warn('"clicConfig" parameter is deprected, please dump a new steering file!')
+        self.configVersion = config.get(PP, 'clicConfig')
 
+      # attribute and option names differ, special treatment
+      self.cliRecoOption = config.get(PP, 'cliReco')
+
+      if self.moveStatus not in ('Active', 'Stopped'):
+        raise AttributeError("MoveStatus can only be 'Active' or 'Stopped' not %r" % self.moveStatus)
+
+      self.overlayEvents = self.checkOverlayParameter(self.overlayEvents)
       self.overlayEventType = self.overlayEventType + self.overlayEvents.lower()
-
-      if config.has_option(PP, 'prodIDs'):
-        self.prodIDs = listify(config.get(PP, 'prodIDs'))
-      else:
-        self.prodIDs = []
-
-      ##for split only
-      self.eventsInSplitFiles = listify(config.get(PP, 'eventsInSplitFiles'))
 
       self.processes = [ process.strip() for process in self.processes if process.strip() ]
       self.energies = [ float(eng.strip()) for eng in self.energies if eng.strip() ]
@@ -469,7 +459,7 @@ MoveTypes = %(moveTypes)s
           raise AttributeError("Lengths of numberOfTasks, whizard2SinFile, and Energies do not match")
 
       self.eventsInSplitFiles = listify(self.eventsInSplitFiles, int)
-      self.eventsInSplitFiles = self.eventsInSplitFiles if self.eventsInSplitFiles else [ -1 for _ in self.energies ]
+      self.eventsInSplitFiles = self.eventsInSplitFiles if self.eventsInSplitFiles else [-1] * len(self.energies)
 
       if self._flags.spl and len(self.eventsInSplitFiles) != len(self.energies):
         raise AttributeError( "Length of eventsInSplitFiles does not match: %d vs %d" %(
@@ -487,7 +477,7 @@ MoveTypes = %(moveTypes)s
           pass
 
     if parameter.dumpConfigFile:
-      print self
+      print(self)
       raise RuntimeError('')
 
   def _getProdInfoFromIDs(self):
@@ -557,6 +547,7 @@ outputSE = %(outputSE)s
 
 finalOutputSE = %(finalOutputSE)s
 MoveStatus = %(moveStatus)s
+MoveGroupSize = %(moveGroupSize)s
 
 ## optional additional name
 # additionalName = %(additionalName)s
@@ -704,13 +695,14 @@ overlayEventType = %(overlayEventType)s
     return overlay
 
   def createMarlinApplication(self, energy, cliReco, over):
-    """Create Marlin Application without overlay."""
+    """Create Marlin application with or without overlay."""
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
     marlin = Marlin()
     marlin.setDebug()
     marlin.setVersion( self.softwareVersion )
     marlin.setDetectorModel( self.detectorModel )
     marlin.detectortype = self.detectorModel
+    marlin.setKeepRecFile(False)
 
     if over:
       self.addOverlayOptionsToMarlin( energy )
@@ -938,7 +930,7 @@ overlayEventType = %(overlayEventType)s
                        metaValue=prodID,
                        extraData={'Datatype': dataType},
                        tGroup=self.prodGroup,
-                       groupSize=1,
+                       groupSize=int(self.moveGroupSize),
                        enable=not self._flags.dryRun,
                       )
         message = "Moving transformation with parameters"
@@ -971,14 +963,14 @@ overlayEventType = %(overlayEventType)s
     """
 
     for option, value in self.applicationOptions[appName].items():
-      if option.startswith('FE.'):
-        continue
-      if option.startswith('C_'):
+      if option.startswith(('FE.', 'C_')):
         continue
       gLogger.notice("%s: setting option %s to %s" % (appName, option, value))
       setterFunc = 'set' + option
       if not hasattr(app, setterFunc):
         raise AttributeError("Cannot set %s for %s, check spelling!" % (option, appName))
+      if value.lower() in ('false', 'true'):
+        value = value.lower() == 'true'
       getattr(app, setterFunc)(value)
 
   def createTransformations(self, taskDict):
@@ -1022,11 +1014,12 @@ overlayEventType = %(overlayEventType)s
 
     for parameterDict in self.getParameterDictionary(prodName):
       if self._flags.gen:
-        self.addGenTask(taskDict, Task(metaInput, parameterDict, eventsPerJob, nbTasks, sinFile))
+        self.addGenTask(taskDict, Task(metaInput, parameterDict, eventsPerJob, nbTasks=nbTasks, sinFile=sinFile))
 
       elif self._flags.spl and eventsPerBaseFile == eventsPerJob:
         gLogger.notice("*" * 80 + "\nSkipping split transformation for %s\n" % prodName + "*" * 80)
-        self.addSimTask(taskDict, metaInput, Task({}, parameterDict, eventsPerJob))
+        if self._flags.sim:
+          self.addSimTask(taskDict, metaInput, Task({}, parameterDict, eventsPerJob))
       elif self._flags.spl:
         taskDict['SPLIT'].append(Task(metaInput, parameterDict, eventsPerJob,
                                       eventsPerBaseFile=eventsPerBaseFile))
@@ -1037,18 +1030,8 @@ overlayEventType = %(overlayEventType)s
 
     return taskDict
 
-  def addGenTask(self, taskDict, originalTask):
-    """Add a gen task with required options."""
-    # FIXME add loop for parameters(?)
-    originalTask.dryRun = self._flags.dryRun
-    taskDict['GEN'].append(originalTask)
-
   def _addTask(self, taskDict, metaInput, originalTask, prodType, applicationName):
     """Add a task to the given prodType and applicatioName."""
-    eventsPerJob = originalTask.eventsPerJob
-    parameterDict = originalTask.parameterDict
-    sourceMetaDict = originalTask.meta
-
     options = defaultdict(list)
     nTasks = 0
     for option, value in self.applicationOptions[applicationName].items():
@@ -1058,7 +1041,14 @@ overlayEventType = %(overlayEventType)s
         gLogger.notice("Found option %s with values %s" % (optionName, pformat(options[optionName])))
         nTasks = len(options[optionName])
 
-    theTask = Task(metaInput, parameterDict, eventsPerJob, metaPrev=sourceMetaDict, dryRun=self._flags.dryRun)
+    theTask = Task(metaInput,
+                   parameterDict=originalTask.parameterDict,
+                   eventsPerJob=originalTask.eventsPerJob,
+                   metaPrev=originalTask.meta,
+                   dryRun=self._flags.dryRun,
+                   sinFile=originalTask.sinFile,
+                   nbTasks=originalTask.nbTasks,
+                   )
     theTask.sourceName = originalTask.taskName
     if not nTasks:
       taskDict[prodType].append(theTask)
@@ -1068,6 +1058,10 @@ overlayEventType = %(overlayEventType)s
     taskDict[prodType].extend(taskList)
     self.addTaskOptions(options, taskList)
     return
+
+  def addGenTask(self, taskDict, originalTask):
+    """Add a gen task with required options."""
+    return self._addTask(taskDict, metaInput={}, originalTask=originalTask, prodType='GEN', applicationName='Whizard2')
 
   def addRecTask(self, taskDict, metaInput, originalTask):
     """Add a reconstruction task."""
@@ -1118,4 +1112,4 @@ if __name__ == "__main__":
     CHAIN.createAllTransformations()
   except (AttributeError, RuntimeError) as excp:
     if str(excp) != '':
-      print "Failure to create transformations", repr(excp)
+      gLogger.exception('Failure to create transformations', lException=excp)

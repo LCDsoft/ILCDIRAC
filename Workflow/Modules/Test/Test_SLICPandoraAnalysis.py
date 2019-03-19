@@ -95,7 +95,7 @@ class TestSLICPandora( unittest.TestCase ):
         'PandoraFrontend -g /secret/dir/testmodelDetector_pandora.xml -c $PANDORASETTINGS -i ruinonslcio.test -o  -r 0 \n',
         'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       assertMockCalls( remove_mock, [ 'SLICPandora__Run_465.sh', 'applogFile.test' ], self )
-      chmod_mock.assert_called_once_with( 'SLICPandora__Run_465.sh', 0755 )
+      chmod_mock.assert_called_once_with('SLICPandora__Run_465.sh', 0o755)
       shell_mock.assert_called_once_with( 0, 'sh -c "./SLICPandora__Run_465.sh"',
                                           callbackFunction = self.spa.redirectLogOutput,
                                           bufferLimit = 20971520 )
@@ -202,7 +202,7 @@ class TestSLICPandora( unittest.TestCase ):
         'PandoraFrontend -g /secret/dir/testmodelDetector_pandora.xml -c $PANDORASETTINGS -i ruinonslcio.test -o  -r 0 \n',
         'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       assertMockCalls( remove_mock, [ 'SLICPandora__Run_465.sh', 'applogFile.test' ], self )
-      chmod_mock.assert_called_once_with( 'SLICPandora__Run_465.sh', 0755 )
+      chmod_mock.assert_called_once_with('SLICPandora__Run_465.sh', 0o755)
       shell_mock.assert_called_once_with( 0, 'sh -c "./SLICPandora__Run_465.sh"',
                                           callbackFunction = self.spa.redirectLogOutput,
                                           bufferLimit = 20971520 )
@@ -303,7 +303,7 @@ class TestSLICPandora( unittest.TestCase ):
         'env | sort >> localEnv.log\n',
         'PandoraFrontend /my/curdir/test/secret/dir/mySuperDetector_pandora.xml $PANDORASETTINGS ruinonslcio.test  0 \n',
         'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
-      chmod_mock.assert_called_once_with( 'SLICPandora_V2_Run_465.sh', 0755 )
+      chmod_mock.assert_called_once_with('SLICPandora_V2_Run_465.sh', 0o755)
       shell_mock.assert_called_once_with( 0, 'sh -c "./SLICPandora_V2_Run_465.sh"',
                                           callbackFunction = self.spa.redirectLogOutput,
                                           bufferLimit = 20971520 )
@@ -332,7 +332,7 @@ class TestSLICPandora( unittest.TestCase ):
         exists_mock.assert_called_once_with( 'PandoraFrontend' )
         abspath_mock.assert_called_once_with( 'SLICPandora.sh' )
         assertDiracSucceedsWith_equals( result, '/abs/test/path/SLICPandora.sh', self )
-        chmod_mock.assert_called_once_with( 'SLICPandora.sh', 0755 )
+        chmod_mock.assert_called_once_with('SLICPandora.sh', 0o755)
       getsoft_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
       removelib_mock.assert_called_once_with( '/my/dir/test/me/LDLibs' )
       getlib_mock.assert_called_once_with( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
@@ -370,7 +370,7 @@ class TestSLICPandora( unittest.TestCase ):
          patch('%s.os.chmod' % MODULE_NAME) as chmod_mock, \
          patch('%s.os.path.abspath' % MODULE_NAME, new=Mock(side_effect=replace_abspath)) as abspath_mock:
         result = self.spa.getEnvScript( 'mytestsysconfig', 'SLIC Pandora', 'V2' )
-        chmod_mock.assert_called_once_with( 'SLICPandora.sh', 0755 )
+        chmod_mock.assert_called_once_with('SLICPandora.sh', 0o755)
         assertMockCalls( exists_mock, [ 'PandoraFrontend', '/my/dir/test/me/Executable/PandoraFrontend' ], self )
         abspath_mock.assert_called_once_with( 'SLICPandora.sh' )
       assertDiracSucceedsWith_equals( result, '/abs/test/path/SLICPandora.sh', self )

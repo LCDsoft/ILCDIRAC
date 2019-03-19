@@ -48,6 +48,11 @@ class Marlin( DDInterfaceMixin, LCApplication ):
     "GearOutput.xml" but as reconstruction based on DD4hep is not using gear
     files a default value is more dangerous than before.
 
+  .. versionchanged:: v29r0p4
+
+    New member flag ``keepRecFile``, defaults to ``True``, if set to
+    ``False``, the REC file is not uploaded from ProductionJobs
+
   """
   def __init__(self, paramdict = None):
 
@@ -55,6 +60,7 @@ class Marlin( DDInterfaceMixin, LCApplication ):
     self.outputDstFile = ''
     self.outputRecPath = ''
     self.outputRecFile = ''
+    self.keepRecFile = True
     self.gearFile = ''
     self.processorsToUse = []
     self.processorsToExclude = []
@@ -78,6 +84,16 @@ class Marlin( DDInterfaceMixin, LCApplication ):
     self.gearFile = gearFile
     if os.path.exists(gearFile) or gearFile.lower().count("lfn:"):
       self.inputSB.append(gearFile)
+
+  def setKeepRecFile(self, val):
+    """Set the ``keepRecFile`` flag.
+
+    Only relevant for ProductionJobs
+
+    :param bool val: If ``False`` REC file is not stored
+    """
+    self._checkArgs({'val': types.BooleanType})
+    self.keepRecFile = val
 
   def setOutputRecFile(self, outputRecFile, path = None):
     """Optional: Define output rec file for Marlin. Used only in production
@@ -188,10 +204,11 @@ class Marlin( DDInterfaceMixin, LCApplication ):
 
     if self._jobtype != 'User':
       if not self.outputFile:
-        self._listofoutput.append({"outputFile":"@{outputREC}", "outputPath":"@{outputPathREC}",
-                                   "outputDataSE":'@{OutputSE}'})
-        self._listofoutput.append({"outputFile":"@{outputDST}", "outputPath":"@{outputPathDST}",
-                                   "outputDataSE":'@{OutputSE}'})
+        self._listofoutput.append({'outputFile': '@{outputDST}', 'outputPath': '@{outputPathDST}',
+                                   'outputDataSE': '@{OutputSE}'})
+        if self.keepRecFile:
+          self._listofoutput.append({'outputFile': '@{outputREC}', 'outputPath': '@{outputPathREC}',
+                                     'outputDataSE': '@{OutputSE}'})
       self.prodparameters['detectorType'] = self.detectortype
       self.prodparameters['marlin_gearfile'] = self.gearFile
       self.prodparameters['marlin_steeringfile'] = self.steeringFile

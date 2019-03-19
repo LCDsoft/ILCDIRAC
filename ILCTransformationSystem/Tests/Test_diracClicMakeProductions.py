@@ -47,11 +47,15 @@ def configDict():
           'eventsInSplitFiles': '5000, 6000',
           'ProdTypes': 'Gen, RecOver',
           'MoveTypes': '',
+          'MoveStatus': 'Stopped',
+          'MoveGroupSize': '10',
           'overlayEvents': '',
+          'overlayEventType': '',
           'cliReco': '--Config.Tracking=Tracked',
           'whizard2Version': 'myWhizardVersion',
           'whizard2SinFile': 'myWhizardSinFile1, myWhizardSinFile2',
           'numberOfTasks': '1, 2',
+          'ignoreMetadata': '',
           }
 
 
@@ -133,6 +137,17 @@ def test_meta(theChain):
           'Machine': 'clic'} == ret
 
 
+@pytest.mark.parametrize('eInput, eOutput',
+                         [(123.0, '123'),
+                          (123.03, '123.03'),
+                          (123.235, '123.23'),
+                          ('123.235', '123.235'),
+                          ])
+def test_metaEnergy(theChain, eInput, eOutput):
+  """Test meta data."""
+  assert theChain.metaEnergy(eInput) == eOutput
+
+
 def test_overlayParameter(theChain):
   """Test overlayPamareters."""
   assert theChain.checkOverlayParameter('300GeV') == '300GeV'
@@ -173,6 +188,7 @@ def test_loadParameters(theChain, cpMock):
        pytest.raises(AttributeError, match="Lengths of Processes"):
     c.loadParameters(parameter)
 
+  cpMock.thisConfigDict['prodIDs'] = ''
   cpMock.has_option = Mock()
   cpMock.has_option.return_value = False
   with patch(SCP, new=Mock(return_value=cpMock)):
@@ -294,9 +310,10 @@ def test_createSplitProduction(theChain, pMockMod):
   """Test creating the splitting production."""
   task = Task(metaInput={'ProdID': '23', 'Energy': '350'},
               parameterDict=theChain.getParameterDictionary('MI6')[0],
-              eventsPerJob=007,
+              eventsPerJob=0o07,
               eventsPerBaseFile=700,
               )
+  assert task.meta['NumberOfEvents'] == 700
   with patch("ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob", new=pMockMod):
     retMeta = theChain.createSplitProduction(task)
   assert retMeta == {}
@@ -344,6 +361,7 @@ def test_createMovingTransformation(theChain):
   """Test creating the moving productions."""
   theChain.outputSE = "Source"
   theChain.finalOutputSE = "Target"
+  theChain.moveGroupSize = 13
   theChain._flags._rec = True
   theChain._flags._sim = True
   theChain._flags._moveDst = True
@@ -361,7 +379,7 @@ def test_createMovingTransformation(theChain):
                    metaValue=666,
                    extraData={'Datatype': 'DST'},
                    tGroup='several',
-                   groupSize=1,
+                   groupSize=13,
                    enable=True,
                    )
     moveMock.assert_called_once_with(**parDict)
@@ -376,7 +394,7 @@ def test_createMovingTransformation(theChain):
                    metaValue=666,
                    extraData={'Datatype': 'SIM'},
                    tGroup='several',
-                   groupSize=1,
+                   groupSize=13,
                    enable=True,
                    )
     moveMock.assert_called_once_with(**parDict)
@@ -482,7 +500,7 @@ def test_createTransformations_2(theChain):
 
   task = Task(metaInput={'ProdID': '23', 'Energy': '350'},
               parameterDict=theChain.getParameterDictionary('MI6')[0],
-              eventsPerJob=007,
+              eventsPerJob=0o07,
               eventsPerBaseFile=700,
               )
   taskDict = defaultdict(list)
@@ -568,6 +586,86 @@ def test_addRecTask(theChain):
   assert taskDict['REC'][1].meta['Language'] == 'DE'
   assert taskDict['REC'][0].cliReco == '--Option=Value0'
   assert taskDict['REC'][1].cliReco == '--Option=Value1'
+
+
+def test_addGenTask(theChain):
+  """Test adding gen task."""
+  taskDict = defaultdict(list)
+  theChain.addGenTask(taskDict, originalTask=Task({}, {}, 123))
+  assert len(taskDict['GEN']) == 1
+
+  taskDict = defaultdict(list)
+  theChain.applicationOptions['Whizard2']['FE.additionalName'] = ['1', '2']
+  theChain.applicationOptions['Whizard2']['steeringFile'] = ['original.sin']
+  theChain.addGenTask(taskDict, originalTask=Task({}, {}, 123))
+  assert len(taskDict['GEN']) == 2
+  assert taskDict['GEN'][0].taskName == '1'
+  assert taskDict['GEN'][1].taskName == '2'
+
+
+def test_createTaskDict_none(theChain):
+  """Test createTaskDict function."""
+  taskDict = theChain.createTaskDict(123456, 'ee_qq', 5000, 333, sinFile='file.sin', nbTasks=222,
+                                     eventsPerBaseFile=None)
+  for pType in ['GEN', 'SIM', 'REC', 'SPLIT']:
+    assert not taskDict[pType]
+
+
+def test_createTaskDict_gen(theChain):
+  """Test createTaskDict function."""
+  theChain._flags._gen = True
+  taskDict = theChain.createTaskDict(123456, 'ee_qq', 5000, 333, sinFile='file.sin', nbTasks=222,
+                                     eventsPerBaseFile=None)
+  assert len(taskDict['GEN']) == 1
+  assert taskDict['GEN'][0].sinFile == 'file.sin'
+  assert taskDict['GEN'][0].nbTasks == 222
+  assert taskDict['GEN'][0].meta == {'EvtType': 'ee_qq', 'ProdID': '123456',
+                                     'Machine': 'clic',
+                                     'NumberOfEvents': 333,
+                                     'Energy': '5000',
+                                     }
+
+
+def test_createTaskDict_sim(theChain):
+  """Test createTaskDict function."""
+  theChain._flags._sim = True
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 333, sinFile=None, nbTasks=None, eventsPerBaseFile=None)
+  assert len(taskDict['SIM']) == 1
+  assert taskDict['SIM'][0].sinFile is None
+  assert taskDict['SIM'][0].nbTasks is None
+  assert taskDict['SIM'][0].eventsPerJob == 333
+
+
+def test_createTaskDict_sim_split(theChain):
+  """Test createTaskDict function."""
+  theChain._flags._sim = True
+  theChain._flags._spl = True
+  # no need to split
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=25)
+  assert not taskDict['SPLIT']
+  assert len(taskDict['SIM']) == 1
+  # need to split
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=400)
+  assert len(taskDict['SPLIT']) == 1
+  assert not taskDict['SIM']
+
+
+def test_createTaskDict_nosplit(theChain):
+  """Test createTaskDict function."""
+  theChain._flags._spl = True
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=25)
+  assert not taskDict['SPLIT']
+  assert not taskDict['SIM']
+
+
+def test_createTaskDict_rec(theChain):
+  """Test createTaskDict function."""
+  theChain._flags._rec = True
+  theChain.applicationOptions['Marlin']['FE.QueryMachine'] = 'fccee, clic'
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=400)
+  assert len(taskDict['REC']) == 2
+  assert taskDict['REC'][0].meta['Machine'] == 'fccee'
+  assert taskDict['REC'][1].meta['Machine'] == 'clic'
 
 
 @pytest.fixture

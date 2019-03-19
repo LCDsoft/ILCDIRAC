@@ -30,6 +30,17 @@ class MarlinTestCase( unittest.TestCase ):
     self.assertFalse( self.mar._errorDict )
     self.assertIn( 'lfn:/my/gear/file.txt', self.mar.inputSB )
 
+  def test_setKeepRecFile(self):
+    """Tests for behaviour with KeepRecFile True/False."""
+    self.assertTrue(self.mar.keepRecFile)
+    self.mar.setKeepRecFile(False)
+    self.assertFalse(self.mar._errorDict)
+    self.mar.setKeepRecFile(True)
+    self.assertTrue(self.mar.keepRecFile)
+    self.assertFalse(self.mar._errorDict)
+    self.mar.setKeepRecFile(123)
+    self.assertIn('val = 123', str(self.mar._errorDict))
+
   def test_setoutputrec( self ):
     self.mar.setOutputRecFile( 'my/file.outputrec', 'mytestPath' )
     assertEqualsImproved( self.mar.outputRecPath, 'mytestPath', self )
@@ -134,20 +145,18 @@ class MarlinTestCase( unittest.TestCase ):
       self.assertNotIn( keyword, self.mar.prodparameters )
     assertEqualsImproved( self.mar.gearFile, 'myGearOutput.mock', self )
 
+  def test_resolvelinkedparams(self):
+    """Test _resolveLinkedStepParameters with something happening."""
+    step_mock = Mock()
+    input_mock = Mock()
+    input_mock.getType.return_value = {'abc': False}
+    self.mar._linkedidx = 3
+    self.mar._jobsteps = [None, None, None, input_mock]
+    assertDiracSucceeds(self.mar._resolveLinkedStepParameters(step_mock), self)
+    step_mock.setLink.assert_called_once_with('InputFile', {'abc': False}, 'OutputFile')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  def test_resolvelinkedparams_noinputstep(self):
+    """Call _resolveLinkedStep function, which does nothing."""
+    self.mar._linkedidx = None
+    self.mar._inputappstep = []
+    assertDiracSucceeds(self.mar._resolveLinkedStepParameters(None), self)

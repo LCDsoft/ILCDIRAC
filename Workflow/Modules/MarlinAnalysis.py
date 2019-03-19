@@ -68,15 +68,9 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
       
     if 'IS_PROD' in self.workflow_commons:
       if self.workflow_commons["IS_PROD"] and not self.OutputFile:
-        #self.outputREC = getProdFilename(self.outputREC,int(self.workflow_commons["PRODUCTION_ID"]),
-        #                                 int(self.workflow_commons["JOB_ID"]))
-        #self.outputDST = getProdFilename(self.outputDST,int(self.workflow_commons["PRODUCTION_ID"]),
-        #                                 int(self.workflow_commons["JOB_ID"]))
-        #if 'MokkaOutput' in self.workflow_commons:
-        #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
-        #                                    int(self.workflow_commons["JOB_ID"]))
         if 'ProductionOutputData' in self.workflow_commons:
           outputlist = self.workflow_commons['ProductionOutputData'].split(";")
+          LOG.info('Found ProductionOutputData in WF Commons', str(outputlist))
           for obj in outputlist:
             if obj.lower().count("_rec_"):
               self.outputREC = os.path.basename(obj)
@@ -85,17 +79,13 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
             elif obj.lower().count("_sim_"):
               self.InputFile = [os.path.basename(obj)]
         else:
-          self.outputREC = getProdFilename(self.outputREC, int(self.workflow_commons["PRODUCTION_ID"]),
-                                           int(self.workflow_commons["JOB_ID"]))
-          self.outputDST = getProdFilename(self.outputDST, int(self.workflow_commons["PRODUCTION_ID"]),
-                                           int(self.workflow_commons["JOB_ID"]))
-          #if 'MokkaOutput' in self.workflow_commons:
-          #  self.InputFile = getProdFilename(self.workflow_commons["MokkaOutput"],int(self.workflow_commons["PRODUCTION_ID"]),
-          #                                    int(self.workflow_commons["JOB_ID"]))
-          self.InputFile = [getProdFilename(self.InputFile, int(self.workflow_commons["PRODUCTION_ID"]),
-                                            int(self.workflow_commons["JOB_ID"]))]
-          
-        
+          prodID = int(self.workflow_commons['PRODUCTION_ID'])
+          jobID = int(self.workflow_commons["JOB_ID"])
+          self.outputREC = getProdFilename(self.outputREC, prodID, jobID)
+          self.outputDST = getProdFilename(self.outputDST, prodID, jobID)
+          self.InputFile = [getProdFilename(self.InputFile, prodID, jobID)]
+    LOG.info('OutputDST:', self.outputDST)
+    LOG.info('OutputREC:', self.outputREC)
     if not self.InputFile and self.InputData:
       for files in self.InputData:
         if files.lower().find(".slcio") > -1:
@@ -240,7 +230,7 @@ class MarlinAnalysis(DD4hepMixin, ModuleBase):
       lines.append('source %s > /dev/null' % env_script_path)
       lines.append('echo $MARLIN_DLL')
       script.write("\n".join(lines))
-    os.chmod("temp.sh", 0755)
+    os.chmod("temp.sh", 0o755)
     res = shellCall(0, "./temp.sh")
     if not res['OK']:
       LOG.error("Could not get the MARLIN_DLL env")
@@ -383,7 +373,7 @@ fi
     if os.path.exists(self.applicationLog): 
       os.remove(self.applicationLog)
 
-    os.chmod(scriptName, 0755)
+    os.chmod(scriptName, 0o755)
     comm = 'sh -c "./%s"' % (scriptName)
     self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.STEP_NUMBER))
     self.stdError = ''

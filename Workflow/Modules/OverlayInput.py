@@ -6,7 +6,7 @@ Get the overlay files
 :author: sposs
 '''
 
-
+from __future__ import print_function
 import glob
 import os
 import random
@@ -436,7 +436,7 @@ if [ ! -s %s ]; then
 fi\n""" % (basename, lfile))
       script.write('declare -x appstatus=$?\n')
       script.write('exit $appstatus\n')
-    os.chmod("overlayinput.sh", 0755)
+    os.chmod("overlayinput.sh", 0o755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
 
@@ -468,7 +468,7 @@ fi\n""" % (basename, lfile))
       script.write("xrdcp -s root://eospublic.cern.ch/%s ./ \n" % lfile.rstrip() )
       script.write('declare -x appstatus=$?\n')
       script.write('exit $appstatus\n')
-    os.chmod("overlayinput.sh", 0755)
+    os.chmod("overlayinput.sh", 0o755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
 
@@ -508,7 +508,7 @@ fi\n""" % (basename, lfile))
 #fi\n"""%(basename,lfile))
       script.write('declare -x appstatus=$?\n')
       script.write('exit $appstatus\n')
-    os.chmod("overlayinput.sh", 0755)
+    os.chmod("overlayinput.sh", 0o755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
 
@@ -545,7 +545,7 @@ fi\n""" % (basename, lfile))
 #fi\n"""%(basename,lfile))
       script.write('declare -x appstatus=$?\n')
       script.write('exit $appstatus\n')
-    os.chmod("overlayinput.sh", 0755)
+    os.chmod("overlayinput.sh", 0o755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
 
@@ -573,7 +573,7 @@ fi\n""" % (basename, lfile))
     if 'X509_USER_PROXY' in os.environ:
       comm2 = ["cp", os.environ['X509_USER_PROXY'],"/tmp/x509up_u%s" % os.getuid()]
       res = subprocess.Popen(comm2, stdout = subprocess.PIPE).communicate()
-      print res
+      print(res)
     #comm.append("xrdcp root://ccdcacsn179.in2p3.fr:1094%s ./ -s"%file)
     #command = string.join(comm,";")
     #logfile = file(self.applicationLog,"w")
@@ -601,7 +601,7 @@ fi\n""" % (basename, lfile))
       script.write("/usr/bin/rfcp 'rfio://cgenstager.ads.rl.ac.uk:9002?svcClass=ilcTape&path=%s' %s\n" % (lfile, basename))
       script.write('declare -x appstatus=$?\n')
       script.write('exit $appstatus\n')
-    os.chmod("overlayinput.sh", 0755)
+    os.chmod("overlayinput.sh", 0o755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
 
@@ -630,7 +630,7 @@ fi\n""" % (basename, lfile))
       script.write('declare -x appstatus=$?\n')
       script.write('exit $appstatus\n')
 
-    os.chmod("overlayinput.sh", 0755)
+    os.chmod("overlayinput.sh", 0o755)
     comm = 'sh -c "./overlayinput.sh"'
     self.result = shellCall(600, comm, callbackFunction = self.redirectLogOutput, bufferLimit = 20971520)
 

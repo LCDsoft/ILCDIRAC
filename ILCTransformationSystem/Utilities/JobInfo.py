@@ -4,6 +4,7 @@ from pprint import pformat
 from itertools import izip_longest
 from DIRAC import gLogger
 
+LOG = gLogger.getSubLogger(__name__)
 __RCSID__ = "$Id$"
 
 class TaskInfoException( Exception ):
@@ -82,8 +83,8 @@ class JobInfo( object ):
       try:
         taskDict = tasksDict[ lfnTaskDict[self.inputFile] ]
       except KeyError as ke:
-        gLogger.error("ERROR for key:", str(ke))
-        gLogger.error("Failed to get taskDict", "%s, %s: %s" % (self.taskID, self.inputFile, pformat(lfnTaskDict)))
+        LOG.error('ERROR for key:', str(ke))
+        LOG.error('Failed to get taskDict', '%s, %s: %s' % (self.taskID, self.inputFile, pformat(lfnTaskDict)))
         raise
       self.otherTasks = lfnTaskDict[self.inputFile]
     else:
@@ -95,17 +96,12 @@ class JobInfo( object ):
     self.taskFileID = taskDict['FileID']
     self.errorCount = taskDict['ErrorCount']
 
-  def checkFileExistance( self, fcClient ):
+  def checkFileExistence(self, success):
     """check if input and outputfile still exist"""
     lfns = []
     if self.inputFile:
       lfns = [self.inputFile]
     lfns = lfns + self.outputFiles
-    reps = fcClient.exists( lfns )
-    if not reps['OK']:
-      raise RuntimeError( "Failed to check existance: %s" % reps['Message'] )
-    statuses = reps['Value']
-    success = statuses['Successful']
     if self.inputFile:
       self.inputFileExists = True if (self.inputFile in success and success[self.inputFile]) else False
     for lfn in self.outputFiles:
@@ -115,17 +111,6 @@ class JobInfo( object ):
         self.outputFileStatus.append("Missing")
       else:
         self.outputFileStatus.append("Unknown")
-      
-  def checkRequests( self, reqClient ):
-    """check if there are pending Requests"""
-    result = reqClient.readRequestsForJobs( [self.jobID] )
-    if not result['OK']:
-      raise RuntimeError( "Failed to check Requests: %s " % result['Message'] )
-    if self.jobID in result['Value']['Successful']:
-      request = result['Value']['Successful'][self.jobID]
-      requestID = request.RequestID
-      dbStatus = reqClient.getRequestStatus( requestID ).get( 'Value', 'Unknown' )
-      self.pendingRequest = dbStatus not in ("Done","Canceled")
     
   def __getJDL( self, dILC ):
     """return jdlParameterDictionary for this job"""
@@ -144,21 +129,30 @@ class JobInfo( object ):
     
   def __getInputFile( self, jdlParameters ):
     """get the Inputdata for the given job"""
-    lfn = jdlParameters.get( 'InputData', None )
-    self.inputFile = lfn
+    lfn = jdlParameters.get('InputData', None)
+    if isinstance(lfn, basestring) or lfn is None:
+      self.inputFile = lfn
+      return
+    if isinstance(lfn, list):
+      LOG.warn('InputFile is a list: %s' % self)
+      LOG.warn('InputFile is a list: %r' % lfn)
+      if len(lfn) == 1:
+        self.inputFile = lfn[0]
+        return
+    raise TaskInfoException('InputFile is terrible: %s' % str(self))
+
 
   def __getTaskID( self, jdlParameters ):
-    """get the taskID """
+    """Get the taskID."""
     if 'TaskID' not in jdlParameters:
       return
     try:
-      self.taskID = int(jdlParameters.get( 'TaskID', None ))
+      self.taskID = int(jdlParameters.get('TaskID', None))
     except ValueError:
-      print "*"*80
-      print "ERROR"
-      print jdlParameters.get( 'TaskID', None )
-      print self
-      print "*"*80
+      LOG.warn('*' * 80)
+      LOG.warn('TaskID broken?: %r' % jdlParameters.get('TaskID', None))
+      LOG.warn(self)
+      LOG.warn('*' * 80)
       raise
 
   def setJobDone( self , tInfo ):

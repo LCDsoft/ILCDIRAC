@@ -1,0 +1,2 @@
+[bandit]
+exclude:./Interfaces/Tests,./Interfaces/API/Test,./Interfaces/API/NewInterface/Tests,./OverlaySystem/DB/Test,./Testfiles,./FrameworkSystem/Tests,./Tests,./WorkloadManagementSystem/Tests,./Core/Utilities/tests,./Workflow/Modules/Test,./ILCTransformationSystem/Tests,./DataManagementSystem/Agent/RequestOperations/Tests,./docs

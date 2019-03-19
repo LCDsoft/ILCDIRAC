@@ -1,3 +1,5 @@
+"""Create Conditional Overlay."""
+from __future__ import print_function
 from DIRAC.Core.Base import Script
 
 Script.parseCommandLine()
@@ -14,11 +16,11 @@ meta["ProdID"]=651
 
 res = fc.findFilesByMetadata(meta)
 if not res['OK']:
-    print "Found no files"
+    print("Found no files")
     exit()
 
 lfns = res['Value']    
-print "found %s files"%len(lfns)
+print("found %s files" % len(lfns))
 
 
 ovi = OverlayInput() 
@@ -40,7 +42,7 @@ for ov in overlay:
       steeringf = "clic_ild_cdr_steering_overlay.xml"
       res = j.append(ovi)
       if not res['OK']:
-        print res['Message']
+        print(res['Message'])
         continue
     ma = Marlin() 
     ma.setVersion("v0111Prod")
@@ -53,7 +55,7 @@ for ov in overlay:
     ma.setOutputDstFile("mydst_overlay_%s.slcio"%ov)
     res =j.append(ma)
     if not res['OK']:
-      print res['Message']
+      print(res['Message'])
       exit()
 
     j.setCPUTime(86400)
@@ -62,7 +64,7 @@ for ov in overlay:
     j.setJobGroup("SomeGroup")
     res = d.checkparams(j)
     if not res['OK']:
-      print res['Message']
+      print(res['Message'])
       exit()
 
     j.submit(d)

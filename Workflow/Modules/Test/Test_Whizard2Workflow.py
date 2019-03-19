@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 """Test the Whizard2 WorkflowModule"""
 
+from __future__ import print_function
 import __builtin__
 import unittest
 import os
+import os.path
 import shutil
 import tempfile
 from mock import patch, MagicMock as Mock, mock_open
+
+from parameterized import parameterized
 
 from DIRAC import gLogger, S_OK, S_ERROR
 from ILCDIRAC.Workflow.Modules.Whizard2Analysis import Whizard2Analysis
@@ -71,7 +75,7 @@ class TestWhizard2AnalysisRunit( TestWhizard2Analysis ):
     ## side effect for Script, userlibs, log, logAfter
     with patch("os.path.exists", new=Mock(side_effect=[False, False, False, True] ) ):
       res = self.whiz.runIt()
-    print res
+    print(res)
     assertDiracSucceeds( res, self )
 
   @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("setup.sh") ) )
@@ -210,13 +214,19 @@ class TestWhizard2AnalysisRunit( TestWhizard2Analysis ):
     assertDiracSucceeds( res, self )
     self.assertIn( "sample_format = stdhep", open("Whizard2__Steer_.sin").read())
 
-  def test_Whizard2_runIt_fail(self):
+  @parameterized.expand([(S_ERROR(), S_OK(), 'Whizard2 should not proceed as'),
+                         (S_OK(), S_ERROR('resInt Failed'), 'resInt Failed')])
+  def test_Whizard2_runIt_fail(self, preStatus, resInt, errorMessage):
     """Whizard.runit fail steps......................................................................."""
     self.whiz.platform = "Windows"
     self.whiz.applicationLog = self.logFileName
-    self.whiz.workflowStatus = S_ERROR( "Failed earlier")
+    self.whiz.resolveIntegratedProcess = Mock(return_value=resInt)
+    self.whiz.workflowStatus = preStatus
     res = self.whiz.runIt()
-    self.assertEqual( res['Value'], "Whizard2 should not proceed as previous step did not end properly" )
+    if preStatus['OK']:
+      self.assertIn(errorMessage, res['Message'])
+    else:
+      self.assertIn(errorMessage, res['Value'])
 
   @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_ERROR("missing setup.sh") ) )
   def test_Whizard2_runIt_fail_env(self):
@@ -278,13 +288,44 @@ class TestWhizard2AnalysisASI( TestWhizard2Analysis ):
     self.whiz.applicationSpecificInputs()
     self.assertEqual( int(self.whiz.randomSeed), 0)
 
+  def test_Whizard2_resolveIntegratedProcess_NoProc(self):
+    """Test resolveIntegratedProcess with no integrated process"""
+    gLogger.setLevel('ERROR')
+    self.whiz = Whizard2Analysis()
+    self.whiz.integratedProcess = ''
+    ret = self.whiz.resolveIntegratedProcess()
+    self.assertTrue(ret['OK'])
+
+  GOD_RET_VALs = (S_OK({'tt': 'tt.tar'}), S_OK(dict(CVMFSPath='/c/c/c', TarBallURL='/ilc/vo')))
+
+  @parameterized.expand([(False, (S_ERROR('No Processes'),), (None,), False),  # no processes defined
+                         (False, (S_OK(), S_ERROR('No Options')), (None,), False),  # no options defined
+                         (True, GOD_RET_VALs, (S_OK(),), True),  # cvmfs file exists
+                         (True, GOD_RET_VALs, (S_OK(),), False),  # cvmfs file does not exist
+                         (False, GOD_RET_VALs, (S_ERROR(),), False),  # getFile fails
+                       ])
+  def test_Whizard2_resolveIntegratedProcess_WithProc(self, success, sideEffects, gf_SE, localFile):
+    self.whiz.integratedProcess = 'tt'
+    self.whiz.ops = Mock()
+    self.whiz.datMan = Mock(name='DatMan')
+    self.whiz.datMan.getFile.side_effect = gf_SE
+    self.whiz.ops.getOptionsDict.side_effect = sideEffects
+    pathMock = Mock(name='pathMock')
+    pathMock.path.join = os.path.join
+    pathMock.path.exists.return_value = localFile
+    with patch('%s.os' % MODULE_NAME, new=pathMock), \
+         patch('%s.extractTarball' % MODULE_NAME, return_value=S_OK()):
+      ret = self.whiz.resolveIntegratedProcess()
+    self.assertEqual(ret['OK'], success)
+
+
 def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestWhizard2Analysis )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestWhizard2AnalysisRunit ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestWhizard2AnalysisASI ) )
   testResult = unittest.TextTestRunner( verbosity = 2 ).run( suite )
-  print testResult
+  print(testResult)
 
 if __name__ == '__main__':
   runTests()
