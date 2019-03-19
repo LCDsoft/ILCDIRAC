@@ -1,3 +1,29 @@
+[v29r0p4]
+
+Release date: 2019-03-19
+
+*ILCTransformationSystem
+
+FIX: (!257) `dirac-clic-make-productions`: creation Gen transformations now is working again
+FIX: (!257) `dirac-clic-make-productions`: Gen transformations can use the FE. syntax now via the Whizard2 applicationOptions
+CHANGE: (!259) `dirac-clic-make-productions`: new Parameter ``MoveGroupSize`` to set the number of files for each moving request, defaults to 10 instead of 1 as used before
+CHANGE: (!261) The :class:`~ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent.DataRecoveryAgent` now does service calls in bulk to speed up processing by factor at least 4
+CHANGE: (!263) ILCDIRAC-873 :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob`: refactor the registration of metadata, ``_registerMetadata`` now returns S_ERROR if something went wrong. Adding verbose output.
+FIX: (!263) `dirac-clic-make-productions`: Fix for inputDataQuery for Split Productions
+
+*Interfaces
+
+NEW: (!264) `~ILCDIRAC.Interfaces.API.NewInterfaces.Applications.Marlin`: new member flag ``keepRecFile``, if set to ``False`` ProductionJobs are not uploading REC files
+
+*Miscellaneous
+
+FIX: (!260) use print function instead of print statement
+FIX: (!260) remove the usage of the long suffix to distinguish between long and int
+FIX: (!260) convert octal literals to new syntax
+NEW: (!260) Add pylint test to check python 3 compatibility
+NEW: (!258) Enable codecov in travis
+
+
 [v29r0p3]
 
 Release date: 2019-02-12
