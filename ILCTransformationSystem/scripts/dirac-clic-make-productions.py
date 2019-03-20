@@ -647,21 +647,21 @@ overlayEventType = %(overlayEventType)s
     energyString = self.overlayEvents if self.overlayEvents else energyWithUnit( energy )
     self.cliReco += ' --Config.Overlay=%s ' % energyString
 
-  def createWhizard2Application(self, meta, eventsPerJob, sinFile):
+  def createWhizard2Application(self, task):
     """ create Whizard2 Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard2
 
     whiz = Whizard2()
     whiz.setVersion(self.whizard2Version)
-    whiz.setSinFile(sinFile)
-    whiz.setEvtType(meta['EvtType'])
-    whiz.setNumberOfEvents(eventsPerJob)
-    whiz.setEnergy(meta['Energy'])
-    self._setApplicationOptions("Whizard2", whiz)
+    whiz.setSinFile(task.sinFile)
+    whiz.setEvtType(task.meta['EvtType'])
+    whiz.setNumberOfEvents(task.eventsPerJob)
+    whiz.setEnergy(task.meta['Energy'])
+    self._setApplicationOptions('Whizard2', whiz, task.applicationOptions)
 
     return whiz
 
-  def createDDSimApplication( self ):
+  def createDDSimApplication(self, task):
     """ create DDSim Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
 
@@ -670,13 +670,14 @@ overlayEventType = %(overlayEventType)s
     ddsim.setSteeringFile(self.ddsimSteeringFile)
     ddsim.setDetectorModel( self.detectorModel )
 
-    self._setApplicationOptions("DDSim", ddsim)
+    self._setApplicationOptions('DDSim', ddsim, task.applicationOptions)
 
     return ddsim
 
-  def createOverlayApplication( self, energy ):
+  def createOverlayApplication(self, task):
     """ create Overlay Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
+    energy = float(task.meta['Energy'])
     overlay = OverlayInput()
     overlay.setEnergy(energy)
     overlay.setBackgroundType(self.overlayEventType)
@@ -690,11 +691,11 @@ overlayEventType = %(overlayEventType)s
     if self.overlayEvents:
       overlay.setUseEnergyForFileLookup( False )
 
-    self._setApplicationOptions("Overlay", overlay)
+    self._setApplicationOptions('Overlay', overlay, task.applicationOptions)
 
     return overlay
 
-  def createMarlinApplication(self, energy, cliReco, over):
+  def createMarlinApplication(self, task, over):
     """Create Marlin application with or without overlay."""
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
     marlin = Marlin()
@@ -705,32 +706,31 @@ overlayEventType = %(overlayEventType)s
     marlin.setKeepRecFile(False)
 
     if over:
+      energy = float(task.meta['Energy'])
       self.addOverlayOptionsToMarlin( energy )
 
-    self.cliReco = ' '.join([self.cliRecoOption, self.cliReco, cliReco]).strip()
+    self.cliReco = ' '.join([self.cliRecoOption, self.cliReco, task.cliReco]).strip()
     marlin.setExtraCLIArguments(self.cliReco)
     self.cliReco = ''
 
     marlin.setSteeringFile(self.marlinSteeringFile)
 
-    self._setApplicationOptions("Marlin", marlin)
+    self._setApplicationOptions('Marlin', marlin, task.applicationOptions)
 
     return marlin
 
   def createGenerationProduction(self, task):
     """Create generation production."""
-    meta = task.meta
     prodName = task.getProdName(self._machine, 'gen', self.additionalName)
     parameterDict = task.parameterDict
-    eventsPerJob = task.eventsPerJob
     nbTasks = task.nbTasks
-    sinFile = task.sinFile
     gLogger.notice("*" * 80 + "\nCreating generation production: %s " % prodName)
     genProd = self.getProductionJob()
     genProd.setProdType('MCGeneration')
     genProd.setWorkflowName(prodName)
     # Add the application
-    res = genProd.append(self.createWhizard2Application(meta, eventsPerJob, sinFile))
+    print('Task', task)
+    res = genProd.append(self.createWhizard2Application(task))
     if not res['OK']:
       raise RuntimeError("Error creating generation production: %s" % res['Message'])
     genProd.addFinalization(True, True, True, True)
@@ -770,7 +770,7 @@ overlayEventType = %(overlayEventType)s
       raise RuntimeError( "Error creating Simulation Production: %s" % res['Message'] )
     simProd.setWorkflowName(prodName)
     #Add the application
-    res = simProd.append( self.createDDSimApplication() )
+    res = simProd.append(self.createDDSimApplication(task))
     if not res['OK']:
       raise RuntimeError( "Error creating simulation Production: %s" % res[ 'Message' ] )
     simProd.addFinalization(True,True,True,True)
@@ -818,12 +818,12 @@ overlayEventType = %(overlayEventType)s
 
     #Add overlay if needed
     if over:
-      res = recProd.append( self.createOverlayApplication( float( meta['Energy'] ) ) )
+      res = recProd.append(self.createOverlayApplication(task))
       if not res['OK']:
         raise RuntimeError( "Error appending overlay to reconstruction transformation: %s" % res['Message'] )
 
     #Add reconstruction
-    res = recProd.append(self.createMarlinApplication(float(meta['Energy']), task.cliReco, over))
+    res = recProd.append(self.createMarlinApplication(task, over))
     if not res['OK']:
       raise RuntimeError( "Error appending Marlin to reconstruction production: %s" % res['Message'] )
     recProd.addFinalization(True,True,True,True)
@@ -955,14 +955,17 @@ overlayEventType = %(overlayEventType)s
     prodJob.maxFCFoldersToCheck = 1
     return prodJob
 
-  def _setApplicationOptions(self, appName, app):
+  def _setApplicationOptions(self, appName, app, optionsDict=None):
     """ set options for given application
 
     :param str appName: name of the application, for print out
     :param app: application instance
     """
-
-    for option, value in self.applicationOptions[appName].items():
+    if optionsDict is None:
+      optionsDict = {}
+    allOptions = dict(self.applicationOptions[appName])
+    allOptions.update(optionsDict)
+    for option, value in allOptions.items():
       if option.startswith(('FE.', 'C_')):
         continue
       gLogger.notice("%s: setting option %s to %s" % (appName, option, value))
@@ -1061,7 +1064,8 @@ overlayEventType = %(overlayEventType)s
 
   def addGenTask(self, taskDict, originalTask):
     """Add a gen task with required options."""
-    return self._addTask(taskDict, metaInput={}, originalTask=originalTask, prodType='GEN', applicationName='Whizard2')
+    return self._addTask(taskDict, metaInput=originalTask.meta,
+                         originalTask=originalTask, prodType='GEN', applicationName='Whizard2')
 
   def addRecTask(self, taskDict, metaInput, originalTask):
     """Add a reconstruction task."""
