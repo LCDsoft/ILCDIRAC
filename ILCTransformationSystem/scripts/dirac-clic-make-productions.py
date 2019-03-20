@@ -1052,7 +1052,7 @@ overlayEventType = %(overlayEventType)s
                    sinFile=originalTask.sinFile,
                    nbTasks=originalTask.nbTasks,
                    )
-    theTask.sourceName = originalTask.taskName
+    theTask.sourceName = '_'.join([originalTask.sourceName, originalTask.taskName])
     if not nTasks:
       taskDict[prodType].append(theTask)
       return
