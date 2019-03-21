@@ -13,13 +13,15 @@ from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
-from ILCDIRAC.Workflow.Modules.Calibration import Calibration
 from DIRAC.Core.Utilities.Subprocess import shellCall
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.functions import convert_and_execute
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from ILCDIRAC.CalibrationSystem.Utilities.functions import searchFilesWithPattern
+from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
+from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
+from ILCDIRAC.Interfaces.API.NewInterface.Applications import Calibration
 
 __RCSID__ = "$Id$"
 
@@ -114,7 +116,7 @@ class CalibrationRun(object):
     #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs
     #to be accessed by the agent in the case of resubmission
 
-  def getCalibrationID():
+  def getCalibrationID(self):
     return self.calibrationID
 
   # TODO this function is only for debugging purpose
@@ -143,8 +145,6 @@ class CalibrationRun(object):
     self.proxyUserName = usernameAndGroup['username']
     self.proxyUserGroup = usernameAndGroup['group']
 
-    from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
-    from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
     dirac = DiracILC(True, 'some_job_repository.rep')
     results = []
     self.init_files()
@@ -157,14 +157,18 @@ class CalibrationRun(object):
       curJob.setName('CalibrationService_calid_%s_workerid_%s' % (self.calibrationID, curWorkerID))
       curJob.setJobGroup('CalibrationService_calib_job')
 
-      # TODO check if the name of module (Calibration) is correct
-      calib = Calibration(self.calibrationID, curWorkerID)
+      calib = Calibration()
+      calib.setCalibrationID(self.calibrationID)
+      calib.setWorkerID(curWorkerID)
+
       calib.setVersion(self.marlinVersion)
       calib.setDetectorModel(self.detectorModel)
       #  calib.setNbEvts(nEvts+1)
       #  calib.setProcessorsToUse([])
       if self.steeringFile != '':
         calib.setSteeringFile(self.steeringFile)
+      job.setCLICConfig(self.marlinVersion.rsplit("_", 1)[0])  # TODO check if this needed for this case
+      # TODO implement using line below - choose of tracking, time window, etc.
       #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"
       #                             --Output_DST.LCIOOutputFile="+outputFile+"
       #                             --constant.CalorimeterIntegrationTimeWindow="+str(calorimeterIntegrationTimeWindow))
@@ -864,11 +868,12 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK on success. (Should always succeed)
     :rtype: dict
     """
-    newRun = CalibrationRun(1, 'dummy.txt', 'dummyIlcSoftPath', "dummyInFile.slcio",
-                            1, 'dummyMarlinVersion', 'dummyDetectorModel')
+    newRun = CalibrationRun(1, 'dummy.txt', 'dummyIlcSoftPath', {
+                            0: "dummyInFile.slcio"}, 1, 'dummyMarlinVersion', 'dummyDetectorModel')
+    #  newRun = CalibrationRun(calibrationID, steeringFile, ilcsoftPath, groupedInputFiles, numberOfJobs, marlinVersion, detectorModel)
     #  newRun = CalibrationRun()
 
-    return S_OK(newRun)
+    return S_OK(newRun.getCalibrationID())
 
   auth_resetService = ['all']  # FIXME: Restrict to test usage only
   types_resetService = []

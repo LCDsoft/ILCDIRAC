@@ -67,8 +67,6 @@ def mimic_convert_and_execute(inList):
 
 
 def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
-  from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationRun
-
   opsMock = Mock(name='instance')
   opsMock.getValue.return_value = 'dummy'
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.Operations',
@@ -258,6 +256,24 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   #  print('nSignalEvents: %s' % nSignalEvents)
   #  print('nBackgroundEvents: %s' % nBackgroundEvents)
 
+#  def test_submitJobs(calibHandler, mocker):
+#    inputFileDir = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'], 'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'], 'gamma': ['gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'], 'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
+#    numberOfJobs = 4
+#    res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
+#    groupedDict = res['Value']
+#
+#    curWorkerID = 6
+#    calibrationID = 1
+#    marlinVersion = 'ILCSoft-2019-02-20_gcc62'
+#    detectorModel = 'CLIC_o3_v14'
+#    currentPhase = 0
+#
+#    userJobMock = Mock(name='instance')
+#    userJobMock.submit.return_value = 'dummy'
+#    userJobMock.append.return_value = {'OK': True}
+#    mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.UserJob', new=Mock(return_value=userJobMock, name='Class'))
+#
+#    newRun = CalibrationRun(1, 'dummy_steeringFile', 'dummy_ilcsoftPath', ['dummy_inputFiles1', 'dummy_inputFiles2'], 1, '', '')
 
 #pylint: disable=protected-access,too-many-public-methods,,no-member
 

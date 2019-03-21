@@ -1,12 +1,12 @@
 '''
-Run Marlin
+Run Pandora Calorimeter calibration
 
-ILCDIRAC.Workflow.Modules.MarlinAnalysis Called by Job Agent.
+ILCDIRAC.Workflow.Modules.Calibration Called by Job Agent.
 
-:since: Feb 9, 2010
+:since: March, 2019
 
-:author: Stephane Poss
-:author: Przemyslaw Majewski
+:author: Jan Hendrik Ebbing
+:author: Oleksandr Viazlo
 '''
 
 import glob
@@ -39,17 +39,19 @@ class Calibration(MarlinAnalysis):
   """Define the Calibration part of the workflow
   """
 
-  def __init__(self, _calibrationID, _workerID):
+  def __init__(self):
     super(Calibration, self).__init__()
     self.applicationName = "Calibration"
     self.currentStep = -1  # internal counter of worker node of how much times Marlin was run
     self.currentPhase = None
     self.currentStage = None
-    self.cali = CalibrationClient(_calibrationID, _workerID)
+    self.calibrationID = None
+    self.workerID = None
+    self.cali = None
 
   def runIt(self):
     """
-    Called by Agent
+    Called by Job Agent
     
     Execute the following:
       - resolve where the soft was installed
@@ -59,6 +61,10 @@ class Calibration(MarlinAnalysis):
 
     :return: S_OK(), S_ERROR()
     """
+
+    if self.cali is None:
+      self.cali = CalibrationClient(self.calibrationID, self.workerID)
+
     self.result = S_OK()
     if not self.platform:
       self.result = S_ERROR('No ILC platform selected')
@@ -125,12 +131,6 @@ class Calibration(MarlinAnalysis):
     # rename output xml-file from photon training stage
     updateSteeringFile(pandorasettings, pandorasettings,
                        {"algorithm[@type='PhotonReconstruction']/HistogramFile": 'PandoraLikelihoodDataPhotonTraining.xml'})
-
-    if self.inputGEAR:
-      self.inputGEAR = os.path.basename(self.inputGEAR)
-      if self.inputGEAR and not os.path.exists(self.inputGEAR) and steeringfiledirname \
-         and os.path.exists(os.path.join(steeringfiledirname, self.inputGEAR)):
-        self.inputGEAR = os.path.join(steeringfiledirname, self.inputGEAR)
 
     if not os.path.exists(self.SteeringFile):
       if steeringfiledirname:

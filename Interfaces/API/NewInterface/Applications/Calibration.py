@@ -1,6 +1,7 @@
 """
 Application used by the Calibration system, not for user jobs
 """
+import types
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
 
 from DIRAC import S_OK
@@ -51,3 +52,19 @@ class Calibration(Marlin):
     moduleinstance.setValue("calibrationID", self.calibrationID)
     moduleinstance.setValue("workerID", self.workerID)
     moduleinstance.setValue("baseSteeringFile", self.baseSteeringFile)
+
+  def setCalibrationID(self, calibrationID):
+    """ Set calibrationID 
+
+    :param int calibrationID: ID of calibration 
+    """
+    self._checkArgs({'calibrationID': types.IntType})
+    self.calibrationID = calibrationID
+
+  def setWorkerID(self, workerID):
+    """ Set workerID 
+
+    :param int workerID: ID of worker node
+    """
+    self._checkArgs({'workerID': types.IntType})
+    self.workerID = workerID

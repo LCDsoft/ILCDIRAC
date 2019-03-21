@@ -226,6 +226,8 @@ def createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs):
   return self.calibrationService.createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs,
                                                    res['Value']['username'], res['Value']['group'])
 
+  #  def export_createCalibration(self, ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
+
 #FIXME is this for testing?
 if __name__ == '__main__':
   if len(sys.argv) < 4:
