@@ -27,7 +27,7 @@ def readParameterDict():
   fileDir = os.path.join(os.environ['DIRAC'], "ILCDIRAC", "CalibrationSystem", "Utilities", "testing")
   fileToRead = os.path.join(fileDir, 'parameterListMarlinSteeringFile.txt')
   parDict = readParameterDict(fileToRead)
-  for iKey, _ in parDict.iteritems():
+  for iKey in parDict.keys():
     parDict[iKey] = 1.0
   return parDict
 
@@ -77,7 +77,8 @@ def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
                side_effect=mimic_convert_and_execute)
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.shellCall', return_value={'OK': False})
 
-  newRun = CalibrationRun(1, 'dummy_steeringFile', 'dummy_ilcsoftPath', ['dummy_inputFiles1', 'dummy_inputFiles2'], 1)
+  newRun = CalibrationRun(1, 'dummy_steeringFile', 'dummy_ilcsoftPath', [
+                          'dummy_inputFiles1', 'dummy_inputFiles2'], 1, '', '')
   newRun.calibrationConstantsDict = dict(readParameterDict)
   stageIDSequence = []
   phaseIDSequence = []
@@ -103,31 +104,69 @@ def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
 #    print(CalibrationHandler.activeCalibrations)
 #    assert False
 
-#  def test_export_submitResult(calibHandler, mocker):
-#    mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
-#    calibHandler.export_createCalibration( '', '', [], 0, '', '' )
-#
-#    import ILCDIRAC.CalibrationSystem.Utilities as utilities
-#    fileDir = utilities.__path__[0]
-#    fileToRead = os.path.join(fileDir, 'testing/pfoAnalysis.xml')
-#    from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
-#    tmpFile = binaryFileToString(fileToRead)
-#
-#    calibID = 1
-#    stageID = 2
-#    phaseID = 0
-#    stepID = 0
-#    workerID = 8234
-#
-#    res = calibHandler.export_submitResult(calibID, stageID, phaseID, stepID, workerID, tmpFile)
-#    assert res['OK'] == True
-#
-#    outFile = CalibrationHandler.activeCalibrations[calibID].stepResults[stepID].results[workerID]
-#    assert os.path.exists(outFile)
-#    print(outFile)
-#
-#    import filecmp
-#    assert filecmp.cmp(fileToRead, outFile)
+def test_regroupInputFile(calibHandler, mocker):
+  inputFileDir = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'], 'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'], 'gamma': [
+      'gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'], 'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
+
+  numberOfJobs = 4
+  res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
+  assert res['OK']
+  groupedDict = res['Value']
+  for iKey in groupedDict.keys():
+    assert len(groupedDict[iKey][0]) == 2
+    assert len(groupedDict[iKey][1]) == 1
+
+  numberOfJobs = 2
+  res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
+  assert res['OK']
+  groupedDict = res['Value']
+  for iKey in groupedDict.keys():
+    assert len(groupedDict[iKey][0]) == 3
+    assert len(groupedDict[iKey][1]) == 2
+
+
+def test_export_createCalibration_wrongInputFiles(calibHandler, mocker):
+  res = calibHandler.export_createCalibration('', {'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+  assert not res['OK']
+  assert 'Wrong input data' in res['Message']
+
+  res = calibHandler.export_createCalibration('', {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+  assert not res['OK']
+  assert 'Too many jobs for provided input data.' in res['Message']
+
+
+def test_export_submitResult(calibHandler, mocker):
+  mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
+  mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile',
+                      new=Mock(return_value={'OK': True, 'Value': []}))
+  res = calibHandler.export_createCalibration('', {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+  if not res['OK']:
+    assert False
+
+  import ILCDIRAC.CalibrationSystem.Utilities as utilities
+  fileDir = utilities.__path__[0]
+  fileToRead = os.path.join(fileDir, 'testing/pfoAnalysis.xml')
+  from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
+  tmpFile = binaryFileToString(fileToRead)
+
+  calibID = 1
+  stageID = 2
+  phaseID = 0
+  stepID = 0
+  workerID = 8234
+
+  res = calibHandler.export_submitResult(calibID, stageID, phaseID, stepID, workerID, tmpFile)
+  if not res['OK']:
+    print res
+    assert False
+  assert res['OK'] == True
+
+  outFile = CalibrationHandler.activeCalibrations[calibID].stepResults[stepID].results[workerID]
+  assert os.path.exists(outFile)
+  print(outFile)
+
+  import filecmp
+  assert filecmp.cmp(fileToRead, outFile)
 
 def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
@@ -137,10 +176,17 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   opsMock = Mock(name='instance')
   opsMock.getValue.return_value = os.path.join(fileDir, 'testing')
   mocker.patch('%s.Operations' % MODULE_NAME, new=Mock(return_value=opsMock, name='Class'))
+  mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile',
+                      new=Mock(return_value={'OK': True, 'Value': []}))
 
-  calibHandler.export_createCalibration('', '', [], 0, '', '')
+  res = calibHandler.export_createCalibration('', {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+  if not res['OK']:
+    print(res)
+    assert False
 
   fileToRead = os.path.join(fileDir, 'testing/PandoraLikelihoodData9EBin.xml')
+  if not os.path.exists(fileToRead):
+    assert False
   from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
   tmpFile = binaryFileToString(fileToRead)
 
@@ -155,12 +201,22 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   CalibrationHandler.activeCalibrations[calibID].currentStep = stepID
 
   res = calibHandler.export_submitResult(calibID, stageID, phaseID, stepID, workerID, tmpFile)
+  if not res['OK']:
+    print res
+    assert False
+
   nFilesToMerge = 3
   for _ in range(0, nFilesToMerge - 1):
     workerID += 1
     res = calibHandler.export_submitResult(calibID, stageID, phaseID, stepID, workerID, tmpFile)
+    if not res['OK']:
+      print(res)
+      assert False
 
   res = CalibrationHandler.activeCalibrations[calibID]._CalibrationRun__mergePandoraLikelihoodXmlFiles()
+  if not res['OK']:
+    print(res)
+    assert False
 
   mergedFile = 'calib%s/newPandoraLikelihoodData.xml' % calibID
   assert os.path.exists(mergedFile)
@@ -307,21 +363,21 @@ class CalibrationHandlerTest(unittest.TestCase):
                                            954692: 0, 29485: 1040}, self)
 
   def test_getnewparams_calculationfinished(self):
-    testRun = CalibrationRun(1, '', '', [], 13)
+    testRun = CalibrationRun(1, '', '', [], 13, '', '')
     testRun.calibrationFinished = True
     CalibrationHandler.activeCalibrations[2489] = testRun
     assertDiracSucceedsWith(self.calh.export_getNewParameters(2489, 193),
                             'Calibration finished! End job now', self)
 
   def test_getnewparams_nonewparamsyet(self):
-    testRun = CalibrationRun(1, '', '', [], 13)
+    testRun = CalibrationRun(1, '', '', [], 13, '', '')
     testRun.currentStep = 149
     CalibrationHandler.activeCalibrations[2489] = testRun
     assertDiracFailsWith(self.calh.export_getNewParameters(2489, 149),
                          'No new parameter set available yet', self)
 
   def test_getnewparams_newparams(self):
-    testRun = CalibrationRun(1, '', '', [], 13)
+    testRun = CalibrationRun(1, '', '', [], 13, '', '')
     testRun.currentStep = 36
     testRun.currentParameterSet = 982435
     CalibrationHandler.activeCalibrations[2489] = testRun
@@ -330,17 +386,20 @@ class CalibrationHandlerTest(unittest.TestCase):
 
   def test_getnewparams_inactive_calibration(self):
     with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
-      for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
-        self.calh.export_createCalibration('', '', [], 0, '', '')
-    assertDiracFailsWith(self.calh.export_getNewParameters(135, 913),
-                         'CalibrationID is not in active calibrations: 135', self)
+      with patch.object(self.calh, '_CalibrationHandler__regroupInputFile', new=Mock(return_value={'OK': True, 'Value': []})):
+        for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
+          res = self.calh.export_createCalibration('', {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+          if not res['OK']:
+            assert False
+        assertDiracFailsWith(self.calh.export_getNewParameters(135, 913),
+                             'CalibrationID is not in active calibrations: 135', self)
 
   def test_calculate_params(self):
     from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
     result1 = [1, 2.3, 5]
     result2 = [0, 0.2, -0.5]
     result3 = [-10, -5.4, 2]
-    obj = CalibrationRun(1, 'file', 'v123', 'input', 123)
+    obj = CalibrationRun(1, 'file', 'v123', 'input', 123, '', '')
     res = CalibrationResult()
     res.addResult( 2384, result1 )
     res.addResult( 742, result2 )
@@ -424,7 +483,7 @@ class CalibrationHandlerTest(unittest.TestCase):
     # Simple case
     test_list_1 = [1, 148]
     test_list_2 = [-3, 0.2]
-    testobj = CalibrationRun(1, '', '', [], 0)
+    testobj = CalibrationRun(1, '', '', [], 0, '', '')
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([-2, 148.2], res, self)
 
@@ -432,7 +491,7 @@ class CalibrationHandlerTest(unittest.TestCase):
     # More complex case
     test_list_1 = [9013, -137.25, 90134, 4278, -123, 'abc', ['a', False]]
     test_list_2 = [0, 93, -213, 134, 98245, 'aifjg', ['some_entry', {}]]
-    testobj = CalibrationRun(1, '', '', [], 0)
+    testobj = CalibrationRun(1, '', '', [], 0, '', '')
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([9013, -44.25, 89921, 4412, 98122, 'abcaifjg',
                           ['a', False, 'some_entry', {}]], res, self)
@@ -440,20 +499,20 @@ class CalibrationHandlerTest(unittest.TestCase):
   def test_addlists_empty(self):
     test_list_1 = []
     test_list_2 = []
-    testobj = CalibrationRun(1, '', '', [], 0)
+    testobj = CalibrationRun(1, '', '', [], 0, '', '')
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([], res, self)
 
   def test_addlists_incompatible(self):
     test_list_1 = [1, 83, 0.2, -123]
     test_list_2 = [1389, False, '']
-    testobj = CalibrationRun(1, '', '', [], 0)
+    testobj = CalibrationRun(1, '', '', [], 0, '', '')
     with pytest.raises(ValueError) as ve:
       testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertInImproved('the two lists do not have the same number of elements', ve.__str__().lower(), self)
 
   def test_calcnewparams_no_values(self):
-    testrun = CalibrationRun(1, '', '', [], 0)
+    testrun = CalibrationRun(1, '', '', [], 0, '', '')
     with pytest.raises(ValueError) as ve:
       testrun._CalibrationRun__calculateNewParams(1)
     assertInImproved('no step results provided', ve.__str__().lower(), self)

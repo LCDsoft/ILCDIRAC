@@ -134,6 +134,7 @@ class CalibrationAgent(AgentModule):
       for workerID, jobStatus in workerDict.iteritems():
         if jobStatus in CalibrationAgent.JOB_STATUS_RUNNING:
           possibly_successful_jobs.append(workerID)  # FIXME: Currently unused
+          # FIXME JOB_STATUS_ENDED contains also 'Done' and 'Completed' statuses. These don't mean that job were failed, right?
         elif jobStatus in CalibrationAgent.JOB_STATUS_ENDED:
           failed_jobs.append(workerID)
       failed_ratio = float(len(failed_jobs)) / float(targetNumberDict[calibrationID])

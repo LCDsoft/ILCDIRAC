@@ -70,11 +70,14 @@ class CalibrationRun(object):
   Includes files, current parameter set, software version, the workers running as well as
   the results of each step.
   """
-  def __init__(self, calibrationID, steeringFile, ilcsoftPath, inputFiles, numberOfJobs):
+
+  def __init__(self, calibrationID, steeringFile, ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, detectorModel):
     self.calibrationID = calibrationID
     self.steeringFile = steeringFile
     self.ilcsoftPath = ilcsoftPath
     self.inputFiles = inputFiles
+    self.marlinVersion = marlinVersion
+    self.detectorModel = detectorModel
     #TODO ask user to provide these... or read it from CS
     self.ecalBarrelCosThetaRange = [0.0, 1.0]
     self.ecalEndcapCosThetaRange = [0.0, 1.0]
@@ -111,6 +114,9 @@ class CalibrationRun(object):
     #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs
     #to be accessed by the agent in the case of resubmission
 
+  def getCalibrationID():
+    return self.calibrationID
+
   # TODO this function is only for debugging purpose
   def dumpSelfArguments(self):
     for iEl in dir(self):
@@ -120,11 +126,10 @@ class CalibrationRun(object):
           print("%s: %s" % (iEl, eval("self." + iEl)))
 
   @executeWithUserProxy
-  def submitJobs(self, calibrationID, idsOfWorkerNodesToSubmitTo=None):
+  def submitJobs(self, idsOfWorkerNodesToSubmitTo=None):
     """ Submit the calibration jobs to the workers for the first time.
     Use a specially crafted application that runs repeated Marlin reconstruction steps
 
-    :param int calibrationID: ID of this calibration. Needed for the jobName parameter
     :param idsOfWorkerNodesToSubmitTo: list of integers representing IDs of worker nodes to submit jobs to;
                                        if None submit to all allocated nodes
     :returns: S_OK or S_ERROR
@@ -133,7 +138,7 @@ class CalibrationRun(object):
     usernameAndGroup = self._getUsernameAndGroup()
     if not usernameAndGroup['OK']:
         return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
-                       % (calibrationID))
+                       % (self.calibrationID))
     # TODO do we want to do any checks of user proxy?
     self.proxyUserName = usernameAndGroup['username']
     self.proxyUserGroup = usernameAndGroup['group']
@@ -149,17 +154,17 @@ class CalibrationRun(object):
     for curWorkerID in listOfNodesToSubmitTo:
       curJob = UserJob()
       curJob.check = False  # Necessary to turn off user confirmation
-      curJob.setName('CalibrationService_calid_%s_workerid_%s' % (calibrationID, curWorkerID))
+      curJob.setName('CalibrationService_calid_%s_workerid_%s' % (self.calibrationID, curWorkerID))
       curJob.setJobGroup('CalibrationService_calib_job')
 
       # TODO check if the name of module (Calibration) is correct
-      calib = Calibration(calibrationID, curWorkerID)
-      # FIXME provide marlinVersion and detectorModel
+      calib = Calibration(self.calibrationID, curWorkerID)
       calib.setVersion(self.marlinVersion)
       calib.setDetectorModel(self.detectorModel)
       #  calib.setNbEvts(nEvts+1)
       #  calib.setProcessorsToUse([])
-      calib.setSteeringFile(self.recoSteeringFileName)
+      if self.steeringFile != '':
+        calib.setSteeringFile(self.steeringFile)
       #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"
       #                             --Output_DST.LCIOOutputFile="+outputFile+"
       #                             --constant.CalorimeterIntegrationTimeWindow="+str(calorimeterIntegrationTimeWindow))
@@ -167,20 +172,19 @@ class CalibrationRun(object):
       if not res['OK']:
         print res['Message']
         return S_ERROR('Failed to setup Calibration worklow module. CalibrationID = %s; WorkerID = %s'
-                       % (calibrationID, curWorkerID))
+                       % (self.calibrationID, curWorkerID))
 
       # FIXME should we set any time limit at all?
       curJob.setCPUTime(60 * 60 * 24)
+
       # FIXME allow user to specify xml-files. CLIC detector have different name of PandoraLikelihhod file than CLD
       inputSB = ['GearOutput.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
-      # FIXME implement distribution of slcio files of each category (MUON, KAON, PHOTON) among the jobs
-      # FIXME treat case when number of input files in one of category is less than number of jobs...
-      lcioFile = None
-      #  key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
-      #  lcioFile = _getLCIOInputFiles(self.inputFiles[key][i])
-
-      curJob.setInputData(lcioFile)
       curJob.setInputSandbox(inputSB)
+
+      key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
+      lcioFile = self.inputFiles[key][i]
+      curJob.setInputData(lcioFile)
+
       # TODO files to redirect for output: newPhotonLikelihood.xml, finalSteeringFile
       curJob.setOutputSandbox(['*.log', '*.xml', '*.txt'])
       res = curJob.submit(dirac)
@@ -283,6 +287,9 @@ class CalibrationRun(object):
 
   def __mergePandoraLikelihoodXmlFiles(self):
     folder = "calib%s/stage%s/phase%s/" % (self.calibrationID, self.currentStage, self.currentPhase)
+    if not os.path.exists(folder):
+      return S_ERROR('no directory found: %s' % folder)
+
     filesToMerge = searchFilesWithPattern(folder, '*.xml')
     outFileName = "calib%s/newPandoraLikelihoodData.xml" % (self.calibrationID)
 
@@ -295,8 +302,18 @@ class CalibrationRun(object):
     comm = 'python %s "main([%s],\'%s\')"' % (likelihoodMergeScript, ', '.join(("'%s'" % (iFile))
                                                                                for iFile in filesToMerge), outFileName)
     res = shellCall(0, comm)
+    incorrectSyntaxError = False
     if res['OK']:
+      if len(res['Value']) >= 2:
+        if 'Error' in res['Value'][1]:
+          incorrectSyntaxError = True
+
+    if res['OK'] and not incorrectSyntaxError:
       self.newPhotonLikelihood = binaryFileToString(outFileName)
+
+    if incorrectSyntaxError:
+      return S_ERROR(res['Value'][1])
+
     return res
 
   def endCurrentStep(self):
@@ -571,28 +588,41 @@ class CalibrationHandler(RequestHandler):
 
   # TODO this function has different number of arguments here and in tests. Figure out the logic of the test
   auth_createCalibration = ['authenticated']
-  types_createCalibration = [basestring, basestring, dict, int, basestring, basestring]
-  #  def export_createCalibration(self, steeringFile, ilcsoftPath, inputFiles, numberOfJobs):
+  types_createCalibration = [basestring, dict, int, basestring, basestring]
+  # TODO use marlinVersion
 
-  def export_createCalibration(self, steeringFile, ilcsoftPath, inputFiles, numberOfJobs, marlinversion, _):
+  def export_createCalibration(self, ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
     """ Called by users to create a calibration run (series of calibration iterations)
 
-    :param basestring steeringFile: Steering file used in the calibration, LFN
-    :param basestring marlinversion: Version of the Marlin application to be used for reconstruction
-    :param inputFiles: Input files for the calibration. Dictionary
+    :param basestring marlinVersion: Version of the Marlin application to be used for reconstruction
+    :param inputFiles: Input list of files for the calibration. Dictionary.
     :type inputFiles: `python:dict`
     :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
+    :param basestring steeringFile: Steering file used in the calibration, LFN
     :returns: S_OK containing ID of the calibration, used to retrieve results etc
     :rtype: dict
     """
+
+    inputFileTypes = ['gamma', 'kaon', 'muon', 'zuds']
+    if not set(inputFileTypes).issubset([iEl.lower() for iEl in inputFiles.keys()]):
+      return S_ERROR(
+          'Wrong input data. Dict inputFiles should have following keys: %s; provided dictionary has keys: %s'
+          % (inputFileTypes, inputFiles.keys()))
+
+    res = self.__regroupInputFile(inputFiles, numberOfJobs)
+    if not res['OK']:
+      return res
+    groupedInputFiles = res['Value']
+
     CalibrationHandler.calibrationCounter += 1
     calibrationID = CalibrationHandler.calibrationCounter
-    newRun = CalibrationRun(calibrationID, steeringFile, ilcsoftPath, inputFiles, numberOfJobs)
+    newRun = CalibrationRun(calibrationID, steeringFile, ilcsoftPath, groupedInputFiles,
+                            numberOfJobs, marlinVersion, detectorModel)
     CalibrationHandler.activeCalibrations[calibrationID] = newRun
     #newRun.submitJobs(calibrationID)
     #return S_OK(calibrationID)
     #FIXME: Check if lock is necessary.(Race condition?)
-    res = newRun.submitJobs(calibrationID)  # executionLock = False) #pylint: disable=unexpected-keyword-arg
+    res = newRun.submitJobs()  # executionLock = False) #pylint: disable=unexpected-keyword-arg
     if _calibration_creation_failed(res):
       # FIXME: This should be treated, since the successfully submitted jobs will still run
       ret_val = S_ERROR('Submitting at least one of the jobs failed')
@@ -623,10 +653,13 @@ class CalibrationHandler(RequestHandler):
       return S_ERROR('Calibration with ID %d not found.' % calibrationID)
     if stepID is calibration.currentStep:  # Only add result if it belongs to current step. Else ignore (it's ok)
       ## FIXME: use mkdir -p like implementation
-      try:
-        os.makedirs("calib%s/stage%s/phase%s/step%s" % (calibrationID, stageID, phaseID, stepID))
-      except OSError:
-        pass  # FIXME error message?
+      dirName = "calib%s/stage%s/phase%s/step%s" % (calibrationID, stageID, phaseID, stepID)
+      if not os.path.exists(dirName):
+        try:
+          os.makedirs(dirName)
+        except OSError as e:
+          return S_ERROR('Cannot create diretories. %s' % e)
+
       newFilename = "calib%s/stage%s/phase%s/step%s/pfoanalysis_w%s.root" % (calibrationID, stageID, phaseID, stepID,
                                                                              workerID)
       if stageID == 2:
@@ -648,10 +681,11 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK when the check has been ended.
     :rtype: dict
     """
-    for calibrationID in CalibrationHandler.activeCalibrations:
-      calibration = CalibrationHandler.activeCalibrations.get(calibrationID, None)
+    for calibrationID, calibration in CalibrationHandler.activeCalibrations.iteritems():
       if self.finalInterimResultReceived(calibration, calibration.currentStep):
         calibration.endCurrentStep()
+        if calibration.calibrationFinished:
+          del CalibrationHandler.activeCalibrations[calibrationID]
     return S_OK()
 
   finishedJobsForNextStep = 0.9  # X% of all jobs must have finished in order for the next step to begin.
@@ -734,10 +768,10 @@ class CalibrationHandler(RequestHandler):
     for iCalib in CalibrationHandler.activeCalibrations:
       jobsToResubmit = []
       for calibrationID, workerID in failedJobs:
-        if calibrationID == iCalib:
+        if calibrationID == iCalib.getCalibrationID():
           jobsToResubmit.append(workerID)
       if jobsToResubmit:
-        CalibrationHandler.submitJobs(iCalib, jobsToResubmit)  # pylint: disable=unexpected-keyword-arg
+        iCalib.submitJobs(jobsToResubmit)  # pylint: disable=unexpected-keyword-arg
 
     if failedPairs:
       result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs)
@@ -830,7 +864,8 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK on success. (Should always succeed)
     :rtype: dict
     """
-    newRun = CalibrationRun(1, 'dummy.txt', 'dummyIlcSoftPath', "dummyInFile.slcio", 1)
+    newRun = CalibrationRun(1, 'dummy.txt', 'dummyIlcSoftPath', "dummyInFile.slcio",
+                            1, 'dummyMarlinVersion', 'dummyDetectorModel')
     #  newRun = CalibrationRun()
 
     return S_OK(newRun)
@@ -907,6 +942,34 @@ class CalibrationHandler(RequestHandler):
     """
     from DIRAC.Core.Security.ProxyInfo import getProxyInfo
     return S_OK(getProxyInfo())
+
+  def __regroupInputFile(self, inputFileDir, numberOfJobs):
+    """ Function to regroup inputFiles dict according to numberOfJobs. Output dict will have a format:
+    list of files = outDict[fileType][iJob]
+
+    :param inputFiles: Input list of files for the calibration. Dictionary.
+    :type inputFiles: `python:dict`
+    :param int numberOfJobs: Number of jobs to run
+    :returns: S_OK with 'Value' element being a new regroupped dict or S_ERROR
+    :rtype: dict
+    """
+    outDict = {}
+    for iKey, iList in inputFileDir.iteritems():
+      if len(iList) < numberOfJobs:
+        return S_ERROR('Too many jobs for provided input data. numberOfJobs==%s which is larger than number of availables files for key %s: nFiles==%s' % (numberOfJobs, iKey, len(iList)))
+      nFilesPerJob = int(len(iList) / numberOfJobs)
+      nLeftoverFiles = len(iList) - nFilesPerJob * numberOfJobs
+      newDict = {}
+      for i in range(0, numberOfJobs):
+        newDict[i] = []
+        for j in range(0, nFilesPerJob):
+          j = nFilesPerJob * i + j
+          newDict[i].append(iList[j])
+        if i < nLeftoverFiles:
+          newDict[i].append(iList[nFilesPerJob * numberOfJobs + i])
+      outDict[iKey] = newDict
+
+    return S_OK(outDict)
 
 
 def _calibration_creation_failed(results):
