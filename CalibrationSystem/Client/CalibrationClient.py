@@ -202,8 +202,7 @@ class CalibrationClient(object):
     return S_ERROR('Could not report result back to CalibrationService.')
 
 
-
-def createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs):
+def createCalibration(ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
   """ Starts a calibration.
 
   :param basestring steeringFile: Steering file used in the calibration
@@ -219,14 +218,8 @@ def createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs):
     gLogger.error("inputFiles is not a dictionary")
     return S_ERROR("badParameter")
 
-  if not all(key in inputFiles for key in ("GAMMA", "KAON", "MUON", "ZUDS")):
-    gLogger.error("Missing mandatory key in inputFiles dictionary ")
-    return S_ERROR("missing key")
+  return self.calibrationService.createCalibration(ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel)
 
-  return self.calibrationService.createCalibration(steeringFile, softwareVersion, inputFiles, numberOfJobs,
-                                                   res['Value']['username'], res['Value']['group'])
-
-  #  def export_createCalibration(self, ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
 
 #FIXME is this for testing?
 if __name__ == '__main__':

@@ -146,7 +146,6 @@ def validatePandoraSettingsFile(pandoraSettingsFileName):
   return validateExistenceOfWordsInFile(pandoraSettingsFileName, parametersToValidate)
 
 
-
 def updateSteeringFile(inFileName, outFileName, parametersToSetup):
   """ Read input xml-file, update values given be dictionary and write result to a new file
 
@@ -160,18 +159,18 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup):
   tree = et.parse(inFileName)
 
   #FIXME redirect log messegage to LOG class?
-  print("Updating following values:")
+  print("Updating following values for %s:" % outFileName)
   for iPar, iVal in parametersToSetup.items():
     iElement = tree.find(iPar)
     if iElement is None:
-      return S_ERROR("Cannot update parameter in the steering file! Parameter: %s; inFileName: %s; outFileName: %s" % (iPar, inFileName, outFileName))
+      return S_ERROR("Cannot update parameter in the steering file! Parameter: %s; inFileName: %s; outFileName: %s"
+                     % (iPar, inFileName, outFileName))
     else:
       print('%s:\t"%s" --> "%s"' % (iPar, iElement.text, iVal))
       iElement.text = iVal
 
-  tree.write(outFileName)
+  res = tree.write(outFileName)
   return S_OK()
-
 
 def readValueFromSteeringFile(fileName, xPath):
   """ Read value of the node from xml-file
@@ -184,11 +183,10 @@ def readValueFromSteeringFile(fileName, xPath):
     """
   tree = et.parse(fileName)
   iElement = tree.find(xPath)
-  if iElement:
+  if iElement is not None:
     return iElement.text
   else:
     return None
-
 
 def readParameterDict(inFile='testing/parameterListMarlinSteeringFile.txt'):
   outList = {}
@@ -196,7 +194,6 @@ def readParameterDict(inFile='testing/parameterListMarlinSteeringFile.txt'):
     for iLine in f:
       outList[iLine.split('\n')[0]] = None
   return outList
-
 
 def readParametersFromSteeringFile(inFileName, parameterDict):
   tree = et.parse(inFileName)
@@ -209,7 +206,6 @@ def readParametersFromSteeringFile(inFileName, parameterDict):
       parameterDict[iPar] = iElement.text
 
   return S_OK()
-
 
 def testUpdateOfSteeringFileWithNewParameters():
   inFileName = 'testing/in1.xml'
@@ -227,7 +223,6 @@ def testUpdateOfSteeringFileWithNewParameters():
   res = updateSteeringFile(inFileName, outFileName, {"processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']": "dummyRootFile.root",
                                                      "global/parameter[@name='LCIOInputFiles']": "in1.slcio, in2.slcio", "processor[@name='MyPfoAnalysis2']/parameter[@name='RootFile']": "wrong.root"})
   print res
-
 
 def convert_and_execute(command_list):
   """ Takes a list, casts every entry of said list to string and executes it in a subprocess.

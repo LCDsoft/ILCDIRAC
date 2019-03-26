@@ -147,51 +147,58 @@ class CalibrationRun(object):
 
     dirac = DiracILC(True, 'some_job_repository.rep')
     results = []
-    self.init_files()
+    # TODO do we need this functionality?
+    #  self.init_files()
+
     listOfNodesToSubmitTo = xrange(0, self.numberOfJobs)
     if idsOfWorkerNodesToSubmitTo is not None:
       listOfNodesToSubmitTo = idsOfWorkerNodesToSubmitTo
+
     for curWorkerID in listOfNodesToSubmitTo:
+      # get input files
+      key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
+      lcioFiles = self.inputFiles[key][curWorkerID]
+
+      # create user job
       curJob = UserJob()
       curJob.check = False  # Necessary to turn off user confirmation
       curJob.setName('CalibrationService_calid_%s_workerid_%s' % (self.calibrationID, curWorkerID))
       curJob.setJobGroup('CalibrationService_calib_job')
+      curJob.setCLICConfig(self.marlinVersion.rsplit("_", 1)[0])  # TODO check if this needed for this case
+      # TODO implement using line below - choose of tracking, time window, etc.
+      #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"
+      #                             --Output_DST.LCIOOutputFile="+outputFile+"
+      #                             --constant.CalorimeterIntegrationTimeWindow="+str(calorimeterIntegrationTimeWindow))
+      # FIXME use default CPU time limit?
+      curJob.setCPUTime(60 * 60 * 24)
+      # FIXME allow user to specify xml-files. CLIC detector have different name of PandoraLikelihhod file than CLD
+      #  inputSB = ['GearOutput.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
+      if self.steeringFile != '':
+        curJob.setInputSandbox([self.steeringFile])
+      curJob.setInputData(lcioFiles)
+      # TODO files to redirect for output: newPhotonLikelihood.xml, finalSteeringFile
+      curJob.setOutputSandbox(['*.log', '*.xml', '*.txt'])
 
+      # create calibration workflow
       calib = Calibration()
       calib.setCalibrationID(self.calibrationID)
       calib.setWorkerID(curWorkerID)
-
       calib.setVersion(self.marlinVersion)
       calib.setDetectorModel(self.detectorModel)
       #  calib.setNbEvts(nEvts+1)
       #  calib.setProcessorsToUse([])
       if self.steeringFile != '':
         calib.setSteeringFile(self.steeringFile)
-      job.setCLICConfig(self.marlinVersion.rsplit("_", 1)[0])  # TODO check if this needed for this case
-      # TODO implement using line below - choose of tracking, time window, etc.
-      #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"
-      #                             --Output_DST.LCIOOutputFile="+outputFile+"
-      #                             --constant.CalorimeterIntegrationTimeWindow="+str(calorimeterIntegrationTimeWindow))
+      calib.setInputFile(lcioFiles)
       res = curJob.append(calib)
       if not res['OK']:
         print res['Message']
         return S_ERROR('Failed to setup Calibration worklow module. CalibrationID = %s; WorkerID = %s'
                        % (self.calibrationID, curWorkerID))
 
-      # FIXME should we set any time limit at all?
-      curJob.setCPUTime(60 * 60 * 24)
-
-      # FIXME allow user to specify xml-files. CLIC detector have different name of PandoraLikelihhod file than CLD
-      inputSB = ['GearOutput.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
-      curJob.setInputSandbox(inputSB)
-
-      key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
-      lcioFile = self.inputFiles[key][i]
-      curJob.setInputData(lcioFile)
-
-      # TODO files to redirect for output: newPhotonLikelihood.xml, finalSteeringFile
-      curJob.setOutputSandbox(['*.log', '*.xml', '*.txt'])
-      res = curJob.submit(dirac)
+      # submit jobs
+      # FIXME we use local mode only for testing...
+      res = curJob.submit(dirac, mode='local')
       results.append(res)
 
     return results
@@ -299,8 +306,11 @@ class CalibrationRun(object):
 
     #TODO how to get platform (e.g. x86_64-slc5-gcc43-opt) and appversion (e.g. ILCSoft-2019-02-20_gcc62)?
     #FIXME maybe one can use here ilcsoftpath? or is it better to extract path from Configuration Service?
-    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (self.platform,
-                                                                              'pandora_calibration_scripts', self.appversion), None)
+    #FIXME platform and appversion are hardcoded...
+    platform = 'x86_64-slc5-gcc43-opt'
+    appversion = 'ILCSoft-2019-02-20_gcc62'
+    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
+                                                                              'pandora_calibration_scripts', appversion), None)
     likelihoodMergeScript = os.path.join(scriptPath, 'MergePandoraLikelihoodData.py')
 
     comm = 'python %s "main([%s],\'%s\')"' % (likelihoodMergeScript, ', '.join(("'%s'" % (iFile))
@@ -337,9 +347,15 @@ class CalibrationRun(object):
     fileDir = "calib%s/" % (self.calibrationID)
     calibrationFile = os.path.join(fileDir, "Calibration.txt")  # as hardcoded in calibration binaries
 
+    #FIXME platform and appversion are hardcoded...
+    platform = 'x86_64-slc5-gcc43-opt'
+    appversion = 'ILCSoft-2019-02-20_gcc62'
+    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
+                                                                              'pandora_calibration_scripts', appversion), None)
+    scriptPath = os.path.join(scriptPath, '../../../PandoraAnalysis/HEAD/bin')
     # TODO ask Andre to add separate entry for the directory with binaries from $ILCSOFT/PandoraAnalysis/HEAD/bin
-    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/pandoraAnalysisHeadBin" % (self.platform,
-                                                                                           'pandora_calibration_scripts', self.appversion), None)
+    #  scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/pandoraAnalysisHeadBin" % (self.platform,
+    #                                 'pandora_calibration_scripts', self.appversion), None)
 
     import ILCDIRAC.CalibrationSystem.Utilities as utilities
     pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
@@ -592,7 +608,7 @@ class CalibrationHandler(RequestHandler):
 
   # TODO this function has different number of arguments here and in tests. Figure out the logic of the test
   auth_createCalibration = ['authenticated']
-  types_createCalibration = [basestring, dict, int, basestring, basestring]
+  types_createCalibration = [basestring, dict, int, basestring, basestring, basestring]
   # TODO use marlinVersion
 
   def export_createCalibration(self, ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
@@ -854,8 +870,11 @@ class CalibrationHandler(RequestHandler):
     ops = Operations()
     scriptPath = ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
                                                                          'pandora_calibration_scripts', appversion), None)
-    tmp2 = ops.getValue("/AvailableTarBalls/%s/%s/%s/pandoraAnalysisHeadBin" % (platform,
-                                                                                'pandora_calibration_scripts', appversion), None)
+    tmp2 = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (self.platform,
+                                                                        'pandora_calibration_scripts', self.appversion), None)
+    tmp2 = os.path.join(scriptPath, '../../../PandoraAnalysis/HEAD/bin')
+    #  tmp2 = ops.getValue("/AvailableTarBalls/%s/%s/%s/pandoraAnalysisHeadBin" % (platform,
+    #                                 'pandora_calibration_scripts', appversion), None)
 
     return S_OK((scriptPath, tmp2))
 

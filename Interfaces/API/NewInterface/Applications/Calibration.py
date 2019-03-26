@@ -37,9 +37,9 @@ class Calibration(Marlin):
   def _applicationModule(self):
     md1 = super(Calibration, self)._applicationModule()
 
-    md1.addParameter(Parameter("calibrationID", '', "int", "", "", False, False,
+    md1.addParameter(Parameter("calibrationID", '0', "int", "", "", False, False,
                                "calibration ID"))
-    md1.addParameter(Parameter("workerID", '', "int", "", "", False, False,
+    md1.addParameter(Parameter("workerID", '0', "int", "", "", False, False,
                                "worker ID"))
     md1.addParameter(Parameter("baseSteeringFile", '', "string", "", "", False, False,
                                "basic steering file for calibration reconstructions"))
