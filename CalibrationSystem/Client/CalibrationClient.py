@@ -214,11 +214,12 @@ def createCalibration(ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, stee
   :rtype: dict
   """
 
+  calibrationService = RPCClient('Calibration/Calibration')
   if not isinstance(inputFiles, dict):
     gLogger.error("inputFiles is not a dictionary")
     return S_ERROR("badParameter")
 
-  return self.calibrationService.createCalibration(ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel)
+  return calibrationService.createCalibration(ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel)
 
 
 #FIXME is this for testing?

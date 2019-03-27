@@ -21,7 +21,7 @@ from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from ILCDIRAC.CalibrationSystem.Utilities.functions import searchFilesWithPattern
 from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
-from ILCDIRAC.Interfaces.API.NewInterface.Applications import Calibration
+from ILCDIRAC.Interfaces.API.NewInterface.Applications.Calibration import Calibration
 
 __RCSID__ = "$Id$"
 
@@ -106,8 +106,6 @@ class CalibrationRun(object):
     if len(ilcsoftPath.split('/')) >= 7:
       self.platform = ilcsoftPath.split('/')[6]
       self.appversion = ilcsoftPath.split('/')[5]
-    self.proxyUserName = ''
-    self.proxyUserGroup = ''
     #TODO use either line below or take it from configuration service
     #  self.calibrationBinariesDir = os.path.join(ilcsoftPath, "PandoraAnalysis/HEAD/bin/")
 
@@ -137,14 +135,6 @@ class CalibrationRun(object):
     :returns: S_OK or S_ERROR
     :rtype: dict
     """
-    usernameAndGroup = self._getUsernameAndGroup()
-    if not usernameAndGroup['OK']:
-        return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
-                       % (self.calibrationID))
-    # TODO do we want to do any checks of user proxy?
-    self.proxyUserName = usernameAndGroup['username']
-    self.proxyUserGroup = usernameAndGroup['group']
-
     dirac = DiracILC(True, 'some_job_repository.rep')
     results = []
     # TODO do we need this functionality?
@@ -188,7 +178,7 @@ class CalibrationRun(object):
       #  calib.setNbEvts(nEvts+1)
       #  calib.setProcessorsToUse([])
       if self.steeringFile != '':
-        calib.setSteeringFile(self.steeringFile)
+        calib.setSteeringFile(os.path.basename(self.steeringFile))
       calib.setInputFile(lcioFiles)
       res = curJob.append(calib)
       if not res['OK']:
@@ -601,6 +591,21 @@ class CalibrationHandler(RequestHandler):
     cls.calibrationCounter = 0
     return S_OK()
 
+  def _getUsernameAndGroup(self):
+    """ Returns name of the group and name of the user of the proxy the user is currently having
+
+    :returns: S_OK with value being dict with 'group' and 'username' entries or S_ERROR
+    :rtype: `python:dict`
+    """
+
+    credDict = self.getRemoteCredentials()
+    if 'DN' not in credDict or 'username' not in credDict:
+      return S_ERROR("You must be authenticated!")
+    if not credDict['isProxy']:
+      return S_ERROR(DErrno.EX509, "chain does not contain a proxy")
+    usernameAndGroupDict = {'group': credDict['group'], 'username': credDict['username']}
+    return S_OK(usernameAndGroupDict)
+
   def initialize(self):
     """ Initializes a single response, setting required variables. Called once /per request/.
     """
@@ -642,7 +647,17 @@ class CalibrationHandler(RequestHandler):
     #newRun.submitJobs(calibrationID)
     #return S_OK(calibrationID)
     #FIXME: Check if lock is necessary.(Race condition?)
-    res = newRun.submitJobs()  # executionLock = False) #pylint: disable=unexpected-keyword-arg
+
+    usernameAndGroup = self._getUsernameAndGroup()
+    if not usernameAndGroup['OK']:
+      return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
+                     % (self.calibrationID))
+    usernameAndGroup = usernameAndGroup['Value']
+    gLogger.info('Submitting jobs with proxyUserName = %s, proxyUserGroup = %s' %
+                 (usernameAndGroup['username'], usernameAndGroup['group']))
+    # executionLock = False) #pylint: disable=unexpected-keyword-arg
+    res = newRun.submitJobs(proxyUserName=usernameAndGroup['username'], proxyUserGroup=usernameAndGroup['group'])
+    gLogger.info('results from submitJobs: %s' % res)
     if _calibration_creation_failed(res):
       # FIXME: This should be treated, since the successfully submitted jobs will still run
       ret_val = S_ERROR('Submitting at least one of the jobs failed')
@@ -800,8 +815,7 @@ class CalibrationHandler(RequestHandler):
     else:
       return S_OK()
 
-  #  auth_getNumberOfJobsPerCalibration = ['authenticated']
-  auth_getNumberOfJobsPerCalibration = ['all']
+  auth_getNumberOfJobsPerCalibration = ['authenticated']
   types_getNumberOfJobsPerCalibration = []
   def export_getNumberOfJobsPerCalibration(self):
     """ Returns a dictionary that maps active calibration IDs to the number of initial jobs they submitted.
@@ -815,25 +829,6 @@ class CalibrationHandler(RequestHandler):
       result[calibrationID] = CalibrationHandler.activeCalibrations[calibrationID].numberOfJobs
     return S_OK(result)
 
-  def _getUsernameAndGroup(self):
-    """ Returns name of the group and name of the user of the proxy the user is currently having
-    Implementation is taken from DIRAC/Core/Security/BaseSecurity.py
-
-    :returns: S_OK with value being dict with 'group' and 'username' entries or S_ERROR
-    :rtype: `python:dict`
-    """
-    retVal = self.getCredentials()
-    if not retVal['OK']:
-      return retVal
-    credDict = retVal['Value']
-    if not credDict['isProxy']:
-      return S_ERROR(DErrno.EX509, "chain does not contain a proxy")
-    if not credDict['validDN']:
-      return S_ERROR(DErrno.EDISET, "DN %s is not known in dirac" % credDict['subject'])
-    if not credDict['validGroup']:
-      return S_ERROR(DErrno.EDISET, "Group %s is invalid for DN %s" % (credDict['group'], credDict['subject']))
-    usernameAndGroupDict = {'group': credDict['group'], 'username': credDict['username']}
-    return S_OK(usernameAndGroupDict)
 
 #TODO: Add stopping criterion to calibration loop. This should be checked when new parameter sets are calculated
 #In that case, the calibration should be removed from activeCalibrations and the result stored.
