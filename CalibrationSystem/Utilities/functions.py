@@ -234,7 +234,8 @@ def convert_and_execute(command_list):
   callString = ''
   for iWord in command_list:
     callString += str(iWord)
-  return shellCall(callString)
+    callString += ' '
+  return shellCall(0, callString)
 
 
 def searchFilesWithPattern(dirName, filePattern):

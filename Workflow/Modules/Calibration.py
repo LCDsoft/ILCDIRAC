@@ -165,30 +165,13 @@ class Calibration(MarlinAnalysis):
     marlin_dll = res["Value"]
 
     while True:
-      calibrationParameters = defaultdict()
-      if self.currentStep == -1:
-        calibrationParameters['currentPhase'] = CalibrationPhase.ECalDigi
-        calibrationParameters['currentStage'] = 1
-        # TODO copy this file to workdir first
-
-        import ILCDIRAC.CalibrationSystem.Utilities as utilities
-        # FIXME this path will be different in production version probably... update it
-        parListFileName = os.path.join(utilities.__path__[0], 'testing/parameterListMarlinSteeringFile.txt')
-        parDict = readParameterDict(parListFileName)
-        res = readParametersFromSteeringFile(self.SteeringFile, parDict)
-        if not res['OK']:
-          LOG.error('Failed to read parameters from steering file:', res['Message'])
-          self.setApplicationStatus('Failed to read parameters from steering file')
-          return S_ERROR('Failed to read parameters from steering file')
-        calibrationParameters['parameters'] = parDict
-      else:
+      calibrationParameters = self.cali.requestNewParameters()
+      while calibrationParameters is None:
+        LOG.notice("Waiting for new parameters set")
+        wasteCPUCycles(10)
         calibrationParameters = self.cali.requestNewParameters()
-        while calibrationParameters is None:
-          LOG.notice("Waiting for new parameters set")
-          wasteCPUCycles(10)
-          calibrationParameters = self.cali.requestNewParameters()
 
-      if 'OK' in list(calibrationParameters.keys()):  # dict will contain element with key 'OK' only when calibration is finishd
+      if calibrationParameters['calibrationIsFinished']:
         LOG.notice("Calibration finished")
         break
 

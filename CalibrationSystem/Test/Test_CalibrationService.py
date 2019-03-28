@@ -28,7 +28,10 @@ def readParameterDict():
   fileToRead = os.path.join(fileDir, 'parameterListMarlinSteeringFile.txt')
   parDict = readParameterDict(fileToRead)
   for iKey in parDict.keys():
-    parDict[iKey] = 1.0
+    if 'CalibrECAL' in iKey:
+      parDict[iKey] = '1.0 1.0'
+    else:
+      parDict[iKey] = 1.0
   return parDict
 
 
@@ -137,8 +140,11 @@ def test_export_submitResult(calibHandler, mocker):
   mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
   mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile',
                       new=Mock(return_value={'OK': True, 'Value': []}))
+  mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
+      return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
   res = calibHandler.export_createCalibration('', {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
   if not res['OK']:
+    print('Error message:\t%s' % res['Message'])
     assert False
 
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
@@ -176,10 +182,12 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   mocker.patch('%s.Operations' % MODULE_NAME, new=Mock(return_value=opsMock, name='Class'))
   mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile',
                       new=Mock(return_value={'OK': True, 'Value': []}))
+  mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
+      return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
   res = calibHandler.export_createCalibration('', {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
   if not res['OK']:
-    print(res)
+    print(res['Message'])
     assert False
 
   fileToRead = os.path.join(fileDir, 'testing/PandoraLikelihoodData9EBin.xml')
@@ -403,12 +411,16 @@ class CalibrationHandlerTest(unittest.TestCase):
   def test_getnewparams_inactive_calibration(self):
     with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
       with patch.object(self.calh, '_CalibrationHandler__regroupInputFile', new=Mock(return_value={'OK': True, 'Value': []})):
-        for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
-          res = self.calh.export_createCalibration('', {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
-          if not res['OK']:
-            assert False
-        assertDiracFailsWith(self.calh.export_getNewParameters(135, 913),
-                             'CalibrationID is not in active calibrations: 135', self)
+        with patch.object(self.calh, '_getUsernameAndGroup',
+                          new=Mock(return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}})):
+          for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
+            res = self.calh.export_createCalibration(
+                '', {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+            if not res['OK']:
+              print(res['Message'])
+              assert False
+          assertDiracFailsWith(self.calh.export_getNewParameters(135, 913),
+                               'CalibrationID is not in active calibrations: 135', self)
 
   def test_calculate_params(self):
     from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult

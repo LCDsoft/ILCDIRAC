@@ -142,18 +142,22 @@ class CalibrationClient(object):
     """ Fetches the new parameter set from the service and updates the step counter in this object with the new value.
     Throws a ValueError if the calibration ended already.
 
-    :returns: A string if the calibration is finished and this job should stop, else the parameter set for the new step,
+    :returns: dict with 4 keys: calibrationIsFinished (bool), parameters (dict), currentPhase (int), currentStage (int)
     or None if no new parameters are available yet
     :rtype: list
     """
+    gLogger.info('execute requestNewParameters')
     res = self.calibrationService.getNewParameters(self.calibrationID, self.currentStep)
+    gLogger.info('requestNewParameters: res: %s' % res)
     if res['OK']:
-      if isinstance(res['Value'], dict):
-        self.currentPhase = res['currentPhase']
-        self.currentStage = res['currentStage']
-        return res['Value']
-      else:
-        return res
+      returnValue = res['Value']
+      if not set(['calibrationIsFinished', 'parameters', 'currentPhase', 'currentStage']).issubset(returnValue.keys()):
+        self.log.error('Corrupted structure of outcome data after request to Calibration service for new parameters')
+        # FIXME should we return None in this case?
+        return None
+      self.currentPhase = res['currentPhase']
+      self.currentStage = res['currentStage']
+      return returnValue
     else:
       return None  # No new parameters computed yet. Wait a bit and try again.
 

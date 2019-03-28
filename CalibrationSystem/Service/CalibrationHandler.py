@@ -22,6 +22,8 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import searchFilesWithPatter
 from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.Calibration import Calibration
+from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
+from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 
 __RCSID__ = "$Id$"
 
@@ -87,13 +89,16 @@ class CalibrationRun(object):
     self.hcalEndcapCosThetaRange = [0.0, 1.0]
     #TODO make these three value below configurable
     self.nHcalLayers = 44
-    self.digitisationAccuracy = 0.05
-    self.pandoraPFAAccuracy = 0.005
+    #  self.digitisationAccuracy = 0.05
+    #  self.pandoraPFAAccuracy = 0.005
+    self.digitisationAccuracy = 0.5
+    self.pandoraPFAAccuracy = 0.25
     self.stepResults = defaultdict(CalibrationResult)
     self.currentStage = 1
     self.currentPhase = CalibrationPhase.ECalDigi
     self.currentStep = 0
     self.currentParameterSet = defaultdict()
+
     self.numberOfJobs = numberOfJobs
     self.calibrationFinished = False
     #  /cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-02-07/x86_64-slc6-gcc7-opt
@@ -101,7 +106,7 @@ class CalibrationRun(object):
     self.appversion = ''
     self.newPhotonLikelihood = None
     self.ops = Operations()
-    self.calibrationConstantsDict = defaultdict()
+    self.calibrationConstantsDict = None
     self.softwareVersion = ''
     if len(ilcsoftPath.split('/')) >= 7:
       self.platform = ilcsoftPath.split('/')[6]
@@ -113,6 +118,38 @@ class CalibrationRun(object):
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
     #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs
     #to be accessed by the agent in the case of resubmission
+
+  def readInitialParameterDict(self):
+    gLogger.info('running readInitialParameterDict')
+    import ILCDIRAC.CalibrationSystem.Utilities as utilities
+    from DIRAC.DataManagementSystem.Client.DataManager import DataManager
+    datMan = DataManager()
+    res = datMan.getFile(self.steeringFile)
+    localSteeringFile = os.path.basename(self.steeringFile)
+    if not res['OK'] or not os.path.exists(localSteeringFile):
+      errMsg = 'Cannot copy Marlin steering file to read initial calibration constants. res: %' % res
+      gLogger.error(errMsg)
+      return S_ERROR(errMsg)
+
+    # FIXME this path will be different in production version probably... update it
+    parListFileName = os.path.join(utilities.__path__[0], 'testing/parameterListMarlinSteeringFile.txt')
+    parDict = readParameterDict(parListFileName)
+    res = readParametersFromSteeringFile(localSteeringFile, parDict)
+    if not res['OK']:
+      gLogger.error('Failed to read parameters from steering file:', res['Message'])
+      return S_ERROR('Failed to read parameters from steering file')
+
+    self.calibrationConstantsDict = parDict
+
+    self.currentParameterSet['currentStage'] = self.currentStage
+    self.currentParameterSet['currentPhase'] = self.currentPhase
+    self.currentParameterSet['parameters'] = self.calibrationConstantsDict
+    self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
+
+    #FIXME check if file is correctly removed
+    os.remove(localSteeringFile)
+
+    return S_OK()
 
   def getCalibrationID(self):
     return self.calibrationID
@@ -135,6 +172,10 @@ class CalibrationRun(object):
     :returns: S_OK or S_ERROR
     :rtype: dict
     """
+
+    gLogger.info('running submitJobs')
+    self.readInitialParameterDict()
+
     dirac = DiracILC(True, 'some_job_repository.rep')
     results = []
     # TODO do we need this functionality?
@@ -182,7 +223,7 @@ class CalibrationRun(object):
       calib.setInputFile(lcioFiles)
       res = curJob.append(calib)
       if not res['OK']:
-        print res['Message']
+        gLogger.error('Append calib module to UserJob: error_msg: %s' % res['Message'])
         return S_ERROR('Failed to setup Calibration worklow module. CalibrationID = %s; WorkerID = %s'
                        % (self.calibrationID, curWorkerID))
 
@@ -231,8 +272,6 @@ class CalibrationRun(object):
               parameter set, a S_OK dict containing the updated parameter set. Else a S_ERROR
     :rtype: dict
     """
-    if self.calibrationFinished:
-      return S_OK('Calibration finished! End job now.')
     if self.currentStep > stepIDOnWorker:
       return S_OK(self.currentParameterSet)
     else:
@@ -326,6 +365,7 @@ class CalibrationRun(object):
 
     :returns: None
     """
+    gLogger.info('Start execution of endCurrentStep')
 
     if self.calibrationFinished:
       return S_ERROR('Calibration is finished. Do not call endCurrentStep() anymore!')
@@ -336,6 +376,8 @@ class CalibrationRun(object):
     inputFilesPattern = os.path.join(fileDir, fileNamePattern)
     fileDir = "calib%s/" % (self.calibrationID)
     calibrationFile = os.path.join(fileDir, "Calibration.txt")  # as hardcoded in calibration binaries
+
+    gLogger.info('calibrationFile: %s' % calibrationFile)
 
     #FIXME platform and appversion are hardcoded...
     platform = 'x86_64-slc5-gcc43-opt'
@@ -350,6 +392,8 @@ class CalibrationRun(object):
     import ILCDIRAC.CalibrationSystem.Utilities as utilities
     pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
 
+    gLogger.info('Python_Read_Scripts: %s' % pythonReadScriptPath)
+
     truthEnergy = CalibrationPhase.sampleEnergyFromPhase(self.currentPhase)
 
     #  print('self.currentPhase', self.currentPhase)
@@ -363,12 +407,18 @@ class CalibrationRun(object):
                                  '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'Barrel',
                                  '-i', self.ecalBarrelCosThetaRange[0], '-j', self.ecalBarrelCosThetaRange[1]])
 
+      gLogger.info('res from first convert_and_execute: %s' % res)
+
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'EndCap',
                                  '-i', self.ecalEndcapCosThetaRange[0], '-j', self.ecalEndcapCosThetaRange[1]])
 
-      prevStepCalibConstBarrel = self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"]
+      gLogger.info('res from second convert_and_execute: %s' % res)
+      gLogger.info('self.calibrationConstantsDict: %s' % self.calibrationConstantsDict)
+
+      # this parameter is written in format "value value" in the xml steering file
+      prevStepCalibConstBarrel = float(self.calibrationConstantsDict[
+          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"].split()[0])
       prevStepCalibConstEndcap = prevStepCalibConstBarrel * self.calibrationConstantsDict[
           "processor[@name='MyDDCaloDigi']/parameter[@name='ECALEndcapCorrectionFactor']"]
 
@@ -387,7 +437,8 @@ class CalibrationRun(object):
       # TODO remove this. this is for debugging
       #  print('calibConstBarrel', calibConstBarrel)
 
-      self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"] = calibConstBarrel
+      self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"] = '%s %s' % (
+          calibConstBarrel, calibConstBarrel)
       self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='ECALEndcapCorrectionFactor']"] = (
           calibConstEndcap / calibConstBarrel)
 
@@ -578,6 +629,7 @@ class CalibrationRun(object):
     self.currentParameterSet['currentStage'] = self.currentStage
     self.currentParameterSet['currentPhase'] = self.currentPhase
     self.currentParameterSet['parameters'] = self.calibrationConstantsDict
+    self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
 
     return S_OK()
 
@@ -651,7 +703,7 @@ class CalibrationHandler(RequestHandler):
     usernameAndGroup = self._getUsernameAndGroup()
     if not usernameAndGroup['OK']:
       return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
-                     % (self.calibrationID))
+                     % (calibrationID))
     usernameAndGroup = usernameAndGroup['Value']
     gLogger.info('Submitting jobs with proxyUserName = %s, proxyUserGroup = %s' %
                  (usernameAndGroup['username'], usernameAndGroup['group']))
@@ -755,12 +807,11 @@ class CalibrationHandler(RequestHandler):
       gLogger.error("CalibrationID is not in active calibrations:",
                     "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
                                                                calibrationID))
-      result = S_ERROR("calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
+      res = S_ERROR("calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
                        % calibrationID)
-      return result
+      return res
+
     res = cal.getNewParameters(stepIDOnWorker)
-    res['currentPhase'] = cal.currentPhase
-    res['currentStage'] = cal.currentStage
     return res
 
   auth_getNewPhotonLikelihood = ['authenticated']
