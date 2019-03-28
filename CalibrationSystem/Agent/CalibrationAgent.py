@@ -39,7 +39,7 @@ class CalibrationAgent(AgentModule):
     #remove it from data structures. If too many jobs failed, ask Service for resubmission. Then replace old
     #job status dict with new one
     #To clear up: Can a job disappear from this list? Or what happens if node crashes.
-    res = CalibrationAgent.fetchJobStatuses()
+    res = self.fetchJobStatuses()
     if not res['OK']:
       return res
     currentStatuses = res['Value']
