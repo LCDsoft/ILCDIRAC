@@ -1048,7 +1048,6 @@ overlayEventType = %(overlayEventType)s
                    parameterDict=originalTask.parameterDict,
                    eventsPerJob=originalTask.eventsPerJob,
                    metaPrev=originalTask.meta,
-                   dryRun=self._flags.dryRun,
                    sinFile=originalTask.sinFile,
                    nbTasks=originalTask.nbTasks,
                    )

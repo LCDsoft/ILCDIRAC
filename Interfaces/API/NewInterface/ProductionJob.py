@@ -694,7 +694,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       if not result['OK']:
         LOG.error('Problem setting parameter %s for production %s and value:\n%s' % (prodID, pname, pvalue))
     else:
-      LOG.notice("Adding %s=%s to transformation" % (str(pname), str(pvalue)))
+      LOG.info("Adding %s=%s to transformation" % (str(pname), str(pvalue)))
       result = S_OK()
     return result
   
