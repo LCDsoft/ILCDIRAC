@@ -56,9 +56,10 @@ variables:
     - pip install --upgrade setuptools_scm || echo "done scm"
     - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock flake8 psutil flake8-docstrings flake8-commas caniusepython3 parameterized
     - cd ..
+    - tar czf installation.tar.gz installation
   artifacts:
      paths:
-       - installation
+       - installation.tar.gz
      expire_in: 2 hours
   <<: *retry_policy
 
@@ -116,6 +117,7 @@ code_quality:
     GIT_STRATEGY: none
   script:
     - export HOME=/root/
+    - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
     - source ../bashrc
     - unset PYTHONOPTIMIZE
@@ -154,6 +156,7 @@ checkFormat:
     - tags
   script:
     - export HOME=/root/
+    - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
     - source ../bashrc
     - git remote add CLICDP https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC.git
@@ -170,6 +173,7 @@ checkFormat:
     - tags
   script:
     - export HOME=/root/
+    - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
     - source ../bashrc
     - unset PYTHONOPTIMIZE
@@ -198,6 +202,7 @@ pylint:PY3K:
     - tags
   script:
     - export HOME=/root/
+    - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
     - source ../bashrc
     - unset PYTHONOPTIMIZE
@@ -213,6 +218,7 @@ pylint:PY3K:
     GIT_STRATEGY: none
   script:
     - export HOME=/root/
+    - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
@@ -279,6 +285,7 @@ jobTests:CC7Prod:
     GIT_STRATEGY: none
   script:
     - export HOME=/root/
+    - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
@@ -319,6 +326,7 @@ compiledoc:
     - install:SL6
   script:
     - export HOME=/root/
+    - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
     - source ../bashrc
     - unset REQUESTS_CA_BUNDLE
@@ -348,6 +356,7 @@ maketarballs:
     - install:SL6
   script:
     - export HOME=/root/
+    - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
     - if [ -d "ILCDIRAC" ]; then echo "ILCDIRAC links still present! Failing!"; exit 1; fi
     - source ../bashrc
