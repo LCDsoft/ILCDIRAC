@@ -900,11 +900,16 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     :returns: S_OK, S_ERROR
     """
 
+    metaQuery = ' '.join('%s=%s' % (k, v) for k, v in metadata.items())
+    LOG.verbose('Looking for folder with', repr(metaQuery))
     res = self.fc.findDirectoriesByMetadata(metadata)
     if not res['OK']:
       return self._reportError("Error looking up the catalog for available directories")
     elif len(res['Value']) < 1:
-      return self._reportError('Could not find any directories corresponding to the query issued')
+      return self._reportError('Could not find any directories corresponding to the query issued: %s' % metaQuery)
+    for folderId, folder in res['Value'].items():
+      if folderId == 0 or folder == 'None':
+        return self._reportError('Could not find any directories corresponding to the query issued: %s' % metaQuery)
     return res
 
   def setReconstructionBasePaths( self, recPath, dstPath ):
