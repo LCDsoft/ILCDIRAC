@@ -273,7 +273,7 @@ class CalibrationRun(object):
     :rtype: dict
     """
     if self.currentStep > stepIDOnWorker:
-      return S_OK(self.currentParameterSet)
+      return S_OK(dict(self.currentParameterSet))
     else:
       return S_ERROR('No new parameter set available yet. Current step in service: %s, step on worker: %s'
                      % (self.currentStep, stepIDOnWorker))
@@ -388,6 +388,7 @@ class CalibrationRun(object):
     # TODO ask Andre to add separate entry for the directory with binaries from $ILCSOFT/PandoraAnalysis/HEAD/bin
     #  scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/pandoraAnalysisHeadBin" % (self.platform,
     #                                 'pandora_calibration_scripts', self.appversion), None)
+    ilcSoftInitScript = os.path.join(scriptPath, '../../../init_ilcsoft.sh')
 
     import ILCDIRAC.CalibrationSystem.Utilities as utilities
     pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
@@ -405,13 +406,15 @@ class CalibrationRun(object):
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'Barrel',
-                                 '-i', self.ecalBarrelCosThetaRange[0], '-j', self.ecalBarrelCosThetaRange[1]])
+                                 '-i', self.ecalBarrelCosThetaRange[0], '-j', self.ecalBarrelCosThetaRange[1]],
+                                ilcSoftInitScript)
 
       gLogger.info('res from first convert_and_execute: %s' % res)
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'EndCap',
-                                 '-i', self.ecalEndcapCosThetaRange[0], '-j', self.ecalEndcapCosThetaRange[1]])
+                                 '-i', self.ecalEndcapCosThetaRange[0], '-j', self.ecalEndcapCosThetaRange[1]],
+                                ilcSoftInitScript)
 
       gLogger.info('res from second convert_and_execute: %s' % res)
       gLogger.info('self.calibrationConstantsDict: %s' % self.calibrationConstantsDict)
@@ -419,8 +422,8 @@ class CalibrationRun(object):
       # this parameter is written in format "value value" in the xml steering file
       prevStepCalibConstBarrel = float(self.calibrationConstantsDict[
           "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"].split()[0])
-      prevStepCalibConstEndcap = prevStepCalibConstBarrel * self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='ECALEndcapCorrectionFactor']"]
+      prevStepCalibConstEndcap = prevStepCalibConstBarrel * float(self.calibrationConstantsDict[
+          "processor[@name='MyDDCaloDigi']/parameter[@name='ECALEndcapCorrectionFactor']"])
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'ECal_Digi_Extract.py')
       calibConstBarrel = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
@@ -451,16 +454,18 @@ class CalibrationRun(object):
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'Barrel',
-                                 '-i', self.hcalBarrelCosThetaRange[0], '-j', self.hcalBarrelCosThetaRange[1]])
+                                 '-i', self.hcalBarrelCosThetaRange[0], '-j', self.hcalBarrelCosThetaRange[1]],
+                                ilcSoftInitScript)
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'EndCap',
-                                 '-i', self.hcalEndcapCosThetaRange[0], '-j', self.hcalEndcapCosThetaRange[1]])
+                                 '-i', self.hcalEndcapCosThetaRange[0], '-j', self.hcalEndcapCosThetaRange[1]],
+                                ilcSoftInitScript)
 
-      prevStepCalibConstBarrel = self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALBarrel']"]
-      prevStepCalibConstEndcap = self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"]
+      prevStepCalibConstBarrel = float(self.calibrationConstantsDict[
+          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALBarrel']"])
+      prevStepCalibConstEndcap = float(self.calibrationConstantsDict[
+          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"])
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Digi_Extract.py')
       calibConstBarrel = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
@@ -484,7 +489,8 @@ class CalibrationRun(object):
     elif self.currentPhase == CalibrationPhase.MuonAndHCalOtherDigi:
       binary = os.path.join(scriptPath, 'PandoraPFACalibrate_MipResponse')
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', fileDir])
+                                 '-c', fileDir],
+                                ilcSoftInitScript)
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'Extract_GeVToMIP.py')
       ecalGevToMip = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
@@ -508,7 +514,8 @@ class CalibrationRun(object):
 
       binary = os.path.join(scriptPath, 'SimCaloHitEnergyDistribution')
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', fileDir])
+                                 '-c', fileDir],
+                                ilcSoftInitScript)
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Ring_Digi_Extract.py')
       mipPeakRatio = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
@@ -521,13 +528,14 @@ class CalibrationRun(object):
                                               self.currentStep - 1), fileNamePattern)
       binary = os.path.join(scriptPath, 'HCalDigitisation_DirectionCorrectionDistribution')
       res = convert_and_execute([binary, '-a', kaonInputFilesPattern, '-b', kaonTruthEnergy,
-                                 '-c', fileDir])
+                                 '-c', fileDir],
+                                ilcSoftInitScript)
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Direction_Corrections_Extract.py')
       directionCorrectionRatio = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
                                                             kaonTruthEnergy]))
-      calibHcalEndcap = self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"]
+      calibHcalEndcap = float(self.calibrationConstantsDict[
+          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"])
       # one need to access hcalMeanEndcap again (as in previous phase. Read it again from calibration file...
       # but it will also write output from script execution to the file again
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Digi_Extract.py')
@@ -555,10 +563,11 @@ class CalibrationRun(object):
       binary = os.path.join(scriptPath, 'PandoraPFACalibrate_EMScale')
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', self.pandoraPFAAccuracy, '-d', fileDir, '-e', '90'])
+                                 '-c', self.pandoraPFAAccuracy, '-d', fileDir, '-e', '90'],
+                                ilcSoftInitScript)
 
-      prevStepCalibConstEcalToEm = self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToEMGeVCalibration']"]
+      prevStepCalibConstEcalToEm = float(self.calibrationConstantsDict[
+          "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToEMGeVCalibration']"])
       pythonReadScript = os.path.join(pythonReadScriptPath, 'EM_Extract.py')
       ecalToEm = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
                                             truthEnergy, prevStepCalibConstEcalToEm, 'Calibration_Constant']))
@@ -579,16 +588,17 @@ class CalibrationRun(object):
       binary = os.path.join(scriptPath, 'PandoraPFACalibrate_HadronicScale_ChiSquareMethod')
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', self.pandoraPFAAccuracy, '-d', fileDir, '-e', self.nHcalLayers])
+                                 '-c', self.pandoraPFAAccuracy, '-d', fileDir, '-e', self.nHcalLayers],
+                                ilcSoftInitScript)
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'Had_Extract.py')
-      prevStepCalibConstHcalToHad = self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToHadGeVCalibration']"]
+      prevStepCalibConstHcalToHad = float(self.calibrationConstantsDict[
+          "processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToHadGeVCalibration']"])
       hcalToHad = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
                                              truthEnergy, 'HCTH', prevStepCalibConstHcalToHad,
                                              'Calibration_Constant', 'CSM']))
-      prevStepCalibConstEcalToHad = self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationBarrel']"]
+      prevStepCalibConstEcalToHad = float(self.calibrationConstantsDict[
+          "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationBarrel']"])
       ecalToHad = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
                                              truthEnergy, 'ECTH', prevStepCalibConstEcalToHad,
                                              'Calibration_Constant', 'CSM']))

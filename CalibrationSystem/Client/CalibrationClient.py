@@ -155,8 +155,8 @@ class CalibrationClient(object):
         self.log.error('Corrupted structure of outcome data after request to Calibration service for new parameters')
         # FIXME should we return None in this case?
         return None
-      self.currentPhase = res['currentPhase']
-      self.currentStage = res['currentStage']
+      self.currentPhase = returnValue['currentPhase']
+      self.currentStage = returnValue['currentStage']
       return returnValue
     else:
       return None  # No new parameters computed yet. Wait a bit and try again.

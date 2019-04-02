@@ -3,9 +3,11 @@
 import re
 import os
 import fnmatch
-from DIRAC import S_OK, S_ERROR
 import csv
+import tempfile
 from xml.etree import ElementTree as et
+
+from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Utilities.Subprocess import shellCall
 
 #pylint: disable=invalid-name,too-many-locals,too-many-statements
@@ -224,18 +226,32 @@ def testUpdateOfSteeringFileWithNewParameters():
                                                      "global/parameter[@name='LCIOInputFiles']": "in1.slcio, in2.slcio", "processor[@name='MyPfoAnalysis2']/parameter[@name='RootFile']": "wrong.root"})
   print res
 
-def convert_and_execute(command_list):
+
+def convert_and_execute(command_list, fileToSource=''):
   """ Takes a list, casts every entry of said list to string and executes it in a subprocess.
 
   :param list command_list: List for a subprocess to execute, that may contain castable non-strings
-  :returns: output of the command
-  :rtype: basestring
+  :param basestring fileToSource: file which will be sourced before running command
+  :returns: S_OK or S_ERROR
+  :rtype: S_OK or S_ERROR
   """
   callString = ''
   for iWord in command_list:
     callString += str(iWord)
     callString += ' '
-  return shellCall(0, callString)
+  callString += '\n'
+
+  tmpFile = tempfile.NamedTemporaryFile(delete=False)
+  if fileToSource != '':
+    tmpFile.write("source %s\n" % fileToSource)
+  tmpFile.write(callString)
+  tmpFile.close()
+
+  os.chmod(tmpFile.name, 0755)
+  comm = 'sh -c "%s"' % (tmpFile.name)
+  res = shellCall(0, comm)
+  os.unlink(tmpFile.name)
+  return res
 
 
 def searchFilesWithPattern(dirName, filePattern):
