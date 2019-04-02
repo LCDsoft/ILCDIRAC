@@ -99,11 +99,13 @@ class Calibration(MarlinAnalysis):
       return res
     env_script_path = res["Value"]
 
-    res = self._getInputFiles()
-    if not res['OK']:
-      LOG.error("Failed getting input files:", res['Message'])
-      return res
-    listofslcio = res['Value'].split()
+    #  res = self._getInputFiles()
+    #  if not res['OK']:
+    #    LOG.error("Failed getting input files:", res['Message'])
+    #    return res
+    #  listofslcio = res['Value'].split()
+
+    listofslcio = ' '.join(self.InputData)
 
     steeringfiledirname = ''
     res = getSteeringFileDirName(self.platform, "marlin", self.applicationVersion)
