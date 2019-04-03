@@ -99,13 +99,12 @@ class Calibration(MarlinAnalysis):
       return res
     env_script_path = res["Value"]
 
-    #  res = self._getInputFiles()
-    #  if not res['OK']:
-    #    LOG.error("Failed getting input files:", res['Message'])
-    #    return res
-    #  listofslcio = res['Value'].split()
-
-    listofslcio = ' '.join(self.InputData)
+    res = resolveIFpaths(self.InputData)
+    if not res['OK']:
+      LOG.error("Failed to resolve path to input slcio files: %s" % res)
+      return res
+    listofslcio = res['Value']
+    LOG.info('SASHA resolved input data: %s' % listofslcio)
 
     steeringfiledirname = ''
     res = getSteeringFileDirName(self.platform, "marlin", self.applicationVersion)
@@ -298,6 +297,7 @@ class Calibration(MarlinAnalysis):
     else:
       pandoraSettingsFile = 'CalibrationPandoraSettings/PandoraSettingsPhotonTraining.xml'
 
+    # FIXME I don't need to search for any pattern here. I already preselect files when submit jobs!!!
     filesToRunOn = [x for x in allSlcioFiles if patternToSearchFor in x.lower()]
     if len(filesToRunOn) == 0:
       errorMessage = 'Empty list of or incorrectly named input slcio-files. Search pattern: <%s>. nInputFile: %d' % (
@@ -305,7 +305,7 @@ class Calibration(MarlinAnalysis):
       LOG.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    parameterDict["global/parameter[@name='LCIOInputFiles']"] = ', '.join(filesToRunOn)
+    parameterDict["global/parameter[@name='LCIOInputFiles']"] = ' '.join(filesToRunOn)
     parameterDict["processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']"] = pandoraSettingsFile
 
     #TODO should one use different steering file for photon training? if no one need to append line below during all steps

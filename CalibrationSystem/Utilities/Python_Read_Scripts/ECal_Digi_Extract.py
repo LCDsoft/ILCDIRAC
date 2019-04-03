@@ -28,17 +28,25 @@ Mean = '1.0'
 
 with open(Calibration_File_And_Path, 'r') as f:
     searchlines = f.readlines()
+    startOfTheBlock = False
+    blockType = ''
     for line in searchlines:
-        if 'ECal  Digi Mean' in line:
-            Mean = float(find_between(line, ' : ', ' :'))
-        if ECal_Barrel_Or_EndCap == 'Barrel':
-            if 'ECal Barrel Digi Mean' in line:
+        if startOfTheBlock:
+            if 'endcap' in line.lower():
+                blockType = 'endcap'
+            elif 'barrel' in line.lower():
+                blockType = 'barrel'
+            else:
+                blockType = ''
+
+        if "___" in line:
+            startOfTheBlock = True
+        else:
+            startOfTheBlock = False
+
+        if ECal_Barrel_Or_EndCap.lower() == blockType:
+            if 'ECal Digi Mean' in line:
                 Mean = float(find_between(line, ' : ', ' :'))
-        elif ECal_Barrel_Or_EndCap == 'EndCap':
-            if 'ECal EndCap Digi Mean' in line:
-                Mean = float(find_between(line, ' : ', ' :'))
-#        else:
-#            print 'Please select Barrel or EndCap'
 
 
 if Mean_Or_Calibration_Constant == 'Mean':

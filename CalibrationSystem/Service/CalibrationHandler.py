@@ -220,7 +220,6 @@ class CalibrationRun(object):
       #  calib.setProcessorsToUse([])
       if self.steeringFile != '':
         calib.setSteeringFile(os.path.basename(self.steeringFile))
-      calib.setInputFile(lcioFiles)
       res = curJob.append(calib)
       if not res['OK']:
         gLogger.error('Append calib module to UserJob: error_msg: %s' % res['Message'])
@@ -426,16 +425,20 @@ class CalibrationRun(object):
           "processor[@name='MyDDCaloDigi']/parameter[@name='ECALEndcapCorrectionFactor']"])
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'ECal_Digi_Extract.py')
-      calibConstBarrel = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                    truthEnergy, prevStepCalibConstBarrel, 'Calibration_Constant',
-                                                    'Barrel']))
-      calibConstEndcap = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                    truthEnergy, prevStepCalibConstEndcap, 'Calibration_Constant',
-                                                    'Endcap']))
-      meanBarrel = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                              truthEnergy, prevStepCalibConstBarrel, 'Mean', 'Barrel']))
-      meanEndcap = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                              truthEnergy, prevStepCalibConstEndcap, 'Mean', 'Endcap']))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, prevStepCalibConstBarrel, 'Calibration_Constant',
+                                 'Barrel'])
+      calibConstBarrel = float(res['Value'][1].split('\n')[0])
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, prevStepCalibConstEndcap, 'Calibration_Constant',
+                                 'Endcap'])
+      calibConstEndcap = float(res['Value'][1].split('\n')[0])
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, prevStepCalibConstBarrel, 'Mean', 'Barrel'])
+      meanBarrel = float(res['Value'][1].split('\n')[0])
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, prevStepCalibConstEndcap, 'Mean', 'Endcap'])
+      meanEndcap = float(res['Value'][1].split('\n')[0])
 
       # TODO remove this. this is for debugging
       #  print('calibConstBarrel', calibConstBarrel)
@@ -468,16 +471,20 @@ class CalibrationRun(object):
           "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"])
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Digi_Extract.py')
-      calibConstBarrel = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                    truthEnergy, prevStepCalibConstBarrel, 'Barrel',
-                                                    'Calibration_Constant']))
-      calibConstEndcap = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                    truthEnergy, prevStepCalibConstEndcap, 'Endcap',
-                                                    'Calibration_Constant']))
-      meanBarrel = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                              truthEnergy, prevStepCalibConstBarrel, 'Barrel', 'Mean']))
-      meanEndcap = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                              truthEnergy, prevStepCalibConstEndcap, 'Endcap', 'Mean']))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, prevStepCalibConstBarrel, 'Barrel',
+                                 'Calibration_Constant'])
+      calibConstBarrel = float(res['Value'][1].split('\n')[0])
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, prevStepCalibConstEndcap, 'Endcap',
+                                 'Calibration_Constant'])
+      calibConstEndcap = float(res['Value'][1].split('\n')[0])
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, prevStepCalibConstBarrel, 'Barrel', 'Mean'])
+      meanBarrel = float(res['Value'][1].split('\n')[0])
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, prevStepCalibConstEndcap, 'Endcap', 'Mean'])
+      meanEndcap = float(res['Value'][1].split('\n')[0])
 
       self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALBarrel']"] = calibConstBarrel
       self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"] = calibConstEndcap
@@ -493,12 +500,15 @@ class CalibrationRun(object):
                                 ilcSoftInitScript)
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'Extract_GeVToMIP.py')
-      ecalGevToMip = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                truthEnergy, 'ECal']))
-      hcalGevToMip = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                truthEnergy, 'HCal']))
-      muonGevToMip = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                truthEnergy, 'Muon']))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, 'ECal'])
+      ecalGevToMip = float(res['Value'][1].split('\n')[0])
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, 'HCal'])
+      hcalGevToMip = float(res['Value'][1].split('\n')[0])
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, 'Muon'])
+      muonGevToMip = float(res['Value'][1].split('\n')[0])
       # constants below were not used anywhere but they were calculated in the previous calibration procedure
       #  ecalMipMpv = float(convert_and_execute(['python', 'Extract_SimCaloHitMIPMPV.py', calibrationFile,
       #                                          'ECal']))
@@ -518,8 +528,9 @@ class CalibrationRun(object):
                                 ilcSoftInitScript)
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Ring_Digi_Extract.py')
-      mipPeakRatio = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                truthEnergy]))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy])
+      mipPeakRatio = float(res['Value'][1].split('\n')[0])
 
       # this binary need to access kaon files --> refer to previous stage and step
       kaonTruthEnergy = CalibrationPhase.sampleEnergyFromPhase(self.currentPhase - 1)
@@ -532,15 +543,17 @@ class CalibrationRun(object):
                                 ilcSoftInitScript)
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Direction_Corrections_Extract.py')
-      directionCorrectionRatio = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                            kaonTruthEnergy]))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 kaonTruthEnergy])
+      directionCorrectionRatio = float(res['Value'][1].split('\n')[0])
       calibHcalEndcap = float(self.calibrationConstantsDict[
           "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"])
       # one need to access hcalMeanEndcap again (as in previous phase. Read it again from calibration file...
       # but it will also write output from script execution to the file again
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Digi_Extract.py')
-      hcalMeanEndcap = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                  kaonTruthEnergy, calibHcalEndcap, 'Endcap', 'Mean']))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 kaonTruthEnergy, calibHcalEndcap, 'Endcap', 'Mean'])
+      hcalMeanEndcap = float(res['Value'][1].split('\n')[0])
 
       # TODO deal with these hardcoded values
       Absorber_Thickness_EndCap = 20.0
@@ -569,11 +582,13 @@ class CalibrationRun(object):
       prevStepCalibConstEcalToEm = float(self.calibrationConstantsDict[
           "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToEMGeVCalibration']"])
       pythonReadScript = os.path.join(pythonReadScriptPath, 'EM_Extract.py')
-      ecalToEm = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                            truthEnergy, prevStepCalibConstEcalToEm, 'Calibration_Constant']))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, prevStepCalibConstEcalToEm, 'Calibration_Constant'])
+      ecalToEm = float(res['Value'][1].split('\n')[0])
       hcalToEm = ecalToEm
-      emMean = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                          truthEnergy, prevStepCalibConstEcalToEm, 'Mean']))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, prevStepCalibConstEcalToEm, 'Mean'])
+      emMean = float(res['Value'][1].split('\n')[0])
 
       self.calibrationConstantsDict[
           "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToEMGeVCalibration']"] = ecalToEm
@@ -594,14 +609,16 @@ class CalibrationRun(object):
       pythonReadScript = os.path.join(pythonReadScriptPath, 'Had_Extract.py')
       prevStepCalibConstHcalToHad = float(self.calibrationConstantsDict[
           "processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToHadGeVCalibration']"])
-      hcalToHad = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                             truthEnergy, 'HCTH', prevStepCalibConstHcalToHad,
-                                             'Calibration_Constant', 'CSM']))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, 'HCTH', prevStepCalibConstHcalToHad,
+                                 'Calibration_Constant', 'CSM'])
+      hcalToHad = float(res['Value'][1].split('\n')[0])
       prevStepCalibConstEcalToHad = float(self.calibrationConstantsDict[
           "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationBarrel']"])
-      ecalToHad = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                             truthEnergy, 'ECTH', prevStepCalibConstEcalToHad,
-                                             'Calibration_Constant', 'CSM']))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, 'ECTH', prevStepCalibConstEcalToHad,
+                                 'Calibration_Constant', 'CSM'])
+      ecalToHad = float(res['Value'][1].split('\n')[0])
 
       self.calibrationConstantsDict[
           "processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToHadGeVCalibration']"] = hcalToHad
@@ -610,10 +627,12 @@ class CalibrationRun(object):
       self.calibrationConstantsDict[
           "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationEndCap']"] = ecalToHad
 
-      hcalToHadFom = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                truthEnergy, 'HCTH', hcalToHad, 'FOM', 'CSM']))
-      ecalToHadFom = float(convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                                truthEnergy, 'ECTH', ecalToHad, 'FOM', 'CSM']))
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, 'HCTH', hcalToHad, 'FOM', 'CSM'])
+      hcalToHadFom = float(res['Value'][1].split('\n')[0])
+      res = convert_and_execute(['python', pythonReadScript, calibrationFile,
+                                 truthEnergy, 'ECTH', ecalToHad, 'FOM', 'CSM'])
+      ecalToHadFom = float(res['Value'][1].split('\n')[0])
 
       fractionalError = max(abs(hcalToHadFom - truthEnergy), abs(ecalToHadFom - truthEnergy)) / truthEnergy
 
