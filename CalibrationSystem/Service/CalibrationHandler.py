@@ -91,8 +91,8 @@ class CalibrationRun(object):
     self.nHcalLayers = 44
     #  self.digitisationAccuracy = 0.05
     #  self.pandoraPFAAccuracy = 0.005
-    self.digitisationAccuracy = 0.5
-    self.pandoraPFAAccuracy = 0.25
+    self.digitisationAccuracy = 0.05
+    self.pandoraPFAAccuracy = 0.025
     self.stepResults = defaultdict(CalibrationResult)
     self.currentStage = 1
     self.currentPhase = CalibrationPhase.ECalDigi
