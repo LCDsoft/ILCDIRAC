@@ -188,7 +188,7 @@ class CalibrationRun(object):
     for curWorkerID in listOfNodesToSubmitTo:
       # get input files
       key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
-      lcioFiles = self.inputFiles[key][curWorkerID]
+      lcioFiles = self.inputFiles[curWorkerID]
 
       # create user job
       curJob = UserJob()
@@ -864,6 +864,33 @@ class CalibrationHandler(RequestHandler):
       result = cal.getNewPhotonLikelihood()
     return result
 
+  auth_getInputDataDict = ['authenticated']
+  types_getInputDataDict = [int, int]
+
+  def export_getInputDataDict(self, calibrationID, workerID):
+    """ Called by the worker node to retrieve the parameters for the next iteration of the calibration
+
+    :param int calibrationID: ID of the calibration being run on the worker
+    :returns: S_ERROR in case of error (e.g. inactive calibration asking for params), S_OK with the parameter set and the id of the current step
+    :rtype: dict
+    """
+    cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
+    if not cal:
+      gLogger.error("CalibrationID is not in active calibrations:",
+                    "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
+                                                               calibrationID))
+      result = S_ERROR("calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
+                       % calibrationID)
+    else:
+      if workerID >= cal.numberOfJobs:
+        errMsg = 'Value of workerID is larger than number of job in this calibration: calibID: %s, nJobs: %s, workerID: %s' % (
+            calibrationID, cal.numberOfJobs, workerID)
+        gLogger.error(errMsg)
+        return S_ERROR(errMsg)
+      else:
+        result = cal.InputFiles[workerID]
+    return result
+
   auth_resubmitJobs = ['authenticated']
   types_resubmitJobs = [list]
   def export_resubmitJobs(self, failedJobs):
@@ -1042,9 +1069,9 @@ class CalibrationHandler(RequestHandler):
     from DIRAC.Core.Security.ProxyInfo import getProxyInfo
     return S_OK(getProxyInfo())
 
-  def __regroupInputFile(self, inputFileDir, numberOfJobs):
+  def __regroupInputFile(self, inputFiles, numberOfJobs):
     """ Function to regroup inputFiles dict according to numberOfJobs. Output dict will have a format:
-    list of files = outDict[fileType][iJob]
+    list of files = outDict[iJob][fileType]
 
     :param inputFiles: Input list of files for the calibration. Dictionary.
     :type inputFiles: `python:dict`
@@ -1052,8 +1079,8 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK with 'Value' element being a new regroupped dict or S_ERROR
     :rtype: dict
     """
-    outDict = {}
-    for iKey, iList in inputFileDir.iteritems():
+    tmpDict = {}
+    for iKey, iList in inputFiles.iteritems():
       if len(iList) < numberOfJobs:
         return S_ERROR('Too many jobs for provided input data. numberOfJobs==%s which is larger than number of availables files for key %s: nFiles==%s' % (numberOfJobs, iKey, len(iList)))
       nFilesPerJob = int(len(iList) / numberOfJobs)
@@ -1066,7 +1093,14 @@ class CalibrationHandler(RequestHandler):
           newDict[i].append(iList[j])
         if i < nLeftoverFiles:
           newDict[i].append(iList[nFilesPerJob * numberOfJobs + i])
-      outDict[iKey] = newDict
+      tmpDict[iKey] = newDict
+
+    outDict = {}
+    for iJob in range(0, numberOfJobs):
+      newDict = {}
+      for iType in inputFiles.keys().lower():
+        newDict[iType] = tmpDict[iType][iJob]
+      outDict[iJob] = newDict
 
     return S_OK(outDict)
 

@@ -64,9 +64,9 @@ elif Mean_Or_Calibration_Constant == 'Calibration_Constant':
     Calibration_Text += 'CalibrECal                                         : ' + \
         str(float(Energy_To_Calibrate) * float(Initial_Calibration_Constant) / float(Mean)) + '\n\n'
 
-    if ECal_Barrel_Or_EndCap == 'Barrel':
+    if ECal_Barrel_Or_EndCap.lower() == 'barrel':
         Calibration_Text += 'CalibrECalBarrel '
-    elif ECal_Barrel_Or_EndCap == 'EndCap':
+    elif ECal_Barrel_Or_EndCap.lower() == 'endcap':
         Calibration_Text += 'CalibrECalEndCap '
 
     Calibration_Text += 'from digitisation program.' + '\n'

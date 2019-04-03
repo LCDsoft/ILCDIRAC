@@ -286,22 +286,27 @@ class Calibration(MarlinAnalysis):
     :returns: S_OK or S_ERROR
     :rtype: dict
     """
-    #FIXME TODO implementation assumes that slcio file names should containt a specific word among: ['muon','kaon','gamma','zuds']
-    #           this require adding functionality of renaming of the input files at some point
 
-    patternToSearchFor = ''
     pandoraSettingsFile = ''
-    patternToSearchFor = CalibrationPhase.fileKeyFromPhase(self.currentPhase).lower()
     if self.currentStage in [1, 3]:  # FIXME hardcoded values are bad...
       pandoraSettingsFile = 'PandoraSettings/PandoraSettingsDefault.xml'
     else:
       pandoraSettingsFile = 'CalibrationPandoraSettings/PandoraSettingsPhotonTraining.xml'
 
-    # FIXME I don't need to search for any pattern here. I already preselect files when submit jobs!!!
-    filesToRunOn = [x for x in allSlcioFiles if patternToSearchFor in x.lower()]
+    iType = CalibrationPhase.fileKeyFromPhase(self.currentPhase).lower()
+    inputDataDict = self.cali.getInputDataDict()
+    if iType not in inputDataDict.keys():
+      errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (Type)
+      LOG.error(errorMessage)
+      return S_ERROR(errorMessage)
+    filesToRunOn = self.cali.getInputDataDict()[iType]
     if len(filesToRunOn) == 0:
-      errorMessage = 'Empty list of or incorrectly named input slcio-files. Search pattern: <%s>. nInputFile: %d' % (
-          patternToSearchFor, len(allSlcioFiles))
+      errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (Type)
+      LOG.error(errorMessage)
+      return S_ERROR(errorMessage)
+    if not set(filesToRunOn).issubset(allSlcioFiles):
+      errorMessage = ('Cannot find all input data on the worker.\nNeeded files for phase: %s\nAll copied files: %s'
+                      % (filesToRunOn, allSlcioFiles))
       LOG.error(errorMessage)
       return S_ERROR(errorMessage)
 

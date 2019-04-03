@@ -138,6 +138,9 @@ class CalibrationClient(object):
     self.parameterSet = None
     self.log = gLogger.getSubLogger("CalibrationClient")
 
+  def getInputDataDict(self):
+    return self.calibrationService.getInputDataDict(self.calibrationID, self.workerID)
+
   def requestNewParameters(self):
     """ Fetches the new parameter set from the service and updates the step counter in this object with the new value.
     Throws a ValueError if the calibration ended already.
