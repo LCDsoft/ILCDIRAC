@@ -13,6 +13,7 @@ from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
     assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
     assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls, \
     assertDiracFails
+from DIRAC import S_OK, S_ERROR
 
 __RCSID__ = "$Id$"
 
@@ -55,18 +56,21 @@ def calibHandler():
   CalibrationHandler.activeCalibrations = {}
   CalibrationHandler.calibrationCounter = 0
 
-def mimic_convert_and_execute(inList):
+
+def mimic_convert_and_execute(inList, _=''):
   from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
   if True in ['ECal_Digi_Extract.py' in str(iEl) for iEl in inList] and True in ['Mean' in str(iEl) for iEl in inList]:
-    return CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ECalDigi)
+    return S_OK((0, '%s\n' % CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ECalDigi)))
   elif True in ['HCal_Digi_Extract.py' in str(iEl) for iEl in inList] and True in ['Mean' in str(iEl) for iEl in inList]:
-    return CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HCalDigi)
+    return S_OK((0, '%s\n' % CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HCalDigi)))
   elif True in ['EM_Extract.py' in str(iEl) for iEl in inList] and True in ['Mean' in str(iEl) for iEl in inList]:
-    return CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ElectroMagEnergy)
+    return S_OK((0, '%s\n' % CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ElectroMagEnergy)))
   elif True in ['Had_Extract.py' in str(iEl) for iEl in inList] and True in ['FOM' in str(iEl) for iEl in inList]:
-    return CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HadronicEnergy)
-  else:
+    return S_OK((0, '%s\n' % CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HadronicEnergy)))
+  elif _ != '':
     return 6.66
+  else:
+    return S_OK((0, '6.66\n'))
 
 
 def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
@@ -113,17 +117,17 @@ def test_regroupInputFile(calibHandler, mocker):
   res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
   assert res['OK']
   groupedDict = res['Value']
-  for iKey in groupedDict.keys():
-    assert len(groupedDict[iKey][0]) == 2
-    assert len(groupedDict[iKey][1]) == 1
+  for iKey in inputFileDir.keys():
+    assert len(groupedDict[0][iKey]) == 2
+    assert len(groupedDict[1][iKey]) == 1
 
   numberOfJobs = 2
   res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
   assert res['OK']
   groupedDict = res['Value']
-  for iKey in groupedDict.keys():
-    assert len(groupedDict[iKey][0]) == 3
-    assert len(groupedDict[iKey][1]) == 2
+  for iKey in inputFileDir.keys():
+    assert len(groupedDict[0][iKey]) == 3
+    assert len(groupedDict[1][iKey]) == 2
 
 
 def test_export_createCalibration_wrongInputFiles(calibHandler, mocker):

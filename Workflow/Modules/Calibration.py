@@ -294,11 +294,18 @@ class Calibration(MarlinAnalysis):
       pandoraSettingsFile = 'CalibrationPandoraSettings/PandoraSettingsPhotonTraining.xml'
 
     iType = CalibrationPhase.fileKeyFromPhase(self.currentPhase).lower()
-    inputDataDict = self.cali.getInputDataDict()
+    res = self.cali.getInputDataDict()
+    if not res['OK']:
+      errorMessage = 'Somemethignwent wrong during retrieveing inputDataDict! Msg: %s' % (res['Message'])
+      LOG.error(errorMessage)
+      return S_ERROR(errorMessage)
+
+    inputDataDict = res['Value']
     if iType not in inputDataDict.keys():
       errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (Type)
       LOG.error(errorMessage)
       return S_ERROR(errorMessage)
+
     filesToRunOn = self.cali.getInputDataDict()[iType]
     if len(filesToRunOn) == 0:
       errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (Type)

@@ -188,7 +188,10 @@ class CalibrationRun(object):
     for curWorkerID in listOfNodesToSubmitTo:
       # get input files
       key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
-      lcioFiles = self.inputFiles[curWorkerID]
+      fileList = []
+      for _, iList in self.inputFiles[curWorkerID].iteritems():
+        fileList += iList
+      lcioFiles = fileList
 
       # create user job
       curJob = UserJob()
@@ -715,7 +718,11 @@ class CalibrationHandler(RequestHandler):
           'Wrong input data. Dict inputFiles should have following keys: %s; provided dictionary has keys: %s'
           % (inputFileTypes, inputFiles.keys()))
 
-    res = self.__regroupInputFile(inputFiles, numberOfJobs)
+    inputFileDictLoweredKeys = {}
+    for iKey, iList in inputFiles.iteritems():
+      inputFileDictLoweredKeys[iKey.lower()] = iList
+
+    res = self.__regroupInputFile(inputFileDictLoweredKeys, numberOfJobs)
     if not res['OK']:
       return res
     groupedInputFiles = res['Value']
@@ -888,7 +895,7 @@ class CalibrationHandler(RequestHandler):
         gLogger.error(errMsg)
         return S_ERROR(errMsg)
       else:
-        result = cal.InputFiles[workerID]
+        result = cal.inputFiles[workerID]
     return result
 
   auth_resubmitJobs = ['authenticated']
@@ -901,6 +908,7 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK if successful, else a S_ERROR with a pair (errorstring, list_of_failed_id_pairs)
     :rtype: dict
     """
+
     failedPairs = []
     for calibrationID, workerID in failedJobs:
       if calibrationID not in CalibrationHandler.activeCalibrations:
@@ -1098,7 +1106,7 @@ class CalibrationHandler(RequestHandler):
     outDict = {}
     for iJob in range(0, numberOfJobs):
       newDict = {}
-      for iType in inputFiles.keys().lower():
+      for iType in [x.lower() for x in inputFiles.keys()]:
         newDict[iType] = tmpDict[iType][iJob]
       outDict[iJob] = newDict
 

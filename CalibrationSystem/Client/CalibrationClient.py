@@ -155,7 +155,8 @@ class CalibrationClient(object):
     if res['OK']:
       returnValue = res['Value']
       if not set(['calibrationIsFinished', 'parameters', 'currentPhase', 'currentStage']).issubset(returnValue.keys()):
-        self.log.error('Corrupted structure of outcome data after request to Calibration service for new parameters')
+        self.log.error(
+            'Corrupted structure of outcome data after request to Calibration service for new parameters. Present keys: %s' % returnValue.keys())
         # FIXME should we return None in this case?
         return None
       self.currentPhase = returnValue['currentPhase']
