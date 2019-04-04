@@ -19,7 +19,7 @@ def find_between(s, first, last):
 Calibration_File_And_Path = sys.argv[1]
 Energy_To_Calibrate = sys.argv[2]
 Initial_Calibration_Constant = sys.argv[3]
-HCal_Barrel_Or_EndCap = sys.argv[4]
+HCal_Barrel_Or_EndCap = sys.argv[4].lower()
 Mean_Or_Calibration_Constant = sys.argv[5]
 
 # Mean is the last value for mean of Gaussian fit written to the Calibration.txt file.
@@ -29,14 +29,14 @@ Mean = '1.0'
 with open(Calibration_File_And_Path, 'r') as f:
     searchlines = f.readlines()
     for line in searchlines:
-        if HCal_Barrel_Or_EndCap == 'Barrel':
+        if HCal_Barrel_Or_EndCap == 'barrel':
             if 'HCal Barrel Digi Mean' in line:
                 Mean = float(find_between(line, ' : ', ' :'))
-        elif HCal_Barrel_Or_EndCap == 'EndCap':
+        elif HCal_Barrel_Or_EndCap == 'endcap':
             if 'HCal EndCap Digi Mean' in line:
                 Mean = float(find_between(line, ' : ', ' :'))
         else:
-            print 'Please select Barrel or EndCap'
+            print 'Please select Barrel or Endcap'
 
 if Mean_Or_Calibration_Constant == 'Mean':
     print Mean
@@ -47,9 +47,9 @@ elif Mean_Or_Calibration_Constant == 'Calibration_Constant':
     Calibration_Text = '_____________________________________________________________________________________' + '\n'
     Calibration_Text += 'HCal_Digi_Extract.py retrieving '
 
-    if HCal_Barrel_Or_EndCap == 'Barrel':
+    if HCal_Barrel_Or_EndCap == 'barrel':
         Calibration_Text += 'CalibrHCalBarrel '
-    elif HCal_Barrel_Or_EndCap == 'EndCap':
+    elif HCal_Barrel_Or_EndCap == 'endcap':
         Calibration_Text += 'CalibrHCalEndCap '
 
     Calibration_Text += 'from digitisation program.' + '\n'

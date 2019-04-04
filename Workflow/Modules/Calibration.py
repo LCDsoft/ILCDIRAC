@@ -210,9 +210,11 @@ class Calibration(MarlinAnalysis):
         # TODO this depends from the name inside steering file... And it's even more difficult for FCCee case
         pandoraSettingsFile = readValueFromSteeringFile(
             self.SteeringFile, "processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']")
+	pandoraSettingsFile = pandoraSettingsFile.strip()
+
         updateSteeringFile(
             pandoraSettingsFile, pandoraSettingsFile,
-            {"processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']":
+            {"algorithm[@type='PhotonReconstruction']/HistogramFile":
              "newPhotonLikelihood.xml"})
 
       #TODO clean up Marlin steering file - we don't need a lot of processors for calibration
@@ -294,11 +296,14 @@ class Calibration(MarlinAnalysis):
       pandoraSettingsFile = 'CalibrationPandoraSettings/PandoraSettingsPhotonTraining.xml'
 
     iType = CalibrationPhase.fileKeyFromPhase(self.currentPhase).lower()
+    gLogger.info('SASHA iType: %s' % iType)
     res = self.cali.getInputDataDict()
     if not res['OK']:
       errorMessage = 'Somemethignwent wrong during retrieveing inputDataDict! Msg: %s' % (res['Message'])
       LOG.error(errorMessage)
       return S_ERROR(errorMessage)
+
+    gLogger.info('SASHA self.cali.getInputDataDict() %s' % res)
 
     inputDataDict = res['Value']
     if iType not in inputDataDict.keys():
@@ -306,7 +311,11 @@ class Calibration(MarlinAnalysis):
       LOG.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    filesToRunOn = self.cali.getInputDataDict()[iType]
+    res = resolveIFpaths(inputDataDict[iType])
+    if not res['OK']:
+      LOG.error("Failed to resolve path to input slcio files: %s" % res)
+      return res
+    filesToRunOn = res['Value']
     if len(filesToRunOn) == 0:
       errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (Type)
       LOG.error(errorMessage)

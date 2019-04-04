@@ -20,7 +20,7 @@ Calibration_File_And_Path = sys.argv[1]
 Energy_To_Calibrate = sys.argv[2]
 Initial_Calibration_Constant = sys.argv[3]
 Mean_Or_Calibration_Constant = sys.argv[4]
-ECal_Barrel_Or_EndCap = sys.argv[5]
+ECal_Barrel_Or_EndCap = sys.argv[5].lower()
 
 # Mean is the last value for mean of Gaussian fit written to the Calibration.txt file.
 
@@ -44,7 +44,7 @@ with open(Calibration_File_And_Path, 'r') as f:
         else:
             startOfTheBlock = False
 
-        if ECal_Barrel_Or_EndCap.lower() == blockType:
+        if ECal_Barrel_Or_EndCap == blockType:
             if 'ECal Digi Mean' in line:
                 Mean = float(find_between(line, ' : ', ' :'))
 
@@ -64,9 +64,9 @@ elif Mean_Or_Calibration_Constant == 'Calibration_Constant':
     Calibration_Text += 'CalibrECal                                         : ' + \
         str(float(Energy_To_Calibrate) * float(Initial_Calibration_Constant) / float(Mean)) + '\n\n'
 
-    if ECal_Barrel_Or_EndCap.lower() == 'barrel':
+    if ECal_Barrel_Or_EndCap == 'barrel':
         Calibration_Text += 'CalibrECalBarrel '
-    elif ECal_Barrel_Or_EndCap.lower() == 'endcap':
+    elif ECal_Barrel_Or_EndCap == 'endcap':
         Calibration_Text += 'CalibrECalEndCap '
 
     Calibration_Text += 'from digitisation program.' + '\n'

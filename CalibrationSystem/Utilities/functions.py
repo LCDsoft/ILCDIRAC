@@ -169,6 +169,8 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup):
                      % (iPar, inFileName, outFileName))
     else:
       print('%s:\t"%s" --> "%s"' % (iPar, iElement.text, iVal))
+      if isinstance(iVal, (float, int)):
+	iVal = str(iVal)
       iElement.text = iVal
 
   res = tree.write(outFileName)

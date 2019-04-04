@@ -328,38 +328,26 @@ class CalibrationRun(object):
     return result
 
   def __mergePandoraLikelihoodXmlFiles(self):
+    gLogger.info('SASHA __mergePandoraLikelihoodXmlFiles')
     folder = "calib%s/stage%s/phase%s/" % (self.calibrationID, self.currentStage, self.currentPhase)
     if not os.path.exists(folder):
       return S_ERROR('no directory found: %s' % folder)
 
     filesToMerge = searchFilesWithPattern(folder, '*.xml')
+    gLogger.info('SASHA filesToMerge: %s' % filesToMerge)
     outFileName = "calib%s/newPandoraLikelihoodData.xml" % (self.calibrationID)
+    gLogger.info('SASHA outFileName: %s' % outFileName)
 
-    #TODO how to get platform (e.g. x86_64-slc5-gcc43-opt) and appversion (e.g. ILCSoft-2019-02-20_gcc62)?
-    #FIXME maybe one can use here ilcsoftpath? or is it better to extract path from Configuration Service?
-    #FIXME platform and appversion are hardcoded...
-    platform = 'x86_64-slc5-gcc43-opt'
-    appversion = 'ILCSoft-2019-02-20_gcc62'
-    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
-                                                                              'pandora_calibration_scripts', appversion), None)
-    likelihoodMergeScript = os.path.join(scriptPath, 'MergePandoraLikelihoodData.py')
+    from ILCDIRAC.CalibrationSystem.Utilities.mergePandoraLikelihoodData import mergeLikelihoods
+    res = mergeLikelihoods(filesToMerge, outFileName)
+    if not res['OK']:
+      return res
 
-    comm = 'python %s "main([%s],\'%s\')"' % (likelihoodMergeScript, ', '.join(("'%s'" % (iFile))
-                                                                               for iFile in filesToMerge), outFileName)
-    res = shellCall(0, comm)
-    incorrectSyntaxError = False
-    if res['OK']:
-      if len(res['Value']) >= 2:
-        if 'Error' in res['Value'][1]:
-          incorrectSyntaxError = True
-
-    if res['OK'] and not incorrectSyntaxError:
+    if os.path.exists(outFileName):
       self.newPhotonLikelihood = binaryFileToString(outFileName)
-
-    if incorrectSyntaxError:
-      return S_ERROR(res['Value'][1])
-
-    return res
+      return S_OK()
+    else:
+      return S_ERROR('Failed to merge photon likelihoods')
 
   def endCurrentStep(self):
     """ Calculates the new parameter set based on the results from the computations and prepares the object
@@ -395,7 +383,7 @@ class CalibrationRun(object):
     import ILCDIRAC.CalibrationSystem.Utilities as utilities
     pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
 
-    gLogger.info('Python_Read_Scripts: %s' % pythonReadScriptPath)
+    gLogger.info('SASHA Python_Read_Scripts: %s' % pythonReadScriptPath)
 
     truthEnergy = CalibrationPhase.sampleEnergyFromPhase(self.currentPhase)
 
@@ -411,15 +399,15 @@ class CalibrationRun(object):
                                  '-i', self.ecalBarrelCosThetaRange[0], '-j', self.ecalBarrelCosThetaRange[1]],
                                 ilcSoftInitScript)
 
-      gLogger.info('res from first convert_and_execute: %s' % res)
+      gLogger.info('SASHA res from first convert_and_execute: %s' % res)
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'EndCap',
                                  '-i', self.ecalEndcapCosThetaRange[0], '-j', self.ecalEndcapCosThetaRange[1]],
                                 ilcSoftInitScript)
 
-      gLogger.info('res from second convert_and_execute: %s' % res)
-      gLogger.info('self.calibrationConstantsDict: %s' % self.calibrationConstantsDict)
+      gLogger.info('SASHA res from second convert_and_execute: %s' % res)
+      gLogger.info('SASHA self.calibrationConstantsDict: %s' % self.calibrationConstantsDict)
 
       # this parameter is written in format "value value" in the xml steering file
       prevStepCalibConstBarrel = float(self.calibrationConstantsDict[
@@ -479,14 +467,14 @@ class CalibrationRun(object):
                                  'Calibration_Constant'])
       calibConstBarrel = float(res['Value'][1].split('\n')[0])
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                 truthEnergy, prevStepCalibConstEndcap, 'Endcap',
+                                 truthEnergy, prevStepCalibConstEndcap, 'EndCap',
                                  'Calibration_Constant'])
       calibConstEndcap = float(res['Value'][1].split('\n')[0])
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
                                  truthEnergy, prevStepCalibConstBarrel, 'Barrel', 'Mean'])
       meanBarrel = float(res['Value'][1].split('\n')[0])
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                 truthEnergy, prevStepCalibConstEndcap, 'Endcap', 'Mean'])
+                                 truthEnergy, prevStepCalibConstEndcap, 'EndCap', 'Mean'])
       meanEndcap = float(res['Value'][1].split('\n')[0])
 
       self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALBarrel']"] = calibConstBarrel
@@ -649,7 +637,9 @@ class CalibrationRun(object):
         else:
           return S_ERROR('%s' % self.currentStage)
     elif self.currentPhase == CalibrationPhase.PhotonTraining and self.currentStage == 2:
-      self.__mergePandoraLikelihoodXmlFiles()
+      res = self.__mergePandoraLikelihoodXmlFiles()
+      if not res['OK']:
+	return res
       self.currentStage += 1
       self.currentPhase = CalibrationPhase.ECalDigi
     else:
@@ -731,6 +721,9 @@ class CalibrationHandler(RequestHandler):
     calibrationID = CalibrationHandler.calibrationCounter
     newRun = CalibrationRun(calibrationID, steeringFile, ilcsoftPath, groupedInputFiles,
                             numberOfJobs, marlinVersion, detectorModel)
+    # TODO FIXME stage and phase is setup for debugging
+    #newRun.currentStage = 2
+    #newRun.currentPhase = 5
     CalibrationHandler.activeCalibrations[calibrationID] = newRun
     #newRun.submitJobs(calibrationID)
     #return S_OK(calibrationID)
@@ -893,9 +886,10 @@ class CalibrationHandler(RequestHandler):
         errMsg = 'Value of workerID is larger than number of job in this calibration: calibID: %s, nJobs: %s, workerID: %s' % (
             calibrationID, cal.numberOfJobs, workerID)
         gLogger.error(errMsg)
-        return S_ERROR(errMsg)
+        result = S_ERROR(errMsg)
       else:
-        result = cal.inputFiles[workerID]
+        result = S_OK(cal.inputFiles[workerID])
+
     return result
 
   auth_resubmitJobs = ['authenticated']
