@@ -136,7 +136,7 @@ class CalibrationClient(object):
     self.currentStage = 1
     self.calibrationService = RPCClient('Calibration/Calibration')
     self.parameterSet = None
-    self.log = gLogger.getSubLogger("CalibrationClient")
+    self.log = gLogger.getSubLogger('CalibrationSystem/%s' % self.__class__.__name__)
 
   def getInputDataDict(self):
     return self.calibrationService.getInputDataDict(self.calibrationID, self.workerID)
@@ -149,9 +149,9 @@ class CalibrationClient(object):
     or None if no new parameters are available yet
     :rtype: list
     """
-    gLogger.info('execute requestNewParameters')
+    self.log.info('execute requestNewParameters')
     res = self.calibrationService.getNewParameters(self.calibrationID, self.currentStep)
-    gLogger.info('requestNewParameters: res: %s' % res)
+    self.log.info('requestNewParameters: res: %s' % res)
     if res['OK']:
       returnValue = res['Value']
       if not set(['calibrationIsFinished', 'parameters', 'currentPhase', 'currentStage']).issubset(returnValue.keys()):

@@ -84,6 +84,8 @@ def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
 
   newRun = CalibrationRun(1, 'dummy_steeringFile', 'dummy_ilcsoftPath', [
                           'dummy_inputFiles1', 'dummy_inputFiles2'], 1, '', '')
+  mocker.patch.object(CalibrationRun, '_CalibrationRun__mergePandoraLikelihoodXmlFiles',
+                      new=Mock(return_value={'OK': True}))
   newRun.calibrationConstantsDict = dict(readParameterDict)
   stageIDSequence = []
   phaseIDSequence = []

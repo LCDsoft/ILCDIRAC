@@ -39,7 +39,6 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSte
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 
 __RCSID__ = '$Id$'
-LOG = gLogger.getSubLogger(__name__)
 
 class Calibration(MarlinAnalysis):
   """Define the Calibration part of the workflow
@@ -54,6 +53,7 @@ class Calibration(MarlinAnalysis):
     self.calibrationID = None
     self.workerID = None
     self.cali = None
+    self.log = gLogger.getSubLogger('%s' % self.__class__.__name__)
 
   def runIt(self):
     """
@@ -77,11 +77,11 @@ class Calibration(MarlinAnalysis):
     elif not self.applicationLog:
       self.result = S_ERROR('No Log file provided')
     if not self.result['OK']:
-      LOG.error("Failed to resolve input parameters:", self.result["Message"])
+      self.log.error("Failed to resolve input parameters:", self.result["Message"])
       return self.result
 
     if not self.workflowStatus['OK'] or not self.stepStatus['OK']:
-      LOG.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
+      self.log.verbose('Workflow status = %s, step status = %s' % (self.workflowStatus['OK'], self.stepStatus['OK']))
       return S_OK('%s should not proceed as previous step did not end properly' % self.applicationName)
 
     #get the path to the detector model, either local or from the software
@@ -89,29 +89,29 @@ class Calibration(MarlinAnalysis):
     if self.detectorModel:
       resXML = self._getDetectorXML()
       if not resXML['OK']:
-        LOG.error("Could not obtain the detector XML file: ", resXML["Message"])
+        self.log.error("Could not obtain the detector XML file: ", resXML["Message"])
         return resXML
       compactFile = resXML['Value']
 
     res = getEnvironmentScript(self.platform, "marlin", self.applicationVersion, self.getEnvScript)
     if not res['OK']:
-      LOG.error("Failed to get the env script")
+      self.log.error("Failed to get the env script")
       return res
     env_script_path = res["Value"]
 
     res = resolveIFpaths(self.InputData)
     if not res['OK']:
-      LOG.error("Failed to resolve path to input slcio files: %s" % res)
+      self.log.error("Failed to resolve path to input slcio files: %s" % res)
       return res
     listofslcio = res['Value']
-    LOG.info('SASHA resolved input data: %s' % listofslcio)
+    self.log.info('SASHA resolved input data: %s' % listofslcio)
 
     steeringfiledirname = ''
     res = getSteeringFileDirName(self.platform, "marlin", self.applicationVersion)
     if res['OK']:
       steeringfiledirname = res['Value']
     else:
-      LOG.warn('Could not find the steering file directory', res['Message'])
+      self.log.warn('Could not find the steering file directory', res['Message'])
 
     ##Handle PandoraSettings.xml
     # TODO directory below is detector dependent... implement it
@@ -122,7 +122,7 @@ class Calibration(MarlinAnalysis):
           shutil.copy(os.path.join(steeringfiledirname, pandorasettings),
                       os.path.join(os.getcwd(), pandorasettings))
         except EnvironmentError, x:
-          LOG.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
+          self.log.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
 
     ##Handle PandoraSettingsPhotonTraining.xml which is used for photon training stage
     pandorasettings = 'CalibrationPandoraSettings/PandoraSettingsPhotonTraining.xml'
@@ -135,7 +135,7 @@ class Calibration(MarlinAnalysis):
           shutil.copy(os.path.join(photontrainingfiledirname, pandorasettings),
                       fullPathPandoraSettings)
         except EnvironmentError, x:
-          LOG.warn('Could not copy and prepare PandoraSettingsPhotonTraining.xml, exception: %s' % x)
+          self.log.warn('Could not copy and prepare PandoraSettingsPhotonTraining.xml, exception: %s' % x)
     # rename output xml-file from photon training stage
     updateSteeringFile(pandorasettings, pandorasettings,
                        {"algorithm[@type='PhotonReconstruction']/HistogramFile":
@@ -147,12 +147,12 @@ class Calibration(MarlinAnalysis):
           self.SteeringFile = os.path.join(steeringfiledirname, self.SteeringFile)
           # default steering file doesn't have PfoAnalysis processor
     if not self.SteeringFile:
-      LOG.error("Steering file not defined, this shouldn't happen!")
+      self.log.error("Steering file not defined, this shouldn't happen!")
       return S_ERROR("Could not find steering file")
     if not os.path.exists(self.SteeringFile):
-      LOG.error("Steering is not found!")
+      self.log.error("Steering is not found!")
       return S_ERROR("Could not find steering file")
-    LOG.info("Steering file: %s" % self.SteeringFile)
+    self.log.info("Steering file: %s" % self.SteeringFile)
 
     # check if steering file contains PfoAnalysis processor needed for calibration
     if readValueFromSteeringFile(self.SteeringFile, "processor[@type='PfoAnalysis']") is None:
@@ -160,7 +160,7 @@ class Calibration(MarlinAnalysis):
 
     res = self.prepareMARLIN_DLL(env_script_path)
     if not res['OK']:
-      LOG.error('Failed building MARLIN_DLL:', res['Message'])
+      self.log.error('Failed building MARLIN_DLL:', res['Message'])
       self.setApplicationStatus('Failed to setup MARLIN_DLL')
       return S_ERROR('Something wrong with software installation')
     marlin_dll = res["Value"]
@@ -168,12 +168,12 @@ class Calibration(MarlinAnalysis):
     while True:
       calibrationParameters = self.cali.requestNewParameters()
       while calibrationParameters is None:
-        LOG.notice("Waiting for new parameters set")
+        self.log.notice("Waiting for new parameters set")
         wasteCPUCycles(10)
         calibrationParameters = self.cali.requestNewParameters()
 
       if calibrationParameters['calibrationIsFinished']:
-        LOG.notice("Calibration finished")
+        self.log.notice("Calibration finished")
         break
 
       #  print('\nstepID: %s' % self.currentStep)
@@ -190,20 +190,20 @@ class Calibration(MarlinAnalysis):
       if res['OK']:
         parameterDict = res['Value']
       else:
-        LOG.error('Problem while executing resolveInputSlcioFilesAndAddToParameterDict: %s' % res['Message'])
+        self.log.error('Problem while executing resolveInputSlcioFilesAndAddToParameterDict: %s' % res['Message'])
         return res
       print('DEBUG_CALIB: parameterDict AFTER resolve: %s' % parameterDict)
 
       steeringFileToRun = 'marlinSteeringFile_%s_%s_%s.xml' % (self.currentStage, self.currentPhase, self.currentStep)
       res = updateSteeringFile(self.SteeringFile, steeringFileToRun, parameterDict)
       if not res['OK']:
-        LOG.error('Error while updateing steering file. Error message: %s' % res['Message'])
+        self.log.error('Error while updateing steering file. Error message: %s' % res['Message'])
         return res
 
       if self.currentStage == 3 and not os.path.exists('newPhotonLikelihood.xml'):
         newPhotonLikelihood = self.cali.requestNewPhotonLikelihood()
         while newPhotonLikelihood is None:
-          LOG.notice("Waiting for new photon likelihood file for stage 3")
+          self.log.notice("Waiting for new photon likelihood file for stage 3")
           wasteCPUCycles(10)
           newPhotonLikelihood = self.cali.requestNewPhotonLikelihood()
         stringToBinaryFile(newPhotonLikelihood, 'newPhotonLikelihood.xml')
@@ -218,11 +218,11 @@ class Calibration(MarlinAnalysis):
              "newPhotonLikelihood.xml"})
 
       #TODO clean up Marlin steering file - we don't need a lot of processors for calibration
-      LOG.notice("new set of calibration parameters: %r" % parameterDict)
+      self.log.notice("new set of calibration parameters: %r" % parameterDict)
 
       self.result = self.runScript(steeringFileToRun, env_script_path, marlin_dll)
       if not self.result['OK']:
-        LOG.error('Something wrong during running:', self.result['Message'])
+        self.log.error('Something wrong during running:', self.result['Message'])
         self.setApplicationStatus('Error during running %s' % self.applicationName)
         return S_ERROR('Failed to run %s' % self.applicationName)
 
@@ -230,7 +230,7 @@ class Calibration(MarlinAnalysis):
       #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
       resultTuple = self.result['Value']
       if not os.path.exists(self.applicationLog):
-        LOG.error("Something went terribly wrong, the log file is not present")
+        self.log.error("Something went terribly wrong, the log file is not present")
         self.setApplicationStatus('%s failed terribly, you are doomed!' % (self.applicationName))
         if not self.ignoreapperrors:
           return S_ERROR('%s did not produce the expected log' % (self.applicationName))
@@ -239,7 +239,7 @@ class Calibration(MarlinAnalysis):
       status = resultTuple
       # stdOutput = resultTuple[1]
       # stdError = resultTuple[2]
-      LOG.info("Status after the application execution is:", str(status))
+      self.log.info("Status after the application execution is:", str(status))
 
       outFile = "pfoAnalysis.root"
       if self.currentStage == 2:
@@ -296,34 +296,34 @@ class Calibration(MarlinAnalysis):
       pandoraSettingsFile = 'CalibrationPandoraSettings/PandoraSettingsPhotonTraining.xml'
 
     iType = CalibrationPhase.fileKeyFromPhase(self.currentPhase).lower()
-    gLogger.info('SASHA iType: %s' % iType)
+    self.log.info('SASHA iType: %s' % iType)
     res = self.cali.getInputDataDict()
     if not res['OK']:
       errorMessage = 'Somemethignwent wrong during retrieveing inputDataDict! Msg: %s' % (res['Message'])
-      LOG.error(errorMessage)
+      self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    gLogger.info('SASHA self.cali.getInputDataDict() %s' % res)
+    self.log.info('SASHA self.cali.getInputDataDict() %s' % res)
 
     inputDataDict = res['Value']
     if iType not in inputDataDict.keys():
       errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (Type)
-      LOG.error(errorMessage)
+      self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
     res = resolveIFpaths(inputDataDict[iType])
     if not res['OK']:
-      LOG.error("Failed to resolve path to input slcio files: %s" % res)
+      self.log.error("Failed to resolve path to input slcio files: %s" % res)
       return res
     filesToRunOn = res['Value']
     if len(filesToRunOn) == 0:
       errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (Type)
-      LOG.error(errorMessage)
+      self.log.error(errorMessage)
       return S_ERROR(errorMessage)
     if not set(filesToRunOn).issubset(allSlcioFiles):
       errorMessage = ('Cannot find all input data on the worker.\nNeeded files for phase: %s\nAll copied files: %s'
                       % (filesToRunOn, allSlcioFiles))
-      LOG.error(errorMessage)
+      self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
     parameterDict["global/parameter[@name='LCIOInputFiles']"] = ' '.join(filesToRunOn)
@@ -414,7 +414,7 @@ fi
 
     if not os.path.exists(marlinSteeringFile):
       script.close()
-      LOG.error("Steering file missing: %s" % (marlinSteeringFile))
+      self.log.error("Steering file missing: %s" % (marlinSteeringFile))
       return S_ERROR("SteeringFile is missing: %s" % (marlinSteeringFile))
     #check
     script.write('Marlin -c %s %s\n' % (marlinSteeringFile, self.extraCLIarguments))

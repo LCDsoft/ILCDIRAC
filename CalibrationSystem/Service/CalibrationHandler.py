@@ -77,6 +77,7 @@ class CalibrationRun(object):
 
   def __init__(self, calibrationID, steeringFile, ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, detectorModel):
     self.calibrationID = calibrationID
+    self.log = gLogger.getSubLogger('CalibrationSystem/%s_%s' % (self.__class__.__name__, self.calibrationID))
     self.steeringFile = steeringFile
     self.ilcsoftPath = ilcsoftPath
     self.inputFiles = inputFiles
@@ -120,7 +121,7 @@ class CalibrationRun(object):
     #to be accessed by the agent in the case of resubmission
 
   def readInitialParameterDict(self):
-    gLogger.info('running readInitialParameterDict')
+    self.log.info('running readInitialParameterDict')
     import ILCDIRAC.CalibrationSystem.Utilities as utilities
     from DIRAC.DataManagementSystem.Client.DataManager import DataManager
     datMan = DataManager()
@@ -128,7 +129,7 @@ class CalibrationRun(object):
     localSteeringFile = os.path.basename(self.steeringFile)
     if not res['OK'] or not os.path.exists(localSteeringFile):
       errMsg = 'Cannot copy Marlin steering file to read initial calibration constants. res: %' % res
-      gLogger.error(errMsg)
+      self.log.error(errMsg)
       return S_ERROR(errMsg)
 
     # FIXME this path will be different in production version probably... update it
@@ -136,7 +137,7 @@ class CalibrationRun(object):
     parDict = readParameterDict(parListFileName)
     res = readParametersFromSteeringFile(localSteeringFile, parDict)
     if not res['OK']:
-      gLogger.error('Failed to read parameters from steering file:', res['Message'])
+      self.log.error('Failed to read parameters from steering file:', res['Message'])
       return S_ERROR('Failed to read parameters from steering file')
 
     self.calibrationConstantsDict = parDict
@@ -173,7 +174,7 @@ class CalibrationRun(object):
     :rtype: dict
     """
 
-    gLogger.info('running submitJobs')
+    self.log.info('running submitJobs')
     self.readInitialParameterDict()
 
     dirac = DiracILC(True, 'some_job_repository.rep')
@@ -225,7 +226,7 @@ class CalibrationRun(object):
         calib.setSteeringFile(os.path.basename(self.steeringFile))
       res = curJob.append(calib)
       if not res['OK']:
-        gLogger.error('Append calib module to UserJob: error_msg: %s' % res['Message'])
+        self.log.error('Append calib module to UserJob: error_msg: %s' % res['Message'])
         return S_ERROR('Failed to setup Calibration worklow module. CalibrationID = %s; WorkerID = %s'
                        % (self.calibrationID, curWorkerID))
 
@@ -328,15 +329,15 @@ class CalibrationRun(object):
     return result
 
   def __mergePandoraLikelihoodXmlFiles(self):
-    gLogger.info('SASHA __mergePandoraLikelihoodXmlFiles')
+    self.log.info('SASHA __mergePandoraLikelihoodXmlFiles')
     folder = "calib%s/stage%s/phase%s/" % (self.calibrationID, self.currentStage, self.currentPhase)
     if not os.path.exists(folder):
       return S_ERROR('no directory found: %s' % folder)
 
     filesToMerge = searchFilesWithPattern(folder, '*.xml')
-    gLogger.info('SASHA filesToMerge: %s' % filesToMerge)
+    self.log.info('SASHA filesToMerge: %s' % filesToMerge)
     outFileName = "calib%s/newPandoraLikelihoodData.xml" % (self.calibrationID)
-    gLogger.info('SASHA outFileName: %s' % outFileName)
+    self.log.info('SASHA outFileName: %s' % outFileName)
 
     from ILCDIRAC.CalibrationSystem.Utilities.mergePandoraLikelihoodData import mergeLikelihoods
     res = mergeLikelihoods(filesToMerge, outFileName)
@@ -355,7 +356,7 @@ class CalibrationRun(object):
 
     :returns: None
     """
-    gLogger.info('Start execution of endCurrentStep')
+    self.log.info('Start execution of endCurrentStep')
 
     if self.calibrationFinished:
       return S_ERROR('Calibration is finished. Do not call endCurrentStep() anymore!')
@@ -367,7 +368,7 @@ class CalibrationRun(object):
     fileDir = "calib%s/" % (self.calibrationID)
     calibrationFile = os.path.join(fileDir, "Calibration.txt")  # as hardcoded in calibration binaries
 
-    gLogger.info('calibrationFile: %s' % calibrationFile)
+    self.log.info('calibrationFile: %s' % calibrationFile)
 
     #FIXME platform and appversion are hardcoded...
     platform = 'x86_64-slc5-gcc43-opt'
@@ -383,7 +384,7 @@ class CalibrationRun(object):
     import ILCDIRAC.CalibrationSystem.Utilities as utilities
     pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
 
-    gLogger.info('SASHA Python_Read_Scripts: %s' % pythonReadScriptPath)
+    self.log.info('SASHA Python_Read_Scripts: %s' % pythonReadScriptPath)
 
     truthEnergy = CalibrationPhase.sampleEnergyFromPhase(self.currentPhase)
 
@@ -399,15 +400,15 @@ class CalibrationRun(object):
                                  '-i', self.ecalBarrelCosThetaRange[0], '-j', self.ecalBarrelCosThetaRange[1]],
                                 ilcSoftInitScript)
 
-      gLogger.info('SASHA res from first convert_and_execute: %s' % res)
+      self.log.info('SASHA res from first convert_and_execute: %s' % res)
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'EndCap',
                                  '-i', self.ecalEndcapCosThetaRange[0], '-j', self.ecalEndcapCosThetaRange[1]],
                                 ilcSoftInitScript)
 
-      gLogger.info('SASHA res from second convert_and_execute: %s' % res)
-      gLogger.info('SASHA self.calibrationConstantsDict: %s' % self.calibrationConstantsDict)
+      self.log.info('SASHA res from second convert_and_execute: %s' % res)
+      self.log.info('SASHA self.calibrationConstantsDict: %s' % self.calibrationConstantsDict)
 
       # this parameter is written in format "value value" in the xml steering file
       prevStepCalibConstBarrel = float(self.calibrationConstantsDict[
@@ -430,9 +431,6 @@ class CalibrationRun(object):
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
                                  truthEnergy, prevStepCalibConstEndcap, 'Mean', 'Endcap'])
       meanEndcap = float(res['Value'][1].split('\n')[0])
-
-      # TODO remove this. this is for debugging
-      #  print('calibConstBarrel', calibConstBarrel)
 
       self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"] = '%s %s' % (
           calibConstBarrel, calibConstBarrel)
@@ -639,7 +637,7 @@ class CalibrationRun(object):
     elif self.currentPhase == CalibrationPhase.PhotonTraining and self.currentStage == 2:
       res = self.__mergePandoraLikelihoodXmlFiles()
       if not res['OK']:
-	return res
+        return res
       self.currentStage += 1
       self.currentPhase = CalibrationPhase.ECalDigi
     else:
@@ -664,6 +662,10 @@ class CalibrationHandler(RequestHandler):
     cls.activeCalibrations = {}
     cls.calibrationCounter = 0
     return S_OK()
+
+  #  def __init__(self):
+  #    super(CalibrationHandler, self).__init__()
+  #    self.log = gLogger.getSubLogger('CalibrationSystem/%s', self.__class__.__name__)
 
   def _getUsernameAndGroup(self):
     """ Returns name of the group and name of the user of the proxy the user is currently having
@@ -734,11 +736,11 @@ class CalibrationHandler(RequestHandler):
       return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
                      % (calibrationID))
     usernameAndGroup = usernameAndGroup['Value']
-    gLogger.info('Submitting jobs with proxyUserName = %s, proxyUserGroup = %s' %
-                 (usernameAndGroup['username'], usernameAndGroup['group']))
+    self.log.info('Submitting jobs with proxyUserName = %s, proxyUserGroup = %s' %
+                  (usernameAndGroup['username'], usernameAndGroup['group']))
     # executionLock = False) #pylint: disable=unexpected-keyword-arg
     res = newRun.submitJobs(proxyUserName=usernameAndGroup['username'], proxyUserGroup=usernameAndGroup['group'])
-    gLogger.info('results from submitJobs: %s' % res)
+    self.log.info('results from submitJobs: %s' % res)
     if _calibration_creation_failed(res):
       # FIXME: This should be treated, since the successfully submitted jobs will still run
       ret_val = S_ERROR('Submitting at least one of the jobs failed')
@@ -833,9 +835,9 @@ class CalibrationHandler(RequestHandler):
     """
     cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
     if not cal:
-      gLogger.error("CalibrationID is not in active calibrations:",
-                    "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
-                                                               calibrationID))
+      self.log.error("CalibrationID is not in active calibrations:",
+                     "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
+                                                                calibrationID))
       res = S_ERROR("calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
                        % calibrationID)
       return res
@@ -855,9 +857,9 @@ class CalibrationHandler(RequestHandler):
     """
     cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
     if not cal:
-      gLogger.error("CalibrationID is not in active calibrations:",
-                    "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
-                                                               calibrationID))
+      self.log.error("CalibrationID is not in active calibrations:",
+                     "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
+                                                                calibrationID))
       result = S_ERROR("calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
                        % calibrationID)
     else:
@@ -876,16 +878,16 @@ class CalibrationHandler(RequestHandler):
     """
     cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
     if not cal:
-      gLogger.error("CalibrationID is not in active calibrations:",
-                    "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
-                                                               calibrationID))
+      self.log.error("CalibrationID is not in active calibrations:",
+                     "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
+                                                                calibrationID))
       result = S_ERROR("calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
                        % calibrationID)
     else:
       if workerID >= cal.numberOfJobs:
         errMsg = 'Value of workerID is larger than number of job in this calibration: calibID: %s, nJobs: %s, workerID: %s' % (
             calibrationID, cal.numberOfJobs, workerID)
-        gLogger.error(errMsg)
+        self.log.error(errMsg)
         result = S_ERROR(errMsg)
       else:
         result = S_OK(cal.inputFiles[workerID])
