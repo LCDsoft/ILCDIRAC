@@ -232,7 +232,8 @@ class CalibrationRun(object):
 
       # submit jobs
       # FIXME we use local mode only for testing...
-      res = curJob.submit(dirac, mode='local')
+      # res = curJob.submit(dirac, mode='local')
+      res = curJob.submit(dirac)
       results.append(res)
 
     return results
