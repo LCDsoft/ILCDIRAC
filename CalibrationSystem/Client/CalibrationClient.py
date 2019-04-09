@@ -210,7 +210,7 @@ class CalibrationClient(object):
     return S_ERROR('Could not report result back to CalibrationService.')
 
 
-def createCalibration(ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
+def createCalibration(inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
   """ Starts a calibration.
 
   :param basestring steeringFile: Steering file used in the calibration
@@ -227,7 +227,7 @@ def createCalibration(ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, stee
     gLogger.error("inputFiles is not a dictionary")
     return S_ERROR("badParameter")
 
-  return calibrationService.createCalibration(ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel)
+  return calibrationService.createCalibration(inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel)
 
 
 #FIXME is this for testing?

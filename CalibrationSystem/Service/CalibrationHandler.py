@@ -24,6 +24,7 @@ from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.Calibration import Calibration
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
 
 __RCSID__ = "$Id$"
 
@@ -75,11 +76,12 @@ class CalibrationRun(object):
   the results of each step.
   """
 
-  def __init__(self, calibrationID, steeringFile, ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, detectorModel):
+  def __init__(self, calibrationID, steeringFile, inputFiles, numberOfJobs, marlinVersion, detectorModel):
     self.calibrationID = calibrationID
     self.log = gLogger.getSubLogger('CalibrationSystem/%s_%s' % (self.__class__.__name__, self.calibrationID))
     self.steeringFile = steeringFile
-    self.ilcsoftPath = ilcsoftPath
+    if 'LFN:' in self.steeringFile:
+      self.steeringFile = self.steeringFile.split(':')[1]
     self.inputFiles = inputFiles
     self.marlinVersion = marlinVersion
     self.detectorModel = detectorModel
@@ -89,7 +91,7 @@ class CalibrationRun(object):
     self.hcalBarrelCosThetaRange = [0.0, 1.0]
     self.hcalEndcapCosThetaRange = [0.0, 1.0]
     #TODO make these three value below configurable
-    self.nHcalLayers = 44
+    self.nHcalLayers = 60
     #  self.digitisationAccuracy = 0.05
     #  self.pandoraPFAAccuracy = 0.005
     self.digitisationAccuracy = 0.05
@@ -102,18 +104,16 @@ class CalibrationRun(object):
 
     self.numberOfJobs = numberOfJobs
     self.calibrationFinished = False
-    #  /cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-02-07/x86_64-slc6-gcc7-opt
-    self.platform = ''
-    self.appversion = ''
+    self.platform = 'x86_64-slc5-gcc43-opt'  # FIXME does it the default platform in CS?
+    self.appversion = 'ILCSoft-2019-02-20_gcc62'  # FIXME this has to be equal to self.marlinVersion. hardcoded for debugging
+    #  self.appversion = self.marlinVersion
     self.newPhotonLikelihood = None
     self.ops = Operations()
     self.calibrationConstantsDict = None
     self.softwareVersion = ''
-    if len(ilcsoftPath.split('/')) >= 7:
-      self.platform = ilcsoftPath.split('/')[6]
-      self.appversion = ilcsoftPath.split('/')[5]
-    #TODO use either line below or take it from configuration service
-    #  self.calibrationBinariesDir = os.path.join(ilcsoftPath, "PandoraAnalysis/HEAD/bin/")
+    # TODO user has to define this path
+    self.outputPath = ''
+
 
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
@@ -124,11 +124,11 @@ class CalibrationRun(object):
     self.log.info('running readInitialParameterDict')
     import ILCDIRAC.CalibrationSystem.Utilities as utilities
     from DIRAC.DataManagementSystem.Client.DataManager import DataManager
-    datMan = DataManager()
-    res = datMan.getFile(self.steeringFile)
+    dataMan = DataManager()
+    res = dataMan.getFile(self.steeringFile)
     localSteeringFile = os.path.basename(self.steeringFile)
-    if not res['OK'] or not os.path.exists(localSteeringFile):
-      errMsg = 'Cannot copy Marlin steering file to read initial calibration constants. res: %' % res
+    if ((not res['OK']) or (not os.path.exists(localSteeringFile))):
+      errMsg = 'Cannot copy Marlin steering file. res: %s' % res
       self.log.error(errMsg)
       return S_ERROR(errMsg)
 
@@ -175,20 +175,24 @@ class CalibrationRun(object):
     """
 
     self.log.info('running submitJobs')
-    self.readInitialParameterDict()
+    res = self.readInitialParameterDict()
+    self.log.info('read initial parameter dict')
+    if not res['OK']:
+      errMsg = 'Cannot read initial parameter dict. Message: %s' % res['Message']
+      return res
 
     dirac = DiracILC(True, 'some_job_repository.rep')
     results = []
-    # TODO do we need this functionality?
-    #  self.init_files()
 
     listOfNodesToSubmitTo = xrange(0, self.numberOfJobs)
     if idsOfWorkerNodesToSubmitTo is not None:
       listOfNodesToSubmitTo = idsOfWorkerNodesToSubmitTo
 
+    key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
+    self.log.verbose('fileKeyFromPhase: %s' % key)
+
     for curWorkerID in listOfNodesToSubmitTo:
       # get input files
-      key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
       fileList = []
       for _, iList in self.inputFiles[curWorkerID].iteritems():
         fileList += iList
@@ -199,17 +203,17 @@ class CalibrationRun(object):
       curJob.check = False  # Necessary to turn off user confirmation
       curJob.setName('CalibrationService_calid_%s_workerid_%s' % (self.calibrationID, curWorkerID))
       curJob.setJobGroup('CalibrationService_calib_job')
-      curJob.setCLICConfig(self.marlinVersion.rsplit("_", 1)[0])  # TODO check if this needed for this case
+      curJob.setCLICConfig(self.marlinVersion.rsplit("_", 1)[0])  # needed to copy files form ClicPerformance package
       # TODO implement using line below - choose of tracking, time window, etc.
       #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"
       #                             --Output_DST.LCIOOutputFile="+outputFile+"
       #                             --constant.CalorimeterIntegrationTimeWindow="+str(calorimeterIntegrationTimeWindow))
       # FIXME use default CPU time limit?
-      curJob.setCPUTime(60 * 60 * 24)
+      curJob.setCPUTime(24 * 60 * 60)
       # FIXME allow user to specify xml-files. CLIC detector have different name of PandoraLikelihhod file than CLD
       #  inputSB = ['GearOutput.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
       if self.steeringFile != '':
-        curJob.setInputSandbox([self.steeringFile])
+        curJob.setInputSandbox(['LFN:' + self.steeringFile])
       curJob.setInputData(lcioFiles)
       # TODO files to redirect for output: newPhotonLikelihood.xml, finalSteeringFile
       curJob.setOutputSandbox(['*.log', '*.xml', '*.txt'])
@@ -233,27 +237,10 @@ class CalibrationRun(object):
       # submit jobs
       # FIXME we use local mode only for testing...
       # res = curJob.submit(dirac, mode='local')
-      res = curJob.submit(dirac)
+      res = curJob.submit(dirac, mode='wms')
       results.append(res)
 
     return results
-
-  def init_files(self):
-    """ Initializes the necessary files etc.
-
-    :returns: nothing
-    :rtype: None
-    """
-    import tempfile
-    tmp_path = tempfile.mkdtemp()
-    #FIXME: Fix these to copy the actual directory
-    # Copy GearOutput.xml, PandoraSettingsDefault.xml, PandoraLikelihoodData9EBin.xml to tmp dir
-    GAMMA_FILES = execute_and_return_output(['python', 'Xml_Generation/countMatches.py',
-                                             GAMMA_PATH, SLCIO_FORMAT]).split(' ')
-    MUON_FILES = execute_and_return_output(['python', 'Xml_Generation/countMatches.py',
-                                            MUON_PATH, SLCIO_FORMAT]).split(' ')
-    KAON_FILES = execute_and_return_output(['python', 'Xml_Generation/countMatches.py',
-                                              KAON_PATH, SLCIO_FORMAT]).split(' ')
 
   def addResult(self, stepID, workerID, result):
     """ Add a reconstruction result to the list of other results
@@ -371,11 +358,8 @@ class CalibrationRun(object):
 
     self.log.info('calibrationFile: %s' % calibrationFile)
 
-    #FIXME platform and appversion are hardcoded...
-    platform = 'x86_64-slc5-gcc43-opt'
-    appversion = 'ILCSoft-2019-02-20_gcc62'
-    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
-                                                                              'pandora_calibration_scripts', appversion), None)
+    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (self.platform,
+                                                                              'pandora_calibration_scripts', self.appversion), None)
     scriptPath = os.path.join(scriptPath, '../../../PandoraAnalysis/HEAD/bin')
     # TODO ask Andre to add separate entry for the directory with binaries from $ILCSOFT/PandoraAnalysis/HEAD/bin
     #  scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/pandoraAnalysisHeadBin" % (self.platform,
@@ -632,7 +616,6 @@ class CalibrationRun(object):
           self.currentPhase += 1
         elif self.currentStage == 3:
           self.calibrationFinished = True
-          # TODO collect all final results and put them into final files
         else:
           return S_ERROR('%s' % self.currentStage)
     elif self.currentPhase == CalibrationPhase.PhotonTraining and self.currentStage == 2:
@@ -651,6 +634,47 @@ class CalibrationRun(object):
     self.currentParameterSet['currentPhase'] = self.currentPhase
     self.currentParameterSet['parameters'] = self.calibrationConstantsDict
     self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
+
+    return S_OK()
+
+  @executeWithUserProxy
+  def copyResultsToEos(self):
+
+    filesToCopy = []
+
+    # TODO get input steering file
+    steeringFile = ''
+    res = updateSteeringFile(steeringFile, steeringFile, self.calibrationConstantsDict)
+    if not res['OK']:
+      self.log.error('Error while updateing steering file. Error message: %s' % res['Message'])
+      return res
+
+    filesToCopy += steeringFile
+    filesToCopy += "calib%s/newPandoraLikelihoodData.xml" % (self.calibrationID)
+    filesToCopy += "calib%s/Calibration.txt" % (self.calibrationID)
+    filesToCopy += glob.glob("calib%s/*.C" % (self.calibrationID))
+    filesToCopy += glob.glob("calib%s/*.png" % (self.calibrationID))
+
+    from DIRAC.DataManagementSystem.Client.DataManager import DataManager
+    dm = DataManager()
+    for iFile in filesToCopy:
+
+      if not os.path.exists(iFile):
+        errMsg = "File %s must exist locally" % iFile
+        self.log.error(errMsg)
+        return(S_ERROR(errMsg))
+      if not os.path.isfile(iFile):
+        errMsg = "%s is not a file" % iFile
+        self.log.error(errMsg)
+        return(S_ERROR(errMsg))
+
+      lfn = os.path.join(self.outputPath, os.path.basename(iFile))
+      localFile = iFile
+      res = dm.putAndRegister(lfn, localFile, 'CERN-DST-EOS', None, overwrite=True)
+      if not res['OK']:
+        errMsg = 'Error while uploading results to EOS. Error message: %s' % res['Message']
+        self.log.error(errMsg)
+        return res
 
     return S_OK()
 
@@ -688,16 +712,16 @@ class CalibrationHandler(RequestHandler):
     """
     pass
 
-  # TODO this function has different number of arguments here and in tests. Figure out the logic of the test
+  # TODO split this function to two: first one just create CalibrationRun instance and returns it (to allow user to setup different settings);
+  # second one - submits jobs
   auth_createCalibration = ['authenticated']
-  types_createCalibration = [basestring, dict, int, basestring, basestring, basestring]
-  # TODO use marlinVersion
+  types_createCalibration = [dict, int, basestring, basestring, basestring]
 
-  def export_createCalibration(self, ilcsoftPath, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
+  def export_createCalibration(self, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
     """ Called by users to create a calibration run (series of calibration iterations)
 
     :param basestring marlinVersion: Version of the Marlin application to be used for reconstruction
-    :param inputFiles: Input list of files for the calibration. Dictionary.
+    :param dict inputFiles: Input files for the calibration. Dictionary.
     :type inputFiles: `python:dict`
     :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
     :param basestring steeringFile: Steering file used in the calibration, LFN
@@ -722,8 +746,7 @@ class CalibrationHandler(RequestHandler):
 
     CalibrationHandler.calibrationCounter += 1
     calibrationID = CalibrationHandler.calibrationCounter
-    newRun = CalibrationRun(calibrationID, steeringFile, ilcsoftPath, groupedInputFiles,
-                            numberOfJobs, marlinVersion, detectorModel)
+    newRun = CalibrationRun(calibrationID, steeringFile, groupedInputFiles, numberOfJobs, marlinVersion, detectorModel)
     # TODO FIXME stage and phase is setup for debugging
     #newRun.currentStage = 2
     #newRun.currentPhase = 5
@@ -732,15 +755,18 @@ class CalibrationHandler(RequestHandler):
     #return S_OK(calibrationID)
     #FIXME: Check if lock is necessary.(Race condition?)
 
-    usernameAndGroup = self._getUsernameAndGroup()
-    if not usernameAndGroup['OK']:
+    res = self._getUsernameAndGroup()
+    if not res['OK']:
       return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
                      % (calibrationID))
-    usernameAndGroup = usernameAndGroup['Value']
+    usernameAndGroup = res['Value']
     self.log.info('Submitting jobs with proxyUserName = %s, proxyUserGroup = %s' %
                   (usernameAndGroup['username'], usernameAndGroup['group']))
     # executionLock = False) #pylint: disable=unexpected-keyword-arg
     res = newRun.submitJobs(proxyUserName=usernameAndGroup['username'], proxyUserGroup=usernameAndGroup['group'])
+    if isinstance(res, dict):
+      self.log.error('Error while submitting jobs. Res: %s' % res)
+      return res
     self.log.info('results from submitJobs: %s' % res)
     if _calibration_creation_failed(res):
       # FIXME: This should be treated, since the successfully submitted jobs will still run
@@ -765,8 +791,6 @@ class CalibrationHandler(RequestHandler):
               S_ERROR if the requested calibration can not be found.
     :rtype: dict
     """
-    #TODO: Fix race condition(if it exists)
-    #TODO: different calibrations will use the same directory?
     calibration = CalibrationHandler.activeCalibrations.get(calibrationID, None)
     if not calibration:
       return S_ERROR('Calibration with ID %d not found.' % calibrationID)
@@ -786,10 +810,8 @@ class CalibrationHandler(RequestHandler):
                                                                                                       stageID, phaseID,
                                                                                                       stepID, workerID)
       stringToBinaryFile(rootFileContent, newFilename)
-
       calibration.addResult(stepID, workerID, newFilename)
     return S_OK()
-
 
   auth_checkForStepIncrement = ['authenticated']
   types_checkForStepIncrement = []
@@ -804,7 +826,16 @@ class CalibrationHandler(RequestHandler):
       if self.finalInterimResultReceived(calibration, calibration.currentStep):
         calibration.endCurrentStep()
         if calibration.calibrationFinished:
+          usernameAndGroup = self._getUsernameAndGroup()
+          if not usernameAndGroup['OK']:
+            return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
+                           % (self.calibrationID))
+          usernameAndGroup = usernameAndGroup['Value']
+          res = calibration.copyResultsToEos(
+              proxyUserName=usernameAndGroup['username'], proxyUserGroup=usernameAndGroup['group'])
           del CalibrationHandler.activeCalibrations[calibrationID]
+          if not res['OK']:
+            return res
     return S_OK()
 
   finishedJobsForNextStep = 0.9  # X% of all jobs must have finished in order for the next step to begin.
@@ -994,9 +1025,8 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK on success. (Should always succeed)
     :rtype: dict
     """
-    newRun = CalibrationRun(1, 'dummy.txt', 'dummyIlcSoftPath', {
-                            0: "dummyInFile.slcio"}, 1, 'dummyMarlinVersion', 'dummyDetectorModel')
-    #  newRun = CalibrationRun(calibrationID, steeringFile, ilcsoftPath, groupedInputFiles, numberOfJobs, marlinVersion, detectorModel)
+    newRun = CalibrationRun(1, 'dummy.txt', {0: "dummyInFile.slcio"}, 1, 'dummyMarlinVersion', 'dummyDetectorModel')
+    #  newRun = CalibrationRun(calibrationID, steeringFile, groupedInputFiles, numberOfJobs, marlinVersion, detectorModel)
     #  newRun = CalibrationRun()
 
     return S_OK(newRun.getCalibrationID())
