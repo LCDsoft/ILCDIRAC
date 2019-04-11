@@ -176,10 +176,6 @@ class Calibration(MarlinAnalysis):
         self.log.notice("Calibration finished")
         break
 
-      #  print('\nstepID: %s' % self.currentStep)
-      #  print(calibrationParameters)
-
-
       self.currentPhase = calibrationParameters['currentPhase']
       self.currentStage = calibrationParameters['currentStage']
       self.currentStep = self.currentStep + 1

@@ -82,6 +82,7 @@ class CalibrationRun(object):
     self.steeringFile = steeringFile
     if 'LFN:' in self.steeringFile:
       self.steeringFile = self.steeringFile.split(':')[1]
+    self.localSteeringFile = ''
     self.inputFiles = inputFiles
     self.marlinVersion = marlinVersion
     self.detectorModel = detectorModel
@@ -111,8 +112,8 @@ class CalibrationRun(object):
     self.ops = Operations()
     self.calibrationConstantsDict = None
     self.softwareVersion = ''
-    # TODO user has to define this path
-    self.outputPath = ''
+    # TODO hardcoded! user has to define this path
+    self.outputPath = '/ilc/user/o/oviazlo/clic_caloCalib/output/'
 
 
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
@@ -126,8 +127,8 @@ class CalibrationRun(object):
     from DIRAC.DataManagementSystem.Client.DataManager import DataManager
     dataMan = DataManager()
     res = dataMan.getFile(self.steeringFile)
-    localSteeringFile = os.path.basename(self.steeringFile)
-    if ((not res['OK']) or (not os.path.exists(localSteeringFile))):
+    self.localSteeringFile = os.path.basename(self.steeringFile)
+    if ((not res['OK']) or (not os.path.exists(self.localSteeringFile))):
       errMsg = 'Cannot copy Marlin steering file. res: %s' % res
       self.log.error(errMsg)
       return S_ERROR(errMsg)
@@ -146,9 +147,6 @@ class CalibrationRun(object):
     self.currentParameterSet['currentPhase'] = self.currentPhase
     self.currentParameterSet['parameters'] = self.calibrationConstantsDict
     self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
-
-    #FIXME check if file is correctly removed
-    os.remove(localSteeringFile)
 
     return S_OK()
 
@@ -640,16 +638,13 @@ class CalibrationRun(object):
   @executeWithUserProxy
   def copyResultsToEos(self):
 
-    filesToCopy = []
-
-    # TODO get input steering file
-    steeringFile = ''
-    res = updateSteeringFile(steeringFile, steeringFile, self.calibrationConstantsDict)
+    res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile, self.calibrationConstantsDict)
     if not res['OK']:
-      self.log.error('Error while updateing steering file. Error message: %s' % res['Message'])
+      self.log.error('Error while updating local steering file. Error message: %s' % res['Message'])
       return res
 
-    filesToCopy += steeringFile
+    filesToCopy = []
+    filesToCopy += self.localSteeringFile
     filesToCopy += "calib%s/newPandoraLikelihoodData.xml" % (self.calibrationID)
     filesToCopy += "calib%s/Calibration.txt" % (self.calibrationID)
     filesToCopy += glob.glob("calib%s/*.C" % (self.calibrationID))
@@ -658,7 +653,6 @@ class CalibrationRun(object):
     from DIRAC.DataManagementSystem.Client.DataManager import DataManager
     dm = DataManager()
     for iFile in filesToCopy:
-
       if not os.path.exists(iFile):
         errMsg = "File %s must exist locally" % iFile
         self.log.error(errMsg)
@@ -675,7 +669,6 @@ class CalibrationRun(object):
         errMsg = 'Error while uploading results to EOS. Error message: %s' % res['Message']
         self.log.error(errMsg)
         return res
-
     return S_OK()
 
 
