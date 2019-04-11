@@ -136,7 +136,7 @@ class CalibrationRun(object):
     # FIXME this path will be different in production version probably... update it
     parListFileName = os.path.join(utilities.__path__[0], 'testing/parameterListMarlinSteeringFile.txt')
     parDict = readParameterDict(parListFileName)
-    res = readParametersFromSteeringFile(localSteeringFile, parDict)
+    res = readParametersFromSteeringFile(self.localSteeringFile, parDict)
     if not res['OK']:
       self.log.error('Failed to read parameters from steering file:', res['Message'])
       return S_ERROR('Failed to read parameters from steering file')
@@ -815,6 +815,8 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK when the check has been ended.
     :rtype: dict
     """
+    self.log.info('Executing checkForStepIncrement. activeCalibrations: %s' %
+                  CalibrationHandler.activeCalibrations.keys())
     for calibrationID, calibration in CalibrationHandler.activeCalibrations.iteritems():
       if self.finalInterimResultReceived(calibration, calibration.currentStep):
         calibration.endCurrentStep()
@@ -846,6 +848,8 @@ class CalibrationHandler(RequestHandler):
     import math
     numberOfResults = calibration.stepResults[stepID].getNumberOfResults()
     maxNumberOfJobs = calibration.numberOfJobs
+    self.log.info('Executing finalInterimResultReceived. numberOfResults: %d, maxNumberOfJobs: %d' %
+                  (numberOfResults, maxNumberOfJobs))
     return numberOfResults >= math.ceil(CalibrationHandler.finishedJobsForNextStep * maxNumberOfJobs)
 
   auth_getNewParameters = ['authenticated']

@@ -47,7 +47,9 @@ class CalibrationAgent(AgentModule):
     if not res['OK']:
       return res
     targetJobNumbers = res['Value']
-    self.requestResubmission(self.__calculateJobsToBeResubmitted(currentStatuses, targetJobNumbers))
+    self.log.info('Execute execute. currentStatuses: %s, targetJobNumbers: %s' % (currentStatuses, targetJobNumbers))
+    # TODO temporarily switched off resubmission. For testing purpose
+    #  self.requestResubmission( self.__calculateJobsToBeResubmitted( currentStatuses, targetJobNumbers ) )
     res = self.calibrationService.checkForStepIncrement()
     if not res['OK']:
       return res
