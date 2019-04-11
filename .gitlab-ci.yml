@@ -329,6 +329,7 @@ compiledoc:
     - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
     - source ../bashrc
+    - source /cvmfs/clicdp.cern.ch/software/git/2.13.2/x86_64-slc6-gcc7-opt/setup.sh
     - unset REQUESTS_CA_BUNDLE
     - pip install sphinx==1.8.0
     - rm -rf ILCDIRAC ## removes just the folder with the links
