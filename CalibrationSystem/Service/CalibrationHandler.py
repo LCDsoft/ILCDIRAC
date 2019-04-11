@@ -182,6 +182,11 @@ class CalibrationRun(object):
       self.log.error(errMsg)
       return res
 
+    # FIXME this file is needed to disable watchdog check to prevent killing jobs
+    self.log.info('creating DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK file to disable watchdog')
+    fopen = open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK', 'w')
+    fopen.close()
+
     dirac = DiracILC(True, 'some_job_repository.rep')
     results = []
 
