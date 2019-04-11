@@ -20,6 +20,7 @@ variables:
   SETUP: "ILC-Production"
   ILCDIRAC_BRANCH: "master"
   DIRAC_DEPRECATED_FAIL: "1"
+  DIRAC_USE_M2CRYPTO: "no"
 
 .retry_template: &retry_policy
   retry:
