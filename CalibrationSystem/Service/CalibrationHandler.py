@@ -662,7 +662,7 @@ class CalibrationRun(object):
         self.log.error(errMsg)
         return(S_ERROR(errMsg))
 
-      lfn = os.path.join(self.outputPath, os.path.basename(iFile))
+      lfn = os.path.join(self.outputPath, "calib%s" % (self.calibrationID), os.path.basename(iFile))
       localFile = iFile
       res = dm.putAndRegister(lfn, localFile, 'CERN-DST-EOS', None, overwrite=True)
       if not res['OK']:
