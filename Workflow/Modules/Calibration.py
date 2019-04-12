@@ -9,16 +9,10 @@ ILCDIRAC.Workflow.Modules.Calibration Called by Job Agent.
 :author: Oleksandr Viazlo
 '''
 
-import glob
 import os
 import shutil
 
 from xml.etree import ElementTree as et
-from ILCDIRAC.Core.Utilities.WasteCPU import wasteCPUCycles
-from collections import defaultdict
-from DIRAC.Core.Utilities.Subprocess import shellCall
-from DIRAC import S_OK, S_ERROR, gLogger
-
 from ILCDIRAC.Core.Utilities.WasteCPU import wasteCPUCycles
 from collections import defaultdict
 from DIRAC.Core.Utilities.Subprocess import shellCall
@@ -39,6 +33,7 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSte
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 
 __RCSID__ = '$Id$'
+
 
 class Calibration(MarlinAnalysis):
   """Define the Calibration part of the workflow

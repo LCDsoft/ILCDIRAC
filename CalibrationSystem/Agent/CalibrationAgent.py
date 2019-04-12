@@ -93,7 +93,6 @@ class CalibrationAgent(AgentModule):
     return S_OK(dict(result))
 
   RESUBMISSION_RETRIES = 5  # How often the agent tries to resubmit jobs before giving up
-
   def requestResubmission(self, failedJobs):
     """ Requests the Service to resubmit the failed jobs.
 
@@ -118,13 +117,14 @@ class CalibrationAgent(AgentModule):
   JOB_STATUS_ENDED = ['Failed', 'Killed', 'Done', 'Completed']
   JOB_STATUS_RUNNING = ['Running', 'Waiting', 'Checking', 'Staging']
   RESUBMISSION_THRESHOLD = 0.13  # When this percentage of jobs failed for good, resubmit new ones #FIXME: Tune this parameter
-
   def __calculateJobsToBeResubmitted(self, jobStatusDict, targetNumberDict):
     """ Checks if any of the active calibrations have not enough jobs running and if that is the case
     adds the worker nodes that need resubmission to a list that is returned.
 
-    :param dict jobStatusDict: Dictionary with a mapping from calibrationID -> dict, with dict having a mapping workerID -> jobStatus
-    :param dict targetNumberDict: Dictionary with a mapping from calibrationID -> number of jobs originally alotted to the calibration
+    :param dict jobStatusDict: Dictionary with a mapping from calibrationID -> dict, with dict having a mapping
+                               workerID -> jobStatus
+    :param dict targetNumberDict: Dictionary with a mapping from calibrationID -> number of jobs originally alotted
+                                  to the calibration
     :returns: List containing 2-tuples ( calibrationID, workerID )
     :rtype: list
     """

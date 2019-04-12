@@ -8,12 +8,10 @@ import os
 import glob
 
 from collections import defaultdict
-import xml.etree.ElementTree as ET
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
-from DIRAC.Core.Utilities.Subprocess import shellCall
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.functions import convert_and_execute
@@ -106,7 +104,8 @@ class CalibrationRun(object):
     self.numberOfJobs = numberOfJobs
     self.calibrationFinished = False
     self.platform = 'x86_64-slc5-gcc43-opt'  # FIXME does it the default platform in CS?
-    self.appversion = 'ILCSoft-2019-02-20_gcc62'  # FIXME this has to be equal to self.marlinVersion. hardcoded for debugging
+    self.appversion = 'ILCSoft-2019-02-20_gcc62'  # FIXME this has to be equal to self.marlinVersion.
+    # hardcoded for debugging
     #  self.appversion = self.marlinVersion
     self.newPhotonLikelihood = None
     self.ops = Operations()
@@ -114,7 +113,6 @@ class CalibrationRun(object):
     self.softwareVersion = ''
     # TODO hardcoded! user has to define this path
     self.outputPath = '/ilc/user/o/oviazlo/clic_caloCalib/output/'
-
 
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
@@ -177,6 +175,7 @@ class CalibrationRun(object):
     self.log.info('read initial parameter dict')
     if not res['OK']:
       errMsg = 'Cannot read initial parameter dict. Message: %s' % res['Message']
+      self.log.error(errMsg)
       return res
 
     dirac = DiracILC(True, 'some_job_repository.rep')
@@ -415,8 +414,8 @@ class CalibrationRun(object):
                                  truthEnergy, prevStepCalibConstEndcap, 'Mean', 'Endcap'])
       meanEndcap = float(res['Value'][1].split('\n')[0])
 
-      self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"] = '%s %s' % (
-          calibConstBarrel, calibConstBarrel)
+      self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"] = (
+          '%s %s' % (calibConstBarrel, calibConstBarrel))
       self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='ECALEndcapCorrectionFactor']"] = (
           calibConstEndcap / calibConstBarrel)
 
@@ -458,8 +457,10 @@ class CalibrationRun(object):
                                  truthEnergy, prevStepCalibConstEndcap, 'EndCap', 'Mean'])
       meanEndcap = float(res['Value'][1].split('\n')[0])
 
-      self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALBarrel']"] = calibConstBarrel
-      self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"] = calibConstEndcap
+      self.calibrationConstantsDict[
+          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALBarrel']"] = calibConstBarrel
+      self.calibrationConstantsDict[
+          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"] = calibConstEndcap
 
       fractionalError = max(abs(meanBarrel - truthEnergy), abs(meanEndcap - truthEnergy)) / truthEnergy
       if fractionalError < self.digitisationAccuracy:
@@ -696,6 +697,7 @@ class CalibrationHandler(RequestHandler):
     if 'DN' not in credDict or 'username' not in credDict:
       return S_ERROR("You must be authenticated!")
     if not credDict['isProxy']:
+      from DIRAC.Core.Utilities import DErrno
       return S_ERROR(DErrno.EX509, "chain does not contain a proxy")
     usernameAndGroupDict = {'group': credDict['group'], 'username': credDict['username']}
     return S_OK(usernameAndGroupDict)
@@ -705,8 +707,8 @@ class CalibrationHandler(RequestHandler):
     """
     pass
 
-  # TODO split this function to two: first one just create CalibrationRun instance and returns it (to allow user to setup different settings);
-  # second one - submits jobs
+  # TODO split this function to two: first one just create CalibrationRun instance and returns it (to allow user to
+  # setup different settings); second one - submits jobs
   auth_createCalibration = ['authenticated']
   types_createCalibration = [dict, int, basestring, basestring, basestring]
 
@@ -741,8 +743,8 @@ class CalibrationHandler(RequestHandler):
     calibrationID = CalibrationHandler.calibrationCounter
     newRun = CalibrationRun(calibrationID, steeringFile, groupedInputFiles, numberOfJobs, marlinVersion, detectorModel)
     # TODO FIXME stage and phase is setup for debugging
-    #newRun.currentStage = 2
-    #newRun.currentPhase = 5
+    #  newRun.currentStage = 2
+    #  newRun.currentPhase = 5
     CalibrationHandler.activeCalibrations[calibrationID] = newRun
     #newRun.submitJobs(calibrationID)
     #return S_OK(calibrationID)
@@ -753,17 +755,16 @@ class CalibrationHandler(RequestHandler):
       return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
                      % (calibrationID))
     usernameAndGroup = res['Value']
-    self.log.info('Submitting jobs with proxyUserName = %s, proxyUserGroup = %s' %
-                  (usernameAndGroup['username'], usernameAndGroup['group']))
-    # executionLock = False) #pylint: disable=unexpected-keyword-arg
+    self.log.info('Submitting jobs with proxyUserName = %s, proxyUserGroup = %s'
+                  % (usernameAndGroup['username'], usernameAndGroup['group']))
     res = newRun.submitJobs(proxyUserName=usernameAndGroup['username'], proxyUserGroup=usernameAndGroup['group'])
     if isinstance(res, dict):
       self.log.error('Error while submitting jobs. Res: %s' % res)
       return res
     self.log.info('results from submitJobs: %s' % res)
-    if _calibration_creation_failed(res):
-      # FIXME: This should be treated, since the successfully submitted jobs will still run
-      ret_val = S_ERROR('Submitting at least one of the jobs failed')
+    if self._calibration_creation_failed(res):
+      ret_val = S_ERROR('Submitting at least one of the jobs failed')  # FIXME: This should be treated, since the
+      # successfully submitted jobs will still run
       ret_val['calibrations'] = res
       return ret_val
     return S_OK((calibrationID, res))
@@ -815,8 +816,8 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK when the check has been ended.
     :rtype: dict
     """
-    self.log.info('Executing checkForStepIncrement. activeCalibrations: %s' %
-                  CalibrationHandler.activeCalibrations.keys())
+    self.log.info('Executing checkForStepIncrement. activeCalibrations: %s'
+                  % CalibrationHandler.activeCalibrations.keys())
     for calibrationID, calibration in CalibrationHandler.activeCalibrations.iteritems():
       if self.finalInterimResultReceived(calibration, calibration.currentStep):
         calibration.endCurrentStep()
@@ -826,8 +827,8 @@ class CalibrationHandler(RequestHandler):
             return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
                            % (self.calibrationID))
           usernameAndGroup = usernameAndGroup['Value']
-          res = calibration.copyResultsToEos(
-              proxyUserName=usernameAndGroup['username'], proxyUserGroup=usernameAndGroup['group'])
+          res = calibration.copyResultsToEos(proxyUserName=usernameAndGroup['username'],
+                                             proxyUserGroup=usernameAndGroup['group'])
           del CalibrationHandler.activeCalibrations[calibrationID]
           if not res['OK']:
             return res
@@ -848,8 +849,8 @@ class CalibrationHandler(RequestHandler):
     import math
     numberOfResults = calibration.stepResults[stepID].getNumberOfResults()
     maxNumberOfJobs = calibration.numberOfJobs
-    self.log.info('Executing finalInterimResultReceived. numberOfResults: %d, maxNumberOfJobs: %d' %
-                  (numberOfResults, maxNumberOfJobs))
+    self.log.info('Executing finalInterimResultReceived. numberOfResults: %d, maxNumberOfJobs: %d'
+                  % (numberOfResults, maxNumberOfJobs))
     return numberOfResults >= math.ceil(CalibrationHandler.finishedJobsForNextStep * maxNumberOfJobs)
 
   auth_getNewParameters = ['authenticated']
@@ -859,7 +860,8 @@ class CalibrationHandler(RequestHandler):
 
     :param int calibrationID: ID of the calibration being run on the worker
     :param int stepIDOnWorker: current step ID on the worker node
-    :returns: S_ERROR in case of error (e.g. inactive calibration asking for params), S_OK with the parameter set and the id of the current step
+    :returns: S_ERROR in case of error (e.g. inactive calibration asking for params),
+              S_OK with the parameter set and the id of the current step
     :rtype: dict
     """
     cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
@@ -867,8 +869,9 @@ class CalibrationHandler(RequestHandler):
       self.log.error("CalibrationID is not in active calibrations:",
                      "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
                                                                 calibrationID))
-      res = S_ERROR("calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
-                       % calibrationID)
+      res = S_ERROR(
+          "calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
+          % calibrationID)
       return res
 
     res = cal.getNewParameters(stepIDOnWorker)
@@ -881,7 +884,8 @@ class CalibrationHandler(RequestHandler):
     """ Called by the worker node to retrieve the parameters for the next iteration of the calibration
 
     :param int calibrationID: ID of the calibration being run on the worker
-    :returns: S_ERROR in case of error (e.g. inactive calibration asking for params), S_OK with the parameter set and the id of the current step
+    :returns: S_ERROR in case of error (e.g. inactive calibration asking for params),
+              S_OK with the parameter set and the id of the current step
     :rtype: dict
     """
     cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
@@ -889,8 +893,9 @@ class CalibrationHandler(RequestHandler):
       self.log.error("CalibrationID is not in active calibrations:",
                      "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
                                                                 calibrationID))
-      result = S_ERROR("calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
-                       % calibrationID)
+      result = S_ERROR(
+          "calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
+          % calibrationID)
     else:
       result = cal.getNewPhotonLikelihood()
     return result
@@ -902,7 +907,8 @@ class CalibrationHandler(RequestHandler):
     """ Called by the worker node to retrieve the parameters for the next iteration of the calibration
 
     :param int calibrationID: ID of the calibration being run on the worker
-    :returns: S_ERROR in case of error (e.g. inactive calibration asking for params), S_OK with the parameter set and the id of the current step
+    :returns: S_ERROR in case of error (e.g. inactive calibration asking for params),
+              S_OK with the parameter set and the id of the current step
     :rtype: dict
     """
     cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
@@ -910,12 +916,13 @@ class CalibrationHandler(RequestHandler):
       self.log.error("CalibrationID is not in active calibrations:",
                      "Active Calibrations:%s , asked for %s" % (self.activeCalibrations,
                                                                 calibrationID))
-      result = S_ERROR("calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
-                       % calibrationID)
+      result = S_ERROR(
+          "calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
+          % calibrationID)
     else:
       if workerID >= cal.numberOfJobs:
-        errMsg = 'Value of workerID is larger than number of job in this calibration: calibID: %s, nJobs: %s, workerID: %s' % (
-            calibrationID, cal.numberOfJobs, workerID)
+        errMsg = ('Value of workerID is larger than number of job in this calibration: '
+                  'calibID: %s, nJobs: %s, workerID: %s' % (calibrationID, cal.numberOfJobs, workerID))
         self.log.error(errMsg)
         result = S_ERROR(errMsg)
       else:
@@ -969,17 +976,63 @@ class CalibrationHandler(RequestHandler):
       result[calibrationID] = CalibrationHandler.activeCalibrations[calibrationID].numberOfJobs
     return S_OK(result)
 
-
 #TODO: Add stopping criterion to calibration loop. This should be checked when new parameter sets are calculated
 #In that case, the calibration should be removed from activeCalibrations and the result stored.
 #Should we then kill all jobs of that calibration?
+
+  def _calibration_creation_failed(self, results):
+    """ Returns whether or not the creation of all calibration jobs was successful.
+
+    :param results: List of S_OK/S_ERROR dicts that were returned by the submission call
+    :returns: True if everything was successful, False otherwise
+    :rtype: bool
+    """
+    success = True
+    for job_result in results:
+      success = success and job_result['OK']
+    return not success
+
+  def __regroupInputFile(self, inputFiles, numberOfJobs):
+    """ Function to regroup inputFiles dict according to numberOfJobs. Output dict will have a format:
+    list of files = outDict[iJob][fileType]
+
+    :param inputFiles: Input list of files for the calibration. Dictionary.
+    :type inputFiles: `python:dict`
+    :param int numberOfJobs: Number of jobs to run
+    :returns: S_OK with 'Value' element being a new regroupped dict or S_ERROR
+    :rtype: dict
+    """
+    tmpDict = {}
+    for iKey, iList in inputFiles.iteritems():
+      if len(iList) < numberOfJobs:
+        return S_ERROR('Too many jobs for provided input data. numberOfJobs==%s which is larger than number of '
+                       'availables files for key %s: nFiles==%s' % (numberOfJobs, iKey, len(iList)))
+      nFilesPerJob = int(len(iList) / numberOfJobs)
+      nLeftoverFiles = len(iList) - nFilesPerJob * numberOfJobs
+      newDict = {}
+      for i in range(0, numberOfJobs):
+        newDict[i] = []
+        for j in range(0, nFilesPerJob):
+          j = nFilesPerJob * i + j
+          newDict[i].append(iList[j])
+        if i < nLeftoverFiles:
+          newDict[i].append(iList[nFilesPerJob * numberOfJobs + i])
+      tmpDict[iKey] = newDict
+
+    outDict = {}
+    for iJob in range(0, numberOfJobs):
+      newDict = {}
+      for iType in [x.lower() for x in inputFiles.keys()]:
+        newDict[iType] = tmpDict[iType][iJob]
+      outDict[iJob] = newDict
+
+    return S_OK(outDict)
 
 ####################################################################
 #                                                                  #
 #         Testcode, not to be used by production code              #
 #                                                                  #
 ####################################################################
-
   auth_testGetInitVals = ['all']  # FIXME: Restrict to test usage only
   types_testGetInitVals = []
 
@@ -1023,8 +1076,6 @@ class CalibrationHandler(RequestHandler):
     :rtype: dict
     """
     newRun = CalibrationRun(1, 'dummy.txt', {0: "dummyInFile.slcio"}, 1, 'dummyMarlinVersion', 'dummyDetectorModel')
-    #  newRun = CalibrationRun(calibrationID, steeringFile, groupedInputFiles, numberOfJobs, marlinVersion, detectorModel)
-    #  newRun = CalibrationRun()
 
     return S_OK(newRun.getCalibrationID())
 
@@ -1049,7 +1100,8 @@ class CalibrationHandler(RequestHandler):
     This is done since for an unknown reason one cannot return objects of custom (i.e. non-default python)
     classes through a service (else a socket timeout occurs).
 
-    :returns: S_OK containing a tuple with the active calibrations dict (serialized with the pickle module) and the calibrationCounter
+    :returns: S_OK containing a tuple with the active calibrations dict (serialized with the pickle module) and
+              the calibrationCounter
     :rtype: dict
     """
     import copy
@@ -1090,77 +1142,6 @@ class CalibrationHandler(RequestHandler):
     from DIRAC import gConfig
     return S_OK(gConfig.getValue(option))
 
-  auth_getproxy_info = ['all']
-  types_getproxy_info = []
-  def export_getproxy_info(self):
-    """ Returns the info of the proxy this service is using.
-
-    :returns: S_OK containing the proxy info
-    :rtype: dict
-    """
-    from DIRAC.Core.Security.ProxyInfo import getProxyInfo
-    return S_OK(getProxyInfo())
-
-  def __regroupInputFile(self, inputFiles, numberOfJobs):
-    """ Function to regroup inputFiles dict according to numberOfJobs. Output dict will have a format:
-    list of files = outDict[iJob][fileType]
-
-    :param inputFiles: Input list of files for the calibration. Dictionary.
-    :type inputFiles: `python:dict`
-    :param int numberOfJobs: Number of jobs to run
-    :returns: S_OK with 'Value' element being a new regroupped dict or S_ERROR
-    :rtype: dict
-    """
-    tmpDict = {}
-    for iKey, iList in inputFiles.iteritems():
-      if len(iList) < numberOfJobs:
-        return S_ERROR('Too many jobs for provided input data. numberOfJobs==%s which is larger than number of availables files for key %s: nFiles==%s' % (numberOfJobs, iKey, len(iList)))
-      nFilesPerJob = int(len(iList) / numberOfJobs)
-      nLeftoverFiles = len(iList) - nFilesPerJob * numberOfJobs
-      newDict = {}
-      for i in range(0, numberOfJobs):
-        newDict[i] = []
-        for j in range(0, nFilesPerJob):
-          j = nFilesPerJob * i + j
-          newDict[i].append(iList[j])
-        if i < nLeftoverFiles:
-          newDict[i].append(iList[nFilesPerJob * numberOfJobs + i])
-      tmpDict[iKey] = newDict
-
-    outDict = {}
-    for iJob in range(0, numberOfJobs):
-      newDict = {}
-      for iType in [x.lower() for x in inputFiles.keys()]:
-        newDict[iType] = tmpDict[iType][iJob]
-      outDict[iJob] = newDict
-
-    return S_OK(outDict)
 
 
-def _calibration_creation_failed(results):
-  """ Returns whether or not the creation of all calibration jobs was successful.
 
-  :param results: List of S_OK/S_ERROR dicts that were returned by the submission call
-  :returns: True if everything was successful, False otherwise
-  :rtype: bool
-  """
-  success = True
-  for job_result in results:
-    success = success and job_result['OK']
-  return not success
-
-def _getLCIOInputFiles(xml_file):
-  """ Extracts the LCIO input file from the given marlin input xml
-
-  :param string xml_file: Path to the Marlin input xml
-  :returns: List with all LCIOInput files
-  :rtype: list
-  """
-  result = []
-  tree = ET.parse(xml_file)
-  root = tree.getroot()
-  elements = root.findall(".//parameter")
-  for element in elements:
-    if element.get('name', '') == 'LCIOInputFiles' and not element.text.count('afs'):
-      result.append(element.text.strip())
-  return result

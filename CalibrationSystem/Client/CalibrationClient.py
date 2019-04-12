@@ -4,11 +4,9 @@ The worker nodes use this interface to ask for new parameters, their event slice
 about the results of their reconstruction
 """
 
-import subprocess
 import sys
 from DIRAC.Core.DISET.RPCClient import RPCClient
 from DIRAC import S_OK, S_ERROR, gLogger
-from DIRAC.Core.Security.ProxyInfo import getProxyInfo
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 
 __RCSID__ = "$Id$"
@@ -155,8 +153,8 @@ class CalibrationClient(object):
     if res['OK']:
       returnValue = res['Value']
       if not set(['calibrationIsFinished', 'parameters', 'currentPhase', 'currentStage']).issubset(returnValue.keys()):
-        self.log.error(
-            'Corrupted structure of outcome data after request to Calibration service for new parameters. Present keys: %s' % returnValue.keys())
+        self.log.error('Corrupted structure of outcome data after request to Calibration service for new parameters. '
+                       'Present keys: %s' % returnValue.keys())
         # FIXME should we return None in this case?
         return None
       self.currentPhase = returnValue['currentPhase']
@@ -187,9 +185,9 @@ class CalibrationClient(object):
     self.currentStep = stepID
 
   MAXIMUM_REPORT_TRIES = 10
-
   def reportResult(self, outFileName):
-    """ Sends the root file from PfoAnalysis or PandoraLikelihoodDataPhotonTraining.xml from photon training back to the service procedure
+    """ Sends the root file from PfoAnalysis or PandoraLikelihoodDataPhotonTraining.xml from photon training
+    back to the service procedure
 
     :param outFileName: Output file from one calibration iteration
     :returns: None
@@ -215,7 +213,8 @@ def createCalibration(inputFiles, numberOfJobs, marlinVersion, steeringFile, det
 
   :param basestring steeringFile: Steering file used in the calibration
   :param basestring softwareVersion: Version of the software
-  :param inputFiles: Input files for the calibration: dictionary of keys GAMMA, KAON, and MUON to list of lfns for each particle type
+  :param inputFiles: Input files for the calibration: dictionary of keys GAMMA, KAON, and MUON to list of lfns
+                     for each particle type
   :type inputFiles: `python:dict`
   :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
   :returns: S_OK containing ID of the calibration, or S_ERROR if something went wrong
@@ -228,12 +227,3 @@ def createCalibration(inputFiles, numberOfJobs, marlinVersion, steeringFile, det
     return S_ERROR("badParameter")
 
   return calibrationService.createCalibration(inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel)
-
-
-#FIXME is this for testing?
-if __name__ == '__main__':
-  if len(sys.argv) < 4:
-    print 'Not enogh arguments!\nUsage: calibrationID workerID command\nPassed parameters were %s' % sys.argv
-    exit(2)
-  # Assume argv[1] is calibrationID, argv[2] is workerID, rest is histogram
-  exit(runCalibration(sys.argv[1], sys.argv[2], sys.argv[3:]))
