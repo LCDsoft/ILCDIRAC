@@ -21,6 +21,8 @@ variables:
   ILCDIRAC_BRANCH: "master"
   DIRAC_DEPRECATED_FAIL: "1"
   DIRAC_USE_M2CRYPTO: "no"
+  DIRAC_USE_DIRACOS: "no"
+  PYTHON_PACKAGES: "psutil"
 
 .retry_template: &retry_policy
   retry:
@@ -56,6 +58,7 @@ variables:
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
     - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock flake8 flake8-docstrings flake8-commas caniusepython3 parameterized
+    - if [ "${DIRAC_USE_DIRACOS}" == "no" ]; then pip install --upgrade ${PYTHON_PACKAGES} ; fi
     - cd ..
     - tar czf installation.tar.gz installation
   artifacts:
