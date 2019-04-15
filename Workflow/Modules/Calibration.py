@@ -14,22 +14,16 @@ import shutil
 
 from xml.etree import ElementTree as et
 from ILCDIRAC.Core.Utilities.WasteCPU import wasteCPUCycles
-from collections import defaultdict
 from DIRAC.Core.Utilities.Subprocess import shellCall
 from DIRAC import S_OK, S_ERROR, gLogger
 
-from ILCDIRAC.Workflow.Modules.ModuleBase import ModuleBase
-from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getSoftwareFolder, getEnvironmentScript
-from ILCDIRAC.Core.Utilities.PrepareOptionFiles import prepareXMLFile, getNewLDLibs
-from ILCDIRAC.Core.Utilities.resolvePathsAndNames import resolveIFpaths, getProdFilename
-from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc
+from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentScript
+from ILCDIRAC.Core.Utilities.resolvePathsAndNames import resolveIFpaths
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir import getSteeringFileDirName
-from ILCDIRAC.Workflow.Utilities.DD4hepMixin import DD4hepMixin
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationClient, CalibrationPhase
-from ILCDIRAC.CalibrationSystem.Utilities.functions import xml_generate, updateSteeringFile
-from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict, readValueFromSteeringFile
-from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import readValueFromSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 
 __RCSID__ = '$Id$'
@@ -85,6 +79,7 @@ class Calibration(MarlinAnalysis):
     fopen.close()
 
     #get the path to the detector model, either local or from the software
+    # FIXME compactFile is not used anywhere
     compactFile = None
     if self.detectorModel:
       resXML = self._getDetectorXML()
@@ -206,7 +201,7 @@ class Calibration(MarlinAnalysis):
         # TODO this depends from the name inside steering file... And it's even more difficult for FCCee case
         pandoraSettingsFile = readValueFromSteeringFile(
             self.SteeringFile, "processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']")
-	pandoraSettingsFile = pandoraSettingsFile.strip()
+        pandoraSettingsFile = pandoraSettingsFile.strip()
 
         updateSteeringFile(
             pandoraSettingsFile, pandoraSettingsFile,
@@ -276,7 +271,8 @@ class Calibration(MarlinAnalysis):
     return S_OK()
 
   def resolveInputSlcioFilesAndAddToParameterDict(self, allSlcioFiles, parameterDict):
-    """ Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the parameterDict
+    """ Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the
+    parameterDict
 
     :param list basestring allSlcioFiles: List of all slcio-files in the node
     :param dict parameterDict: dict of parameters and their values
@@ -303,7 +299,7 @@ class Calibration(MarlinAnalysis):
 
     inputDataDict = res['Value']
     if iType not in inputDataDict.keys():
-      errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (Type)
+      errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (iType)
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
@@ -313,7 +309,7 @@ class Calibration(MarlinAnalysis):
       return res
     filesToRunOn = res['Value']
     if len(filesToRunOn) == 0:
-      errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (Type)
+      errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (iType)
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
     if not set(filesToRunOn).issubset(allSlcioFiles):
@@ -323,10 +319,12 @@ class Calibration(MarlinAnalysis):
       return S_ERROR(errorMessage)
 
     parameterDict["global/parameter[@name='LCIOInputFiles']"] = ' '.join(filesToRunOn)
-    parameterDict["processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']"] = pandoraSettingsFile
+    parameterDict[
+        "processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']"] = pandoraSettingsFile
 
-    #TODO should one use different steering file for photon training? if no one need to append line below during all steps
-    if self.currentStage in [1, 3]: 
+    #TODO should one use different steering file for photon training? if no one need to append line below during all
+    #     steps
+    if self.currentStage in [1, 3]:
       parameterDict["processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']"] = 'pfoAnalysis.root'
     return S_OK(parameterDict)
 
@@ -385,7 +383,7 @@ class Calibration(MarlinAnalysis):
 if [ -e "${PANDORASETTINGS}" ]
 then
    cp $PANDORASETTINGS .
-fi    
+fi
 """)
     script.write('echo =============================\n')
     script.write('echo LD_LIBRARY_PATH is\n')

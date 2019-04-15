@@ -23,6 +23,7 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications.Calibration import Calibr
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
+from DIRAC.Core.Utilities import DErrno
 
 __RCSID__ = "$Id$"
 
@@ -113,6 +114,8 @@ class CalibrationRun(object):
     self.softwareVersion = ''
     # TODO hardcoded! user has to define this path
     self.outputPath = '/ilc/user/o/oviazlo/clic_caloCalib/output/'
+    self.proxyUserName = ''
+    self.proxyUserGroup = ''
 
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
@@ -355,13 +358,10 @@ class CalibrationRun(object):
 
     self.log.info('calibrationFile: %s' % calibrationFile)
 
-    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (self.platform,
-                                                                              'pandora_calibration_scripts', self.appversion), None)
-    scriptPath = os.path.join(scriptPath, '../../../PandoraAnalysis/HEAD/bin')
-    # TODO ask Andre to add separate entry for the directory with binaries from $ILCSOFT/PandoraAnalysis/HEAD/bin
-    #  scriptPath = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/pandoraAnalysisHeadBin" % (self.platform,
-    #                                 'pandora_calibration_scripts', self.appversion), None)
-    ilcSoftInitScript = os.path.join(scriptPath, '../../../init_ilcsoft.sh')
+    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.platform,
+                                                                                                self.appversion, "PandoraAnalysis"), None)
+    ilcSoftInitScript = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.platform,
+                                                                                                       self.appversion, "CVMFSEnvScript"), None)
 
     import ILCDIRAC.CalibrationSystem.Utilities as utilities
     pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
@@ -615,6 +615,7 @@ class CalibrationRun(object):
           self.currentPhase += 1
         elif self.currentStage == 3:
           self.calibrationFinished = True
+          self.log.info('The last step of calibration has been finished')
         else:
           return S_ERROR('%s' % self.currentStage)
     elif self.currentPhase == CalibrationPhase.PhotonTraining and self.currentStage == 2:
@@ -645,11 +646,14 @@ class CalibrationRun(object):
       return res
 
     filesToCopy = []
-    filesToCopy += self.localSteeringFile
-    filesToCopy += "calib%s/newPandoraLikelihoodData.xml" % (self.calibrationID)
-    filesToCopy += "calib%s/Calibration.txt" % (self.calibrationID)
+    filesToCopy.append(self.localSteeringFile)
+    filesToCopy.append("calib%s/newPandoraLikelihoodData.xml" % (self.calibrationID))
+    filesToCopy.append("calib%s/Calibration.txt" % (self.calibrationID))
     filesToCopy += glob.glob("calib%s/*.C" % (self.calibrationID))
     filesToCopy += glob.glob("calib%s/*.png" % (self.calibrationID))
+
+    self.log.info('Start copying output of the calibration to user directory : %s' % self.outputPath)
+    self.log.info('Files to copy: %s' % filesToCopy)
 
     from DIRAC.DataManagementSystem.Client.DataManager import DataManager
     dm = DataManager()
@@ -670,6 +674,8 @@ class CalibrationRun(object):
         errMsg = 'Error while uploading results to EOS. Error message: %s' % res['Message']
         self.log.error(errMsg)
         return res
+
+    self.log.info('Copying is finished')
     return S_OK()
 
 
@@ -697,7 +703,6 @@ class CalibrationHandler(RequestHandler):
     if 'DN' not in credDict or 'username' not in credDict:
       return S_ERROR("You must be authenticated!")
     if not credDict['isProxy']:
-      from DIRAC.Core.Utilities import DErrno
       return S_ERROR(DErrno.EX509, "chain does not contain a proxy")
     usernameAndGroupDict = {'group': credDict['group'], 'username': credDict['username']}
     return S_OK(usernameAndGroupDict)
@@ -755,9 +760,13 @@ class CalibrationHandler(RequestHandler):
       return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
                      % (calibrationID))
     usernameAndGroup = res['Value']
-    self.log.info('Submitting jobs with proxyUserName = %s, proxyUserGroup = %s'
+    self.log.info('Retrieve user proxy - userName = %s, userGroup = %s'
                   % (usernameAndGroup['username'], usernameAndGroup['group']))
-    res = newRun.submitJobs(proxyUserName=usernameAndGroup['username'], proxyUserGroup=usernameAndGroup['group'])
+
+    newRun.proxyUserName = usernameAndGroup['username']
+    newRun.proxyUserGroup = usernameAndGroup['group']
+
+    res = newRun.submitJobs(proxyUserName=newRun.proxyUserName, proxyUserGroup=newRun.proxyUserGroup)
     if isinstance(res, dict):
       self.log.error('Error while submitting jobs. Res: %s' % res)
       return res
@@ -822,13 +831,8 @@ class CalibrationHandler(RequestHandler):
       if self.finalInterimResultReceived(calibration, calibration.currentStep):
         calibration.endCurrentStep()
         if calibration.calibrationFinished:
-          usernameAndGroup = self._getUsernameAndGroup()
-          if not usernameAndGroup['OK']:
-            return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
-                           % (self.calibrationID))
-          usernameAndGroup = usernameAndGroup['Value']
-          res = calibration.copyResultsToEos(proxyUserName=usernameAndGroup['username'],
-                                             proxyUserGroup=usernameAndGroup['group'])
+          res = calibration.copyResultsToEos(proxyUserName=calibration.proxyUserName,
+                                             proxyUserGroup=calibration.proxyUserGroup)
           del CalibrationHandler.activeCalibrations[calibrationID]
           if not res['OK']:
             return res
@@ -1053,18 +1057,14 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK on success. (Should always succeed)
     :rtype: dict
     """
-    platform = 'x86_64-slc5-gcc43-opt'
-    appversion = 'ILCSoft-2019-02-20_gcc62'
-    ops = Operations()
-    scriptPath = ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (platform,
-                                                                         'pandora_calibration_scripts', appversion), None)
-    tmp2 = self.ops.getValue("/AvailableTarBalls/%s/%s/%s/CVMFSPath" % (self.platform,
-                                                                        'pandora_calibration_scripts', self.appversion), None)
-    tmp2 = os.path.join(scriptPath, '../../../PandoraAnalysis/HEAD/bin')
-    #  tmp2 = ops.getValue("/AvailableTarBalls/%s/%s/%s/pandoraAnalysisHeadBin" % (platform,
-    #                                 'pandora_calibration_scripts', appversion), None)
+    pandoraAnalysisCalibExecutablePath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" %
+                                                           (self.platform, self.appversion, "PandoraAnalysis"), None)
+    ilcSoftInitScript = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.platform,
+                                                                                                       self.appversion, "CVMFSEnvScript"), None)
+    marlinPandoraScriptsPath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s"
+                                                 % (self.platform, self.appversion, "MarlinPandora"), None)
 
-    return S_OK((scriptPath, tmp2))
+    return S_OK((ilcSoftInitScript, marlinPandoraScriptsPath, pandoraAnalysisCalibExecutablePath))
 
   auth_testCreateRun = ['all']  # FIXME: Restrict to test usage only
   types_testCreateRun = []
