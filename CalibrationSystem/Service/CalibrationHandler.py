@@ -266,8 +266,9 @@ class CalibrationRun(object):
     if self.currentStep > stepIDOnWorker:
       return S_OK(dict(self.currentParameterSet))
     else:
-      return S_ERROR('No new parameter set available yet. Current step in service: %s, step on worker: %s'
+      self.log.info('No new parameter set available yet. Current step in service: %s, step on worker: %s'
                      % (self.currentStep, stepIDOnWorker))
+      return S_OK()
 
   def getNewPhotonLikelihood(self):
     if self.newPhotonLikelihood:
@@ -804,7 +805,9 @@ class CalibrationHandler(RequestHandler):
         try:
           os.makedirs(dirName)
         except OSError as e:
-          return S_ERROR('Cannot create diretories. %s' % e)
+          errMsg = 'Cannot create directories. Current working directory: %s. Error message: %s' % (os.getcwd(), e)
+          self.log.error(errMsg)
+          return S_ERROR(errMsg)
 
       newFilename = "calib%s/stage%s/phase%s/step%s/pfoanalysis_w%s.root" % (calibrationID, stageID, phaseID, stepID,
                                                                              workerID)

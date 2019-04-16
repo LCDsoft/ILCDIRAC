@@ -73,25 +73,27 @@ def test_runScript_properInputArguments(calib, mocker):
 
 
 paramDictList = [
-    {'currentStage': 1, 'currentPhase': 0, 'parameters': {
-        "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationEndCap']": 'ECALTOHAD_YYYY'}},
-    {'currentStage': 1, 'currentPhase': 1, 'parameters': {}},
-    {'currentStage': 1, 'currentPhase': 2, 'parameters': {}},
-    {'currentStage': 1, 'currentPhase': 3, 'parameters': {}},
-    {'currentStage': 1, 'currentPhase': 4, 'parameters': {}},
-    {'currentStage': 2, 'currentPhase': 5, 'parameters': {}},
-    {'currentStage': 3, 'currentPhase': 0, 'parameters': {}},
-    {'currentStage': 3, 'currentPhase': 1, 'parameters': {}},
-    {'currentStage': 3, 'currentPhase': 2, 'parameters': {}},
-    {'currentStage': 3, 'currentPhase': 3, 'parameters': {}},
-    {'currentStage': 3, 'currentPhase': 4, 'parameters': {}},
-    {'currentStage': 3, 'currentPhase': 4, 'parameters': {}, 'OK': True}]
+    {'OK': True, 'Value': {'currentStage': 1, 'currentPhase': 0, 'parameters': {
+        "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationEndCap']": 'ECALTOHAD_YYYY'}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 1, 'currentPhase': 1, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 1, 'currentPhase': 2, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 1, 'currentPhase': 3, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 1, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 2, 'currentPhase': 5, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 0, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 1, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 2, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 3, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': True}}]
+
 
 def test_runIt_simple(calib, mocker):
   mocker.patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK()))
   mocker.patch('%s.os.remove' % MODULE_NAME, return_value=True)
   mocker.patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value={'OK': True, 'Value': 'dummy_EnvScript'}))
-  mocker.patch('%s.updateSteeringFile' % MODULE_NAME, new=Mock(return_value={'OK': True}))
+  mocker.patch('%s.updateSteeringFile' % MODULE_NAME, new=Mock(return_value={'OK': True, 'Value': None}))
   mocker.patch('%s.os.path.exists' % MODULE_NAME, return_value=True)
 
   calibClientMock = Mock(name='mock1')
@@ -101,6 +103,7 @@ def test_runIt_simple(calib, mocker):
   mocker.patch('%s.CalibrationClient' % MODULE_NAME, new=Mock(return_value=calibClientMock, name='mock2'))
 
   calib.prepareMARLIN_DLL = Mock(return_value={'OK': True, 'Value': 'dummy_MARLIN_DLL'})
+  calib.resolveInputSlcioFilesAndAddToParameterDict = Mock(return_value={'OK': True, 'Value': {}})
 
   res = calib.runIt()
   assert res['OK']
@@ -112,7 +115,6 @@ def test_runIt_updatingSteeringFile(calib, mocker):
   mocker.patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK()))
   mocker.patch('%s.os.remove' % MODULE_NAME, return_value=True)
   mocker.patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value={'OK': True, 'Value': 'dummy_EnvScript'}))
-  #  mocker.patch('%s.updateSteeringFile' % MODULE_NAME, new=Mock(return_value={'OK': True}))
   mocker.patch('%s.os.path.exists' % MODULE_NAME, return_value=True)
 
   calibClientMock = Mock(name='mock1')
@@ -122,6 +124,7 @@ def test_runIt_updatingSteeringFile(calib, mocker):
   mocker.patch('%s.CalibrationClient' % MODULE_NAME, new=Mock(return_value=calibClientMock, name='mock2'))
 
   calib.prepareMARLIN_DLL = Mock(return_value={'OK': True, 'Value': 'dummy_MARLIN_DLL'})
+  calib.resolveInputSlcioFilesAndAddToParameterDict = Mock(return_value={'OK': True, 'Value': {}})
 
   res = calib.runIt()
   assert res['OK']

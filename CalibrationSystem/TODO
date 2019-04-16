@@ -1,0 +1,52 @@
+[current status]
+- calibration runs sucesfully with one local job.
+- many parameters are still hardcoded
+
+[to be tested]
+- calibration with many jobs (jobs have to be sent to grid)
+- different user cases which can potentially fail calibration
+
+[open issues]
+- muonToMipCalibration is still not working properly (histogram doesn't have proper x-axius range and all events are slammed in the first bin)
+- createCalibration function keeps socket open. It should just create calibration and return the status
+- during photon training step output from pfoAnalysis processor is "pfoAnalysis_XXXX.root"
+- Temporary fix in Utilities/mergeLikelihoods: "if nBins==0 --> nBins = 1" which prevent function from crashing. 
+- how to get platform and appvesrion to read 'pandora_calibration_scripts' value from CS?
+- calibration service, endCurrentStep(): we use hardcoded strings to acess calib. constants from the parameter dict (e.g. we use specific names for processors, but they can be changed by the user). Allow for user specify parameter dict himself
+- fccee steering files. There are two copies of DDCaloDigi and DDPandoraPFANewProcessor processors (we use which one to use according to integration time window). How should we deal with this situation? Should we ask user to provide name of processor to be used?
+- there are a few calorimeter constants used to calculate one calibration constant: Absorber_Thickness_EndCap, Scintillator_Thickness_Ring and so on. They are similar for CLICdet/CLD but maybe not for ILD. To fix this.
+
+[to implement]
+- user interface to setup folowing settings (ask Andre for recommendation):
+	- ecal and hcal barrel / endcap ranges
+	- nHcalLayers
+	- digitisationAccuracy, pandoraPFAAccuracy
+	- currentStage, self.currentPhase - for debuging
+- allow user to specify steering and PandoraSetings files to use
+- possibility to use calib.setExtraCLIArguments (e.g. to set CalorimeterIntegrationTimeWindow)
+- complete documentation
+- run python style check
+- modify application status: "Marlin, stage: %s, phase: %s, iter: %s" (or step?)
+- when make cali.requestNewParameters() take into account that service can be down for some time... just wait a few minutes if it happens
+
+[comments from code review, 12 Aprli 2019]
+- check all calls to CS. Andre changed names for pandora_calibration_scripts
+- proxy information should belong to CalibrationClass 
+- if jobs crashes than agent should resubmit the job, not to kill it
+- job_succes (???)
+- if calibration service have been restarted for whatever reason it should pick up calibID numbrer and all ongoing calibrations from the log (or by other means) and continue existing calibrations.
+- all constants should go to configuration service
+- create class (class factory) that holds only input variables for calibration run
+- move CalibrationRun class to separate file
+- read documentation about the log filter (written by Andre)
+- put all calibration related files to the directory calib<calibrationID> and clean it up when calibration is finished. But have some file which contains latest calibrationID which has to be used during initialization of the Calibration service in case of service restart
+- implement skip events and use one file for many jobs
+- CalibrationHandler source code: refactor: executing python calib scripts into separate functions (where one execute binaries and python scripts to calculate and read calibration constants after each phase)
+- CalibrationClient: l.96 - use constants not number for phases (and implement this in dictionary)
+- CalibrationClient: setup client - can have function submit jobs (instead of calling function in handler???)
+- implement: If too many jobs fails - stop calibration (because probably something is wrong  with configurations)
+- ask user to provide relative path to copy all files to user eos directory. Use Core/Utilities: constructUsersLFNs to construct full path
+- Workflow: make nuber of cycles to waste (wasteCPUCycles) configurable from CS
+- Workflow: if no response from CS for too long - stop requesting new parameters and kill the job (???)
+- Workflow: get current step from the service (do not use it from internal counter)
+

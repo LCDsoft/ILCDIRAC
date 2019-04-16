@@ -147,21 +147,13 @@ class CalibrationClient(object):
     or None if no new parameters are available yet
     :rtype: list
     """
-    self.log.info('execute requestNewParameters')
     res = self.calibrationService.getNewParameters(self.calibrationID, self.currentStep)
-    self.log.info('requestNewParameters: res: %s' % res)
     if res['OK']:
       returnValue = res['Value']
-      if not set(['calibrationIsFinished', 'parameters', 'currentPhase', 'currentStage']).issubset(returnValue.keys()):
-        self.log.error('Corrupted structure of outcome data after request to Calibration service for new parameters. '
-                       'Present keys: %s' % returnValue.keys())
-        # FIXME should we return None in this case?
-        return None
-      self.currentPhase = returnValue['currentPhase']
-      self.currentStage = returnValue['currentStage']
-      return returnValue
-    else:
-      return None  # No new parameters computed yet. Wait a bit and try again.
+      if returnValue is not None:
+        self.currentPhase = returnValue['currentPhase']
+        self.currentStage = returnValue['currentStage']
+    return res
 
   def requestNewPhotonLikelihood(self):
    res = self.calibrationService.getNewPhotonLikelihood(self.calibrationID)

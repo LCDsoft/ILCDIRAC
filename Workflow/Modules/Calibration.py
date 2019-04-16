@@ -42,7 +42,7 @@ class Calibration(MarlinAnalysis):
     self.calibrationID = None
     self.workerID = None
     self.cali = None
-    self.log = gLogger.getSubLogger('%s' % self.__class__.__name__)
+    self.log = None
 
   def runIt(self):
     """
@@ -59,6 +59,8 @@ class Calibration(MarlinAnalysis):
 
     if self.cali is None:
       self.cali = CalibrationClient(self.calibrationID, self.workerID)
+    if self.log is None:
+      self.log = gLogger.getSubLogger('%s_wid_%s' % (__name__, self.workerID))
 
     self.result = S_OK()
     if not self.platform:
@@ -161,12 +163,22 @@ class Calibration(MarlinAnalysis):
     marlin_dll = res["Value"]
 
     while True:
-      calibrationParameters = self.cali.requestNewParameters()
-      while calibrationParameters is None:
+      res = self.cali.requestNewParameters()
+      if not res['OK']:
+        self.log.error('Stop executing calibration workflow. Error when requesting new parameters from the calibration'
+                       ' service. Error message: %s' % res['Message'])
+        return res
+
+      while res['Value'] is None:
         self.log.notice("Waiting for new parameters set")
         wasteCPUCycles(10)
-        calibrationParameters = self.cali.requestNewParameters()
+        res = self.cali.requestNewParameters()
+        if not res['OK']:
+          self.log.error('Stop executing calibration workflow. Error when requesting new parameters from the'
+                         ' calibration service. Error message: %s' % res['Message'])
+          return res
 
+      calibrationParameters = res['Value']
       if calibrationParameters['calibrationIsFinished']:
         self.log.notice("Calibration finished")
         break

@@ -80,7 +80,6 @@ def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
                new=Mock(return_value=opsMock, name='Class'))
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.convert_and_execute',
                side_effect=mimic_convert_and_execute)
-  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.shellCall', return_value={'OK': False})
 
   newRun = CalibrationRun(1, 'dummy_steeringFile', ['dummy_inputFiles1', 'dummy_inputFiles2'], 1, '', '')
   mocker.patch.object(CalibrationRun, '_CalibrationRun__mergePandoraLikelihoodXmlFiles',
