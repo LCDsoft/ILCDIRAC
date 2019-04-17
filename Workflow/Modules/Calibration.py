@@ -36,7 +36,7 @@ class Calibration(MarlinAnalysis):
   def __init__(self):
     super(Calibration, self).__init__()
     self.applicationName = "Calibration"
-    self.currentStep = -1  # internal counter of worker node of how much times Marlin was run
+    self.currentStep = None
     self.currentPhase = None
     self.currentStage = None
     self.calibrationID = None
@@ -185,7 +185,7 @@ class Calibration(MarlinAnalysis):
 
       self.currentPhase = calibrationParameters['currentPhase']
       self.currentStage = calibrationParameters['currentStage']
-      self.currentStep = self.currentStep + 1
+      self.currentStep = calibrationParameters['currentStep']
       parameterDict = calibrationParameters['parameters']
 
       print('DEBUG_CALIB: parameterDict BEFORE resolve: %s' % parameterDict)

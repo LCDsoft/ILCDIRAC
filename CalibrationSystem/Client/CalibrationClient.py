@@ -129,7 +129,7 @@ class CalibrationClient(object):
     """
     self.calibrationID = calibrationID
     self.workerID = workerID
-    self.currentStep = -1  # counter of how much Marlin have been run on worker nodes
+    self.currentStep = -1  # initial parameter request
     self.currentPhase = CalibrationPhase.ECalDigi
     self.currentStage = 1
     self.calibrationService = RPCClient('Calibration/Calibration')
@@ -153,6 +153,7 @@ class CalibrationClient(object):
       if returnValue is not None:
         self.currentPhase = returnValue['currentPhase']
         self.currentStage = returnValue['currentStage']
+        self.currentStep = returnValue['currentStep']
     return res
 
   def requestNewPhotonLikelihood(self):
@@ -187,7 +188,6 @@ class CalibrationClient(object):
     attempt = 0
 
     resultString = binaryFileToString(outFileName)
-    self.currentStep = self.currentStep + 1
 
     while attempt < CalibrationClient.MAXIMUM_REPORT_TRIES:
       res = self.calibrationService.submitResult(self.calibrationID, self.currentStage, self.currentPhase,

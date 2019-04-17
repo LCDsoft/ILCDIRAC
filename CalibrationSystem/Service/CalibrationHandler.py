@@ -146,6 +146,7 @@ class CalibrationRun(object):
 
     self.currentParameterSet['currentStage'] = self.currentStage
     self.currentParameterSet['currentPhase'] = self.currentPhase
+    self.currentParameterSet['currentStep'] = self.currentStep
     self.currentParameterSet['parameters'] = self.calibrationConstantsDict
     self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
 
@@ -633,6 +634,7 @@ class CalibrationRun(object):
 
     self.currentParameterSet['currentStage'] = self.currentStage
     self.currentParameterSet['currentPhase'] = self.currentPhase
+    self.currentParameterSet['currentStep'] = self.currentStep
     self.currentParameterSet['parameters'] = self.calibrationConstantsDict
     self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
 
