@@ -28,6 +28,7 @@ def calib():
   calib.debug = True
   calib.platform = 'dummy_platform'
   calib.applicationLog = 'dummy_applicationLog'
+  calib.log = Mock()
 
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
   # FIXME this path will be different in production version probably... update it
@@ -73,20 +74,31 @@ def test_runScript_properInputArguments(calib, mocker):
 
 
 paramDictList = [
-    {'OK': True, 'Value': {'currentStage': 1, 'currentPhase': 0, 'parameters': {
+    {'OK': True, 'Value': {'currentStep': 0, 'currentStage': 1, 'currentPhase': 0, 'parameters': {
         "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationEndCap']": 'ECALTOHAD_YYYY'}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 1, 'currentPhase': 1, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 1, 'currentPhase': 2, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 1, 'currentPhase': 3, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 1, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 2, 'currentPhase': 5, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 0, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 1, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 2, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 3, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStage': 3, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': True}}]
+    {'OK': True, 'Value': {'currentStep': 1, 'currentStage': 1,
+                           'currentPhase': 1, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 2, 'currentStage': 1,
+                           'currentPhase': 2, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 3, 'currentStage': 1,
+                           'currentPhase': 3, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 4, 'currentStage': 1,
+                           'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 5, 'currentStage': 2,
+                           'currentPhase': 5, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 6, 'currentStage': 3,
+                           'currentPhase': 0, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 7, 'currentStage': 3,
+                           'currentPhase': 1, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 8, 'currentStage': 3,
+                           'currentPhase': 2, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 9, 'currentStage': 3,
+                           'currentPhase': 3, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 10, 'currentStage': 3,
+                           'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 11, 'currentStage': 3,
+                           'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
+    {'OK': True, 'Value': {'currentStep': 12, 'currentStage': 3, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': True}}]
 
 
 def test_runIt_simple(calib, mocker):

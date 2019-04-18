@@ -7,7 +7,8 @@ from collections import defaultdict
 
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
-from DIRAC.Core.DISET.RPCClient import RPCClient
+from DIRAC.Core.Base.Client import Client
+from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
 
 __RCSID__ = "$Id$"
 
@@ -19,13 +20,15 @@ class CalibrationAgent(AgentModule):
   Periodically checks the state of the jobs from the CalibrationService.
   If too few jobs are running, it tells the CalibrationService to restart the failed ones.
   """
+  # TODO FIXME these two constants are not used anywhere for time being
+  # if they will be used - don't hardcode them. read from CS with self.am_getOption()
   MIN_JOB_SUCCESS_RATE = 0.9  # X% of jobs have to succeed for the next step to start
   MAX_NUMBER_OF_JOBS = 1000  # Number of jobs initially started
 
   def initialize(self):
     """ Initialization of the Agent
     """
-    self.calibrationService = RPCClient('Calibration/Calibration')
+    self.calibrationService = Client('Calibration/Calibration')
     self.currentCalibrations = []  # Contains IDs (int) of the calibrations
     self.currentJobStatuses = {}  # Contains a mapping calibrationID -> dict, the dict contains a mapping
     # WorkerID (int) -> jobStatus (enum)
@@ -63,7 +66,7 @@ class CalibrationAgent(AgentModule):
     :rtype: dict
     """
     result = defaultdict(dict)  # defaults to {}
-    jobMonitoringService = RPCClient('WorkloadManagement/JobMonitoring')
+    jobMonitoringService = JobMonitoringClient()
     res = jobMonitoringService.getJobs({'JobGroup': 'CalibrationService_calib_job'})
     if not res['OK']:
       self.log.error("Failed getting job IDs from job DB! Error:", res['Message'])

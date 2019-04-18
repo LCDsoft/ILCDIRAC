@@ -4,12 +4,12 @@ The worker nodes use this interface to ask for new parameters, their event slice
 about the results of their reconstruction
 """
 
-import sys
 from DIRAC.Core.DISET.RPCClient import RPCClient
 from DIRAC import S_OK, S_ERROR, gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 
 __RCSID__ = "$Id$"
+LOG = gLogger.getSubLogger(__name__)
 
 
 class CalibrationPhase(object):
@@ -134,7 +134,7 @@ class CalibrationClient(object):
     self.currentStage = 1
     self.calibrationService = RPCClient('Calibration/Calibration')
     self.parameterSet = None
-    self.log = gLogger.getSubLogger('CalibrationSystem/%s' % self.__class__.__name__)
+    self.log = LOG
 
   def getInputDataDict(self):
     return self.calibrationService.getInputDataDict(self.calibrationID, self.workerID)
@@ -177,6 +177,7 @@ class CalibrationClient(object):
     self.currentPhase = phaseID
     self.currentStep = stepID
 
+  # TODO read this constant from CS
   MAXIMUM_REPORT_TRIES = 10
   def reportResult(self, outFileName):
     """ Sends the root file from PfoAnalysis or PandoraLikelihoodDataPhotonTraining.xml from photon training
@@ -215,7 +216,7 @@ def createCalibration(inputFiles, numberOfJobs, marlinVersion, steeringFile, det
 
   calibrationService = RPCClient('Calibration/Calibration')
   if not isinstance(inputFiles, dict):
-    gLogger.error("inputFiles is not a dictionary")
+    LOG.error("inputFiles is not a dictionary")
     return S_ERROR("badParameter")
 
   return calibrationService.createCalibration(inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel)
