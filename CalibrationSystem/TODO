@@ -7,10 +7,11 @@
 - different user cases which can potentially fail calibration
 
 [open issues]
+- if one want to have possibility to run calibration from some specific stage/phase one need to modify Calibration Workflow (line which starts with "if self.currentStage == 3")
+- in CalibratinHandler.py-->export_checkForStepIncrement() - if on previous function execution calibration was finished than on this execution we will delete this calibration run from active calibrations. Since we perform constant calculation when 90% of jobs are finished it can lead that 10% of jobs which were slower can finish with error status... What should one do? Wait for all jobs to be finished? of don't mark them with error but just mark them with OK status?
 - muonToMipCalibration is still not working properly (histogram doesn't have proper x-axius range and all events are slammed in the first bin)
-- createCalibration function keeps socket open. It should just create calibration and return the status
 - during photon training step output from pfoAnalysis processor is "pfoAnalysis_XXXX.root"
-- Temporary fix in Utilities/mergeLikelihoods: "if nBins==0 --> nBins = 1" which prevent function from crashing. 
+- Temporary fix in Utilities/mergeLikelihoods: "if nBins==0 --> nBins = 1" which prevent function from crashing when there are no counts in bin (division by zero)
 - how to get platform and appvesrion to read 'pandora_calibration_scripts' value from CS?
 - calibration service, endCurrentStep(): we use hardcoded strings to acess calib. constants from the parameter dict (e.g. we use specific names for processors, but they can be changed by the user). Allow for user specify parameter dict himself
 - fccee steering files. There are two copies of DDCaloDigi and DDPandoraPFANewProcessor processors (we use which one to use according to integration time window). How should we deal with this situation? Should we ask user to provide name of processor to be used?
@@ -26,12 +27,11 @@
 - possibility to use calib.setExtraCLIArguments (e.g. to set CalorimeterIntegrationTimeWindow)
 - complete documentation
 - run python style check
-- modify application status: "Marlin, stage: %s, phase: %s, iter: %s" (or step?)
 - when make cali.requestNewParameters() take into account that service can be down for some time... just wait a few minutes if it happens
+- replace usage of RPC clients (there is one at least in Client)
 
 [comments from code review, 12 Aprli 2019]
 - check all calls to CS. Andre changed names for pandora_calibration_scripts
-- proxy information should belong to CalibrationClass 
 - if jobs crashes than agent should resubmit the job, not to kill it
 - job_succes (???)
 - if calibration service have been restarted for whatever reason it should pick up calibID numbrer and all ongoing calibrations from the log (or by other means) and continue existing calibrations.
@@ -42,11 +42,9 @@
 - put all calibration related files to the directory calib<calibrationID> and clean it up when calibration is finished. But have some file which contains latest calibrationID which has to be used during initialization of the Calibration service in case of service restart
 - implement skip events and use one file for many jobs
 - CalibrationHandler source code: refactor: executing python calib scripts into separate functions (where one execute binaries and python scripts to calculate and read calibration constants after each phase)
-- CalibrationClient: l.96 - use constants not number for phases (and implement this in dictionary)
 - CalibrationClient: setup client - can have function submit jobs (instead of calling function in handler???)
 - implement: If too many jobs fails - stop calibration (because probably something is wrong  with configurations)
 - ask user to provide relative path to copy all files to user eos directory. Use Core/Utilities: constructUsersLFNs to construct full path
-- Workflow: make nuber of cycles to waste (wasteCPUCycles) configurable from CS
+- Workflow: make number of cycles to waste (wasteCPUCycles) configurable from CS
 - Workflow: if no response from CS for too long - stop requesting new parameters and kill the job (???)
-- Workflow: get current step from the service (do not use it from internal counter)
 

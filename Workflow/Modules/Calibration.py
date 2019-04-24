@@ -203,7 +203,9 @@ class Calibration(MarlinAnalysis):
         self.log.error('Error while updateing steering file. Error message: %s' % res['Message'])
         return res
 
-      if self.currentStage == 3 and not os.path.exists('newPhotonLikelihood.xml'):
+      # FIXME for debugging
+      if self.currentStage == 3 and self.currentPhase <= 2 and not os.path.exists('newPhotonLikelihood.xml'):
+        #  if self.currentStage == 3 and not os.path.exists('newPhotonLikelihood.xml'):
         newPhotonLikelihood = self.cali.requestNewPhotonLikelihood()
         while newPhotonLikelihood is None:
           self.log.notice("Waiting for new photon likelihood file for stage 3")
@@ -361,7 +363,9 @@ class Calibration(MarlinAnalysis):
 
     os.chmod(scriptName, 0755)
     comm = 'sh -c "./%s"' % (scriptName)
-    self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.currentStep))
+    #  self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.currentStep))
+    self.setApplicationStatus('PandoraCalib, stage: %s; phase: %s; step: %s' % (self.currentStage, self.currentPhase,
+                                                                                self.currentStep))
     self.stdError = ''
     res = shellCall(0, comm, callbackFunction=self.redirectLogOutput, bufferLimit=20971520)
     return res

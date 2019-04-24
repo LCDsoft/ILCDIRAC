@@ -838,14 +838,16 @@ class CalibrationHandler(RequestHandler):
     self.log.info('Executing checkForStepIncrement. activeCalibrations: %s'
                   % CalibrationHandler.activeCalibrations.keys())
     for calibrationID, calibration in CalibrationHandler.activeCalibrations.iteritems():
-      if self.finalInterimResultReceived(calibration, calibration.currentStep):
+      # FIXME this still can lead to that some jobs will finish with error status because they didn't finish in time
+      if calibration.calibrationFinished:
+        res = calibration.copyResultsToEos(proxyUserName=calibration.proxyUserName,
+                                           proxyUserGroup=calibration.proxyUserGroup)
+        del CalibrationHandler.activeCalibrations[calibrationID]
+        # TODO should I do this? if only one calibration is not finished - all other will stop as well...
+        if not res['OK']:
+          return res
+      elif self.finalInterimResultReceived(calibration, calibration.currentStep):
         calibration.endCurrentStep()
-        if calibration.calibrationFinished:
-          res = calibration.copyResultsToEos(proxyUserName=calibration.proxyUserName,
-                                             proxyUserGroup=calibration.proxyUserGroup)
-          del CalibrationHandler.activeCalibrations[calibrationID]
-          if not res['OK']:
-            return res
     return S_OK()
 
   finishedJobsForNextStep = 0.9  # X% of all jobs must have finished in order for the next step to begin.

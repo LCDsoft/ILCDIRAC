@@ -100,17 +100,17 @@ class CalibrationPhase(object):
     :returns: The name of the CalibrationPhase
     :rtype: basestring
     """
-    if phaseID == 0:
+    if phaseID == CalibrationPhase.ECalDigi:
       return 'ECalDigi'
-    elif phaseID == 1:
+    elif phaseID == CalibrationPhase.HCalDigi:
       return 'HCalDigi'
-    elif phaseID == 2:
+    elif phaseID == CalibrationPhase.MuonAndHCalOtherDigi:
       return 'MuonAndHCalOtherDigi'
-    elif phaseID == 3:
+    elif phaseID == CalibrationPhase.ElectroMagEnergy:
       return 'ElectroMagEnergy'
-    elif phaseID == 4:
+    elif phaseID == CalibrationPhase.HadronicEnergy:
       return 'HadronicEnergy'
-    elif phaseID == 5:
+    elif phaseID == CalibrationPhase.PhotonTraining:
       return 'PhotonTraining'
     else:
       raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)
