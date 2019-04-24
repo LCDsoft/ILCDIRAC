@@ -28,7 +28,8 @@ class CalibrationAgent(AgentModule):
   def initialize(self):
     """ Initialization of the Agent
     """
-    self.calibrationService = Client('Calibration/Calibration')
+    self.calibrationService = Client()
+    self.calibrationService.setServer('Calibration/Calibration')
     self.currentCalibrations = []  # Contains IDs (int) of the calibrations
     self.currentJobStatuses = {}  # Contains a mapping calibrationID -> dict, the dict contains a mapping
     # WorkerID (int) -> jobStatus (enum)

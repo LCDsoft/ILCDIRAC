@@ -7,8 +7,10 @@ import csv
 import tempfile
 from xml.etree import ElementTree as et
 
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Subprocess import shellCall
+
+LOG = gLogger.getSubLogger(__name__)
 
 #pylint: disable=invalid-name,too-many-locals,too-many-statements
 
@@ -161,16 +163,19 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup):
   tree = et.parse(inFileName)
 
   #FIXME redirect log messegage to LOG class?
-  print("Updating following values for %s:" % outFileName)
+  LOG.info("Updating following values for %s:" % outFileName)
   for iPar, iVal in parametersToSetup.items():
     iElement = tree.find(iPar)
     if iElement is None:
-      return S_ERROR("Cannot update parameter in the steering file! Parameter: %s; inFileName: %s; outFileName: %s"
-                     % (iPar, inFileName, outFileName))
+      errMsg = ("Cannot update parameter in the steering file! Parameter: %s; inFileName: %s; outFileName: %s"
+                % (iPar, inFileName, outFileName))
+      LOG.error(errMsg)
+      return S_ERROR(errMsg)
     else:
-      print('%s:\t"%s" --> "%s"' % (iPar, iElement.text, iVal))
       if isinstance(iVal, (float, int)):
-	iVal = str(iVal)
+        iVal = str(iVal)
+      if not iVal in iElement.text:
+        LOG.info('%s:\t"%s" --> "%s"' % (iPar, iElement.text, iVal))
       iElement.text = iVal
 
   res = tree.write(outFileName)

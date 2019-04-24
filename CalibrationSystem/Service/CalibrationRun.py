@@ -3,6 +3,7 @@ The CalibrationRun ???
 """
 
 import glob
+import os
 from collections import defaultdict
 
 from DIRAC import S_OK, S_ERROR, gLogger
@@ -109,20 +110,15 @@ class CalibrationRun(object):
   def readInitialParameterDict(self):
     self.log.info('running readInitialParameterDict')
 
-    folder = "calib%s" % self.calibrationID
-    if not os.path.exists(folder):
-      os.mkdir(folder)
-
     dataMan = DataManager()
-    res = dataMan.getFile(self.steeringFile)
+    res = dataMan.getFile(self.steeringFile, destinationDir='calib%s/' % self.calibrationID)
 
-    if not res['OK'] or not os.path.exists(os.path.basename(self.steeringFile)):
+    self.localSteeringFile = os.path.join("calib%s/" % self.calibrationID, os.path.basename(self.steeringFile))
+
+    if not res['OK'] or not os.path.exists(self.localSteeringFile):
       errMsg = 'Cannot copy Marlin steering file. res: %s' % res
       self.log.error(errMsg)
       return S_ERROR(errMsg)
-
-    self.localSteeringFile = os.path.join("calib%s/" % self.calibrationID, os.path.basename(self.steeringFile))
-    shutil.move(os.path.basename(self.steeringFile), self.localSteeringFile)
 
     # FIXME this path will be different in production version probably... update it
     parListFileName = os.path.join(utilities.__path__[0], 'testing/parameterListMarlinSteeringFile.txt')
@@ -172,7 +168,7 @@ class CalibrationRun(object):
       self.log.error(errMsg)
       return res
 
-    dirac = DiracILC(True, 'some_job_repository.rep')
+    dirac = DiracILC(True, 'calib%s/job_repository.rep' % self.calibrationID)
     results = []
 
     listOfNodesToSubmitTo = xrange(0, self.numberOfJobs)
@@ -627,6 +623,9 @@ class CalibrationRun(object):
     self.currentParameterSet['currentStep'] = self.currentStep
     self.currentParameterSet['parameters'] = self.calibrationConstantsDict
     self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
+
+    # update local steering file after every step. This file will be used if calibration service will be restarted and some calibrations are still are not finished
+    res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile, self.calibrationConstantsDict)
 
     return S_OK()
 

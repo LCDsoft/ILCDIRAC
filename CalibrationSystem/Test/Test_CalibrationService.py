@@ -5,15 +5,16 @@ Unit tests for the CalibrationService
 import unittest
 import pytest
 import os
+from DIRAC import S_OK, S_ERROR, gLogger
 from mock import call, patch, MagicMock as Mock
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
-from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler, \
-    CalibrationRun
+from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler
+from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
     assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
     assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls, \
     assertDiracFails
-from DIRAC import S_OK, S_ERROR
+from ILCDIRAC.CalibrationSystem.Client.DetectorSettings import createCalibrationSettings
 
 __RCSID__ = "$Id$"
 
@@ -76,9 +77,9 @@ def mimic_convert_and_execute(inList, _=''):
 def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
   opsMock = Mock(name='instance')
   opsMock.getValue.return_value = 'dummy'
-  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.Operations',
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
                new=Mock(return_value=opsMock, name='Class'))
-  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.convert_and_execute',
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.convert_and_execute',
                side_effect=mimic_convert_and_execute)
 
   newRun = CalibrationRun(1, 'dummy_steeringFile', ['dummy_inputFiles1', 'dummy_inputFiles2'], 1, '', '')
@@ -131,11 +132,13 @@ def test_regroupInputFile(calibHandler, mocker):
 
 
 def test_export_createCalibration_wrongInputFiles(calibHandler, mocker):
-  res = calibHandler.export_createCalibration({'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+  calibSettings = createCalibrationSettings('CLIC')
+  res = calibHandler.export_createCalibration({'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
   assert not res['OK']
   assert 'Wrong input data' in res['Message']
 
-  res = calibHandler.export_createCalibration({'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+  res = calibHandler.export_createCalibration(
+      {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
   assert not res['OK']
   assert 'Too many jobs for provided input data.' in res['Message']
 
@@ -146,7 +149,11 @@ def test_export_submitResult(calibHandler, mocker):
                       new=Mock(return_value={'OK': True, 'Value': []}))
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
-  res = calibHandler.export_createCalibration({'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+
+  calibSettings = createCalibrationSettings('CLIC')
+
+  res = calibHandler.export_createCalibration(
+      {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
   if not res['OK']:
     print('Error message:\t%s' % res['Message'])
     assert False
@@ -183,13 +190,17 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
   opsMock = Mock(name='instance')
   opsMock.getValue.return_value = os.path.join(fileDir, 'testing')
-  mocker.patch('%s.Operations' % MODULE_NAME, new=Mock(return_value=opsMock, name='Class'))
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
+               new=Mock(return_value=opsMock, name='Class'))
   mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile',
                       new=Mock(return_value={'OK': True, 'Value': []}))
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
-  res = calibHandler.export_createCalibration({'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+  calibSettings = createCalibrationSettings('CLIC')
+
+  res = calibHandler.export_createCalibration(
+      {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
   if not res['OK']:
     print(res['Message'])
     assert False
@@ -418,7 +429,9 @@ class CalibrationHandlerTest(unittest.TestCase):
         with patch.object(self.calh, '_getUsernameAndGroup',
                           new=Mock(return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}})):
           for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
-            res = self.calh.export_createCalibration({'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, 1, '', '', '')
+            calibSettings = createCalibrationSettings('CLIC')
+            res = self.calh.export_createCalibration(
+                {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
             if not res['OK']:
               print(res['Message'])
               assert False
@@ -426,7 +439,7 @@ class CalibrationHandlerTest(unittest.TestCase):
                                'CalibrationID is not in active calibrations: 135', self)
 
   def test_calculate_params(self):
-    from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationResult
+    from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationResult
     result1 = [1, 2.3, 5]
     result2 = [0, 0.2, -0.5]
     result3 = [-10, -5.4, 2]

@@ -4,7 +4,7 @@ The worker nodes use this interface to ask for new parameters, their event slice
 about the results of their reconstruction
 """
 
-from DIRAC.Core.DISET.RPCClient import RPCClient
+from DIRAC.Core.Base.Client import Client
 from DIRAC import S_OK, S_ERROR, gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 
@@ -132,7 +132,8 @@ class CalibrationClient(object):
     self.currentStep = -1  # initial parameter request
     self.currentPhase = CalibrationPhase.ECalDigi
     self.currentStage = 1
-    self.calibrationService = RPCClient('Calibration/Calibration')
+    self.calibrationService = Client()
+    self.calibrationService.setServer('Calibration/Calibration')
     self.parameterSet = None
     self.log = LOG
 
@@ -201,7 +202,7 @@ class CalibrationClient(object):
     return S_ERROR('Could not report result back to CalibrationService.')
 
 
-def createCalibration(inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
+def createCalibration(inputFiles, calibSettings):
   """ Starts a calibration.
 
   :param basestring steeringFile: Steering file used in the calibration
@@ -214,9 +215,10 @@ def createCalibration(inputFiles, numberOfJobs, marlinVersion, steeringFile, det
   :rtype: dict
   """
 
-  calibrationService = RPCClient('Calibration/Calibration')
+  calibrationService = Client()
+  calibrationService.setServer('Calibration/Calibration')
   if not isinstance(inputFiles, dict):
     LOG.error("inputFiles is not a dictionary")
     return S_ERROR("badParameter")
 
-  return calibrationService.createCalibration(inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel)
+  return calibrationService.createCalibration(inputFiles, dict(calibSettings.settingsDict))

@@ -8,6 +8,7 @@ import os
 import copy
 import math
 import pickle
+import shutil
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
@@ -66,9 +67,11 @@ class CalibrationHandler(RequestHandler):
   # TODO split this function to two: first one just create CalibrationRun instance and returns it (to allow user to
   # setup different settings); second one - submits jobs
   auth_createCalibration = ['authenticated']
-  types_createCalibration = [dict, int, basestring, basestring, basestring]
+  #  types_createCalibration = [dict, int, basestring, basestring, basestring]
+  #  def export_createCalibration(self, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
+  types_createCalibration = [dict, dict]
 
-  def export_createCalibration(self, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
+  def export_createCalibration(self, inputFiles, calibSettingsDict):
     """ Called by users to create a calibration run (series of calibration iterations)
 
     :param basestring marlinVersion: Version of the Marlin application to be used for reconstruction
@@ -79,6 +82,11 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK containing ID of the calibration, used to retrieve results etc
     :rtype: dict
     """
+
+    numberOfJobs = calibSettingsDict['numberOfJobs']
+    marlinVersion = calibSettingsDict['marlinVersion']
+    detectorModel = calibSettingsDict['detectorModel']
+    steeringFile = calibSettingsDict['steeringFile']
 
     inputFileTypes = ['gamma', 'kaon', 'muon', 'zuds']
     if not set(inputFileTypes).issubset([iEl.lower() for iEl in inputFiles.keys()]):
@@ -99,8 +107,8 @@ class CalibrationHandler(RequestHandler):
     calibrationID = CalibrationHandler.calibrationCounter
     newRun = CalibrationRun(calibrationID, steeringFile, groupedInputFiles, numberOfJobs, marlinVersion, detectorModel)
     # TODO FIXME stage and phase is setup for debugging
-    #  newRun.currentStage = 2
-    #  newRun.currentPhase = 5
+    newRun.currentStage = calibSettingsDict['startStage']
+    newRun.currentPhase = calibSettingsDict['startPhase']
     CalibrationHandler.activeCalibrations[calibrationID] = newRun
     #newRun.submitJobs(calibrationID)
     #return S_OK(calibrationID)
@@ -180,12 +188,15 @@ class CalibrationHandler(RequestHandler):
     """
     self.log.info('Executing checkForStepIncrement. activeCalibrations: %s'
                   % CalibrationHandler.activeCalibrations.keys())
-    for calibrationID, calibration in CalibrationHandler.activeCalibrations.iteritems():
+    for calibrationID in CalibrationHandler.activeCalibrations.keys():
       # FIXME this still can lead to that some jobs will finish with error status because they didn't finish in time
+      calibration = CalibrationHandler.activeCalibrations[calibrationID]
       if calibration.calibrationFinished:
         res = calibration.copyResultsToEos(proxyUserName=calibration.proxyUserName,
                                            proxyUserGroup=calibration.proxyUserGroup)
+        self.log.info('Removing calibration %s from the active calibration list and clean up local directory')
         del CalibrationHandler.activeCalibrations[calibrationID]
+        shutil.rmtree('calib%s' % calibrationID)
         # TODO should I do this? if only one calibration is not finished - all other will stop as well...
         if not res['OK']:
           return res
