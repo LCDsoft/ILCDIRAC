@@ -60,45 +60,26 @@ class CalibrationRun(object):
   the results of each step.
   """
 
-  def __init__(self, calibrationID, steeringFile, inputFiles, numberOfJobs, marlinVersion, detectorModel):
+  def __init__(self, calibrationID, inputFiles, calibSettingsDict):
     self.calibrationID = calibrationID
-    self.log = LOG.getSubLogger('[%s]' % calibrationID)
-    self.steeringFile = steeringFile
-    if 'LFN:' in self.steeringFile:
-      self.steeringFile = self.steeringFile.split(':')[1]
-    self.localSteeringFile = ''
+    self.settings = calibSettingsDict
     self.inputFiles = inputFiles
-    self.marlinVersion = marlinVersion
-    self.detectorModel = detectorModel
-    #TODO ask user to provide these... or read it from CS
-    self.ecalBarrelCosThetaRange = [0.0, 1.0]
-    self.ecalEndcapCosThetaRange = [0.0, 1.0]
-    self.hcalBarrelCosThetaRange = [0.0, 1.0]
-    self.hcalEndcapCosThetaRange = [0.0, 1.0]
-    #TODO make these three value below configurable
-    self.nHcalLayers = 60
-    #  self.digitisationAccuracy = 0.05
-    #  self.pandoraPFAAccuracy = 0.005
-    self.digitisationAccuracy = 0.05
-    self.pandoraPFAAccuracy = 0.025
+    self.log = LOG.getSubLogger('[%s]' % calibrationID)
+    if 'LFN:' in self.settings['steeringFile']:
+      self.settings['steeringFile'] = self.settings['steeringFile'].split(':')[1]
+    self.localSteeringFile = os.path.join("calib%s/" % self.calibrationID,
+                                          os.path.basename(self.settings['steeringFile']))
     self.stepResults = defaultdict(CalibrationResult)
-    self.currentStage = 1
-    self.currentPhase = CalibrationPhase.ECalDigi
+    self.currentStage = self.settings['startStage']
+    self.currentPhase = self.settings['startPhase']
     self.currentStep = 0
     self.currentParameterSet = defaultdict()
-
-    self.numberOfJobs = numberOfJobs
-    self.calibrationFinished = False
-    self.platform = 'x86_64-slc5-gcc43-opt'  # FIXME does it the default platform in CS?
-    self.appversion = 'ILCSoft-2019-02-20_gcc62'  # FIXME this has to be equal to self.marlinVersion.
-    # hardcoded for debugging
-    #  self.appversion = self.marlinVersion
+    # TODO temporary field in the settings. for testing only
+    self.calibrationFinished = self.settings['startCalibrationFinished']
+    #  self.calibrationFinished = False
     self.newPhotonLikelihood = None
     self.ops = Operations()
     self.calibrationConstantsDict = None
-    self.softwareVersion = ''
-    # TODO hardcoded! user has to define this path
-    self.outputPath = '/ilc/user/o/oviazlo/clic_caloCalib/output/'
     self.proxyUserName = ''
     self.proxyUserGroup = ''
 
@@ -111,9 +92,7 @@ class CalibrationRun(object):
     self.log.info('running readInitialParameterDict')
 
     dataMan = DataManager()
-    res = dataMan.getFile(self.steeringFile, destinationDir='calib%s/' % self.calibrationID)
-
-    self.localSteeringFile = os.path.join("calib%s/" % self.calibrationID, os.path.basename(self.steeringFile))
+    res = dataMan.getFile(self.settings['steeringFile'], destinationDir='calib%s/' % self.calibrationID)
 
     if not res['OK'] or not os.path.exists(self.localSteeringFile):
       errMsg = 'Cannot copy Marlin steering file. res: %s' % res
@@ -171,7 +150,7 @@ class CalibrationRun(object):
     dirac = DiracILC(True, 'calib%s/job_repository.rep' % self.calibrationID)
     results = []
 
-    listOfNodesToSubmitTo = xrange(0, self.numberOfJobs)
+    listOfNodesToSubmitTo = xrange(0, self.settings['numberOfJobs'])
     if idsOfWorkerNodesToSubmitTo is not None:
       listOfNodesToSubmitTo = idsOfWorkerNodesToSubmitTo
 
@@ -190,7 +169,8 @@ class CalibrationRun(object):
       curJob.check = False  # Necessary to turn off user confirmation
       curJob.setName('CalibrationService_calid_%s_workerid_%s' % (self.calibrationID, curWorkerID))
       curJob.setJobGroup('CalibrationService_calib_job')
-      curJob.setCLICConfig(self.marlinVersion.rsplit("_", 1)[0])  # needed to copy files form ClicPerformance package
+      # needed to copy files form ClicPerformance package
+      curJob.setCLICConfig(self.settings['marlinVersion'].rsplit("_", 1)[0])
       # TODO implement using line below - choose of tracking, time window, etc.
       #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"
       #                             --Output_DST.LCIOOutputFile="+outputFile+"
@@ -199,8 +179,7 @@ class CalibrationRun(object):
       curJob.setCPUTime(24 * 60 * 60)
       # FIXME allow user to specify xml-files. CLIC detector have different name of PandoraLikelihhod file than CLD
       #  inputSB = ['GearOutput.xml', 'PandoraSettingsDefault.xml', 'PandoraLikelihoodData9EBin.xml']
-      if self.steeringFile != '':
-        curJob.setInputSandbox(['LFN:' + self.steeringFile])
+      curJob.setInputSandbox(['LFN:' + self.settings['steeringFile']])
       curJob.setInputData(lcioFiles)
       # TODO files to redirect for output: newPhotonLikelihood.xml, finalSteeringFile
       curJob.setOutputSandbox(['*.log', '*.xml', '*.txt'])
@@ -209,12 +188,11 @@ class CalibrationRun(object):
       calib = Calibration()
       calib.setCalibrationID(self.calibrationID)
       calib.setWorkerID(curWorkerID)
-      calib.setVersion(self.marlinVersion)
-      calib.setDetectorModel(self.detectorModel)
+      calib.setVersion(self.settings['marlinVersion'])
+      calib.setDetectorModel(self.settings['detectorModel'])
       #  calib.setNbEvts(nEvts+1)
       #  calib.setProcessorsToUse([])
-      if self.steeringFile != '':
-        calib.setSteeringFile(os.path.basename(self.steeringFile))
+      calib.setSteeringFile(os.path.basename(self.settings['steeringFile']))
       res = curJob.append(calib)
       if not res['OK']:
         self.log.error('Append calib module to UserJob: error_msg: %s' % res['Message'])
@@ -346,15 +324,13 @@ class CalibrationRun(object):
 
     self.log.info('calibrationFile: %s' % calibrationFile)
 
-    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.platform,
-                                                                                                self.appversion, "PandoraAnalysis"), None)
-    ilcSoftInitScript = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.platform,
-                                                                                                       self.appversion, "CVMFSEnvScript"), None)
+    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.settings['platform'],
+                                                                                                self.settings['marlinVersion_CS'], "PandoraAnalysis"), None)
+    ilcSoftInitScript = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.settings['platform'],
+                                                                                                       self.settings['marlinVersion_CS'], "CVMFSEnvScript"), None)
 
     import ILCDIRAC.CalibrationSystem.Utilities as utilities
     pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
-
-    self.log.info('SASHA Python_Read_Scripts: %s' % pythonReadScriptPath)
 
     truthEnergy = CalibrationPhase.sampleEnergyFromPhase(self.currentPhase)
 
@@ -366,19 +342,14 @@ class CalibrationRun(object):
       binary = os.path.join(scriptPath, 'ECalDigitisation_ContainedEvents')
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'Barrel',
-                                 '-i', self.ecalBarrelCosThetaRange[0], '-j', self.ecalBarrelCosThetaRange[1]],
+                                 '-c', self.settings['digitisationAccuracy'], '-d', fileDir, '-e', '90', '-g', 'Barrel',
+                                 '-i', self.settings['ecalBarrelCosThetaRange'][0], '-j', self.settings['ecalBarrelCosThetaRange'][1]],
                                 ilcSoftInitScript)
-
-      self.log.info('SASHA res from first convert_and_execute: %s' % res)
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'EndCap',
-                                 '-i', self.ecalEndcapCosThetaRange[0], '-j', self.ecalEndcapCosThetaRange[1]],
+                                 '-c', self.settings['digitisationAccuracy'], '-d', fileDir, '-e', '90', '-g', 'EndCap',
+                                 '-i', self.settings['ecalEndcapCosThetaRange'][0], '-j', self.settings['ecalEndcapCosThetaRange'][1]],
                                 ilcSoftInitScript)
-
-      self.log.info('SASHA res from second convert_and_execute: %s' % res)
-      self.log.info('SASHA self.calibrationConstantsDict: %s' % self.calibrationConstantsDict)
 
       # this parameter is written in format "value value" in the xml steering file
       prevStepCalibConstBarrel = float(self.calibrationConstantsDict[
@@ -408,20 +379,20 @@ class CalibrationRun(object):
           calibConstEndcap / calibConstBarrel)
 
       fractionalError = max(abs(meanBarrel - truthEnergy), abs(meanEndcap - truthEnergy)) / truthEnergy
-      if fractionalError < self.digitisationAccuracy:
+      if fractionalError < self.settings['digitisationAccuracy']:
         self.currentPhase = self.currentPhase + 1
 
     elif self.currentPhase == CalibrationPhase.HCalDigi:
       binary = os.path.join(scriptPath, 'HCalDigitisation_ContainedEvents')
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'Barrel',
-                                 '-i', self.hcalBarrelCosThetaRange[0], '-j', self.hcalBarrelCosThetaRange[1]],
+                                 '-c', self.settings['digitisationAccuracy'], '-d', fileDir, '-e', '90', '-g', 'Barrel',
+                                 '-i', self.settings['hcalBarrelCosThetaRange'][0], '-j', self.settings['hcalBarrelCosThetaRange'][1]],
                                 ilcSoftInitScript)
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', self.digitisationAccuracy, '-d', fileDir, '-e', '90', '-g', 'EndCap',
-                                 '-i', self.hcalEndcapCosThetaRange[0], '-j', self.hcalEndcapCosThetaRange[1]],
+                                 '-c', self.settings['digitisationAccuracy'], '-d', fileDir, '-e', '90', '-g', 'EndCap',
+                                 '-i', self.settings['hcalEndcapCosThetaRange'][0], '-j', self.settings['hcalEndcapCosThetaRange'][1]],
                                 ilcSoftInitScript)
 
       prevStepCalibConstBarrel = float(self.calibrationConstantsDict[
@@ -451,7 +422,7 @@ class CalibrationRun(object):
           "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"] = calibConstEndcap
 
       fractionalError = max(abs(meanBarrel - truthEnergy), abs(meanEndcap - truthEnergy)) / truthEnergy
-      if fractionalError < self.digitisationAccuracy:
+      if fractionalError < self.settings['digitisationAccuracy']:
         self.currentPhase = self.currentPhase + 1
 
     elif self.currentPhase == CalibrationPhase.MuonAndHCalOtherDigi:
@@ -537,7 +508,7 @@ class CalibrationRun(object):
       binary = os.path.join(scriptPath, 'PandoraPFACalibrate_EMScale')
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', self.pandoraPFAAccuracy, '-d', fileDir, '-e', '90'],
+                                 '-c', self.settings['pandoraPFAAccuracy'], '-d', fileDir, '-e', '90'],
                                 ilcSoftInitScript)
 
       prevStepCalibConstEcalToEm = float(self.calibrationConstantsDict[
@@ -557,14 +528,14 @@ class CalibrationRun(object):
           "processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToEMGeVCalibration']"] = hcalToEm
 
       fractionalError = abs(truthEnergy - emMean) / truthEnergy
-      if fractionalError < self.pandoraPFAAccuracy:
+      if fractionalError < self.settings['pandoraPFAAccuracy']:
         self.currentPhase += 1
 
     elif self.currentPhase == CalibrationPhase.HadronicEnergy:
       binary = os.path.join(scriptPath, 'PandoraPFACalibrate_HadronicScale_ChiSquareMethod')
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', self.pandoraPFAAccuracy, '-d', fileDir, '-e', self.nHcalLayers],
+                                 '-c', self.settings['pandoraPFAAccuracy'], '-d', fileDir, '-e', self.settings['nHcalLayers']],
                                 ilcSoftInitScript)
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'Had_Extract.py')
@@ -597,7 +568,7 @@ class CalibrationRun(object):
 
       fractionalError = max(abs(hcalToHadFom - truthEnergy), abs(ecalToHadFom - truthEnergy)) / truthEnergy
 
-      if fractionalError < self.pandoraPFAAccuracy:
+      if fractionalError < self.settings['pandoraPFAAccuracy']:
         if self.currentStage == 1:
           self.currentStage += 1
           self.currentPhase += 1
@@ -645,7 +616,7 @@ class CalibrationRun(object):
     filesToCopy += glob.glob("calib%s/*.C" % (self.calibrationID))
     filesToCopy += glob.glob("calib%s/*.png" % (self.calibrationID))
 
-    self.log.info('Start copying output of the calibration to user directory : %s' % self.outputPath)
+    self.log.info('Start copying output of the calibration to user directory : %s' % self.settings['outputPath'])
     self.log.info('Files to copy: %s' % filesToCopy)
 
     from DIRAC.DataManagementSystem.Client.DataManager import DataManager
@@ -660,7 +631,7 @@ class CalibrationRun(object):
         self.log.error(errMsg)
         return(S_ERROR(errMsg))
 
-      lfn = os.path.join(self.outputPath, "calib%s" % (self.calibrationID), os.path.basename(iFile))
+      lfn = os.path.join(self.settings['outputPath'], "calib%s" % (self.calibrationID), os.path.basename(iFile))
       localFile = iFile
       res = dm.putAndRegister(lfn, localFile, 'CERN-DST-EOS', None, overwrite=True)
       if not res['OK']:

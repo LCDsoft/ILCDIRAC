@@ -3,7 +3,6 @@
 """
 
 from DIRAC import S_OK, S_ERROR, gLogger
-from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.objectFactory import ObjectFactory
 
 __RCSID__ = "$Id$"
@@ -12,19 +11,31 @@ LOG = gLogger.getSubLogger(__name__)
 
 class CalibrationSettings(object):
   def __init__(self):
+
     self.settingsDict = {}
     self.settingsDict['digitisationAccuracy'] = 0.05
     self.settingsDict['pandoraPFAAccuracy'] = 0.025
-    # FIXME these 3 parameters only for debugging purposes
+    # FIXME these 2 parameters only for debugging purposes
     self.settingsDict['startStage'] = 1
-    self.settingsDict['startPhase'] = CalibrationPhase.ECalDigi
-    self.settingsDict['startStep'] = 0
+    self.settingsDict['startPhase'] = 0
 
     self.settingsDict['numberOfJobs'] = 100
     self.settingsDict['platform'] = 'x86_64-slc5-gcc43-opt'  # FIXME does it the default platform in CS?
-    self.settingsDict['marlinVersion'] = 'ILCSoft-2019-02-20_gcc62'  # FIXME this has to be equal to self.marlinVersion
+    self.settingsDict['marlinVersion'] = 'ILCSoft-2019-04-01_gcc62'
+    # FIXME temprorary field, since currently there is only on item in CS which corresponds to ILCSoft-2019-02-20_gcc62 (for any marlin version)
+    self.settingsDict['marlinVersion_CS'] = 'ILCSoft-2019-02-20_gcc62'
     self.settingsDict['outputPath'] = '/ilc/user/o/oviazlo/clic_caloCalib/output/'
-    self.settingsDict['steeringFile'] = ''
+
+    # following settings has to be setup for daughter classes
+    self.settingsDict['detectorModel'] = None
+    self.settingsDict['ecalBarrelCosThetaRange'] = None
+    self.settingsDict['ecalEndcapCosThetaRange'] = None
+    self.settingsDict['hcalBarrelCosThetaRange'] = None
+    self.settingsDict['hcalEndcapCosThetaRange'] = None
+    self.settingsDict['nHcalLayers'] = None
+    self.settingsDict['steeringFile'] = None
+    # TODO temporary field in the settings. for testing only
+    self.settingsDict['startCalibrationFinished'] = False
 
   def printSettings(self):
     print('%-59s %s' % ('Settings', 'Value'))
@@ -42,6 +53,8 @@ class CLDSettings(CalibrationSettings):
     self.settingsDict['hcalBarrelCosThetaRange'] = [0.15, 0.485]
     self.settingsDict['hcalEndcapCosThetaRange'] = [0.72, 0.94]
     self.settingsDict['nHcalLayers'] = 44
+    # TODO this default will not work... one need to specify full LFN path
+    self.settingsDict['steeringFile'] = 'fcceeReconstruction.xml'
 
 
 class CLICSettings(CalibrationSettings):
@@ -53,6 +66,8 @@ class CLICSettings(CalibrationSettings):
     self.settingsDict['hcalBarrelCosThetaRange'] = [0.2, 0.6]
     self.settingsDict['hcalEndcapCosThetaRange'] = [0.8, 0.9]
     self.settingsDict['nHcalLayers'] = 60
+    # TODO this default will not work... one need to specify full LFN path
+    self.settingsDict['steeringFile'] = 'clicReconstruction.xml'
 
 
 class CalibrationSettingsFactory(ObjectFactory):

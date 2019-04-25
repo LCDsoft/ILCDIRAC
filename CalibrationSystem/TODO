@@ -3,7 +3,6 @@
 - many parameters are still hardcoded
 
 [to be tested]
-- calibration with many jobs (jobs have to be sent to grid)
 - different user cases which can potentially fail calibration
 
 [open issues]
@@ -30,14 +29,12 @@
 - when make cali.requestNewParameters() take into account that service can be down for some time... just wait a few minutes if it happens
 - replace usage of RPC clients (there is one at least in Client)
 
-[comments from code review, 12 Aprli 2019]
+[comments from code review, 12 April 2019]
 - check all calls to CS. Andre changed names for pandora_calibration_scripts
 - if jobs crashes than agent should resubmit the job, not to kill it
 - job_succes (???)
 - if calibration service have been restarted for whatever reason it should pick up calibID numbrer and all ongoing calibrations from the log (or by other means) and continue existing calibrations.
 - all constants should go to configuration service
-- create class (class factory) that holds only input variables for calibration run
-- move CalibrationRun class to separate file
 - read documentation about the log filter (written by Andre)
 - put all calibration related files to the directory calib<calibrationID> and clean it up when calibration is finished. But have some file which contains latest calibrationID which has to be used during initialization of the Calibration service in case of service restart
 - implement skip events and use one file for many jobs
@@ -47,4 +44,3 @@
 - ask user to provide relative path to copy all files to user eos directory. Use Core/Utilities: constructUsersLFNs to construct full path
 - Workflow: make number of cycles to waste (wasteCPUCycles) configurable from CS
 - Workflow: if no response from CS for too long - stop requesting new parameters and kill the job (???)
-

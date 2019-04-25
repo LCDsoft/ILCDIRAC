@@ -7,6 +7,7 @@ about the results of their reconstruction
 from DIRAC.Core.Base.Client import Client
 from DIRAC import S_OK, S_ERROR, gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
+from ILCDIRAC.CalibrationSystem.Client.DetectorSettings import CalibrationSettings
 
 __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
@@ -205,20 +206,36 @@ class CalibrationClient(object):
 def createCalibration(inputFiles, calibSettings):
   """ Starts a calibration.
 
-  :param basestring steeringFile: Steering file used in the calibration
-  :param basestring softwareVersion: Version of the software
   :param inputFiles: Input files for the calibration: dictionary of keys GAMMA, KAON, and MUON to list of lfns
                      for each particle type
-  :type inputFiles: `python:dict`
-  :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
+  :param calibSettings: ???
   :returns: S_OK containing ID of the calibration, or S_ERROR if something went wrong
   :rtype: dict
   """
 
+  if not isinstance(inputFiles, dict) or not isinstance(calibSettings, CalibrationSettings):
+    errMsg = ("Wrong types of input arguments. Types should be (dict, CalibrationSettings)."
+              "Types of provided arguments: (%s, %s)" % (type(inputFiles), type(calibSettings)))
+    LOG.error(errMsg)
+    return S_ERROR(errMsg)
+
+  inputFileTypes = ['gamma', 'kaon', 'muon', 'zuds']
+  if not set(inputFileTypes).issubset([iEl.lower() for iEl in inputFiles.keys()]):
+    errMsg = ('Wrong input data. Dict inputFiles should have following keys: %s; provided dictionary has keys: %s'
+              % (inputFileTypes, inputFiles.keys()))
+    LOG.error(errMsg)
+    return S_ERROR(errMsg)
+
+  requiredSettingFields = CalibrationSettings().settingsDict.keys()
+  providedSettingFields = calibSettings.settingsDict.keys()
+
+  if (len(requiredSettingFields) != len(providedSettingFields)
+          or not set(requiredSettingFields).issubset(providedSettingFields)):
+    errMsg = ('calibSettings should contain %s fields. Numer of provided fields: %s.\nRequired fields: %s\nProvided fields: %s'
+              % (len(requiredSettingFields), len(providedSettingFields), requiredSettingFields, providedSettingFields))
+    LOG.error(errMsg)
+    return S_ERROR("calibration setting doesn't contain")
+
   calibrationService = Client()
   calibrationService.setServer('Calibration/Calibration')
-  if not isinstance(inputFiles, dict):
-    LOG.error("inputFiles is not a dictionary")
-    return S_ERROR("badParameter")
-
   return calibrationService.createCalibration(inputFiles, dict(calibSettings.settingsDict))

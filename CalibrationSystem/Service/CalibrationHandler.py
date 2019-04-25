@@ -83,36 +83,19 @@ class CalibrationHandler(RequestHandler):
     :rtype: dict
     """
 
-    numberOfJobs = calibSettingsDict['numberOfJobs']
-    marlinVersion = calibSettingsDict['marlinVersion']
-    detectorModel = calibSettingsDict['detectorModel']
-    steeringFile = calibSettingsDict['steeringFile']
-
-    inputFileTypes = ['gamma', 'kaon', 'muon', 'zuds']
-    if not set(inputFileTypes).issubset([iEl.lower() for iEl in inputFiles.keys()]):
-      return S_ERROR(
-          'Wrong input data. Dict inputFiles should have following keys: %s; provided dictionary has keys: %s'
-          % (inputFileTypes, inputFiles.keys()))
-
     inputFileDictLoweredKeys = {}
     for iKey, iList in inputFiles.iteritems():
       inputFileDictLoweredKeys[iKey.lower()] = iList
 
-    res = self.__regroupInputFile(inputFileDictLoweredKeys, numberOfJobs)
+    res = self.__regroupInputFile(inputFileDictLoweredKeys, calibSettingsDict['numberOfJobs'])
     if not res['OK']:
       return res
     groupedInputFiles = res['Value']
 
     CalibrationHandler.calibrationCounter += 1
     calibrationID = CalibrationHandler.calibrationCounter
-    newRun = CalibrationRun(calibrationID, steeringFile, groupedInputFiles, numberOfJobs, marlinVersion, detectorModel)
-    # TODO FIXME stage and phase is setup for debugging
-    newRun.currentStage = calibSettingsDict['startStage']
-    newRun.currentPhase = calibSettingsDict['startPhase']
+    newRun = CalibrationRun(calibrationID, groupedInputFiles, calibSettingsDict)
     CalibrationHandler.activeCalibrations[calibrationID] = newRun
-    #newRun.submitJobs(calibrationID)
-    #return S_OK(calibrationID)
-    #FIXME: Check if lock is necessary.(Race condition?)
 
     res = self._getUsernameAndGroup()
     if not res['OK']:

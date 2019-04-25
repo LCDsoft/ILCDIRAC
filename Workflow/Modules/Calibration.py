@@ -188,6 +188,9 @@ class Calibration(MarlinAnalysis):
       self.currentStep = calibrationParameters['currentStep']
       parameterDict = calibrationParameters['parameters']
 
+      self.setApplicationStatus('PandoraCalib, stage: %s; phase: %s; step: %s' % (self.currentStage, self.currentPhase,
+                                                                                  self.currentStep))
+
       print('DEBUG_CALIB: parameterDict BEFORE resolve: %s' % parameterDict)
       res = self.resolveInputSlcioFilesAndAddToParameterDict(listofslcio, parameterDict)
       if res['OK']:

@@ -79,10 +79,12 @@ def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
   opsMock.getValue.return_value = 'dummy'
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
                new=Mock(return_value=opsMock, name='Class'))
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.updateSteeringFile', new=Mock(return_value=S_OK()))
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.convert_and_execute',
                side_effect=mimic_convert_and_execute)
 
-  newRun = CalibrationRun(1, 'dummy_steeringFile', ['dummy_inputFiles1', 'dummy_inputFiles2'], 1, '', '')
+  calibSetting = createCalibrationSettings('CLIC')
+  newRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   mocker.patch.object(CalibrationRun, '_CalibrationRun__mergePandoraLikelihoodXmlFiles',
                       new=Mock(return_value={'OK': True}))
   newRun.calibrationConstantsDict = dict(readParameterDict)
@@ -129,19 +131,6 @@ def test_regroupInputFile(calibHandler, mocker):
   for iKey in inputFileDir.keys():
     assert len(groupedDict[0][iKey]) == 3
     assert len(groupedDict[1][iKey]) == 2
-
-
-def test_export_createCalibration_wrongInputFiles(calibHandler, mocker):
-  calibSettings = createCalibrationSettings('CLIC')
-  res = calibHandler.export_createCalibration({'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
-  assert not res['OK']
-  assert 'Wrong input data' in res['Message']
-
-  res = calibHandler.export_createCalibration(
-      {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
-  assert not res['OK']
-  assert 'Too many jobs for provided input data.' in res['Message']
-
 
 def test_export_submitResult(calibHandler, mocker):
   mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
@@ -402,26 +391,30 @@ class CalibrationHandlerTest(unittest.TestCase):
                                            954692: 0, 29485: 1040}, self)
 
   def test_getnewparams_calculationfinished(self):
-    testRun = CalibrationRun(1, '', [], 13, '', '')
+    # TODO rewrite this test
+    calibSetting = createCalibrationSettings('CLIC')
+    testRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     testRun.calibrationFinished = True
     CalibrationHandler.activeCalibrations[2489] = testRun
     assertDiracSucceedsWith(self.calh.export_getNewParameters(2489, 193),
                             'Calibration finished! End job now', self)
 
   def test_getnewparams_nonewparamsyet(self):
-    testRun = CalibrationRun(1, '', [], 13, '', '')
+    calibSetting = createCalibrationSettings('CLIC')
+    testRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     testRun.currentStep = 149
     CalibrationHandler.activeCalibrations[2489] = testRun
-    assertDiracFailsWith(self.calh.export_getNewParameters(2489, 149),
-                         'No new parameter set available yet', self)
+    assertDiracSucceedsWith_equals(self.calh.export_getNewParameters(2489, 149),
+                                   None, self)
 
   def test_getnewparams_newparams(self):
-    testRun = CalibrationRun(1, '', [], 13, '', '')
+    calibSetting = createCalibrationSettings('CLIC')
+    testRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     testRun.currentStep = 36
-    testRun.currentParameterSet = 982435
+    testRun.currentParameterSet = {'dummy': 2435}
     CalibrationHandler.activeCalibrations[2489] = testRun
     assertDiracSucceedsWith_equals(self.calh.export_getNewParameters(2489, 35),
-                                   982435, self)
+                                   testRun.currentParameterSet, self)
 
   def test_getnewparams_inactive_calibration(self):
     with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
@@ -443,7 +436,8 @@ class CalibrationHandlerTest(unittest.TestCase):
     result1 = [1, 2.3, 5]
     result2 = [0, 0.2, -0.5]
     result3 = [-10, -5.4, 2]
-    obj = CalibrationRun(1, 'file', 'input', 123, '', '')
+    calibSetting = createCalibrationSettings('CLIC')
+    obj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     res = CalibrationResult()
     res.addResult( 2384, result1 )
     res.addResult( 742, result2 )
@@ -527,7 +521,8 @@ class CalibrationHandlerTest(unittest.TestCase):
     # Simple case
     test_list_1 = [1, 148]
     test_list_2 = [-3, 0.2]
-    testobj = CalibrationRun(1, '', [], 0, '', '')
+    calibSetting = createCalibrationSettings('CLIC')
+    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([-2, 148.2], res, self)
 
@@ -535,7 +530,8 @@ class CalibrationHandlerTest(unittest.TestCase):
     # More complex case
     test_list_1 = [9013, -137.25, 90134, 4278, -123, 'abc', ['a', False]]
     test_list_2 = [0, 93, -213, 134, 98245, 'aifjg', ['some_entry', {}]]
-    testobj = CalibrationRun(1, '', [], 0, '', '')
+    calibSetting = createCalibrationSettings('CLIC')
+    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([9013, -44.25, 89921, 4412, 98122, 'abcaifjg',
                           ['a', False, 'some_entry', {}]], res, self)
@@ -543,20 +539,23 @@ class CalibrationHandlerTest(unittest.TestCase):
   def test_addlists_empty(self):
     test_list_1 = []
     test_list_2 = []
-    testobj = CalibrationRun(1, '', [], 0, '', '')
+    calibSetting = createCalibrationSettings('CLIC')
+    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([], res, self)
 
   def test_addlists_incompatible(self):
     test_list_1 = [1, 83, 0.2, -123]
     test_list_2 = [1389, False, '']
-    testobj = CalibrationRun(1, '', [], 0, '', '')
+    calibSetting = createCalibrationSettings('CLIC')
+    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     with pytest.raises(ValueError) as ve:
       testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertInImproved('the two lists do not have the same number of elements', ve.__str__().lower(), self)
 
   def test_calcnewparams_no_values(self):
-    testrun = CalibrationRun(1, '', [], 0, '', '')
+    calibSetting = createCalibrationSettings('CLIC')
+    testrun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     with pytest.raises(ValueError) as ve:
       testrun._CalibrationRun__calculateNewParams(1)
     assertInImproved('no step results provided', ve.__str__().lower(), self)
