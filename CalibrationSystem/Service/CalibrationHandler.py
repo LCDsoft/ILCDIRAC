@@ -187,8 +187,6 @@ class CalibrationHandler(RequestHandler):
         calibration.endCurrentStep()
     return S_OK()
 
-  finishedJobsForNextStep = 0.9  # X% of all jobs must have finished in order for the next step to begin.
-
   def finalInterimResultReceived(self, calibration, stepID):
     """ Called periodically. Checks for the given calibration if we now have enough results to compute
     a new ParameterSet.
@@ -200,10 +198,10 @@ class CalibrationHandler(RequestHandler):
     """
     #FIXME: Find out of this is susceptible to race condition
     numberOfResults = calibration.stepResults[stepID].getNumberOfResults()
-    maxNumberOfJobs = calibration.numberOfJobs
+    maxNumberOfJobs = calibration.settings['numberOfJobs']
     self.log.info('Executing finalInterimResultReceived. numberOfResults: %d, maxNumberOfJobs: %d'
                   % (numberOfResults, maxNumberOfJobs))
-    return numberOfResults >= math.ceil(CalibrationHandler.finishedJobsForNextStep * maxNumberOfJobs)
+    return numberOfResults >= math.ceil(calibration.settings['fractionOfFinishedJobsNeededToStartNextStep'] * maxNumberOfJobs)
 
   auth_getNewParameters = ['authenticated']
   types_getNewParameters = [int, int]
@@ -272,9 +270,9 @@ class CalibrationHandler(RequestHandler):
           "calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
           % calibrationID)
     else:
-      if workerID >= cal.numberOfJobs:
+      if workerID >= cal.settings['numberOfJobs']:
         errMsg = ('Value of workerID is larger than number of job in this calibration: '
-                  'calibID: %s, nJobs: %s, workerID: %s' % (calibrationID, cal.numberOfJobs, workerID))
+                  'calibID: %s, nJobs: %s, workerID: %s' % (calibrationID, cal.settings['numberOfJobs'], workerID))
         self.log.error(errMsg)
         result = S_ERROR(errMsg)
       else:
@@ -325,7 +323,7 @@ class CalibrationHandler(RequestHandler):
     """
     result = {}
     for calibrationID in CalibrationHandler.activeCalibrations:
-      result[calibrationID] = CalibrationHandler.activeCalibrations[calibrationID].numberOfJobs
+      result[calibrationID] = CalibrationHandler.activeCalibrations[calibrationID].settings['numberOfJobs']
     return S_OK(result)
 
 #TODO: Add stopping criterion to calibration loop. This should be checked when new parameter sets are calculated

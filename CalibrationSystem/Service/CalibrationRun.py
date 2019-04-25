@@ -261,27 +261,6 @@ class CalibrationRun(object):
       result.append(first_elem + second_elem)
     return result
 
-  def __calculateNewParams(self, stepID):
-    """ Calculates the new parameter set from the returned histograms. Only call if enough
-    results have been reported back!
-
-    :param int stepID: ID of the current step
-    :returns: None
-    """
-    histograms = [self.stepResults[stepID].results[key] for key in self.stepResults[stepID].results.keys()]
-    if not histograms:
-      raise ValueError('No step results provided!')
-    length = len(histograms)
-    # Sum over elements of histograms
-    result = histograms[0]
-    for i in xrange(1, length):
-      result = self.__addLists(result, histograms[i])
-    # Divide by number of elements to calculate arithmetic mean
-    number_of_elements = len(result)
-    for i in xrange(0, number_of_elements):
-      result[i] = result[i] / float(number_of_elements)
-    return result
-
   def __mergePandoraLikelihoodXmlFiles(self):
     self.log.info('SASHA __mergePandoraLikelihoodXmlFiles')
     folder = "calib%s/stage%s/phase%s/" % (self.calibrationID, self.currentStage, self.currentPhase)

@@ -25,6 +25,8 @@ class CalibrationSettings(object):
     # FIXME temprorary field, since currently there is only on item in CS which corresponds to ILCSoft-2019-02-20_gcc62 (for any marlin version)
     self.settingsDict['marlinVersion_CS'] = 'ILCSoft-2019-02-20_gcc62'
     self.settingsDict['outputPath'] = '/ilc/user/o/oviazlo/clic_caloCalib/output/'
+    # fraction of all jobs must have finished in order for the next step to begin.
+    self.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] = 0.9
 
     # following settings has to be setup for daughter classes
     self.settingsDict['detectorModel'] = None

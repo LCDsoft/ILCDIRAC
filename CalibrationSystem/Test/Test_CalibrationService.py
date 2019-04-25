@@ -108,9 +108,32 @@ def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
                                    False, False, False, False, False, False, False, True, True]
 
 
-#  def test_export_getNewParameters(calibHandler, mocker):
-#    print(CalibrationHandler.activeCalibrations)
-#    assert False
+def test_export_checkForStepIncrement(calibHandler, mocker):
+  calibSetting = createCalibrationSettings('CLIC')
+  calibRun = CalibrationRun(27, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  calibRun.calibrationFinished = True
+  CalibrationHandler.activeCalibrations[27] = calibRun
+
+  mocker.patch.object(calibRun, 'copyResultsToEos', new=Mock(return_value=S_OK()))
+  mocker.patch('%s.shutil' % MODULE_NAME, new=Mock())
+
+  assert len(CalibrationHandler.activeCalibrations) == 1
+  res = calibHandler.export_checkForStepIncrement()
+  assert res['OK']
+  assert len(CalibrationHandler.activeCalibrations) == 0
+
+
+def test_finalInterimResultReceived(calibHandler, mocker):
+  calibSetting = createCalibrationSettings('CLIC')
+  calibSetting.settingsDict['numberOfJobs'] = 200
+  calibRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  nJobsTmp = int(calibSetting.settingsDict['numberOfJobs'] *
+                 calibSetting.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] - 1)
+  for i in range(0, nJobsTmp):
+    calibRun.stepResults[calibRun.currentStep].addResult(i, 'dummy')
+  assert not calibHandler.finalInterimResultReceived(calibRun, calibRun.currentStep)
+  calibRun.stepResults[calibRun.currentStep].addResult(nJobsTmp, 'dummy')
+  assert calibHandler.finalInterimResultReceived(calibRun, calibRun.currentStep)
 
 def test_regroupInputFile(calibHandler, mocker):
   inputFileDir = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'], 'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'], 'gamma': [
