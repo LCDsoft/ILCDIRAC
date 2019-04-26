@@ -191,14 +191,12 @@ class Calibration(MarlinAnalysis):
       self.setApplicationStatus('PandoraCalib, stage: %s; phase: %s; step: %s' % (self.currentStage, self.currentPhase,
                                                                                   self.currentStep))
 
-      print('DEBUG_CALIB: parameterDict BEFORE resolve: %s' % parameterDict)
       res = self.resolveInputSlcioFilesAndAddToParameterDict(listofslcio, parameterDict)
       if res['OK']:
         parameterDict = res['Value']
       else:
         self.log.error('Problem while executing resolveInputSlcioFilesAndAddToParameterDict: %s' % res['Message'])
         return res
-      print('DEBUG_CALIB: parameterDict AFTER resolve: %s' % parameterDict)
 
       steeringFileToRun = 'marlinSteeringFile_%s_%s_%s.xml' % (self.currentStage, self.currentPhase, self.currentStep)
       res = updateSteeringFile(self.SteeringFile, steeringFileToRun, parameterDict)

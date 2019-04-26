@@ -128,6 +128,8 @@ class CalibrationRun(object):
       self.log.error('Failed to read parameters from steering file:', res['Message'])
       return S_ERROR('Failed to read parameters from steering file')
 
+    if not self.settings['enableSoftwareCompensation']:
+      parDict["processor[@name='MyDDMarlinPandora']/parameter[@name='MaxClusterEnergyToApplySoftComp']"] = 0
     self.calibrationConstantsDict = parDict
 
     self.currentParameterSet['currentStage'] = self.currentStage

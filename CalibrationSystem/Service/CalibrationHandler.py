@@ -244,9 +244,11 @@ class CalibrationHandler(RequestHandler):
     #FIXME: Find out of this is susceptible to race condition
     numberOfResults = calibration.stepResults[stepID].getNumberOfResults()
     maxNumberOfJobs = calibration.settings['numberOfJobs']
-    self.log.info('Executing finalInterimResultReceived. numberOfResults: %d, maxNumberOfJobs: %d'
-                  % (numberOfResults, maxNumberOfJobs))
-    return numberOfResults >= math.ceil(calibration.settings['fractionOfFinishedJobsNeededToStartNextStep'] * maxNumberOfJobs)
+    startNextStep = numberOfResults >= math.ceil(
+        calibration.settings['fractionOfFinishedJobsNeededToStartNextStep'] * maxNumberOfJobs)
+    self.log.info('Check status of jobs. CalibID: %d; numberOfResults: %d, totalNumbersOfJobs: %d, startNextStep: %s'
+                  % (calibration.calibrationID, numberOfResults, maxNumberOfJobs, startNextStep))
+    return startNextStep
 
   auth_getNewParameters = ['authenticated']
   types_getNewParameters = [int, int]

@@ -17,26 +17,20 @@
 - there are a few calorimeter constants used to calculate one calibration constant: Absorber_Thickness_EndCap, Scintillator_Thickness_Ring and so on. They are similar for CLICdet/CLD but maybe not for ILD. To fix this.
 
 [to implement]
-- user interface to setup folowing settings (ask Andre for recommendation):
-	- ecal and hcal barrel / endcap ranges
-	- nHcalLayers
-	- digitisationAccuracy, pandoraPFAAccuracy
-	- currentStage, self.currentPhase - for debuging
 - allow user to specify steering and PandoraSetings files to use
 - possibility to use calib.setExtraCLIArguments (e.g. to set CalorimeterIntegrationTimeWindow)
 - complete documentation
 - run python style check
 - when make cali.requestNewParameters() take into account that service can be down for some time... just wait a few minutes if it happens
-- replace usage of RPC clients (there is one at least in Client)
+- when read steering files - names of processors are used (and are hardcoded!). Allow user to specify name of processors to be used for updating calibration constants
+- turn on/off SoftwareCompensation
 
 [comments from code review, 12 April 2019]
 - check all calls to CS. Andre changed names for pandora_calibration_scripts
 - if jobs crashes than agent should resubmit the job, not to kill it
 - job_succes (???)
-- if calibration service have been restarted for whatever reason it should pick up calibID numbrer and all ongoing calibrations from the log (or by other means) and continue existing calibrations.
 - all constants should go to configuration service
 - read documentation about the log filter (written by Andre)
-- put all calibration related files to the directory calib<calibrationID> and clean it up when calibration is finished. But have some file which contains latest calibrationID which has to be used during initialization of the Calibration service in case of service restart
 - implement skip events and use one file for many jobs
 - CalibrationHandler source code: refactor: executing python calib scripts into separate functions (where one execute binaries and python scripts to calculate and read calibration constants after each phase)
 - CalibrationClient: setup client - can have function submit jobs (instead of calling function in handler???)

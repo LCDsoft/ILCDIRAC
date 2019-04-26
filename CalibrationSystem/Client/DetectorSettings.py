@@ -27,6 +27,7 @@ class CalibrationSettings(object):
     self.settingsDict['outputPath'] = '/ilc/user/o/oviazlo/clic_caloCalib/output/'
     # fraction of all jobs must have finished in order for the next step to begin.
     self.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] = 0.9
+    self.settingsDict['enableSoftwareCompensation'] = False
 
     # following settings has to be setup for daughter classes
     self.settingsDict['detectorModel'] = None

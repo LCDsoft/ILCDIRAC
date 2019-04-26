@@ -19,4 +19,5 @@ processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationEnd
 processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToHadGeVCalibration']
 processor[@name='MyDDMarlinPandora']/parameter[@name='MuonToMipCalibration']
 processor[@name='MyDDMarlinPandora']/parameter[@name='MaxHCalHitHadronicEnergy']
+processor[@name='MyDDMarlinPandora']/parameter[@name='MaxClusterEnergyToApplySoftComp']
 processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']
