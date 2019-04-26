@@ -49,15 +49,28 @@ class CalibrationHandler(RequestHandler):
 
     # try to find not finished calibrations
     notFinishedCalibIDs = [int(re.findall('\d+', x)[0]) for x in glob.glob('calib*')]
+    if len(notFinishedCalibIDs) > 0:
+      cls.log.info('Recovering calibrations after restart of CalibrationSystem service...')
+
     for iCalibID in notFinishedCalibIDs:
       tmpCalibRun = loadCalibrationRun(iCalibID)
-      CalibrationHandler.activeCalibrations[iCalibID] = loadCalibrationRun(iCalibID)
+      if tmpCalibRun is None:
+        errMsg = ("Can't recover calibration #%s. No dump file is found in the calibration working directory."
+                  " Deteting the directory." % iCalibID)
+        cls.log.error(errMsg)
+      else:
+        CalibrationHandler.activeCalibrations[iCalibID] = loadCalibrationRun(iCalibID)
 
+    if len(notFinishedCalibIDs) > 0:
+      cls.log.info('Recovering is finished. Managed to recover following calibrations: %s' %
+                   CalibrationHandler.activeCalibrations.keys())
+
+    # TODO ask Andre if we want to stop service or just delete calibratino with ID greate than calibrationCounter?
     if max(notFinishedCalibIDs or [0]) > cls.calibrationCounter:
       errMsg = ('Something went wrong during an attempt to pickup unfinished calibrations during CalibrationHandler'
-                ' initialization. calibrationCounter: %s is behind one of the picked up calibration IDs: %s'
+                ' initialization. calibrationCounter: %s is behind one of the picked up calibration IDs: %s\n Stop the service!'
                 % (cls.calibrationCounter, notFinishedCalibIDs))
-      LOG.error(errMsg)
+      cls.log.error(errMsg)
       return S_ERROR(errMsg)
 
     return S_OK()

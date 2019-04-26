@@ -45,6 +45,8 @@ def calibHandler():
   calibHandler.initialize()
   yield calibHandler
 
+  if os.path.exists('status'):
+    os.remove('status')
   # clean up output directory
   for iCalID in list(CalibrationHandler.activeCalibrations.keys()):
     try:
@@ -94,6 +96,7 @@ def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.updateSteeringFile', new=Mock(return_value=S_OK()))
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.convert_and_execute',
                side_effect=mimic_convert_and_execute)
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.saveCalibrationRun', new=Mock(return_value=S_OK()))
 
   calibSetting = createCalibrationSettings('CLIC')
   newRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
@@ -175,12 +178,13 @@ def test_export_submitResult(calibHandler, mocker):
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
   calibSettings = createCalibrationSettings('CLIC')
-
   res = calibHandler.export_createCalibration(
       {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
   if not res['OK']:
     print('Error message:\t%s' % res['Message'])
     assert False
+
+  print('CalibrationHandler.activeCalibrations.keys(): %s' % CalibrationHandler.activeCalibrations.keys())
 
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
   fileDir = utilities.__path__[0]
@@ -222,9 +226,11 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
   calibSettings = createCalibrationSettings('CLIC')
+  print('calibSettings.settingsDict: %s' % calibSettings.settingsDict)
 
   res = calibHandler.export_createCalibration(
       {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
+  print('calibHandler.export_createCalibration: %s' % res)
   if not res['OK']:
     print(res['Message'])
     assert False
@@ -303,24 +309,26 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   #  print('nSignalEvents: %s' % nSignalEvents)
   #  print('nBackgroundEvents: %s' % nBackgroundEvents)
 
+# TODO this function has decorator... which one need to mock
 #  def test_submitJobs(calibHandler, mocker):
+#    calibSetting = createCalibrationSettings('CLIC')
+#    calibSetting.settingsDict['numberOfJobs'] = 4
+#
 #    inputFileDir = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'], 'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'], 'gamma': ['gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'], 'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
-#    numberOfJobs = 4
-#    res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
+#    res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, calibSetting.settingsDict['numberOfJobs'])
 #    groupedDict = res['Value']
 #
-#    curWorkerID = 6
-#    calibrationID = 1
-#    marlinVersion = 'ILCSoft-2019-02-20_gcc62'
-#    detectorModel = 'CLIC_o3_v14'
-#    currentPhase = 0
+#    mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.saveCalibrationRun', new=Mock(return_value=S_OK()))
+#    mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.DiracILC', new=Mock(return_value=S_OK()))
+#    testRun  = CalibrationRun(1, groupedDict, calibSetting.settingsDict)
 #
 #    userJobMock = Mock(name='instance')
 #    userJobMock.submit.return_value = 'dummy'
 #    userJobMock.append.return_value = {'OK': True}
-#    mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.UserJob', new=Mock(return_value=userJobMock, name='Class'))
 #
-#    newRun = CalibrationRun(1, 'dummy_steeringFile', 'dummy_ilcsoftPath', ['dummy_inputFiles1', 'dummy_inputFiles2'], 1, '', '')
+#    res = testRun.submitJobs([])
+#    assert res == []
+#    assert False
 
 #pylint: disable=protected-access,too-many-public-methods,,no-member
 
@@ -407,23 +415,20 @@ class CalibrationHandlerTest(unittest.TestCase):
   #      assertEqualsImproved( [ ( 198735, 1357 ) ], res[ 'failed_pairs' ], self )
 
   def test_getnumberofjobs(self):
-    calrun_mock_1 = Mock()
-    calrun_mock_1.numberOfJobs = 815
-    calrun_mock_2 = Mock()
-    calrun_mock_2.numberOfJobs = 421
-    calrun_mock_3 = Mock()
-    calrun_mock_3.numberOfJobs = 100
-    calrun_mock_4 = Mock()
-    calrun_mock_4.numberOfJobs = 0
-    calrun_mock_5 = Mock()
-    calrun_mock_5.numberOfJobs = 1040
-    CalibrationHandler.activeCalibrations = {
-        782145: calrun_mock_1, 72453: calrun_mock_2, 189455: calrun_mock_3,
-        954692: calrun_mock_4, 29485: calrun_mock_5}
-    result = self.calh.export_getNumberOfJobsPerCalibration()
-    assertDiracSucceeds(result, self)
-    assertEqualsImproved(result['Value'], {782145: 815, 72453: 421, 189455: 100,
-                                           954692: 0, 29485: 1040}, self)
+    with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
+      with patch.object(self.calh, '_CalibrationHandler__regroupInputFile', new=Mock(return_value={'OK': True, 'Value': []})):
+        with patch.object(self.calh, '_getUsernameAndGroup',
+                          new=Mock(return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}})):
+          tmpDict = {782145: 815, 72453: 421, 189455: 100, 954692: 0, 29485: 1040}
+          for iCalID in tmpDict.keys():  # creates Calibrations with IDs 1-50
+            calibSettings = createCalibrationSettings('CLIC')
+            calibSettings.settingsDict['numberOfJobs'] = tmpDict[iCalID]
+            iCalibRun = CalibrationRun(iCalID, {'muon': [], 'kaon': [], 'gamma': [],
+                                                'zuds': []}, calibSettings.settingsDict)
+            CalibrationHandler.activeCalibrations[iCalID] = iCalibRun
+          result = self.calh.export_getNumberOfJobsPerCalibration()
+          assertDiracSucceeds(result, self)
+          assertEqualsImproved(result['Value'], tmpDict, self)
 
   def test_getnewparams_calculationfinished(self):
     # TODO rewrite this test
@@ -434,13 +439,13 @@ class CalibrationHandlerTest(unittest.TestCase):
     assertDiracSucceedsWith(self.calh.export_getNewParameters(2489, 193),
                             'Calibration finished! End job now', self)
 
-  def test_getnewparams_nonewparamsyet(self):
-    calibSetting = createCalibrationSettings('CLIC')
-    testRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
-    testRun.currentStep = 149
-    CalibrationHandler.activeCalibrations[2489] = testRun
-    assertDiracSucceedsWith_equals(self.calh.export_getNewParameters(2489, 149),
-                                   None, self)
+  #  def test_getnewparams_nonewparamsyet( self ):
+  #    calibSetting = createCalibrationSettings('CLIC')
+  #    testRun  = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  #    testRun.currentStep = 149
+  #    CalibrationHandler.activeCalibrations[ 2489 ] = testRun
+  #    assertDiracSucceedsWith_equals(self.calh.export_getNewParameters( 2489, 149 ),
+  #                                   None, self)
 
   def test_getnewparams_newparams(self):
     calibSetting = createCalibrationSettings('CLIC')
@@ -465,27 +470,6 @@ class CalibrationHandlerTest(unittest.TestCase):
               assert False
           assertDiracFailsWith(self.calh.export_getNewParameters(135, 913),
                                'CalibrationID is not in active calibrations: 135', self)
-
-  def test_calculate_params(self):
-    from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationResult
-    result1 = [1, 2.3, 5]
-    result2 = [0, 0.2, -0.5]
-    result3 = [-10, -5.4, 2]
-    calibSetting = createCalibrationSettings('CLIC')
-    obj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
-    res = CalibrationResult()
-    res.addResult( 2384, result1 )
-    res.addResult( 742, result2 )
-    res.addResult( 9354, result3 )
-    obj.stepResults[ 42 ] = res
-    actual = obj._CalibrationRun__calculateNewParams( 42 ) #pylint: disable=no-member
-    expected = [ -3.0, -0.9666666666666668, 2.1666666666666665 ]
-    assert len( actual ) == len( expected )
-    for expected_value, actual_value in zip( expected, actual ):
-      self.assertTrue( abs( expected_value - actual_value ) <= max( 1e-09 * max( abs( expected_value ),
-                                                                                 abs( actual_value ) ), 0.0 ),
-                       'Expected values to be (roughly) the same, but they were not:\n Actual = %s,\n Expected = %s' % ( actual_value, expected_value) )
-
 
   #  @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations')
   #  def test_endcurrentstep( self, opsMock ):
@@ -588,15 +572,5 @@ class CalibrationHandlerTest(unittest.TestCase):
       testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertInImproved('the two lists do not have the same number of elements', ve.__str__().lower(), self)
 
-  def test_calcnewparams_no_values(self):
-    calibSetting = createCalibrationSettings('CLIC')
-    testrun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
-    with pytest.raises(ValueError) as ve:
-      testrun._CalibrationRun__calculateNewParams(1)
-    assertInImproved('no step results provided', ve.__str__().lower(), self)
-
   def atest_resubmitJob(self):
-    pass  # FIXME: Finish atest once corresponding method is written
-
-  def atest_submitJobs(self):
     pass  # FIXME: Finish atest once corresponding method is written

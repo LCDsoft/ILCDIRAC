@@ -279,8 +279,11 @@ def saveCalibrationRun(calibRun):
 
 def loadCalibrationRun(calibrationID):
   fileName = "calib%s/calibRun_bak.pkl" % (calibrationID)
-  with open(fileName, 'rb') as f:
-    tmpCalibRun = pickle.load(f)
-    tmpCalibRun.ops = Operations()
-    tmpCalibRun.log = gLogger.getSubLogger(tmpCalibRun.loggerName)
-    return tmpCalibRun
+  if os.path.exists(fileName):
+    with open(fileName, 'rb') as f:
+      tmpCalibRun = pickle.load(f)
+      tmpCalibRun.ops = Operations()
+      tmpCalibRun.log = gLogger.getSubLogger(tmpCalibRun.loggerName)
+      return tmpCalibRun
+  else:
+    return None

@@ -95,6 +95,31 @@ class CalibrationRun(object):
 
   # specify fields to be dumped during saving an instance of the class to the file. All other fields have to be recovered by hand
   # all fields which doesn't contain lock have to be written here
+
+  def __getstate__(self):
+    return (self.calibrationID, self.settings, self.inputFiles, self.settings, self.localSteeringFile,
+            self.stepResults, self.currentStage, self.currentPhase, self.currentStep, self.currentParameterSet,
+            self.calibrationFinished, self.newPhotonLikelihood, self.calibrationConstantsDict, self.proxyUserName,
+            self.proxyUserGroup, self.loggerName)
+
+  def __setstate__(self, state):
+    self.calibrationID = state[0]
+    self.settings = state[1]
+    self.inputFiles = state[2]
+    self.settings = state[3]
+    self.localSteeringFile = state[4]
+    self.stepResults = state[5]
+    self.currentStage = state[6]
+    self.currentPhase = state[7]
+    self.currentStep = state[8]
+    self.currentParameterSet = state[9]
+    self.calibrationFinished = state[10]
+    self.newPhotonLikelihood = state[11]
+    self.calibrationConstantsDict = state[12]
+    self.proxyUserName = state[13]
+    self.proxyUserGroup = state[14]
+    self.loggerName = state[15]
+
   def __reduce__(self):
     return (self.__class__, (self.calibrationID, self.settings, self.inputFiles, self.settings, self.localSteeringFile, self.stepResults, self.currentStage, self.currentPhase, self.currentStep, self.currentParameterSet, self.calibrationFinished, self.newPhotonLikelihood, self.calibrationConstantsDict, self.proxyUserName, self.proxyUserGroup, self.loggerName))
 
@@ -167,7 +192,8 @@ class CalibrationRun(object):
     key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
     self.log.verbose('fileKeyFromPhase: %s' % key)
 
-    dirName = "calib%s/stage%s/phase%s/step%s" % (self.calibrationID, self.stageID, self.phaseID, self.stepID)
+    dirName = "calib%s/stage%s/phase%s/step%s" % (self.calibrationID,
+                                                  self.currentStage, self.currentPhase, self.currentStep)
     if not os.path.exists(dirName):
       try:
         os.makedirs(dirName)
