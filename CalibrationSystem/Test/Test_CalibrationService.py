@@ -58,6 +58,18 @@ def calibHandler():
   CalibrationHandler.calibrationCounter = 0
 
 
+def test_initializeHandler(mocker):
+  mocker.patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=['calib2', 'calib4', 'calib78']))
+  mocker.patch('%s.loadCalibrationRun' % MODULE_NAME, new=Mock())
+  mocker.patch.object(CalibrationHandler, 'loadStatus', new=Mock(return_value=0))
+
+  res = CalibrationHandler.initializeHandler(None)
+  assert not res['OK']
+
+  mocker.patch.object(CalibrationHandler, 'loadStatus', new=Mock(return_value=78))
+  res = CalibrationHandler.initializeHandler(None)
+  assert res['OK']
+
 def mimic_convert_and_execute(inList, _=''):
   from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
   if True in ['ECal_Digi_Extract.py' in str(iEl) for iEl in inList] and True in ['Mean' in str(iEl) for iEl in inList]:

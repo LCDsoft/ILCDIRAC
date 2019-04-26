@@ -5,16 +5,19 @@ distribute reconstruction workloads among them
 """
 
 import os
+import re
 import copy
 import math
 import pickle
 import shutil
+import glob
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from DIRAC.Core.Utilities import DErrno
 from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import loadCalibrationRun
 
 __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
@@ -41,9 +44,37 @@ class CalibrationHandler(RequestHandler):
   def initializeHandler(cls, _):
     """ Initializes the handler, setting required variables. Called once in the beginning of the service """
     cls.activeCalibrations = {}
-    cls.calibrationCounter = 0
+    cls.calibrationCounter = cls.loadStatus()
     cls.log = LOG
+
+    # try to find not finished calibrations
+    notFinishedCalibIDs = [int(re.findall('\d+', x)[0]) for x in glob.glob('calib*')]
+    for iCalibID in notFinishedCalibIDs:
+      tmpCalibRun = loadCalibrationRun(iCalibID)
+      CalibrationHandler.activeCalibrations[iCalibID] = loadCalibrationRun(iCalibID)
+
+    if max(notFinishedCalibIDs or [0]) > cls.calibrationCounter:
+      errMsg = ('Something went wrong during an attempt to pickup unfinished calibrations during CalibrationHandler'
+                ' initialization. calibrationCounter: %s is behind one of the picked up calibration IDs: %s'
+                % (cls.calibrationCounter, notFinishedCalibIDs))
+      LOG.error(errMsg)
+      return S_ERROR(errMsg)
+
     return S_OK()
+
+  def saveStatus(self):
+    fileName = "status"
+    with open(fileName, 'w') as f:
+      f.write("%s" % self.calibrationCounter)
+
+  @classmethod
+  def loadStatus(cls):
+    fileName = "status"
+    if os.path.exists(fileName):
+      with open(fileName, 'r') as f:
+        return int(f.readlines()[0])
+    else:
+      return 0
 
   def _getUsernameAndGroup(self):
     """ Returns name of the group and name of the user of the proxy the user is currently having
@@ -93,6 +124,7 @@ class CalibrationHandler(RequestHandler):
     groupedInputFiles = res['Value']
 
     CalibrationHandler.calibrationCounter += 1
+    self.saveStatus()
     calibrationID = CalibrationHandler.calibrationCounter
     newRun = CalibrationRun(calibrationID, groupedInputFiles, calibSettingsDict)
     CalibrationHandler.activeCalibrations[calibrationID] = newRun

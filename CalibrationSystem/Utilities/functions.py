@@ -5,10 +5,12 @@ import os
 import fnmatch
 import csv
 import tempfile
+import pickle
 from xml.etree import ElementTree as et
 
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Subprocess import shellCall
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
 LOG = gLogger.getSubLogger(__name__)
 
@@ -267,3 +269,18 @@ def searchFilesWithPattern(dirName, filePattern):
     for filename in fnmatch.filter(filenames, filePattern):
       matches.append(os.path.join(root, filename))
   return matches
+
+
+def saveCalibrationRun(calibRun):
+  fileName = "calib%s/calibRun_bak.pkl" % (calibRun.calibrationID)
+  with open(fileName, 'wb') as f:
+    pickle.dump(calibRun, f, pickle.HIGHEST_PROTOCOL)
+
+
+def loadCalibrationRun(calibrationID):
+  fileName = "calib%s/calibRun_bak.pkl" % (calibrationID)
+  with open(fileName, 'rb') as f:
+    tmpCalibRun = pickle.load(f)
+    tmpCalibRun.ops = Operations()
+    tmpCalibRun.log = gLogger.getSubLogger(tmpCalibRun.loggerName)
+    return tmpCalibRun

@@ -10,12 +10,15 @@ from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from DIRAC.DataManagementSystem.Client.DataManager import DataManager
+import ILCDIRAC.CalibrationSystem.Utilities as utilities
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 from ILCDIRAC.CalibrationSystem.Utilities.functions import convert_and_execute
 from ILCDIRAC.CalibrationSystem.Utilities.functions import searchFilesWithPattern
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import saveCalibrationRun
+from ILCDIRAC.CalibrationSystem.Utilities.mergePandoraLikelihoodData import mergeLikelihoods
 import ILCDIRAC.CalibrationSystem.Utilities as utilities
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
 from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
@@ -82,11 +85,18 @@ class CalibrationRun(object):
     self.calibrationConstantsDict = None
     self.proxyUserName = ''
     self.proxyUserGroup = ''
+    # TODO ask Andre if this logic if the name is corect and it is proper way to get logger after loading an instance
+    self.loggerName = self.log.getName() + '/' + self.log.getSubName()
 
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
     #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs
     #to be accessed by the agent in the case of resubmission
+
+  # specify fields to be dumped during saving an instance of the class to the file. All other fields have to be recovered by hand
+  # all fields which doesn't contain lock have to be written here
+  def __reduce__(self):
+    return (self.__class__, (self.calibrationID, self.settings, self.inputFiles, self.settings, self.localSteeringFile, self.stepResults, self.currentStage, self.currentPhase, self.currentStep, self.currentParameterSet, self.calibrationFinished, self.newPhotonLikelihood, self.calibrationConstantsDict, self.proxyUserName, self.proxyUserGroup, self.loggerName))
 
   def readInitialParameterDict(self):
     self.log.info('running readInitialParameterDict')
@@ -157,6 +167,15 @@ class CalibrationRun(object):
     key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
     self.log.verbose('fileKeyFromPhase: %s' % key)
 
+    dirName = "calib%s/stage%s/phase%s/step%s" % (self.calibrationID, self.stageID, self.phaseID, self.stepID)
+    if not os.path.exists(dirName):
+      try:
+        os.makedirs(dirName)
+      except OSError as e:
+        errMsg = 'Cannot create directories. Current working directory: %s. Error message: %s' % (os.getcwd(), e)
+        self.log.error(errMsg)
+        return S_ERROR(errMsg)
+
     for curWorkerID in listOfNodesToSubmitTo:
       # get input files
       fileList = []
@@ -204,6 +223,8 @@ class CalibrationRun(object):
       # res = curJob.submit(dirac, mode='local')
       res = curJob.submit(dirac, mode='wms')
       results.append(res)
+
+    saveCalibrationRun(self)
 
     return results
 
@@ -272,7 +293,6 @@ class CalibrationRun(object):
     outFileName = "calib%s/newPandoraLikelihoodData.xml" % (self.calibrationID)
     self.log.info('SASHA outFileName: %s' % outFileName)
 
-    from ILCDIRAC.CalibrationSystem.Utilities.mergePandoraLikelihoodData import mergeLikelihoods
     res = mergeLikelihoods(filesToMerge, outFileName)
     if not res['OK']:
       return res
@@ -308,7 +328,6 @@ class CalibrationRun(object):
     ilcSoftInitScript = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.settings['platform'],
                                                                                                        self.settings['marlinVersion_CS'], "CVMFSEnvScript"), None)
 
-    import ILCDIRAC.CalibrationSystem.Utilities as utilities
     pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
 
     truthEnergy = CalibrationPhase.sampleEnergyFromPhase(self.currentPhase)
@@ -576,6 +595,7 @@ class CalibrationRun(object):
 
     # update local steering file after every step. This file will be used if calibration service will be restarted and some calibrations are still are not finished
     res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile, self.calibrationConstantsDict)
+    saveCalibrationRun(self)
 
     return S_OK()
 
@@ -598,7 +618,6 @@ class CalibrationRun(object):
     self.log.info('Start copying output of the calibration to user directory : %s' % self.settings['outputPath'])
     self.log.info('Files to copy: %s' % filesToCopy)
 
-    from DIRAC.DataManagementSystem.Client.DataManager import DataManager
     dm = DataManager()
     for iFile in filesToCopy:
       if not os.path.exists(iFile):
