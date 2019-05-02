@@ -9,7 +9,6 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
 
-
 __RCSID__ = "$Id$"
 MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Utilities.functions'
 
@@ -20,7 +19,13 @@ class TestsFileUtilsFunctions(unittest.TestCase):
   def setUp(self):
     """set up the objects"""
     self.fileDir = os.path.join(os.environ['DIRAC'], "ILCDIRAC", "CalibrationSystem", "Utilities", "testing")
-    pass
+
+    inFileName = os.path.join(self.fileDir, 'parameterListMarlinSteeringFile.txt')
+    self.parDict = readParameterDict(inFileName)
+    for iKey in self.parDict.keys():
+      if 'RootFile' in iKey:
+        del self.parDict[iKey]
+
 
   def tearDown(self):
     """ tear down the objects """
@@ -30,42 +35,37 @@ class TestsFileUtilsFunctions(unittest.TestCase):
     pass
 
   def test_readParameterDict(self):
-    inFileName = os.path.join(self.fileDir, 'parameterListMarlinSteeringFile.txt')
-    parDict = readParameterDict(inFileName)
-    self.assertTrue(len(parDict) == 22, "wrong number of items are read")
+    self.assertTrue(len(self.parDict) == 22, "wrong number of items are read")
     allValuesAreNone = True
 
-    for iKey, iVal in parDict.iteritems():
+    for iKey, iVal in self.parDict.iteritems():
       if iVal is not None:
         allValuesAreNone = False
     self.assertTrue(allValuesAreNone, "all values in dict has to be None")
 
   def test_readParametersFromSteeringFile(self):
-    inFileName = os.path.join(self.fileDir, 'parameterListMarlinSteeringFile.txt')
-    parDict = readParameterDict(inFileName)
-
-    inFileName = os.path.join(self.fileDir, 'in1.xml')
-    res = readParametersFromSteeringFile(inFileName, parDict)
+    inFileName = os.path.join(self.fileDir, 'clicReconstruction_2019-04-17.xml')
+    res = readParametersFromSteeringFile(inFileName, self.parDict)
+    print(res)
     self.assertTrue(res['OK'], "function didn't return S_OK")
 
     someValuesAreNone = False
-    for iKey, iVal in parDict.iteritems():
+    for iKey, iVal in self.parDict.iteritems():
       if iVal is None:
         someValuesAreNone = True
     self.assertTrue(not someValuesAreNone, "all read values has to be not None")
 
   def test_updateSteeringFile(self):
-    inFileName = os.path.join(self.fileDir, 'parameterListMarlinSteeringFile.txt')
-    initialParDict = readParameterDict(inFileName)
+    initialParDict = self.parDict
 
     parDict1 = dict(initialParDict)
-    inFileName = os.path.join(self.fileDir, 'in1.xml')
+    inFileName = os.path.join(self.fileDir, 'clicReconstruction_2019-04-17.xml')
     res = readParametersFromSteeringFile(inFileName, parDict1)
-    key1 = "processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']"
-    parDict1[key1] = "dummyDummyRootFile.root"
-    key2 = "global/parameter[@name='LCIOInputFiles']"
-    parDict1[key2] = "in1.slcio, in2.slcio"
-    self.assertTrue(len(parDict1) == len(initialParDict), "two dictionaries have to be the same size")
+    #  key1 = "processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']"
+    #  parDict1[key1] = "dummyDummyRootFile.root"
+    #  key2 = "global/parameter[@name='LCIOInputFiles']"
+    #  parDict1[key2] = "in1.slcio, in2.slcio"
+    #  self.assertTrue(len(parDict1) == len(initialParDict), "two dictionaries have to be the same size. len1: %s; len2: %s" % (len(parDict1), len(initialParDict)))
 
     outFileName = os.path.join(self.fileDir, 'out1.xml')
     res = updateSteeringFile(inFileName, outFileName, parDict1)

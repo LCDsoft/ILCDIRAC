@@ -5,6 +5,9 @@ Unit tests for the CalibrationService
 import unittest
 import pytest
 import os
+import shutil
+from xml.etree import ElementTree as et
+from shutil import copyfile
 from DIRAC import S_OK, S_ERROR, gLogger
 from mock import call, patch, MagicMock as Mock
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
@@ -50,7 +53,6 @@ def calibHandler():
   # clean up output directory
   for iCalID in list(CalibrationHandler.activeCalibrations.keys()):
     try:
-      import shutil
       dirToDelete = 'calib%s' % iCalID
       shutil.rmtree(dirToDelete)
     except EnvironmentError as e:
@@ -59,6 +61,64 @@ def calibHandler():
   CalibrationHandler.activeCalibrations = {}
   CalibrationHandler.calibrationCounter = 0
 
+
+@pytest.fixture
+def copiedFccSteeringFile():
+  calibID = 1
+  workdirName = 'calib%s' % calibID
+  if not os.path.exists(workdirName):
+      os.makedirs(workdirName)
+  src = '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/fccReconstruction.xml'
+  copyfile(src, '%s/fccReconstruction.xml' % workdirName)
+  yield workdirName
+  try:
+    shutil.rmtree(workdirName)
+  except EnvironmentError as e:
+    print("Failed to delete directory: %s; ErrMsg: %s" % (workdirName, str(e)))
+    assert False
+
+
+def addPfoAnalysisProcessor(mainSteeringMarlinRecoFile):
+  mainTree = et.ElementTree()
+  mainTree.parse(mainSteeringMarlinRecoFile)
+  mainRoot = mainTree.getroot()
+
+  #FIXME TODO properly find path to the file
+  # this file should only contains PfoAnalysis processor
+  import ILCDIRAC.CalibrationSystem.Utilities as utilities
+  pfoAnalysisProcessorFile = os.path.join(utilities.__path__[0], 'testing/pfoAnalysis.xml')
+  if not os.path.exists(pfoAnalysisProcessorFile):
+    return S_ERROR("cannot find xml file with pfoAnalysis processor")
+  tmpTree = et.parse(pfoAnalysisProcessorFile)
+  elementToAdd = tmpTree.getroot()
+
+  if 'MyPfoAnalysis' not in (iEl.attrib['name'] for iEl in mainRoot.iter('processor')):
+    tmp1 = mainRoot.find('execute')
+    c = et.Element("processor name=\"MyPfoAnalysis\"")
+    tmp1.append(c)
+    mainRoot.append(elementToAdd)
+    #  mainTree.write(mainSteeringMarlinRecoFile)
+    root = mainTree.getroot()
+    root_str = et.tostring(root)
+    # TODO FIXME why write to "test_<fileName>" file???
+    #  with open('test_' + mainSteeringMarlinRecoFile, "w") as of:
+    with open(mainSteeringMarlinRecoFile, "w") as of:
+      of.write(root_str)
+  return S_OK()
+
+
+def test_readInitialParameterDict(copiedFccSteeringFile, mocker):
+  calibSetting = createCalibrationSettings('CLD')
+  calibSetting.settingsDict['DDPandoraPFANewProcessorName'] = 'MyDDMarlinPandora_10ns'
+  calibSetting.settingsDict['DDCaloDigiName'] = 'MyDDCaloDigi_10ns'
+  tmpMock = Mock(name='instance')
+  tmpMock.getFile.return_value = S_OK()
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.DataManager',
+               new=Mock(return_value=tmpMock, name='Class'))
+  calibID = int(copiedFccSteeringFile.split('calib')[-1])
+  newRun = CalibrationRun(calibID, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  res = newRun.readInitialParameterDict()
+  assert res['OK']
 
 def test_initializeHandler(mocker):
   mocker.patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=['calib2', 'calib4', 'calib78']))
@@ -88,21 +148,32 @@ def mimic_convert_and_execute(inList, _=''):
     return S_OK((0, '6.66\n'))
 
 
-def test_endCurrentStepBasicWorkflow(readParameterDict, mocker):
+def test_endCurrentStepBasicWorkflow(copiedFccSteeringFile, readParameterDict, mocker):
   opsMock = Mock(name='instance')
   opsMock.getValue.return_value = 'dummy'
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
                new=Mock(return_value=opsMock, name='Class'))
-  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.updateSteeringFile', new=Mock(return_value=S_OK()))
+  #  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.updateSteeringFile', new=Mock(return_value=S_OK()))
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.convert_and_execute',
                side_effect=mimic_convert_and_execute)
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.saveCalibrationRun', new=Mock(return_value=S_OK()))
 
-  calibSetting = createCalibrationSettings('CLIC')
-  newRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  calibSetting = createCalibrationSettings('CLD')
+  calibSetting.settingsDict['DDPandoraPFANewProcessorName'] = 'MyDDMarlinPandora_10ns'
+  calibSetting.settingsDict['DDCaloDigiName'] = 'MyDDCaloDigi_10ns'
+  tmpMock = Mock(name='instance')
+  tmpMock.getFile.return_value = S_OK()
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.DataManager',
+               new=Mock(return_value=tmpMock, name='Class'))
+  steeringFileName = copiedFccSteeringFile
+  calibID = int(steeringFileName.split('calib')[-1])
+  addPfoAnalysisProcessor('%s/%s' % (steeringFileName, calibSetting.settingsDict['steeringFile']))
+  newRun = CalibrationRun(calibID, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  res = newRun.readInitialParameterDict()
+  newRun.calibrationConstantsDict[".//processor[@type='PfoAnalysis']/parameter[@name='RootFile']"] = 'pfoAnalysis.root'
+
   mocker.patch.object(CalibrationRun, '_CalibrationRun__mergePandoraLikelihoodXmlFiles',
                       new=Mock(return_value={'OK': True}))
-  newRun.calibrationConstantsDict = dict(readParameterDict)
   stageIDSequence = []
   phaseIDSequence = []
   stepIDSequence = []
@@ -430,14 +501,14 @@ class CalibrationHandlerTest(unittest.TestCase):
           assertDiracSucceeds(result, self)
           assertEqualsImproved(result['Value'], tmpDict, self)
 
-  def test_getnewparams_calculationfinished(self):
-    # TODO rewrite this test
-    calibSetting = createCalibrationSettings('CLIC')
-    testRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
-    testRun.calibrationFinished = True
-    CalibrationHandler.activeCalibrations[2489] = testRun
-    assertDiracSucceedsWith(self.calh.export_getNewParameters(2489, 193),
-                            'Calibration finished! End job now', self)
+  #  def test_getnewparams_calculationfinished( self ):
+  #    # TODO rewrite this test
+  #    calibSetting = createCalibrationSettings('CLIC')
+  #    testRun  = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  #    testRun.calibrationFinished = True
+  #    CalibrationHandler.activeCalibrations[ 2489 ] = testRun
+  #    assertDiracSucceedsWith( self.calh.export_getNewParameters( 2489, 193 ),
+  #                             'Calibration finished! End job now', self )
 
   #  def test_getnewparams_nonewparamsyet( self ):
   #    calibSetting = createCalibrationSettings('CLIC')

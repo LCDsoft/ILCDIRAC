@@ -152,7 +152,7 @@ def validatePandoraSettingsFile(pandoraSettingsFileName):
   return validateExistenceOfWordsInFile(pandoraSettingsFileName, parametersToValidate)
 
 
-def updateSteeringFile(inFileName, outFileName, parametersToSetup):
+def updateSteeringFile(inFileName, outFileName, parametersToSetup, exceptions=[]):
   """ Read input xml-file, update values given be dictionary and write result to a new file
 
   :param basestring inFileName: name of input xml-file
@@ -167,10 +167,16 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup):
   #FIXME redirect log messegage to LOG class?
   LOG.info("Updating following values for %s:" % outFileName)
   for iPar, iVal in parametersToSetup.items():
+    skipParameter = False
+    for iEx in exceptions:
+      if iEx in iPar:
+        skipParameter = True
+    if skipParameter:
+      continue
     iElement = tree.find(iPar)
-    if iElement is None:
-      errMsg = ("Cannot update parameter in the steering file! Parameter: %s; inFileName: %s; outFileName: %s"
-                % (iPar, inFileName, outFileName))
+    if iElement is None or iVal is None:
+      errMsg = ("Cannot update parameter in the steering file! Parameter: %s; Value: %s; inFileName: %s; outFileName: %s"
+                % (iPar, iVal, inFileName, outFileName))
       LOG.error(errMsg)
       return S_ERROR(errMsg)
     else:
@@ -206,11 +212,18 @@ def readParameterDict(inFile='testing/parameterListMarlinSteeringFile.txt'):
       outList[iLine.split('\n')[0]] = None
   return outList
 
-def readParametersFromSteeringFile(inFileName, parameterDict):
+
+def readParametersFromSteeringFile(inFileName, parameterDict, exceptions=[]):
   tree = et.parse(inFileName)
 
-  for iPar, _ in parameterDict.items():
-    iElement = tree.find(iPar)
+  for iPar in parameterDict.keys():
+    skipParameter = False
+    for iEx in exceptions:
+      if iEx in iPar:
+        skipParameter = True
+    if skipParameter:
+      continue
+    iElement = tree.find('%s' % iPar)
     if iElement is None:
       return S_ERROR("Cannot read parameter from the steering file! Parameter: %s; inFileName: %s" % (iPar, inFileName))
     else:
@@ -284,3 +297,34 @@ def loadCalibrationRun(calibrationID):
       return pickle.load(f)
   else:
     return None
+
+
+def addPfoAnalysisProcessor(mainSteeringMarlinRecoFile):
+  mainTree = et.ElementTree()
+  mainTree.parse(mainSteeringMarlinRecoFile)
+  mainRoot = mainTree.getroot()
+
+  #FIXME TODO properly find path to the file
+  # this file should only contains PfoAnalysis processor
+  import ILCDIRAC.CalibrationSystem.Utilities as utilities
+  pfoAnalysisProcessorFile = os.path.join(utilities.__path__[0], 'testing/pfoAnalysis.xml')
+  if not os.path.exists(pfoAnalysisProcessorFile):
+    return S_ERROR("cannot find xml file with pfoAnalysis processor")
+  tmpTree = et.parse(pfoAnalysisProcessorFile)
+  elementToAdd = tmpTree.getroot()
+
+  if 'MyPfoAnalysis' not in (iEl.attrib['name'] for iEl in mainRoot.iter('processor')):
+    tmp1 = mainRoot.find('execute')
+    c = et.Element("processor name=\"MyPfoAnalysis\"")
+    tmp1.append(c)
+    mainRoot.append(elementToAdd)
+    #  mainTree.write(mainSteeringMarlinRecoFile)
+
+    root = mainTree.getroot()
+    root_str = et.tostring(root)
+    # TODO FIXME why write to "test_<fileName>" file???
+    #  with open('test_' + mainSteeringMarlinRecoFile, "w") as of:
+    with open(mainSteeringMarlinRecoFile, "w") as of:
+      of.write(root_str)
+
+  return S_OK()

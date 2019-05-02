@@ -24,6 +24,7 @@ from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationClient, CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readValueFromSteeringFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import addPfoAnalysisProcessor
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 
 __RCSID__ = '$Id$'
@@ -56,6 +57,8 @@ class Calibration(MarlinAnalysis):
 
     :return: S_OK(), S_ERROR()
     """
+
+    self.setApplicationStatus('PandoraCalib: setting up...')
 
     if self.cali is None:
       self.cali = CalibrationClient(self.calibrationID, self.workerID)
@@ -152,8 +155,8 @@ class Calibration(MarlinAnalysis):
     self.log.info("Steering file: %s" % self.SteeringFile)
 
     # check if steering file contains PfoAnalysis processor needed for calibration
-    if readValueFromSteeringFile(self.SteeringFile, "processor[@type='PfoAnalysis']") is None:
-      self.addPfoAnalysisProcessor(self.SteeringFile)
+    if readValueFromSteeringFile(self.SteeringFile, ".//processor[@type='PfoAnalysis']") is None:
+      addPfoAnalysisProcessor(self.SteeringFile)
 
     res = self.prepareMARLIN_DLL(env_script_path)
     if not res['OK']:
@@ -188,7 +191,7 @@ class Calibration(MarlinAnalysis):
       self.currentStep = calibrationParameters['currentStep']
       parameterDict = calibrationParameters['parameters']
 
-      self.setApplicationStatus('PandoraCalib, stage: %s; phase: %s; step: %s' % (self.currentStage, self.currentPhase,
+      self.setApplicationStatus('PandoraCalib: stage: %s; phase: %s; step: %s' % (self.currentStage, self.currentPhase,
                                                                                   self.currentStep))
 
       res = self.resolveInputSlcioFilesAndAddToParameterDict(listofslcio, parameterDict)
@@ -253,37 +256,18 @@ class Calibration(MarlinAnalysis):
 
       self.cali.reportResult(outFile)
 
+      self.setApplicationStatus('PandoraCalib: step %s is finished. Waiting for other jobs' % self.currentStep)
+
     # TODO implement me
     #  return self.finalStatusReport(status)
     return S_OK()
 
-  def addPfoAnalysisProcessor(self, mainSteeringMarlinRecoFile):
-    mainTree = et.ElementTree()
-    mainTree.parse(mainSteeringMarlinRecoFile)
-    mainRoot = mainTree.getroot()
-
-    #FIXME TODO properly find path to the file
-    # this file should only contains PfoAnalysis processor
-    import ILCDIRAC.CalibrationSystem.Utilities as utilities
-    pfoAnalysisProcessorFile = os.path.join(utilities.__path__[0], 'testing/pfoAnalysis.xml')
-    if not os.path.exists(pfoAnalysisProcessorFile):
-      return S_ERROR("cannot find xml file with pfoAnalysis processor")
-    tmpTree = et.parse(pfoAnalysisProcessorFile)
-    elementToAdd = tmpTree.getroot()
-
-    if 'MyPfoAnalysis' not in (iEl.attrib['name'] for iEl in mainRoot.iter('processor')):
-      tmp1 = mainRoot.find('execute')
-      c = et.Element("processor name=\"MyPfoAnalysis\"")
-      tmp1.append(c)
-      mainRoot.append(elementToAdd)
-      #  mainTree.write(mainSteeringMarlinRecoFile)
-
-      root = mainTree.getroot()
-      root_str = et.tostring(root)
-      with open('test_' + mainSteeringMarlinRecoFile, "w") as of:
-        of.write(root_str)
-
-    return S_OK()
+  def getKey(self, parameterDict, pattern):
+    for iKey in parameterDict:
+      if pattern in iKey:
+        return iKey
+    self.log.error('Cannot find XPath inside the parameter dict which contains pattern: %s' % pattern)
+    return None
 
   def resolveInputSlcioFilesAndAddToParameterDict(self, allSlcioFiles, parameterDict):
     """ Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the
@@ -305,6 +289,7 @@ class Calibration(MarlinAnalysis):
     iType = CalibrationPhase.fileKeyFromPhase(self.currentPhase).lower()
     self.log.info('SASHA iType: %s' % iType)
     res = self.cali.getInputDataDict()
+    print('res: %s' % res)
     if not res['OK']:
       errorMessage = 'Somemethignwent wrong during retrieveing inputDataDict! Msg: %s' % (res['Message'])
       self.log.error(errorMessage)
@@ -313,6 +298,8 @@ class Calibration(MarlinAnalysis):
     self.log.info('SASHA self.cali.getInputDataDict() %s' % res)
 
     inputDataDict = res['Value']
+    print('iType: %s' % iType)
+    print('inputDataDict.keys(): %s' % inputDataDict.keys())
     if iType not in inputDataDict.keys():
       errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (iType)
       self.log.error(errorMessage)
@@ -328,19 +315,20 @@ class Calibration(MarlinAnalysis):
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
     if not set(filesToRunOn).issubset(allSlcioFiles):
-      errorMessage = ('Cannot find all input data on the worker.\nNeeded files for phase: %s\nAll copied files: %s'
+      errorMessage = ('Cannot find all input data on the worker. Needed files for phase: %s; All copied files: %s'
                       % (filesToRunOn, allSlcioFiles))
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    parameterDict["global/parameter[@name='LCIOInputFiles']"] = ' '.join(filesToRunOn)
-    parameterDict[
-        "processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']"] = pandoraSettingsFile
+    parameterDict[self.getKey(parameterDict, 'LCIOInputFiles')] = ' '.join(filesToRunOn)
+    parameterDict[self.getKey(parameterDict, 'PandoraSettingsXmlFile')] = pandoraSettingsFile
 
     #TODO should one use different steering file for photon training? if no one need to append line below during all
     #     steps
     if self.currentStage in [1, 3]:
-      parameterDict["processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']"] = 'pfoAnalysis.root'
+      parameterDict[self.getKey(parameterDict, 'RootFile')] = 'pfoAnalysis.root'
+    else:
+      parameterDict[self.getKey(parameterDict, 'RootFile')] = 'dummy.root'
     return S_OK(parameterDict)
 
   def runScript(self, marlinSteeringFile, env_script_path, marlin_dll):

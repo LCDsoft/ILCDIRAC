@@ -5,6 +5,7 @@ The CalibrationRun ???
 import glob
 import os
 from collections import defaultdict
+from xml.etree import ElementTree as et
 
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
@@ -122,15 +123,34 @@ class CalibrationRun(object):
 
     # FIXME this path will be different in production version probably... update it
     parListFileName = os.path.join(utilities.__path__[0], 'testing/parameterListMarlinSteeringFile.txt')
+
     parDict = readParameterDict(parListFileName)
-    res = readParametersFromSteeringFile(self.localSteeringFile, parDict)
+    for key in list(parDict.keys()):
+      newKey = None
+      if 'MyDDMarlinPandora' in key:
+        newKey = key.replace('MyDDMarlinPandora', self.settings['DDPandoraPFANewProcessorName'])
+        # FIXME temporary solution since MaxClusterEnergyToApplySoftComp is setup in the group scope not in the processor one
+        if 'MaxClusterEnergyToApplySoftComp' in key:
+          tree = et.parse(self.localSteeringFile)
+          iElement = tree.find(key)
+          if iElement is None:
+            tmpKey = './/%s' % key.split('/')[-1]
+            iElements = tree.findall(tmpKey)
+            if len(iElements) == 1:
+              newKey = tmpKey
+      if 'MyDDCaloDigi' in key:
+        newKey = key.replace('MyDDCaloDigi', self.settings['DDCaloDigiName'])
+      if not newKey is None:
+        parDict[newKey] = parDict.pop(key)
+
+    res = readParametersFromSteeringFile(self.localSteeringFile, parDict, ['PfoAnalysis'])
     if not res['OK']:
       self.log.error('Failed to read parameters from steering file:', res['Message'])
       return S_ERROR('Failed to read parameters from steering file')
 
-    if not self.settings['enableSoftwareCompensation']:
-      parDict["processor[@name='MyDDMarlinPandora']/parameter[@name='MaxClusterEnergyToApplySoftComp']"] = 0
     self.calibrationConstantsDict = parDict
+    if not self.settings['enableSoftwareCompensation']:
+      parDict[self.getKey('MaxClusterEnergyToApplySoftComp')] = 0
 
     self.currentParameterSet['currentStage'] = self.currentStage
     self.currentParameterSet['currentPhase'] = self.currentPhase
@@ -317,6 +337,13 @@ class CalibrationRun(object):
     else:
       return S_ERROR('Failed to merge photon likelihoods')
 
+  def getKey(self, pattern):
+    for iKey in self.calibrationConstantsDict:
+      if pattern in iKey:
+        return iKey
+    self.log.error('Cannot find XPath inside the parameter dict which contains pattern: %s' % pattern)
+    return None
+
   def endCurrentStep(self):
     """ Calculates the new parameter set based on the results from the computations and prepares the object
     for the next step. (StepCounter increased, ...)
@@ -364,10 +391,9 @@ class CalibrationRun(object):
                                 ilcSoftInitScript)
 
       # this parameter is written in format "value value" in the xml steering file
-      prevStepCalibConstBarrel = float(self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"].split()[0])
+      prevStepCalibConstBarrel = float(self.calibrationConstantsDict[self.getKey('CalibrECAL')].split()[0])
       prevStepCalibConstEndcap = prevStepCalibConstBarrel * float(self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='ECALEndcapCorrectionFactor']"])
+          self.getKey('ECALEndcapCorrectionFactor')])
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'ECal_Digi_Extract.py')
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
@@ -385,9 +411,9 @@ class CalibrationRun(object):
                                  truthEnergy, prevStepCalibConstEndcap, 'Mean', 'Endcap'])
       meanEndcap = float(res['Value'][1].split('\n')[0])
 
-      self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']"] = (
+      self.calibrationConstantsDict[self.getKey('CalibrECAL')] = (
           '%s %s' % (calibConstBarrel, calibConstBarrel))
-      self.calibrationConstantsDict["processor[@name='MyDDCaloDigi']/parameter[@name='ECALEndcapCorrectionFactor']"] = (
+      self.calibrationConstantsDict[self.getKey('ECALEndcapCorrectionFactor')] = (
           calibConstEndcap / calibConstBarrel)
 
       fractionalError = max(abs(meanBarrel - truthEnergy), abs(meanEndcap - truthEnergy)) / truthEnergy
@@ -408,9 +434,9 @@ class CalibrationRun(object):
                                 ilcSoftInitScript)
 
       prevStepCalibConstBarrel = float(self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALBarrel']"])
+          self.getKey('CalibrHCALBarrel')])
       prevStepCalibConstEndcap = float(self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"])
+          self.getKey('CalibrHCALEndcap')])
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Digi_Extract.py')
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
@@ -429,9 +455,9 @@ class CalibrationRun(object):
       meanEndcap = float(res['Value'][1].split('\n')[0])
 
       self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALBarrel']"] = calibConstBarrel
+          self.getKey('CalibrHCALBarrel')] = calibConstBarrel
       self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"] = calibConstEndcap
+          self.getKey('CalibrHCALEndcap')] = calibConstEndcap
 
       fractionalError = max(abs(meanBarrel - truthEnergy), abs(meanEndcap - truthEnergy)) / truthEnergy
       if fractionalError < self.settings['digitisationAccuracy']:
@@ -459,11 +485,11 @@ class CalibrationRun(object):
       #  hcalMipMpv = float(convert_and_execute(['python', 'Extract_SimCaloHitMIPMPV.py', calibrationFile,
       #                                          'HCal']))
 
-      self.calibrationConstantsDict["processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToMipCalibration']"] = (
+      self.calibrationConstantsDict[self.getKey('ECalToMipCalibration')] = (
           ecalGevToMip)
-      self.calibrationConstantsDict["processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToMipCalibration']"] = (
+      self.calibrationConstantsDict[self.getKey('HCalToMipCalibration')] = (
           hcalGevToMip)
-      self.calibrationConstantsDict["processor[@name='MyDDMarlinPandora']/parameter[@name='MuonToMipCalibration']"] = (
+      self.calibrationConstantsDict[self.getKey('MuonToMipCalibration')] = (
           muonGevToMip)
 
       binary = os.path.join(scriptPath, 'SimCaloHitEnergyDistribution')
@@ -491,7 +517,7 @@ class CalibrationRun(object):
                                  kaonTruthEnergy])
       directionCorrectionRatio = float(res['Value'][1].split('\n')[0])
       calibHcalEndcap = float(self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALEndcap']"])
+          self.getKey('CalibrHCALEndcap')])
       # one need to access hcalMeanEndcap again (as in previous phase. Read it again from calibration file...
       # but it will also write output from script execution to the file again
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Digi_Extract.py')
@@ -512,7 +538,7 @@ class CalibrationRun(object):
                         kaonTruthEnergy / hcalMeanEndcap)
 
       self.calibrationConstantsDict[
-          "processor[@name='MyDDCaloDigi']/parameter[@name='CalibrHCALOther']"] = calibHcalOther
+          self.getKey('CalibrHCALOther')] = calibHcalOther
 
       self.currentPhase = self.currentPhase + 1
 
@@ -524,7 +550,7 @@ class CalibrationRun(object):
                                 ilcSoftInitScript)
 
       prevStepCalibConstEcalToEm = float(self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToEMGeVCalibration']"])
+          self.getKey('ECalToEMGeVCalibration')])
       pythonReadScript = os.path.join(pythonReadScriptPath, 'EM_Extract.py')
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
                                  truthEnergy, prevStepCalibConstEcalToEm, 'Calibration_Constant'])
@@ -535,9 +561,9 @@ class CalibrationRun(object):
       emMean = float(res['Value'][1].split('\n')[0])
 
       self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToEMGeVCalibration']"] = ecalToEm
+          self.getKey('ECalToEMGeVCalibration')] = ecalToEm
       self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToEMGeVCalibration']"] = hcalToEm
+          self.getKey('HCalToEMGeVCalibration')] = hcalToEm
 
       fractionalError = abs(truthEnergy - emMean) / truthEnergy
       if fractionalError < self.settings['pandoraPFAAccuracy']:
@@ -552,24 +578,24 @@ class CalibrationRun(object):
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'Had_Extract.py')
       prevStepCalibConstHcalToHad = float(self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToHadGeVCalibration']"])
+          self.getKey('HCalToHadGeVCalibration')])
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
                                  truthEnergy, 'HCTH', prevStepCalibConstHcalToHad,
                                  'Calibration_Constant', 'CSM'])
       hcalToHad = float(res['Value'][1].split('\n')[0])
       prevStepCalibConstEcalToHad = float(self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationBarrel']"])
+          self.getKey('ECalToHadGeVCalibrationBarrel')])
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
                                  truthEnergy, 'ECTH', prevStepCalibConstEcalToHad,
                                  'Calibration_Constant', 'CSM'])
       ecalToHad = float(res['Value'][1].split('\n')[0])
 
       self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToHadGeVCalibration']"] = hcalToHad
+          self.getKey('HCalToHadGeVCalibration')] = hcalToHad
       self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationBarrel']"] = ecalToHad
+          self.getKey('ECalToHadGeVCalibrationBarrel')] = ecalToHad
       self.calibrationConstantsDict[
-          "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationEndCap']"] = ecalToHad
+          self.getKey('ECalToHadGeVCalibrationEndCap')] = ecalToHad
 
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
                                  truthEnergy, 'HCTH', hcalToHad, 'FOM', 'CSM'])
@@ -608,7 +634,8 @@ class CalibrationRun(object):
     self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
 
     # update local steering file after every step. This file will be used if calibration service will be restarted and some calibrations are still are not finished
-    res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile, self.calibrationConstantsDict)
+    res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,
+                             self.calibrationConstantsDict, ["PfoAnalysis"])
     saveCalibrationRun(self)
 
     return S_OK()
@@ -616,7 +643,8 @@ class CalibrationRun(object):
   @executeWithUserProxy
   def copyResultsToEos(self):
 
-    res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile, self.calibrationConstantsDict)
+    res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,
+                             self.calibrationConstantsDict, ["PfoAnalysis"])
     if not res['OK']:
       self.log.error('Error while updating local steering file. Error message: %s' % res['Message'])
       return res

@@ -5,6 +5,7 @@ Unit tests for the Calibration.py file
 import unittest
 import pytest
 import os
+import shutil
 from mock import mock_open, patch, MagicMock as Mock
 from ILCDIRAC.Workflow.Modules.Calibration import Calibration
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
@@ -101,7 +102,34 @@ paramDictList = [
     {'OK': True, 'Value': {'currentStep': 12, 'currentStage': 3, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': True}}]
 
 
+@pytest.fixture
+def helper_copyFiles():
+
+  dirsToCopy = ['/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/CalibrationPandoraSettings',
+                '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/PandoraSettingsFCCee'
+                ]
+  for iDir in dirsToCopy:
+    try:
+      shutil.copytree(iDir, iDir.split('/')[-1])
+    except EnvironmentError as e:
+      print('ERROR Could not copy dir: %s, exception: %s' % (iDir, e))
+
+  yield helper_copyFiles
+  if os.path.exists('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK'):
+    os.remove('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK')
+
+  for iDir in dirsToCopy:
+    iDir = iDir.split('/')[-1]
+
+    if os.path.exists(iDir):
+      try:
+        shutil.rmtree(iDir, './')
+      except EnvironmentError as e:
+        print('ERROR Could not delete dir: %s, exception: %s' % (iDir, e))
+
+
 def test_runIt_simple(calib, mocker):
+
   mocker.patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK()))
   mocker.patch('%s.os.remove' % MODULE_NAME, return_value=True)
   mocker.patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value={'OK': True, 'Value': 'dummy_EnvScript'}))
@@ -123,7 +151,9 @@ def test_runIt_simple(calib, mocker):
   assert calib.currentStep == 11
 
 
-def test_runIt_updatingSteeringFile(calib, mocker):
+def test_runIt_updatingSteeringFile(helper_copyFiles, calib, mocker):
+  helper_copyFiles
+
   mocker.patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK()))
   mocker.patch('%s.os.remove' % MODULE_NAME, return_value=True)
   mocker.patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value={'OK': True, 'Value': 'dummy_EnvScript'}))
@@ -142,3 +172,37 @@ def test_runIt_updatingSteeringFile(calib, mocker):
   assert res['OK']
   print('currentStep: %s' % calib.currentStep)
   assert calib.currentStep == 11
+
+
+initialParameterDict = {".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='ECALBarrelTimeWindowMax']": ' 10 ', ".//global/parameter[@name='LCIOInputFiles']": '\n      /afs/cern.ch/work/e/eleogran/public/mu_sim/mu_validation_50kevents.slcio\n    ', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='MuonToMipCalibration']": '20703.9', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='ECALEndcapCorrectionFactor']": '1.03245503522', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToHadGeVCalibrationEndCap']": '1.11490774181', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='HCalToMipCalibration']": '45.6621', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='HCalToEMGeVCalibration']": '1.01776966108', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToHadGeVCalibrationBarrel']": '1.11490774181', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='HCalToHadGeVCalibration']": '1.00565042407', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='PandoraSettingsXmlFile']": ' PandoraSettingsFCCee/PandoraSettingsDefault.xml ', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToMipCalibration']": '175.439',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToEMGeVCalibration']": '1.01776966108', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='HCALEndcapTimeWindowMax']": ' 10 ', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrHCALBarrel']": '45.9956826061', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrHCALEndcap']": '46.9252540291', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrECAL']": '37.5227197175 37.5227197175', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrHCALOther']": '57.4588011802', ".//parameter[@name='MaxClusterEnergyToApplySoftComp']": 0, ".//processor[@type='InitializeDD4hep']/parameter[@name='DD4hepXMLFile']": '\n      /cvmfs/clicdp.cern.ch/iLCSoft/builds/nightly/x86_64-slc6-gcc62-opt/lcgeo/HEAD/FCCee/compact/FCCee_o1_v04/FCCee_o1_v04.xml\n    ', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='MaxHCalHitHadronicEnergy']": '10000000.', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='ECALEndcapTimeWindowMax']": ' 10 ', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='HCALBarrelTimeWindowMax']": ' 10 ', ".//processor[@name='RootFile']": None}
+
+
+def test_resolveInputSlcioFilesAndAddToParameterDict(calib, mocker):
+  tmpDataDict = {'zuds': ['zuds.slcio'], 'gamma': ['gamma.slcio'], 'muon': ['muon.slcio'], 'kaon': ['kaon.slcio']}
+  tmpListOfFiles = ['zuds.slcio', 'gamma.slcio', 'muon.slcio', 'kaon.slcio']
+  calibClientMock = Mock(name='mock1')
+  calibClientMock.getInputDataDict.return_value = S_OK(tmpDataDict)
+  calib.cali = calibClientMock
+
+  calib.currentPhase = 2
+  dataFile = 'muon.slcio'
+  mocker.patch('%s.resolveIFpaths' % MODULE_NAME, new=Mock(return_value=S_OK([dataFile])))
+
+  calib.currentStage = 1
+  res = calib.resolveInputSlcioFilesAndAddToParameterDict(tmpListOfFiles, initialParameterDict)
+  print(res)
+  assert res['OK']
+  assert res['Value'][calib.getKey(res['Value'], 'LCIOInputFiles')] == dataFile
+  assert res['Value'][calib.getKey(res['Value'], 'PandoraSettingsXmlFile')
+                      ] == 'PandoraSettings/PandoraSettingsDefault.xml'
+  assert res['Value'][calib.getKey(res['Value'], 'RootFile')] == 'pfoAnalysis.root'
+
+  calib.currentStage = 2
+  res = calib.resolveInputSlcioFilesAndAddToParameterDict(tmpListOfFiles, initialParameterDict)
+  print(res)
+  assert res['OK']
+  assert res['Value'][calib.getKey(res['Value'], 'LCIOInputFiles')] == dataFile
+  assert res['Value'][calib.getKey(res['Value'], 'PandoraSettingsXmlFile')
+                      ] == 'CalibrationPandoraSettings/PandoraSettingsPhotonTraining.xml'
+  assert res['Value'][calib.getKey(res['Value'], 'RootFile')] == 'dummy.root'

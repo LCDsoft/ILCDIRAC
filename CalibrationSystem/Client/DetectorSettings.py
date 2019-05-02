@@ -28,6 +28,8 @@ class CalibrationSettings(object):
     # fraction of all jobs must have finished in order for the next step to begin.
     self.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] = 0.9
     self.settingsDict['enableSoftwareCompensation'] = False
+    self.settingsDict['DDPandoraPFANewProcessorName'] = 'MyDDMarlinPandora'
+    self.settingsDict['DDCaloDigiName'] = 'MyDDCaloDigi'
 
     # following settings has to be setup for daughter classes
     self.settingsDict['detectorModel'] = None
@@ -37,6 +39,7 @@ class CalibrationSettings(object):
     self.settingsDict['hcalEndcapCosThetaRange'] = None
     self.settingsDict['nHcalLayers'] = None
     self.settingsDict['steeringFile'] = None
+
     # TODO temporary field in the settings. for testing only
     self.settingsDict['startCalibrationFinished'] = False
 
@@ -57,7 +60,7 @@ class CLDSettings(CalibrationSettings):
     self.settingsDict['hcalEndcapCosThetaRange'] = [0.72, 0.94]
     self.settingsDict['nHcalLayers'] = 44
     # TODO this default will not work... one need to specify full LFN path
-    self.settingsDict['steeringFile'] = 'fcceeReconstruction.xml'
+    self.settingsDict['steeringFile'] = 'fccReconstruction.xml'
 
 
 class CLICSettings(CalibrationSettings):

@@ -28,7 +28,7 @@ class CalibrationAgentTest(unittest.TestCase):
     with patch.object(DIRAC.ConfigurationSystem.Client.PathFinder, 'getAgentSection', new=Mock(return_value='')):
       self.calag = CalibrationAgent('Calibration/testCalAgent', 'testLoadname')
     self.rpc_mock = Mock()
-    with patch('%s.RPCClient' % MODULE_NAME, new=self.rpc_mock):
+    with patch('%s.Client' % MODULE_NAME, new=self.rpc_mock):
       res = self.calag.initialize()
       assert res['OK']
 
@@ -167,7 +167,7 @@ class CalibrationAgentTest(unittest.TestCase):
         'some_cal_3': {'JobName': 'A_CalID_123_WorkID_124', 'Status': 'Running'},
         'some_cal_4': {'JobName': 'A_CalID_1_WorkID_2', 'Status': 'Finished'},
         'some_other_cal': {'JobName': 'A_CalID_1_WorkID_918437', 'Status': 'Killed'}})
-    with patch('%s.RPCClient' % MODULE_NAME, new=jobmon_mock):
+    with patch('%s.JobMonitoringClient' % MODULE_NAME, new=jobmon_mock):
       status_dict = self.calag.fetchJobStatuses()
       assertEqualsImproved(status_dict, S_OK({123: {123: 'Running', 124: 'Running'},
                                               4289: {742: 'Failed'},
