@@ -294,7 +294,6 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
                       '98u243jrui4fg4289fjh2487rh13urhi', 'luminosity' ]
     text_file_data = '\n'.join(file_contents)
     with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
-      file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
       result = PrepareOptionFiles.prepareWhizardFile( "in", "typeA", "1tev",
                                                       "89741", "50", "684",
                                                       "out")
@@ -302,9 +301,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     file_mocker.assert_any_call( 'in', 'r' )
     file_mocker.assert_any_call( 'out', 'w' )
     mocker_handle = file_mocker()
-    expected = [ ' seed = 89741\n', ' sqrts = 1tev\n', 'n_events143417',
-                 ' write_events_file = "typeA" \n', 'processidprocess_id"123',
-                 '98u243jrui4fg4289fjh2487rh13urhi', ' luminosity = 684\n' ]
+    expected = [' seed = 89741\n', ' sqrts = 1tev\n', 'n_events143417\n',
+                ' write_events_file = "typeA" \n', 'processidprocess_id"123\n',
+                '98u243jrui4fg4289fjh2487rh13urhi\n', ' luminosity = 684\n']
     for entry in expected:
       mocker_handle.write.assert_any_call(entry)
     assertEqualsImproved( len(expected),
@@ -321,7 +320,6 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
                        'efiuhifuoejf', '198734y37hrunffuydj82' ]
     text_file_data = '\n'.join(file_contents)
     with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
-      file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
       result = PrepareOptionFiles.prepareWhizardFileTemplate("in", "typeA", parameters, "out")
       assertDiracSucceedsWith_equals( result, True, self )
     file_mocker.assert_any_call('in', 'r')
@@ -334,7 +332,7 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
                 ' USER_spectrum_on = SpectrumB\n', ' USER_spectrum_mode = mode1234\n',
                 ' USER_spectrum_mode = -mode1234\n', ' ISR_on = PSDL\n', ' ISR_on = FVikj\n',
                 ' EPA_on = 234\n', ' EPA_on = asf31\n', ' write_events_file = "typeA" \n',
-                'processidaisuydhprocess_id"35', 'efiuhifuoejf', '198734y37hrunffuydj82' ]
+                'processidaisuydhprocess_id"35\n', 'efiuhifuoejf\n', '198734y37hrunffuydj82']
     for entry in expected:
       mocker_handle.write.assert_any_call(entry)
     assertEqualsImproved( len(expected),
@@ -347,11 +345,9 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
     # Template strings are the keys of the parameter dictionary concatenated with themselves, e.g. SEEDSEED for the entry 'SEED' : 135431
     parameters['USERSPECTRUM'] = 'mode1234'
     file_contents += ['USERSPECTRUMB1', 'USERSPECTRUMB2']
-    file_contents += [ 'write_events_file', 'processidaisuydhprocess_id"',
-                       'efiuhifuoejf', '198734y37hrunffuydj82' ]
+    file_contents += ['write_events_file', 'efiuhifuoejf', 'processidprocess_id1""', '198734y37hrunffuydj82']
     text_file_data = '\n'.join(file_contents)
     with patch('%s.open' % MODULE_NAME, mock_open(read_data=text_file_data), create=True) as file_mocker:
-      file_mocker.return_value.__iter__.return_value = text_file_data.splitlines()
       result = PrepareOptionFiles.prepareWhizardFileTemplate( "in", "typeA",
                                                               parameters, "out" )
       assertDiracSucceedsWith_equals( result, False, self )
@@ -365,8 +361,8 @@ class TestPrepareOptionsFilePatch( unittest.TestCase ):
                  ' USER_spectrum_on = spectrumA\n', ' USER_spectrum_on = SpectrumB\n',
                  ' USER_spectrum_mode = mode1234\n', ' USER_spectrum_mode = -mode1234\n',
                  ' ISR_on = PSDL\n', ' ISR_on = FVikj\n', ' EPA_on = 234\n',
-                 ' EPA_on = asf31\n', ' write_events_file = "typeA" \n',
-                 'processidaisuydhprocess_id"', 'efiuhifuoejf',
+                 ' EPA_on = asf31\n', ' write_events_file = "typeA" \n', 'efiuhifuoejf\n',
+                 'processidprocess_id1""\n',
                  '198734y37hrunffuydj82' ]
     for entry in expected:
       mocker_handle.write.assert_any_call(entry)
