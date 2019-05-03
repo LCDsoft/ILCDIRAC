@@ -205,7 +205,13 @@ def readValueFromSteeringFile(fileName, xPath):
   else:
     return None
 
-def readParameterDict(inFile='testing/parameterListMarlinSteeringFile.txt'):
+#  def readParameterDict(inFile='testing/parameterListMarlinSteeringFile.txt'):
+
+
+def readParameterDict(inFile='DEFAULT_VALUE'):
+  if inFile == 'DEFAULT_VALUE':
+    import ILCDIRAC.CalibrationSystem.Utilities as utilities
+    inFile = os.path.join(utilities.__path__[0], 'testing/parameterListMarlinSteeringFile.txt')
   outList = {}
   with open(inFile, 'r') as f:
     for iLine in f:
@@ -223,7 +229,7 @@ def readParametersFromSteeringFile(inFileName, parameterDict, exceptions=[]):
         skipParameter = True
     if skipParameter:
       continue
-    iElement = tree.find('%s' % iPar)
+    iElement = tree.find(str(iPar))
     if iElement is None:
       return S_ERROR("Cannot read parameter from the steering file! Parameter: %s; inFileName: %s" % (iPar, inFileName))
     else:
@@ -233,6 +239,7 @@ def readParametersFromSteeringFile(inFileName, parameterDict, exceptions=[]):
 
 def testUpdateOfSteeringFileWithNewParameters():
   inFileName = 'testing/in1.xml'
+
 
   parDict = readParameterDict()
   print parDict
@@ -300,8 +307,14 @@ def loadCalibrationRun(calibrationID):
 
 
 def addPfoAnalysisProcessor(mainSteeringMarlinRecoFile):
+  if not os.path.exists(mainSteeringMarlinRecoFile):
+    return S_ERROR("cannot find input steering file: %s" % mainSteeringMarlinRecoFile)
+
   mainTree = et.ElementTree()
-  mainTree.parse(mainSteeringMarlinRecoFile)
+  try:
+    mainTree.parse(mainSteeringMarlinRecoFile)
+  except et.ParseError as e:
+    return S_ERROR("cannot parse input steering file: %s. errMsg: %s" % (mainSteeringMarlinRecoFile, e))
   mainRoot = mainTree.getroot()
 
   #FIXME TODO properly find path to the file
@@ -315,7 +328,7 @@ def addPfoAnalysisProcessor(mainSteeringMarlinRecoFile):
 
   if 'MyPfoAnalysis' not in (iEl.attrib['name'] for iEl in mainRoot.iter('processor')):
     tmp1 = mainRoot.find('execute')
-    c = et.Element("processor name=\"MyPfoAnalysis\"")
+    c = et.Element("processor", {"name": "MyPfoAnalysis"})
     tmp1.append(c)
     mainRoot.append(elementToAdd)
     #  mainTree.write(mainSteeringMarlinRecoFile)
@@ -326,5 +339,42 @@ def addPfoAnalysisProcessor(mainSteeringMarlinRecoFile):
     #  with open('test_' + mainSteeringMarlinRecoFile, "w") as of:
     with open(mainSteeringMarlinRecoFile, "w") as of:
       of.write(root_str)
+
+  return S_OK()
+
+
+def addParameterToProcessor(mainSteeringMarlinRecoFile, processorName, parameterDict):
+  if not os.path.exists(mainSteeringMarlinRecoFile):
+    return S_ERROR("cannot find input steering file: %s" % mainSteeringMarlinRecoFile)
+
+  mainTree = et.ElementTree()
+  try:
+    mainTree.parse(mainSteeringMarlinRecoFile)
+  except et.ParseError as e:
+    return S_ERROR("cannot parse input steering file: %s. errMsg: %s" % (mainSteeringMarlinRecoFile, e))
+
+  if not 'name' in parameterDict.keys():
+    return S_ERROR("parameter dict should have key 'name'")
+
+  mainRoot = mainTree.getroot()
+
+  # each processors is mentioned twixe in the steering file. Once in the execute (just name) and once in the body (with name and type tags).
+  procElement = [iEl for iEl in mainRoot.iter('processor') if iEl.attrib['name']
+                 == processorName and 'type' in iEl.keys()]
+  if len(procElement) > 1:
+    return S_ERROR('Multiple processors with given names are found: %s' % procElement)
+  elif len(procElement) == 0:
+    return S_ERROR("Can't find processor with a name %s in the file %s" % (processorName, mainSteeringMarlinRecoFile))
+  else:
+    procElement = procElement[0]
+  for iSubEl in list(procElement):
+    if 'name' in iSubEl.attrib.keys():
+      if parameterDict['name'] == iSubEl.attrib['name']:
+        return S_ERROR("parameter with name %s already exists in the processor %s" % (parameterDict['name'], processorName))
+  procElement.append(et.Element("parameter", parameterDict))
+
+  root_str = et.tostring(mainRoot)
+  with open(mainSteeringMarlinRecoFile, "w") as of:
+    of.write(root_str)
 
   return S_OK()

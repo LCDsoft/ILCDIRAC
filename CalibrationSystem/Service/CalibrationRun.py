@@ -6,6 +6,7 @@ import glob
 import os
 from collections import defaultdict
 from xml.etree import ElementTree as et
+from datetime import datetime
 
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
@@ -19,6 +20,7 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import saveCalibrationRun
+from ILCDIRAC.CalibrationSystem.Utilities.functions import addParameterToProcessor
 from ILCDIRAC.CalibrationSystem.Utilities.mergePandoraLikelihoodData import mergeLikelihoods
 import ILCDIRAC.CalibrationSystem.Utilities as utilities
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
@@ -81,6 +83,8 @@ class CalibrationRun(object):
     # TODO temporary field in the settings. for testing only
     self.calibrationFinished = self.settings['startCalibrationFinished']
     #  self.calibrationFinished = False
+    self.resultsSuccessfullyCopiedToEos = False
+    self.calibrationEndTime = None
     self.newPhotonLikelihood = None
     self.ops = Operations()
     self.calibrationConstantsDict = None
@@ -129,19 +133,19 @@ class CalibrationRun(object):
       newKey = None
       if 'MyDDMarlinPandora' in key:
         newKey = key.replace('MyDDMarlinPandora', self.settings['DDPandoraPFANewProcessorName'])
-        # FIXME temporary solution since MaxClusterEnergyToApplySoftComp is setup in the group scope not in the processor one
-        if 'MaxClusterEnergyToApplySoftComp' in key:
-          tree = et.parse(self.localSteeringFile)
-          iElement = tree.find(key)
-          if iElement is None:
-            tmpKey = './/%s' % key.split('/')[-1]
-            iElements = tree.findall(tmpKey)
-            if len(iElements) == 1:
-              newKey = tmpKey
       if 'MyDDCaloDigi' in key:
         newKey = key.replace('MyDDCaloDigi', self.settings['DDCaloDigiName'])
       if not newKey is None:
         parDict[newKey] = parDict.pop(key)
+
+    if not self.settings['enableSoftwareCompensation']:
+      tmpKey = ".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']" % self.settings['DDPandoraPFANewProcessorName']
+      parDict[tmpKey] = 0.0
+      tmpDict = {tmpKey: None}
+      res = readParametersFromSteeringFile(self.localSteeringFile, tmpDict)
+      if not res['OK']:
+        res = addParameterToProcessor(self.localSteeringFile, self.settings['DDPandoraPFANewProcessorName'], {
+                                      'name': 'MaxClusterEnergyToApplySoftComp', 'type': 'float', 'value': '0'})
 
     res = readParametersFromSteeringFile(self.localSteeringFile, parDict, ['PfoAnalysis'])
     if not res['OK']:
@@ -149,8 +153,6 @@ class CalibrationRun(object):
       return S_ERROR('Failed to read parameters from steering file')
 
     self.calibrationConstantsDict = parDict
-    if not self.settings['enableSoftwareCompensation']:
-      parDict[self.getKey('MaxClusterEnergyToApplySoftComp')] = 0
 
     self.currentParameterSet['currentStage'] = self.currentStage
     self.currentParameterSet['currentPhase'] = self.currentPhase
@@ -359,6 +361,7 @@ class CalibrationRun(object):
     fileDir = "calib%s/stage%s/phase%s/step%s/" % (self.calibrationID, self.currentStage, self.currentPhase,
                                                    self.currentStep)
     inputFilesPattern = os.path.join(fileDir, fileNamePattern)
+    inputFilesPattern = '"%s"' % inputFilesPattern  # needed for proper handling of wildcards
     fileDir = "calib%s/" % (self.calibrationID)
     calibrationFile = os.path.join(fileDir, "Calibration.txt")  # as hardcoded in calibration binaries
 
@@ -612,6 +615,7 @@ class CalibrationRun(object):
           self.currentPhase += 1
         elif self.currentStage == 3:
           self.calibrationFinished = True
+          self.calibrationEndTime = datetime.now()
           self.log.info('The last step of calibration has been finished')
         else:
           return S_ERROR('%s' % self.currentStage)

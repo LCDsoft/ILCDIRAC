@@ -6,6 +6,9 @@ import unittest
 import pytest
 import os
 import shutil
+import time
+from datetime import datetime
+from datetime import timedelta
 from xml.etree import ElementTree as et
 from shutil import copyfile
 from DIRAC import S_OK, S_ERROR, gLogger
@@ -198,12 +201,17 @@ def test_export_checkForStepIncrement(calibHandler, mocker):
   calibSetting = createCalibrationSettings('CLIC')
   calibRun = CalibrationRun(27, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   calibRun.calibrationFinished = True
+  calibRun.calibrationEndTime = datetime.now() - timedelta(minutes=9, seconds=59, milliseconds=10)
   CalibrationHandler.activeCalibrations[27] = calibRun
 
   mocker.patch.object(calibRun, 'copyResultsToEos', new=Mock(return_value=S_OK()))
   mocker.patch('%s.shutil' % MODULE_NAME, new=Mock())
 
   assert len(CalibrationHandler.activeCalibrations) == 1
+  res = calibHandler.export_checkForStepIncrement()
+  assert res['OK']
+  assert len(CalibrationHandler.activeCalibrations) == 1
+  time.sleep(1)
   res = calibHandler.export_checkForStepIncrement()
   assert res['OK']
   assert len(CalibrationHandler.activeCalibrations) == 0

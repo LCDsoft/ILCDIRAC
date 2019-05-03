@@ -11,6 +11,7 @@ import math
 import pickle
 import shutil
 import glob
+from datetime import datetime
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
@@ -46,6 +47,8 @@ class CalibrationHandler(RequestHandler):
     cls.activeCalibrations = {}
     cls.calibrationCounter = cls.loadStatus()
     cls.log = LOG
+    # FIXME this parameter should be read from CS
+    cls.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES = 7 * 24 * 60
 
     # try to find not finished calibrations
     notFinishedCalibIDs = [int(re.findall('\d+', x)[0]) for x in glob.glob('calib*')]
@@ -216,18 +219,23 @@ class CalibrationHandler(RequestHandler):
     """
     self.log.info('Executing checkForStepIncrement. activeCalibrations: %s'
                   % CalibrationHandler.activeCalibrations.keys())
-    for calibrationID in CalibrationHandler.activeCalibrations.keys():
+    for calibrationID in list(CalibrationHandler.activeCalibrations.keys()):
       # FIXME this still can lead to that some jobs will finish with error status because they didn't finish in time
       calibration = CalibrationHandler.activeCalibrations[calibrationID]
       if calibration.calibrationFinished:
-        res = calibration.copyResultsToEos(proxyUserName=calibration.proxyUserName,
-                                           proxyUserGroup=calibration.proxyUserGroup)
-        self.log.info('Removing calibration %s from the active calibration list and clean up local directory')
-        del CalibrationHandler.activeCalibrations[calibrationID]
-        shutil.rmtree('calib%s' % calibrationID)
-        # TODO should I do this? if only one calibration is not finished - all other will stop as well...
-        if not res['OK']:
-          return res
+        if not calibration.resultsSuccessfullyCopiedToEos:
+          res = calibration.copyResultsToEos(proxyUserName=calibration.proxyUserName,
+                                             proxyUserGroup=calibration.proxyUserGroup)
+          if not res['OK']:
+            return res
+          else:
+            calibration.resultsSuccessfullyCopiedToEos = True
+        if (datetime.now() - calibration.calibrationEndTime).seconds / 60.0 >= self.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES:
+          if not calibration.resultsSuccessfullyCopiedToEos:
+            self.log.error('Calibration results have not been copied properly...')
+          self.log.info('Removing calibration %s from the active calibration list and clean up local directory')
+          del CalibrationHandler.activeCalibrations[calibrationID]
+          shutil.rmtree('calib%s' % calibrationID)
       elif self.finalInterimResultReceived(calibration, calibration.currentStep):
         calibration.endCurrentStep()
     return S_OK()

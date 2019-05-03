@@ -26,6 +26,7 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readValueFromSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import addPfoAnalysisProcessor
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 
 __RCSID__ = '$Id$'
 
@@ -58,7 +59,7 @@ class Calibration(MarlinAnalysis):
     :return: S_OK(), S_ERROR()
     """
 
-    self.setApplicationStatus('PandoraCalib: setting up...')
+    self.setApplicationStatus('PandoraCalib_%s: setting up jobs' % self.calibrationID)
 
     if self.cali is None:
       self.cali = CalibrationClient(self.calibrationID, self.workerID)
@@ -191,8 +192,17 @@ class Calibration(MarlinAnalysis):
       self.currentStep = calibrationParameters['currentStep']
       parameterDict = calibrationParameters['parameters']
 
-      self.setApplicationStatus('PandoraCalib: stage: %s; phase: %s; step: %s' % (self.currentStage, self.currentPhase,
-                                                                                  self.currentStep))
+      tmpKey = self.getKey(parameterDict, 'MaxClusterEnergyToApplySoftComp')
+      if not tmpKey is None:
+        res = readParametersFromSteeringFile(self.SteeringFile, {tmpKey: None})
+        if not res['OK']:
+          #  expect key of following format: ".//processor[@name=%s]/parameter[@name='MaxClusterEnergyToApplySoftComp']"
+          processorName = tmpKey.split('=')[1].split(']')[0]
+          res = addParameterToProcessor(self.SteeringFile, processorName,
+                                        {'name': 'MaxClusterEnergyToApplySoftComp', 'type': 'float', 'value': parameterDict[tmpKey]})
+
+      self.setApplicationStatus('PandoraCalib_%s: stage: %s; phase: %s; step: %s' %
+                                (self.calibrationID, self.currentStage, self.currentPhase, self.currentStep))
 
       res = self.resolveInputSlcioFilesAndAddToParameterDict(listofslcio, parameterDict)
       if res['OK']:
@@ -256,10 +266,13 @@ class Calibration(MarlinAnalysis):
 
       self.cali.reportResult(outFile)
 
-      self.setApplicationStatus('PandoraCalib: step %s is finished. Waiting for other jobs' % self.currentStep)
+      self.setApplicationStatus('PandoraCalib_%s: step %s is finished. Waiting for other jobs' %
+                                (self.calibrationID, self.currentStep))
 
     # TODO implement me
     #  return self.finalStatusReport(status)
+
+    self.setApplicationStatus('PandoraCalib_%s: Calibration is finished.' % self.calibrationID)
     return S_OK()
 
   def getKey(self, parameterDict, pattern):
@@ -353,8 +366,8 @@ class Calibration(MarlinAnalysis):
     os.chmod(scriptName, 0755)
     comm = 'sh -c "./%s"' % (scriptName)
     #  self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.currentStep))
-    self.setApplicationStatus('PandoraCalib, stage: %s; phase: %s; step: %s' % (self.currentStage, self.currentPhase,
-                                                                                self.currentStep))
+    self.setApplicationStatus('PandoraCalib_%s: stage: %s; phase: %s; step: %s'
+                              % (self.calibrationID, self.currentStage, self.currentPhase, self.currentStep))
     self.stdError = ''
     res = shellCall(0, comm, callbackFunction=self.redirectLogOutput, bufferLimit=20971520)
     return res

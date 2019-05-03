@@ -39,3 +39,8 @@
 - ask user to provide relative path to copy all files to user eos directory. Use Core/Utilities: constructUsersLFNs to construct full path
 - Workflow: make number of cycles to waste (wasteCPUCycles) configurable from CS
 - Workflow: if no response from CS for too long - stop requesting new parameters and kill the job (???)
+
+[comments from code review, 5 May 2019]
+- implement function calibrationClient.getCalibrationStatus()
+- implement function calibrationClient.killCalibration()
+- implement function calibrationClient.changeEosDirectotoryToCopyTo()

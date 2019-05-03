@@ -20,4 +20,3 @@
 .//processor[@name='MyDDMarlinPandora']/parameter[@name='HCalToHadGeVCalibration']
 .//processor[@name='MyDDMarlinPandora']/parameter[@name='MuonToMipCalibration']
 .//processor[@name='MyDDMarlinPandora']/parameter[@name='MaxHCalHitHadronicEnergy']
-.//processor[@name='MyDDMarlinPandora']/parameter[@name='MaxClusterEnergyToApplySoftComp']

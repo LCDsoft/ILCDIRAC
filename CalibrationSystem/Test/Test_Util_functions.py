@@ -2,16 +2,81 @@
 Unit tests for the CalibrationSystem/Utilities/functions.py
 """
 
+import pytest
 import os
 import unittest
+import string
+import random
+import tempfile
+import shutil
 
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import addParameterToProcessor
 
 __RCSID__ = "$Id$"
 MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Utilities.functions'
 
+
+@pytest.fixture
+def copyFccSteeringFile():
+  calibID = 1
+  workdirName = 'calib%s' % calibID
+  if not os.path.exists(workdirName):
+      os.makedirs(workdirName)
+  src = '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/fccReconstruction.xml'
+  shutil.copyfile(src, '%s/fccReconstruction.xml' % workdirName)
+  yield '%s/fccReconstruction.xml' % workdirName
+  try:
+    shutil.rmtree(workdirName)
+  except EnvironmentError as e:
+    print("Failed to delete directory: %s; ErrMsg: %s" % (workdirName, str(e)))
+    assert False
+
+
+@pytest.fixture
+def produceRandomTextFile():
+  f = tempfile.NamedTemporaryFile(delete=False)
+  nLines = random.randint(2, 20)
+  for iLine in range(0, nLines):
+    nSymbolsInLine = random.randint(0, 120)
+    line = ''
+    for iSymbol in range(0, nSymbolsInLine):
+      line += random.choice(string.ascii_letters + '       ')
+    f.write(line)
+  f.close()
+  yield f.name
+  os.unlink(f.name)
+
+
+def test_addParameterToProcessor(produceRandomTextFile, copyFccSteeringFile, mocker):
+  # non-existing input file
+  res = addParameterToProcessor('dummy.xml', 'dummyProc', {'name': 'dummyValue'})
+  assert not res['OK']
+  assert "cannot find input" in res['Message']
+  # non-xml input file
+  randomFile = produceRandomTextFile
+  res = addParameterToProcessor(randomFile, 'dummyProc', {'name': 'dummyValue'})
+  assert not res['OK']
+  assert "cannot parse input" in res['Message']
+  # good input file, non-existing processor
+  steeringFile = copyFccSteeringFile
+  res = addParameterToProcessor(steeringFile, 'dummyProc', {'name': 'dummyValue'})
+  assert not res['OK']
+  assert "Can't find processor" in res['Message']
+  # good input file, good processor name, no 'name' key in the parameter dict
+  steeringFile = copyFccSteeringFile
+  res = addParameterToProcessor(steeringFile, 'dummyProc', {'dummy': 'dummyValue'})
+  assert not res['OK']
+  assert "parameter dict should have key 'name'" in res['Message']
+  # good input file, good processor name
+  res = addParameterToProcessor(steeringFile, 'MyAIDAProcessor', {'name': 'dummyValue'})
+  assert res['OK']
+  # good input file, good processor name, second append of the parameter with the same name
+  res = addParameterToProcessor(steeringFile, 'MyAIDAProcessor', {'name': 'dummyValue'})
+  assert not res['OK']
+  assert ("parameter with name %s already exists" % 'dummyValue') in res['Message']
 
 class TestsFileUtilsFunctions(unittest.TestCase):
   """ Tests the utilities/functions for the CalibrationSystem """
@@ -35,9 +100,9 @@ class TestsFileUtilsFunctions(unittest.TestCase):
     pass
 
   def test_readParameterDict(self):
-    self.assertTrue(len(self.parDict) == 22, "wrong number of items are read")
-    allValuesAreNone = True
+    self.assertTrue(not '' in self.parDict.keys(), "entry with empty key in the dictionary")
 
+    allValuesAreNone = True
     for iKey, iVal in self.parDict.iteritems():
       if iVal is not None:
         allValuesAreNone = False
