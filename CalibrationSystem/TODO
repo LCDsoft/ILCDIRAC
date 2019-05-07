@@ -25,6 +25,7 @@
 - when read steering files - names of processors are used (and are hardcoded!). Allow user to specify name of processors to be used for updating calibration constants
 - turn on/off SoftwareCompensation
 - first parse steering file with Marlin and then read/modify parameters... command: Marlin -u old.xml new.xml
+- save calibrationRun.settings to the output EOS directory (that user will now which settings he/she was using). Also make new function like getCalibrationRunMetaData() which will also show these settings to the user
 
 [comments from code review, 12 April 2019]
 - check all calls to CS. Andre changed names for pandora_calibration_scripts

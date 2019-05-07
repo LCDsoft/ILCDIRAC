@@ -83,7 +83,8 @@ class TestsFileUtilsFunctions(unittest.TestCase):
 
   def setUp(self):
     """set up the objects"""
-    self.fileDir = os.path.join(os.environ['DIRAC'], "ILCDIRAC", "CalibrationSystem", "Utilities", "testing")
+    import ILCDIRAC.CalibrationSystem.Utilities as utilities
+    self.fileDir = os.path.join(utilities.__path__[0], 'testing')
 
     inFileName = os.path.join(self.fileDir, 'parameterListMarlinSteeringFile.txt')
     self.parDict = readParameterDict(inFileName)

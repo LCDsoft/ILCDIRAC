@@ -30,6 +30,7 @@ def calib():
   calib.platform = 'dummy_platform'
   calib.applicationLog = 'dummy_applicationLog'
   calib.log = Mock()
+  calib.detectorModel = 'FCCee_o1_v03'
 
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
   # FIXME this path will be different in production version probably... update it
@@ -195,7 +196,7 @@ def test_resolveInputSlcioFilesAndAddToParameterDict(calib, mocker):
   assert res['OK']
   assert res['Value'][calib.getKey(res['Value'], 'LCIOInputFiles')] == dataFile
   assert res['Value'][calib.getKey(res['Value'], 'PandoraSettingsXmlFile')
-                      ] == 'PandoraSettings/PandoraSettingsDefault.xml'
+                      ] == 'PandoraSettingsFCCee/PandoraSettingsDefault.xml'
   assert res['Value'][calib.getKey(res['Value'], 'RootFile')] == 'pfoAnalysis.root'
 
   calib.currentStage = 2

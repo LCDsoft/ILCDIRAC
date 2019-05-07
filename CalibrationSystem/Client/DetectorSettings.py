@@ -24,6 +24,7 @@ class CalibrationSettings(object):
     self.settingsDict['marlinVersion'] = 'ILCSoft-2019-04-01_gcc62'
     # FIXME temprorary field, since currently there is only on item in CS which corresponds to ILCSoft-2019-02-20_gcc62 (for any marlin version)
     self.settingsDict['marlinVersion_CS'] = 'ILCSoft-2019-02-20_gcc62'
+    # FIXME TODO make this argument empty... and then check if it was filled by user... maybe even introduce check that all arguments are set up!
     self.settingsDict['outputPath'] = '/ilc/user/o/oviazlo/clic_caloCalib/output/'
     # fraction of all jobs must have finished in order for the next step to begin.
     self.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] = 0.9
@@ -61,6 +62,8 @@ class CLDSettings(CalibrationSettings):
     self.settingsDict['nHcalLayers'] = 44
     # TODO this default will not work... one need to specify full LFN path
     self.settingsDict['steeringFile'] = 'fccReconstruction.xml'
+    self.settingsDict['DDPandoraPFANewProcessorName'] = 'MyDDMarlinPandora_10ns'
+    self.settingsDict['DDCaloDigiName'] = 'MyDDCaloDigi_10ns'
 
 
 class CLICSettings(CalibrationSettings):

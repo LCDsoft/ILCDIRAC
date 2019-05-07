@@ -117,6 +117,8 @@ class Calibration(MarlinAnalysis):
     ##Handle PandoraSettings.xml
     # TODO directory below is detector dependent... implement it
     pandorasettings = 'PandoraSettings/PandoraSettings.xml'
+    if 'FCC' in self.detectorModel:
+      pandorasettings = 'PandoraSettingsFCCee/PandoraSettings.xml'
     if not os.path.exists(pandorasettings):
       if steeringfiledirname and os.path.exists(os.path.join(steeringfiledirname, pandorasettings)):
         try:
@@ -228,7 +230,7 @@ class Calibration(MarlinAnalysis):
         stringToBinaryFile(newPhotonLikelihood, 'newPhotonLikelihood.xml')
         # TODO this depends from the name inside steering file... And it's even more difficult for FCCee case
         pandoraSettingsFile = readValueFromSteeringFile(
-            self.SteeringFile, "processor[@name='MyDDMarlinPandora']/parameter[@name='PandoraSettingsXmlFile']")
+            self.SteeringFile, self.getKey(parameterDict, 'PandoraSettingsXmlFile'))
         pandoraSettingsFile = pandoraSettingsFile.strip()
 
         updateSteeringFile(
@@ -296,6 +298,8 @@ class Calibration(MarlinAnalysis):
     pandoraSettingsFile = ''
     if self.currentStage in [1, 3]:  # FIXME hardcoded values are bad...
       pandoraSettingsFile = 'PandoraSettings/PandoraSettingsDefault.xml'
+      if 'FCC' in self.detectorModel:
+        pandoraSettingsFile = 'PandoraSettingsFCCee/PandoraSettingsDefault.xml'
     else:
       pandoraSettingsFile = 'CalibrationPandoraSettings/PandoraSettingsPhotonTraining.xml'
 

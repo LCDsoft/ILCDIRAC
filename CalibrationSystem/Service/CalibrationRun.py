@@ -114,6 +114,16 @@ class CalibrationRun(object):
     self.ops = Operations()
     self.log = LOG.getSubLogger('[%s]' % self.calibrationID)
 
+  def getCurrentStatus(self):
+    outDict = {}
+    outDict['calibrationID'] = self.calibrationID
+    outDict['currentStage'] = self.currentStage
+    outDict['currentPhase'] = self.currentPhase
+    outDict['currentStep'] = self.currentStep
+    outDict['calibrationFinished'] = self.calibrationFinished
+    outDict['resultsSuccessfullyCopiedToEos'] = self.resultsSuccessfullyCopiedToEos
+    return outDict
+
   def readInitialParameterDict(self):
     self.log.info('running readInitialParameterDict')
 
@@ -224,8 +234,15 @@ class CalibrationRun(object):
       curJob.check = False  # Necessary to turn off user confirmation
       curJob.setName('CalibrationService_calid_%s_workerid_%s' % (self.calibrationID, curWorkerID))
       curJob.setJobGroup('CalibrationService_calib_job')
-      # needed to copy files form ClicPerformance package
-      curJob.setCLICConfig(self.settings['marlinVersion'].rsplit("_", 1)[0])
+      if 'CLIC' in self.settings['detectorModel']:
+        # needed to copy files form ClicPerformance package
+        curJob.setCLICConfig(self.settings['marlinVersion'].rsplit("_", 1)[0])
+      elif 'FCC' in self.settings['detectorModel']:
+        appName = 'FcceeConfig'
+        version = self.settings['marlinVersion'].rsplit("_", 1)[0]
+        curJob._addSoftware(appName.lower(), version)
+        curJob._addParameter(curJob.workflow, appName + 'Package', 'JDL', appName + version, 'FCCee Config package')
+
       # TODO implement using line below - choose of tracking, time window, etc.
       #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"
       #                             --Output_DST.LCIOOutputFile="+outputFile+"

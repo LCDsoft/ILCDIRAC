@@ -203,6 +203,7 @@ def test_export_checkForStepIncrement(calibHandler, mocker):
   calibRun.calibrationFinished = True
   calibRun.calibrationEndTime = datetime.now() - timedelta(minutes=9, seconds=59, milliseconds=10)
   CalibrationHandler.activeCalibrations[27] = calibRun
+  CalibrationHandler.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES = 10
 
   mocker.patch.object(calibRun, 'copyResultsToEos', new=Mock(return_value=S_OK()))
   mocker.patch('%s.shutil' % MODULE_NAME, new=Mock())
@@ -387,6 +388,9 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
 
   #  print('nSignalEvents: %s' % nSignalEvents)
   #  print('nBackgroundEvents: %s' % nBackgroundEvents)
+
+  #  def test_export_killCalibration(calibHandler, mocker):
+
 
 # TODO this function has decorator... which one need to mock
 #  def test_submitJobs(calibHandler, mocker):

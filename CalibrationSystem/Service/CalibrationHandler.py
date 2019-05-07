@@ -117,7 +117,6 @@ class CalibrationHandler(RequestHandler):
   #  types_createCalibration = [dict, int, basestring, basestring, basestring]
   #  def export_createCalibration(self, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
   types_createCalibration = [dict, dict]
-
   def export_createCalibration(self, inputFiles, calibSettingsDict):
     """ Called by users to create a calibration run (series of calibration iterations)
 
@@ -167,6 +166,54 @@ class CalibrationHandler(RequestHandler):
       ret_val['calibrations'] = res
       return ret_val
     return S_OK((calibrationID, res))
+
+  auth_killCalibration = ['authenticated']
+  types_killCalibration = [int]
+  def export_killCalibration(self, calibIdToKill):
+
+    activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
+    if not calibIdToKill in activeCalibrations:
+      return S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (calibIdToKill, activeCalibrations))
+
+    res = self._getUsernameAndGroup()
+    if not res['OK']:
+      return S_ERROR('Error while retrieving proxy user name or group.')
+    usernameAndGroup = res['Value']
+
+    calibration = CalibrationHandler.activeCalibrations[calibIdToKill]
+    if (calibration.proxyUserName == usernameAndGroup['username']
+            and calibration.proxyUserGroup == usernameAndGroup['group']):
+      del CalibrationHandler.activeCalibrations[calibIdToKill]
+      shutil.rmtree('calib%s' % calibIdToKill)
+      return S_OK()
+    else:
+      return S_ERROR('Permission denied. Calibration has been created by other user.')
+
+  auth_getUserCalibrationStatuses = ['authenticated']
+  types_getUserCalibrationStatuses = []
+
+  def export_getUserCalibrationStatuses(self):
+    res = self._getUsernameAndGroup()
+    if not res['OK']:
+      return S_ERROR('Error while retrieving proxy user name or group.')
+    usernameAndGroup = res['Value']
+
+    statuses = []
+
+    for calibrationID in list(CalibrationHandler.activeCalibrations.keys()):
+      calibration = CalibrationHandler.activeCalibrations[calibrationID]
+      calibBelongsToUser = (calibration.proxyUserName == usernameAndGroup['username']
+                            and calibration.proxyUserGroup == usernameAndGroup['group'])
+      if calibBelongsToUser:
+        calibStatus = calibration.getCurrentStatus()
+        calibStatus['totalNumberOfJobs'] = int(calibration.settings['numberOfJobs'])
+        calibStatus['percentageOfFinishedJobs'] = int(
+            100.0 * calibration.stepResults[calibration.currentStep].getNumberOfResults()
+            / calibration.settings['numberOfJobs'])
+        calibStatus['fractionOfFinishedJobsNeededToStartNextStep'] = int(
+            100.0 * calibration.settings['fractionOfFinishedJobsNeededToStartNextStep'])
+        statuses.append(calibStatus)
+    return(S_OK(statuses))
 
   auth_submitResult = ['authenticated']
   types_submitResult = [int, int, int, int, int, basestring]
@@ -539,7 +586,3 @@ class CalibrationHandler(RequestHandler):
     :rtype: dict
     """
     return S_OK(gConfig.getValue(option))
-
-
-
-

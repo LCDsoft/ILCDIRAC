@@ -239,3 +239,15 @@ def createCalibration(inputFiles, calibSettings):
   calibrationService = Client()
   calibrationService.setServer('Calibration/Calibration')
   return calibrationService.createCalibration(inputFiles, dict(calibSettings.settingsDict))
+
+
+def killCalibration(calibId):
+  calibrationService = Client()
+  calibrationService.setServer('Calibration/Calibration')
+  return calibrationService.killCalibration(calibId)
+
+
+def getCalibrationStatuses():
+  calibrationService = Client()
+  calibrationService.setServer('Calibration/Calibration')
+  return calibrationService.getUserCalibrationStatuses()
