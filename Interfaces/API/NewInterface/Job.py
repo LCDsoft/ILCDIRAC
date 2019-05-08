@@ -130,7 +130,26 @@ class Job(DiracJob):
     # no more debug output in further loops
     self.check = False
     return S_OK()
-  
+
+  def setConfigPackage(self, appName, version):
+    """Define the config package to obtain at job run time.
+
+    :param str appName: name of the ConfigPackage, e.g. 'ClicConfig'
+    :param str version: version of the ConfigPackage
+    """
+    self._addSoftware(appName.lower(), version)
+    self._addParameter(self.workflow, appName + 'Package', 'JDL', appName + version, appName + 'package')
+    return S_OK()
+
+  def setCLICConfig(self, version):
+    """Define the CLIC Configuration package to obtain.
+
+    Copies steering files from CLIC Configuration folder to working directory
+
+    :param str version: version string, e.g.: 'ILCSoft-2017-07-27'
+    """
+    return self.setConfigPackage('ClicConfig', version)
+
   def append(self, application):
     """ Helper function
     

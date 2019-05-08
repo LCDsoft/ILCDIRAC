@@ -97,7 +97,7 @@ class ProductionJobCompleteTestCase( unittest.TestCase ):
 
   def test_setclicconfig( self ):
     ver = '2017-99-99'
-    res = self.prodJob.setClicConfig(ver)
+    res = self.prodJob.setCLICConfig(ver)
     assertDiracSucceeds( res, self )
     assertEqualsImproved(self.prodJob.prodparameters['ClicConfigVersion'], ver, self)
 

@@ -137,14 +137,17 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+version, 'ILDConfig package' )
     return S_OK()  
 
-  def setClicConfig(self, version):
-    """Define the ClicConfig package to obtain."""
-    return self.setConfigPackage('ClicConfig', version)
 
   def setConfigPackage(self, appName, version):
-    """Define the config package to obtain."""
-    self._addSoftware(appName.lower(), version)
-    self._addParameter(self.workflow, appName + 'Package', 'JDL', appName + version, appName + 'package')
+    """Define the config package to obtain.
+
+    Adds Config package to workflow execution, and sets production parameter.
+    See :func:`ILCDIRAC.Interfaces.API.NewInterface.Job.Job.setConfigPackage`
+
+    :param str appName: name of the ConfigPackage, e.g. 'ClicConfig'
+    :param str version: version of the ConfigPackage
+    """
+    super(ProductionJob, self).setConfigPackage(appName, version)
     self.prodparameters[appName + 'Version'] = version
     return S_OK()
 
