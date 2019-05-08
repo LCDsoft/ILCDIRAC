@@ -442,6 +442,7 @@ class CalibrationRun(object):
 
     elif self.currentPhase == CalibrationPhase.HCalDigi:
       binary = os.path.join(scriptPath, 'HCalDigitisation_ContainedEvents')
+      kineticEnergy = truthEnergy - 0.497672
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.settings['digitisationAccuracy'], '-d', fileDir, '-e', '90', '-g', 'Barrel',
@@ -460,18 +461,18 @@ class CalibrationRun(object):
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'HCal_Digi_Extract.py')
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                 truthEnergy, prevStepCalibConstBarrel, 'Barrel',
+                                 kineticEnergy, prevStepCalibConstBarrel, 'Barrel',
                                  'Calibration_Constant'])
       calibConstBarrel = float(res['Value'][1].split('\n')[0])
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                 truthEnergy, prevStepCalibConstEndcap, 'EndCap',
+                                 kineticEnergy, prevStepCalibConstEndcap, 'EndCap',
                                  'Calibration_Constant'])
       calibConstEndcap = float(res['Value'][1].split('\n')[0])
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                 truthEnergy, prevStepCalibConstBarrel, 'Barrel', 'Mean'])
+                                 kineticEnergy, prevStepCalibConstBarrel, 'Barrel', 'Mean'])
       meanBarrel = float(res['Value'][1].split('\n')[0])
       res = convert_and_execute(['python', pythonReadScript, calibrationFile,
-                                 truthEnergy, prevStepCalibConstEndcap, 'EndCap', 'Mean'])
+                                 kineticEnergy, prevStepCalibConstEndcap, 'EndCap', 'Mean'])
       meanEndcap = float(res['Value'][1].split('\n')[0])
 
       self.calibrationConstantsDict[
@@ -479,12 +480,13 @@ class CalibrationRun(object):
       self.calibrationConstantsDict[
           self.getKey('CalibrHCALEndcap')] = calibConstEndcap
 
-      fractionalError = max(abs(meanBarrel - truthEnergy), abs(meanEndcap - truthEnergy)) / truthEnergy
+      fractionalError = max(abs(meanBarrel - kineticEnergy), abs(meanEndcap - kineticEnergy)) / truthEnergy
       if fractionalError < self.settings['digitisationAccuracy']:
         self.currentPhase = self.currentPhase + 1
 
     elif self.currentPhase == CalibrationPhase.MuonAndHCalOtherDigi:
       binary = os.path.join(scriptPath, 'PandoraPFACalibrate_MipResponse')
+      kineticEnergy = truthEnergy - 0.497672
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', fileDir],
                                 ilcSoftInitScript)
@@ -555,7 +557,7 @@ class CalibrationRun(object):
                                      / (Absorber_Thickness_Ring * Scintillator_Thickness_EndCap))
 
       calibHcalOther = (directionCorrectionRatio * mipPeakRatio * Absorber_Scintillator_Ratio * calibHcalEndcap *
-                        kaonTruthEnergy / hcalMeanEndcap)
+                        kineticEnergy / hcalMeanEndcap)
 
       self.calibrationConstantsDict[
           self.getKey('CalibrHCALOther')] = calibHcalOther
@@ -624,7 +626,8 @@ class CalibrationRun(object):
                                  truthEnergy, 'ECTH', ecalToHad, 'FOM', 'CSM'])
       ecalToHadFom = float(res['Value'][1].split('\n')[0])
 
-      fractionalError = max(abs(hcalToHadFom - truthEnergy), abs(ecalToHadFom - truthEnergy)) / truthEnergy
+      kineticEnergy = truthEnergy - 0.497672
+      fractionalError = max(abs(hcalToHadFom - kineticEnergy), abs(ecalToHadFom - kineticEnergy)) / kineticEnergy
 
       if fractionalError < self.settings['pandoraPFAAccuracy']:
         if self.currentStage == 1:

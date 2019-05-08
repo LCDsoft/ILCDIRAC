@@ -26,6 +26,8 @@
 - turn on/off SoftwareCompensation
 - first parse steering file with Marlin and then read/modify parameters... command: Marlin -u old.xml new.xml
 - save calibrationRun.settings to the output EOS directory (that user will now which settings he/she was using). Also make new function like getCalibrationRunMetaData() which will also show these settings to the user
+- fix for socket timeout when submit calibration with many jobs
+- possibility to switch between FOM and CSM methods for hadronic scale calibration
 
 [comments from code review, 12 April 2019]
 - check all calls to CS. Andre changed names for pandora_calibration_scripts
@@ -42,6 +44,6 @@
 - Workflow: if no response from CS for too long - stop requesting new parameters and kill the job (???)
 
 [comments from code review, 5 May 2019]
-- implement function calibrationClient.getCalibrationStatus()
-- implement function calibrationClient.killCalibration()
+- implement function calibrationClient.getCalibrationStatus() (add timestamp when calibration was created)
+- implement function calibrationClient.killCalibration() (aldo kill all jobs)
 - implement function calibrationClient.changeEosDirectotoryToCopyTo()
