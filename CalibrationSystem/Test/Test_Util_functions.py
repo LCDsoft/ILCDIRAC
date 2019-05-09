@@ -19,23 +19,48 @@ __RCSID__ = "$Id$"
 MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Utilities.functions'
 
 
-@pytest.fixture
-def copyFccSteeringFile():
-  calibID = 1
+def copySteeringFile(tag, calibID):
   workdirName = 'calib%s' % calibID
   if not os.path.exists(workdirName):
-      os.makedirs(workdirName)
-  src = '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/fccReconstruction.xml'
-  shutil.copyfile(src, '%s/fccReconstruction.xml' % workdirName)
-  yield '%s/fccReconstruction.xml' % workdirName
-  try:
-    shutil.rmtree(workdirName)
-  except EnvironmentError as e:
-    print("Failed to delete directory: %s; ErrMsg: %s" % (workdirName, str(e)))
-    assert False
+    os.makedirs(workdirName)
+
+  if tag == 'CLIC':
+    src = '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/clicConfig/clicReconstruction.xml'
+    shutil.copyfile(src, '%s/clicReconstruction.xml' % workdirName)
+    return '%s/clicReconstruction.xml' % workdirName
+  elif tag == 'FCCee':
+    src = '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/fccReconstruction.xml'
+    shutil.copyfile(src, '%s/fccReconstruction.xml' % workdirName)
+    return '%s/fccReconstruction.xml' % workdirName
+  else:
+    return None
 
 
-@pytest.fixture
+def cleanDir(calibID):
+  workdirName = 'calib%s' % calibID
+  if os.path.exists(workdirName):
+    try:
+      shutil.rmtree(workdirName)
+    except EnvironmentError as e:
+      print("Failed to delete directory: %s; ErrMsg: %s" % (workdirName, str(e)))
+      assert False
+
+
+@pytest.yield_fixture
+def copyFccSteeringFile():
+  calibID = 1
+  yield copySteeringFile('FCCee', calibID)
+  cleanDir(calibID)
+
+
+@pytest.yield_fixture
+def copyClicSteeringFile():
+  calibID = 1
+  yield copySteeringFile('CLIC', calibID)
+  cleanDir(calibID)
+
+
+@pytest.yield_fixture
 def produceRandomTextFile():
   f = tempfile.NamedTemporaryFile(delete=False)
   nLines = random.randint(2, 20)
@@ -49,6 +74,18 @@ def produceRandomTextFile():
   yield f.name
   os.unlink(f.name)
 
+
+@pytest.fixture
+def readEmptyParameterDict():
+  import ILCDIRAC.CalibrationSystem.Utilities as utilities
+  fileDir = os.path.join(utilities.__path__[0], 'testing')
+
+  inFileName = os.path.join(fileDir, 'parameterListMarlinSteeringFile.txt')
+  parDict = readParameterDict(inFileName)
+  for iKey in parDict.keys():
+    if 'RootFile' in iKey:
+      del parDict[iKey]
+  return parDict
 
 def test_addParameterToProcessor(produceRandomTextFile, copyFccSteeringFile, mocker):
   # non-existing input file
@@ -78,71 +115,55 @@ def test_addParameterToProcessor(produceRandomTextFile, copyFccSteeringFile, moc
   assert not res['OK']
   assert ("parameter with name %s already exists" % 'dummyValue') in res['Message']
 
-class TestsFileUtilsFunctions(unittest.TestCase):
-  """ Tests the utilities/functions for the CalibrationSystem """
 
-  def setUp(self):
-    """set up the objects"""
-    import ILCDIRAC.CalibrationSystem.Utilities as utilities
-    self.fileDir = os.path.join(utilities.__path__[0], 'testing')
+def test_updateSteeringFile(copyClicSteeringFile, readEmptyParameterDict):
+  initialParDict = readEmptyParameterDict
 
-    inFileName = os.path.join(self.fileDir, 'parameterListMarlinSteeringFile.txt')
-    self.parDict = readParameterDict(inFileName)
-    for iKey in self.parDict.keys():
-      if 'RootFile' in iKey:
-        del self.parDict[iKey]
+  parDict1 = dict(initialParDict)
+  #  inFileName = os.path.join(self.fileDir, 'clicReconstruction_2019-04-17.xml')
+  inFileName = copyClicSteeringFile
+  res = readParametersFromSteeringFile(inFileName, parDict1)
+  #  key1 = "processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']"
+  #  parDict1[key1] = "dummyDummyRootFile.root"
+  #  key2 = "global/parameter[@name='LCIOInputFiles']"
+  #  parDict1[key2] = "in1.slcio, in2.slcio"
+  #  self.assertTrue(len(parDict1) == len(initialParDict), "two dictionaries have to be the same size. len1: %s; len2: %s" % (len(parDict1), len(initialParDict)))
+
+  outFileName = os.path.join(os.path.dirname(inFileName), 'out1.xml')
+  res = updateSteeringFile(inFileName, outFileName, parDict1)
+  assert res['OK']
+
+  parDict2 = dict(initialParDict)
+  res = readParametersFromSteeringFile(outFileName, parDict2)
+  assert len(parDict1) == len(parDict2)
+
+  notEqualValues = False
+  for iKey in initialParDict:
+    if parDict1[iKey] != parDict2[iKey]:
+      notEqualValues = True
+  assert not notEqualValues
 
 
-  def tearDown(self):
-    """ tear down the objects """
-    fileName = os.path.join(self.fileDir, 'out1.xml')
-    if os.path.exists(fileName):
-      os.remove(fileName)
-    pass
+def test_readParameterDict(readEmptyParameterDict):
+  parDict = readEmptyParameterDict
+  assert not '' in parDict.keys()
 
-  def test_readParameterDict(self):
-    self.assertTrue(not '' in self.parDict.keys(), "entry with empty key in the dictionary")
+  allValuesAreNone = True
+  for iKey, iVal in parDict.iteritems():
+    if iVal is not None:
+      allValuesAreNone = False
+  assert allValuesAreNone
 
-    allValuesAreNone = True
-    for iKey, iVal in self.parDict.iteritems():
-      if iVal is not None:
-        allValuesAreNone = False
-    self.assertTrue(allValuesAreNone, "all values in dict has to be None")
 
-  def test_readParametersFromSteeringFile(self):
-    inFileName = os.path.join(self.fileDir, 'clicReconstruction_2019-04-17.xml')
-    res = readParametersFromSteeringFile(inFileName, self.parDict)
-    print(res)
-    self.assertTrue(res['OK'], "function didn't return S_OK")
+def test_readParametersFromSteeringFile(copyClicSteeringFile, readEmptyParameterDict):
+  parDict = readEmptyParameterDict
+  inFileName = copyClicSteeringFile
+  res = readParametersFromSteeringFile(inFileName, parDict)
+  print(res)
+  assert res['OK']
 
-    someValuesAreNone = False
-    for iKey, iVal in self.parDict.iteritems():
-      if iVal is None:
-        someValuesAreNone = True
-    self.assertTrue(not someValuesAreNone, "all read values has to be not None")
-
-  def test_updateSteeringFile(self):
-    initialParDict = self.parDict
-
-    parDict1 = dict(initialParDict)
-    inFileName = os.path.join(self.fileDir, 'clicReconstruction_2019-04-17.xml')
-    res = readParametersFromSteeringFile(inFileName, parDict1)
-    #  key1 = "processor[@name='MyPfoAnalysis']/parameter[@name='RootFile']"
-    #  parDict1[key1] = "dummyDummyRootFile.root"
-    #  key2 = "global/parameter[@name='LCIOInputFiles']"
-    #  parDict1[key2] = "in1.slcio, in2.slcio"
-    #  self.assertTrue(len(parDict1) == len(initialParDict), "two dictionaries have to be the same size. len1: %s; len2: %s" % (len(parDict1), len(initialParDict)))
-
-    outFileName = os.path.join(self.fileDir, 'out1.xml')
-    res = updateSteeringFile(inFileName, outFileName, parDict1)
-    self.assertTrue(res['OK'], "function didn't return S_OK")
-
-    parDict2 = dict(initialParDict)
-    res = readParametersFromSteeringFile(outFileName, parDict2)
-    self.assertTrue(len(parDict1) == len(parDict2), "two dictionaries have to be the same size")
-
-    notEqualValues = False
-    for iKey in initialParDict:
-      if parDict1[iKey] != parDict2[iKey]:
-        notEqualValues = True
-    self.assertTrue(not notEqualValues, "two dictionaries have to be identical")
+  someValuesAreNone = False
+  for iKey, iVal in parDict.iteritems():
+    if iVal is None:
+      someValuesAreNone = True
+  assert not someValuesAreNone

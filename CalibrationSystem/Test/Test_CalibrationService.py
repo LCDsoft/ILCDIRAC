@@ -43,16 +43,21 @@ def readParameterDict():
   return parDict
 
 
-@pytest.fixture
+@pytest.yield_fixture
 def calibHandler():
   CalibrationHandler.initializeHandler(None)
   RequestHandler._rh__initializeClass(Mock(), Mock(), Mock(), Mock())
   calibHandler = CalibrationHandler({}, Mock())
   calibHandler.initialize()
+  print('Init CalibrationHandler. List of active calibrations: %s' % CalibrationHandler.activeCalibrations.keys())
   yield calibHandler
 
   if os.path.exists('status'):
-    os.remove('status')
+    try:
+      os.remove('status')
+    except:
+      print("Failed to clean up CalibrationHandler fixture. Cannot delete file 'status'")
+      assert False
   # clean up output directory
   for iCalID in list(CalibrationHandler.activeCalibrations.keys()):
     try:
@@ -321,11 +326,19 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
   tmpFile = binaryFileToString(fileToRead)
 
+  #  calibID = 1
+  #  if os.path.exists("status"):
+  #    with open(fileName, 'r') as f:
+  #      calibID = int(f.readlines()[0])
+
   calibID = 1
   stageID = 2
   phaseID = 0
   stepID = 0
   workerID = 654
+
+  print('test_mergePandoraLikelihoodXmlFiles: List of active calibrations: %s' %
+        CalibrationHandler.activeCalibrations.keys())
 
   CalibrationHandler.activeCalibrations[calibID].currentStage = stageID
   CalibrationHandler.activeCalibrations[calibID].currentPhase = phaseID
@@ -434,6 +447,21 @@ class CalibrationHandlerTest(unittest.TestCase):
     #                                 'pandora_calibration_scripts', self.appversion), None)
 
   def tearDown(self):
+    if os.path.exists('status'):
+      try:
+        os.remove('status')
+      except:
+        print("Failed to clean up CalibrationHandler fixture. Cannot delete file 'status'")
+        assert False
+    # clean up output directory
+    for iCalID in list(CalibrationHandler.activeCalibrations.keys()):
+      dirToDelete = 'calib%s' % iCalID
+      if os.path.exists(dirToDelete):
+        try:
+            shutil.rmtree(dirToDelete)
+        except EnvironmentError as e:
+          print("Failed to delete directory: %s" % dirToDelete, str(e))
+          assert False
     CalibrationHandler.activeCalibrations = {}
     CalibrationHandler.calibrationCounter = 0
 

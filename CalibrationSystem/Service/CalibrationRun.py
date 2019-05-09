@@ -7,6 +7,7 @@ import os
 from collections import defaultdict
 from xml.etree import ElementTree as et
 from datetime import datetime
+import shutil
 
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
@@ -134,6 +135,11 @@ class CalibrationRun(object):
       errMsg = 'Cannot copy Marlin steering file. res: %s' % res
       self.log.error(errMsg)
       return S_ERROR(errMsg)
+
+    try:
+      shutil.copyfile(self.localSteeringFile, "%s_INPUT" % self.localSteeringFile)
+    except IOError as e:
+      self.log.error('Cannot make a backup copy: %s_INPUT. Does not affect operation.' % self.localSteeringFile)
 
     # FIXME this path will be different in production version probably... update it
     parListFileName = os.path.join(utilities.__path__[0], 'testing/parameterListMarlinSteeringFile.txt')
