@@ -46,12 +46,14 @@ class CalibrationAgent(AgentModule):
     res = self.fetchJobStatuses()
     if not res['OK']:
       return res
-    currentStatuses = res['Value']
+    self.currentJobStatuses = res['Value']
     res = self.calibrationService.getNumberOfJobsPerCalibration()
     if not res['OK']:
       return res
     targetJobNumbers = res['Value']
-    self.log.info('Execute execute. currentStatuses: %s, targetJobNumbers: %s' % (currentStatuses, targetJobNumbers))
+    self.currentCalibrations = list(targetJobNumbers.keys())
+    self.log.info('Execute execute. currentJobStatuses: %s, targetJobNumbers: %s' %
+                  (self.currentJobStatuses, targetJobNumbers))
     # TODO temporarily switched off resubmission. For testing purpose
     #  self.requestResubmission( self.__calculateJobsToBeResubmitted( currentStatuses, targetJobNumbers ) )
     res = self.calibrationService.checkForStepIncrement()
@@ -73,7 +75,7 @@ class CalibrationAgent(AgentModule):
       self.log.error("Failed getting job IDs from job DB! Error:", res['Message'])
       return S_ERROR('Failed getting job IDs from job DB!')
     jobIDs = res['Value']
-    res = jobMonitoringService.getJobsParameters(_convert_to_int_list(jobIDs), ['JobName', 'Status'])
+    res = jobMonitoringService.getJobsParameters(_convert_to_int_list(jobIDs), ['JobName', 'Status', 'JobId'])
     if not res['OK']:
       pass
     jobStatuses = res['Value']
@@ -93,8 +95,24 @@ class CalibrationAgent(AgentModule):
       jobName = attrDict['JobName']
       curCalibration = CalibrationAgent.__getCalibrationIDFromJobName(jobName)
       result[curCalibration].update({CalibrationAgent.__getWorkerIDFromJobName(jobName):
-                                     attrDict['Status']})
+                                     (attrDict['Status'], attrDict['JobId'])})
     return S_OK(dict(result))
+
+# TODO FIXME finish implementation
+  #  def checkForCalibrationsToBeKilled():
+  #    result = self.calibrationService.getCalibrationsToBeKilled()
+  #    if not res['OK']:
+  #      self.log.error('Failed to get list of calibrations to be killed from service. errMsg: %s' % res['Message'])
+  #      return None
+  #    calibIds = res['Value']
+  #    if len(calibIds)==0:
+  #      return None
+  #    else:
+  #      ?????????????????????
+  #      for iCalibId in calibIds:
+  #        if not iCalibId in
+
+
 
   RESUBMISSION_RETRIES = 5  # How often the agent tries to resubmit jobs before giving up
   def requestResubmission(self, failedJobs):

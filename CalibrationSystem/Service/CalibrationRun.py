@@ -91,6 +91,9 @@ class CalibrationRun(object):
     self.calibrationConstantsDict = None
     self.proxyUserName = ''
     self.proxyUserGroup = ''
+    # DEBUG properties:
+    self.stopStage = self.settings['stopStage']
+    self.stopPhase = self.settings['stopPhase']
 
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
@@ -125,6 +128,14 @@ class CalibrationRun(object):
     outDict['resultsSuccessfullyCopiedToEos'] = self.resultsSuccessfullyCopiedToEos
     return outDict
 
+  def checkForDebugFlagsToStopCalibration():
+    if (self.stopStage == self.currentParameterSet['currentStage']
+            and self.stopPhase == self.currentParameterSet['currentPhase']):
+      return True
+    else:
+      return False
+
+
   def readInitialParameterDict(self):
     self.log.info('running readInitialParameterDict')
 
@@ -139,7 +150,8 @@ class CalibrationRun(object):
     try:
       shutil.copyfile(self.localSteeringFile, "%s_INPUT" % self.localSteeringFile)
     except IOError as e:
-      self.log.error('Cannot make a backup copy: %s_INPUT. Does not affect operation.' % self.localSteeringFile)
+      self.log.error("Cannot make a copy of input steering file: %s_INPUT. This doesn't affect operation." %
+                     self.localSteeringFile)
 
     # FIXME this path will be different in production version probably... update it
     parListFileName = os.path.join(utilities.__path__[0], 'testing/parameterListMarlinSteeringFile.txt')
@@ -662,6 +674,9 @@ class CalibrationRun(object):
     self.currentParameterSet['currentStep'] = self.currentStep
     self.currentParameterSet['parameters'] = self.calibrationConstantsDict
     self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
+
+    if self.checkForDebugFlagsToStopCalibration():
+      self.currentParameterSet['calibrationIsFinished'] = True
 
     # update local steering file after every step. This file will be used if calibration service will be restarted and some calibrations are still are not finished
     res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,

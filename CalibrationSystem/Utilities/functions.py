@@ -152,7 +152,7 @@ def validatePandoraSettingsFile(pandoraSettingsFileName):
   return validateExistenceOfWordsInFile(pandoraSettingsFileName, parametersToValidate)
 
 
-def updateSteeringFile(inFileName, outFileName, parametersToSetup, exceptions=[]):
+def updateSteeringFile(inFileName, outFileName, parametersToSetup, exceptions=None):
   """ Read input xml-file, update values given be dictionary and write result to a new file
 
   :param basestring inFileName: name of input xml-file
@@ -162,6 +162,8 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup, exceptions=[]
   :returns: S_OK or S_ERROR
   :rtype: dict
     """
+  if exceptions is None:
+    exceptions = []
   tree = et.parse(inFileName)
 
   #FIXME redirect log messegage to LOG class?
@@ -219,7 +221,9 @@ def readParameterDict(inFile='DEFAULT_VALUE'):
   return outList
 
 
-def readParametersFromSteeringFile(inFileName, parameterDict, exceptions=[]):
+def readParametersFromSteeringFile(inFileName, parameterDict, exceptions=None):
+  if exceptions is None:
+    exceptions = []
   tree = et.parse(inFileName)
 
   for iPar in parameterDict.keys():

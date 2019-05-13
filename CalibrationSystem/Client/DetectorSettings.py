@@ -2,6 +2,7 @@
 ???
 """
 
+import sys
 from DIRAC import S_OK, S_ERROR, gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.objectFactory import ObjectFactory
 
@@ -43,6 +44,8 @@ class CalibrationSettings(object):
 
     # TODO temporary field in the settings. for testing only
     self.settingsDict['startCalibrationFinished'] = False
+    self.settingsDict['stopStage'] = sys.maxsize
+    self.settingsDict['stopPhase'] = sys.maxsize
 
   def printSettings(self):
     print('%-59s %s' % ('Settings', 'Value'))
