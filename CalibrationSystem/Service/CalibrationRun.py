@@ -85,6 +85,7 @@ class CalibrationRun(object):
     self.calibrationFinished = self.settings['startCalibrationFinished']
     #  self.calibrationFinished = False
     self.resultsSuccessfullyCopiedToEos = False
+    self.calibrationStartTime = datetime.now()
     self.calibrationEndTime = None
     self.newPhotonLikelihood = None
     self.ops = Operations()
@@ -124,13 +125,16 @@ class CalibrationRun(object):
     outDict['currentStage'] = self.currentStage
     outDict['currentPhase'] = self.currentPhase
     outDict['currentStep'] = self.currentStep
+    outDict['calibrationStartTime'] = self.calibrationStartTime
     outDict['calibrationFinished'] = self.calibrationFinished
     outDict['resultsSuccessfullyCopiedToEos'] = self.resultsSuccessfullyCopiedToEos
+    if not self.calibrationEndTime is None:
+      outDict['calibrationEndTime'] = self.calibrationEndTime
     return outDict
 
-  def checkForDebugFlagsToStopCalibration():
-    if (self.stopStage == self.currentParameterSet['currentStage']
-            and self.stopPhase == self.currentParameterSet['currentPhase']):
+  def checkForDebugFlagsToStopCalibration(self):
+    if (self.stopStage <= self.currentParameterSet['currentStage']
+            and self.stopPhase <= self.currentParameterSet['currentPhase']):
       return True
     else:
       return False

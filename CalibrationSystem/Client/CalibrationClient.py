@@ -213,29 +213,6 @@ def createCalibration(inputFiles, calibSettings):
   :rtype: dict
   """
 
-  if not isinstance(inputFiles, dict) or not isinstance(calibSettings, CalibrationSettings):
-    errMsg = ("Wrong types of input arguments. Types should be (dict, CalibrationSettings)."
-              "Types of provided arguments: (%s, %s)" % (type(inputFiles), type(calibSettings)))
-    LOG.error(errMsg)
-    return S_ERROR(errMsg)
-
-  inputFileTypes = ['gamma', 'kaon', 'muon', 'zuds']
-  if not set(inputFileTypes).issubset([iEl.lower() for iEl in inputFiles.keys()]):
-    errMsg = ('Wrong input data. Dict inputFiles should have following keys: %s; provided dictionary has keys: %s'
-              % (inputFileTypes, inputFiles.keys()))
-    LOG.error(errMsg)
-    return S_ERROR(errMsg)
-
-  requiredSettingFields = CalibrationSettings().settingsDict.keys()
-  providedSettingFields = calibSettings.settingsDict.keys()
-
-  if (len(requiredSettingFields) != len(providedSettingFields)
-          or not set(requiredSettingFields).issubset(providedSettingFields)):
-    errMsg = ('calibSettings should contain %s fields. Numer of provided fields: %s.\nRequired fields: %s\nProvided fields: %s'
-              % (len(requiredSettingFields), len(providedSettingFields), requiredSettingFields, providedSettingFields))
-    LOG.error(errMsg)
-    return S_ERROR("calibration setting doesn't contain")
-
   calibrationService = Client()
   calibrationService.setServer('Calibration/Calibration')
   return calibrationService.createCalibration(inputFiles, dict(calibSettings.settingsDict))
@@ -246,6 +223,11 @@ def killCalibration(calibId):
   calibrationService.setServer('Calibration/Calibration')
   return calibrationService.killCalibration(calibId)
 
+
+def killCalibrations(calibIds):
+  calibrationService = Client()
+  calibrationService.setServer('Calibration/Calibration')
+  return calibrationService.killCalibrations(calibIds)
 
 def getCalibrationStatuses():
   calibrationService = Client()

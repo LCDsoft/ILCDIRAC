@@ -17,6 +17,13 @@ LOG = gLogger.getSubLogger(__name__)
 #pylint: disable=invalid-name,too-many-locals,too-many-statements
 
 
+def printSet(inSet):
+  if isinstance(inSet, set):
+    return re.split('\(|\)', str(inSet))[1]
+  else:
+    return ''
+
+
 def xml_generate(baseFileName='CLIC_PfoAnalysis_AAAA_SN_BBBB.xml',
                  workerID=0,
                  inputFile=None,

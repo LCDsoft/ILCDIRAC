@@ -12,6 +12,7 @@ import pickle
 import shutil
 import glob
 from datetime import datetime
+from datetime import timedelta
 
 from DIRAC import S_OK, S_ERROR, gLogger, gConfig
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
@@ -19,6 +20,8 @@ from DIRAC.Core.Utilities import DErrno
 from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import loadCalibrationRun
+from ILCDIRAC.CalibrationSystem.Utilities.functions import printSet
+from ILCDIRAC.CalibrationSystem.Client.DetectorSettings import CalibrationSettings
 
 __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
@@ -45,6 +48,7 @@ class CalibrationHandler(RequestHandler):
   def initializeHandler(cls, _):
     """ Initializes the handler, setting required variables. Called once in the beginning of the service """
     cls.activeCalibrations = {}
+    cls.idsOfCalibsToBeKilled = []
     cls.calibrationCounter = cls.loadStatus()
     cls.log = LOG
     # FIXME this parameter should be read from CS
@@ -61,6 +65,7 @@ class CalibrationHandler(RequestHandler):
         errMsg = ("Can't recover calibration #%s. No dump file is found in the calibration working directory."
                   " Deteting the directory." % iCalibID)
         cls.log.error(errMsg)
+        shutil.rmtree('calib%s' % iCalibID)
       else:
         CalibrationHandler.activeCalibrations[iCalibID] = loadCalibrationRun(iCalibID)
 
@@ -129,6 +134,26 @@ class CalibrationHandler(RequestHandler):
     :rtype: dict
     """
 
+    reuiredFields = set(['gamma', 'kaon', 'muon', 'zuds'])
+    providedFields = set(inputFiles.keys())
+
+    if reuiredFields != providedFields:
+      errMsg = ("First input dictionary doesn't contain required fields. Missing fields: %s; unused extra fields: %s"
+                % (printSet(set(reuiredFields) - set(providedFields)),
+                   printSet(set(providedFields) - set(reuiredFields))))
+      self.log.error(errMsg)
+      return S_ERROR(errMsg)
+
+    reuiredFields = set(CalibrationSettings().settingsDict.keys())
+    providedFields = set(calibSettingsDict.keys())
+
+    if reuiredFields != providedFields:
+      errMsg = ("Second input dictionary doesn't contain required fields. Missing fields: %s; unused extra fields: %s"
+                % (printSet(set(reuiredFields) - set(providedFields)),
+                   printSet(set(providedFields) - set(reuiredFields))))
+      self.log.error(errMsg)
+      return S_ERROR(errMsg)
+
     inputFileDictLoweredKeys = {}
     for iKey, iList in inputFiles.iteritems():
       inputFileDictLoweredKeys[iKey.lower()] = iList
@@ -167,10 +192,26 @@ class CalibrationHandler(RequestHandler):
       return ret_val
     return S_OK((calibrationID, res))
 
+  auth_killCalibrations = ['authenticated']
+  types_killCalibrations = [list]
+
+  def export_killCalibrations(self, inList):
+    outDict = {}
+    for iEl in inList:
+      if not type(iEl) is int:
+        errMsg = ('All elements of input list has to be of integer type.'
+                  ' You have provided elements of following types: %s' % [type(iEl) for iEl in inList])
+        self.log.error(errMsg)
+        return S_ERROR(errMsg)
+    for iEl in inList:
+      outDict[iEl] = self.export_killCalibration(iEl)
+    return S_OK(outDict)
+
   auth_killCalibration = ['authenticated']
   types_killCalibration = [int]
   def export_killCalibration(self, calibIdToKill):
-
+    '''Send kill signal to all jobs associated with the calibration; mark calibration as finished; keeps all
+       intermediate results on the server in case user want to inspect some of them'''
     activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
     if not calibIdToKill in activeCalibrations:
       return S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (calibIdToKill, activeCalibrations))
@@ -183,8 +224,13 @@ class CalibrationHandler(RequestHandler):
     calibration = CalibrationHandler.activeCalibrations[calibIdToKill]
     if (calibration.proxyUserName == usernameAndGroup['username']
             and calibration.proxyUserGroup == usernameAndGroup['group']):
-      del CalibrationHandler.activeCalibrations[calibIdToKill]
-      shutil.rmtree('calib%s' % calibIdToKill)
+      if calibration.calibrationFinished == False:
+        calibration.calibrationFinished = True
+        calibration.calibrationEndTime = datetime.now()
+      calibration.resultsSuccessfullyCopiedToEos = True  # we don't want files to be copied to user EOS
+      #  if users want logs they can request it with getResults
+      #  command
+      self.idsOfCalibsToBeKilled += [calibIdToKill]
       return S_OK()
     else:
       return S_ERROR('Permission denied. Calibration has been created by other user.')
@@ -200,12 +246,17 @@ class CalibrationHandler(RequestHandler):
 
     statuses = []
 
-    for calibrationID in list(CalibrationHandler.activeCalibrations.keys()):
+    calibList = list(CalibrationHandler.activeCalibrations.keys())
+    calibList.sort()
+    for calibrationID in calibList:
       calibration = CalibrationHandler.activeCalibrations[calibrationID]
       calibBelongsToUser = (calibration.proxyUserName == usernameAndGroup['username']
                             and calibration.proxyUserGroup == usernameAndGroup['group'])
       if calibBelongsToUser:
         calibStatus = calibration.getCurrentStatus()
+        if 'calibrationEndTime' in calibStatus.keys():
+          calibStatus['timeLeftBeforeOutputWillBeDeleted'] = (calibration.settings['calibrationEndTime']
+                                                              + timedelta(minutes=self.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES) - datetime(now))
         calibStatus['totalNumberOfJobs'] = int(calibration.settings['numberOfJobs'])
         calibStatus['percentageOfFinishedJobs'] = int(
             100.0 * calibration.stepResults[calibration.currentStep].getNumberOfResults()
@@ -427,6 +478,13 @@ class CalibrationHandler(RequestHandler):
     for calibrationID in CalibrationHandler.activeCalibrations:
       result[calibrationID] = CalibrationHandler.activeCalibrations[calibrationID].settings['numberOfJobs']
     return S_OK(result)
+
+  auth_getCalibrationsToBeKilled = ['authenticated']
+  types_getCalibrationsToBeKilled = []
+  def export_getCalibrationsToBeKilled(self):
+    listToReturn = self.idsOfCalibsToBeKilled
+    self.idsOfCalibsToBeKilled = []
+    return S_OK(listToReturn)
 
 #TODO: Add stopping criterion to calibration loop. This should be checked when new parameter sets are calculated
 #In that case, the calibration should be removed from activeCalibrations and the result stored.

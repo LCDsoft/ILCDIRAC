@@ -8,7 +8,9 @@ from collections import defaultdict
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
 from DIRAC.Core.Base.Client import Client
+from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
+from DIRAC.WorkloadManagementSystem.Client.JobManagerClient import JobManagerClient
 
 __RCSID__ = "$Id$"
 
@@ -31,7 +33,9 @@ class CalibrationAgent(AgentModule):
     self.calibrationService = Client()
     self.calibrationService.setServer('Calibration/Calibration')
     self.currentCalibrations = []  # Contains IDs (int) of the calibrations
-    self.currentJobStatuses = {}  # Contains a mapping calibrationID -> dict, the dict contains a mapping
+    self.currentJobStatusesPerWorker = {}  # Contains a mapping calibrationID -> dict, the dict contains a mapping
+    self.currentJobStatusesPerJobId = {}
+    self.calibrationOwnership = {}
     # WorkerID (int) -> jobStatus (enum)
     return S_OK()
 
@@ -46,14 +50,16 @@ class CalibrationAgent(AgentModule):
     res = self.fetchJobStatuses()
     if not res['OK']:
       return res
-    self.currentJobStatuses = res['Value']
+    self.currentJobStatusesPerWorker = res['Value']['jobStatusVsWorkerId']
+    self.currentJobStatusesPerJobId = res['Value']['jobStatusVsJobId']
+    self.calibrationOwnership = res['Value']['calibrationOwnership']
+    self.checkForCalibrationsToBeKilled()
     res = self.calibrationService.getNumberOfJobsPerCalibration()
     if not res['OK']:
       return res
     targetJobNumbers = res['Value']
     self.currentCalibrations = list(targetJobNumbers.keys())
-    self.log.info('Execute execute. currentJobStatuses: %s, targetJobNumbers: %s' %
-                  (self.currentJobStatuses, targetJobNumbers))
+    #  self.log.info('Execute execute. currentJobStatusesPerWorker : %s, targetJobNumbers: %s' % (self.currentJobStatusesPerWorker, targetJobNumbers))
     # TODO temporarily switched off resubmission. For testing purpose
     #  self.requestResubmission( self.__calculateJobsToBeResubmitted( currentStatuses, targetJobNumbers ) )
     res = self.calibrationService.checkForStepIncrement()
@@ -68,14 +74,14 @@ class CalibrationAgent(AgentModule):
     :returns: Dictionary of type calibrationID -> dict, with dict of type workerID (int) -> jobStatus (enum)
     :rtype: dict
     """
-    result = defaultdict(dict)  # defaults to {}
     jobMonitoringService = JobMonitoringClient()
     res = jobMonitoringService.getJobs({'JobGroup': 'CalibrationService_calib_job'})
     if not res['OK']:
       self.log.error("Failed getting job IDs from job DB! Error:", res['Message'])
       return S_ERROR('Failed getting job IDs from job DB!')
     jobIDs = res['Value']
-    res = jobMonitoringService.getJobsParameters(_convert_to_int_list(jobIDs), ['JobName', 'Status', 'JobId'])
+    res = jobMonitoringService.getJobsParameters(_convert_to_int_list(
+        jobIDs), ['JobName', 'Status', 'JobId', 'Owner', 'OwnerGroup'])
     if not res['OK']:
       pass
     jobStatuses = res['Value']
@@ -91,28 +97,47 @@ class CalibrationAgent(AgentModule):
     #Killed:	Job received KILL signal from the user
     #Deleted:	Job is marked for deletion
     # see https://twiki.cern.ch/twiki/bin/view/LHCb/DiracWebPortalJobmonitor
+    result1 = defaultdict(dict)  # defaults to {}
+    result2 = defaultdict(dict)  # defaults to {}
+    result3 = defaultdict(dict)  # defaults to {}
     for attrDict in jobStatuses.values():
       jobName = attrDict['JobName']
       curCalibration = CalibrationAgent.__getCalibrationIDFromJobName(jobName)
-      result[curCalibration].update({CalibrationAgent.__getWorkerIDFromJobName(jobName):
-                                     (attrDict['Status'], attrDict['JobId'])})
-    return S_OK(dict(result))
+      result1[curCalibration].update({CalibrationAgent.__getWorkerIDFromJobName(jobName):
+                                      attrDict['Status']})
+      result2[curCalibration].update({attrDict['JobId']: attrDict['Status']})
+      if not curCalibration in result3.keys():
+        result3[curCalibration].update({'Owner': attrDict['Owner']})
+        result3[curCalibration].update({'OwnerGroup': attrDict['OwnerGroup']})
+    return S_OK({'jobStatusVsWorkerId': dict(result1), 'jobStatusVsJobId': dict(result2), 'calibrationOwnership': dict(result3)})
 
-# TODO FIXME finish implementation
-  #  def checkForCalibrationsToBeKilled():
-  #    result = self.calibrationService.getCalibrationsToBeKilled()
-  #    if not res['OK']:
-  #      self.log.error('Failed to get list of calibrations to be killed from service. errMsg: %s' % res['Message'])
-  #      return None
-  #    calibIds = res['Value']
-  #    if len(calibIds)==0:
-  #      return None
-  #    else:
-  #      ?????????????????????
-  #      for iCalibId in calibIds:
-  #        if not iCalibId in
+  @executeWithUserProxy
+  def sendKillSignalToJobManager(self, jobIdsToKill):
+    jobManagerService = JobManagerClient()
+    res = jobManagerService.killJob(jobIdsToKill)
+    return res
 
-
+  def checkForCalibrationsToBeKilled(self):
+    res = self.calibrationService.getCalibrationsToBeKilled()
+    if not res['OK']:
+      self.log.error('Failed to get list of calibrations to be killed from service. errMsg: %s' % res['Message'])
+      return S_OK()
+    calibIds = res['Value']
+    if len(calibIds) == 0:
+      return S_OK()
+    else:
+      for iCalibId in calibIds:
+        if not iCalibId in self.currentJobStatusesPerJobId.keys():
+          self.log.info('No jobs to kill for calibration %s' % iCalibId)
+        else:
+          jobIdsToKill = self.currentJobStatusesPerJobId[iCalibId].keys()
+          self.sendKillSignalToJobManager(jobIdsToKill, proxyUserName=self.calibrationOwnership[iCalibId]['Owner'],
+                                          proxyUserGroup=self.calibrationOwnership[iCalibId]['OwnerGroup'])
+          if not res['OK']:
+            self.log.error('Failed to kill jobs. errMsg: %s' % res['Message'])
+          else:
+            self.log.info('Kill jobs: %s' % res['Value'])
+    return S_OK()
 
   RESUBMISSION_RETRIES = 5  # How often the agent tries to resubmit jobs before giving up
   def requestResubmission(self, failedJobs):

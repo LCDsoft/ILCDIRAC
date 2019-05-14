@@ -14,6 +14,7 @@ from shutil import copyfile
 from DIRAC import S_OK, S_ERROR, gLogger
 from mock import call, patch, MagicMock as Mock
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
+from ILCDIRAC.CalibrationSystem.Client.DetectorSettings import CalibrationSettings
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler
 from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
@@ -85,6 +86,41 @@ def copiedFccSteeringFile():
     print("Failed to delete directory: %s; ErrMsg: %s" % (workdirName, str(e)))
     assert False
 
+
+def test_createCalibration(calibHandler):
+  cldSettings = createCalibrationSettings('CLD')
+  clicSettings = createCalibrationSettings('CLIC')
+  inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
+
+  # wrong input: missing argument in the first input dict
+  res = calibHandler.export_createCalibration({'zuds': [], 'gamma': [], 'muon': []}, clicSettings.settingsDict)
+  assert not res['OK']
+  assert "First input dictionary doesn't contain required fields." in res['Message']
+
+  # wrong input: unused extra argument in the first input dict
+  res = calibHandler.export_createCalibration({'zuds': [], 'gamma': [], 'muon': [], 'kaon': [], 'wonderParticle': []},
+                                              clicSettings.settingsDict)
+  assert not res['OK']
+  assert "First input dictionary doesn't contain required fields." in res['Message']
+
+  # wrong input: unused extra argument in the second input dict
+  wrongSettings = createCalibrationSettings('CLD').settingsDict
+  wrongSettings['dummy'] = 'dummy'
+  res = calibHandler.export_createCalibration(inputData, wrongSettings)
+  assert not res['OK']
+  assert "Second input dictionary doesn't contain required fields." in res['Message']
+
+  # wrong input: missing argument in the second input dict
+  wrongSettings = createCalibrationSettings('CLD').settingsDict
+  del wrongSettings['detectorModel']
+  res = calibHandler.export_createCalibration(inputData, wrongSettings)
+  assert not res['OK']
+  assert "Second input dictionary doesn't contain required fields." in res['Message']
+
+  # wrong input: swapped input dictionaries
+  res = calibHandler.export_createCalibration(cldSettings.settingsDict, inputData)
+  assert not res['OK']
+  assert "First input dictionary doesn't contain required fields." in res['Message']
 
 def addPfoAnalysisProcessor(mainSteeringMarlinRecoFile):
   mainTree = et.ElementTree()
@@ -402,8 +438,68 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   #  print('nSignalEvents: %s' % nSignalEvents)
   #  print('nBackgroundEvents: %s' % nBackgroundEvents)
 
-  #  def test_export_killCalibration(calibHandler, mocker):
 
+def test_simple_killCalibration(calibHandler, mocker):
+  CalibrationHandler.activeCalibrations[27] = 'dummy27'
+  CalibrationHandler.activeCalibrations[31] = 'dummy31'
+  CalibrationHandler.activeCalibrations[20] = 'dummy20'
+
+  # wrong calibrationID
+  res = calibHandler.export_killCalibration(2)
+  assert res['OK']
+  assert res['Value'] == 'No calibration with ID: %s was found. Active calibrations: %s' % (2, [27, 20, 31])
+
+  # test function which accept list
+  # wrong calibrationID
+  res = calibHandler.export_killCalibrations([2, 3])
+  assert res['OK']
+  assert res['Value'] == {2: S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (2, [27, 20, 31])),
+                          3: S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (3, [27, 20, 31]))}
+  # wrong input type in the list
+  res = calibHandler.export_killCalibrations([2, 'blah'])
+  assert not res['OK']
+  # clean up
+  CalibrationHandler.activeCalibrations = {}
+
+
+def test_killCalibration(calibHandler, mocker):
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
+               new=Mock(return_value=Mock(), name='Class'))
+  mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
+      return_value={'OK': True, 'Value': {'username': 'correctUserName', 'group': 'correctUserGroup'}}))
+  calibSetting = createCalibrationSettings('CLIC')
+  calibRun = CalibrationRun(33, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  calibRun.proxyUserName = 'wrongUserName'
+  calibRun.proxyUserGroup = 'correctUserGroup'
+  CalibrationHandler.activeCalibrations[33] = calibRun
+
+  # wrong proxyUserName
+  res = calibHandler.export_killCalibration(33)
+  assert not res['OK']
+  assert res['Message'] == 'Permission denied. Calibration has been created by other user.'
+  # wrong proxyUserName
+  res = calibHandler.export_killCalibrations([33])
+  print(res)
+  assert res['OK']
+  assert res['Value'][33]['Message'] == 'Permission denied. Calibration has been created by other user.'
+  # wrong proxyUserGroup
+  calibRun.proxyUserName = 'correctUserName'
+  calibRun.proxyUserGroup = 'wrongUserGroup'
+  res = calibHandler.export_killCalibration(33)
+  assert not res['OK']
+  assert res['Message'] == 'Permission denied. Calibration has been created by other user.'
+  # everything is correct
+  calibRun.proxyUserName = 'correctUserName'
+  calibRun.proxyUserGroup = 'correctUserGroup'
+  res = calibHandler.export_killCalibration(33)
+  assert res['OK']
+  assert CalibrationHandler.idsOfCalibsToBeKilled == [33]
+  assert calibRun.calibrationFinished == True
+  assert calibRun.resultsSuccessfullyCopiedToEos == True
+  assert not calibRun.calibrationEndTime is None
+
+  # clean up
+  CalibrationHandler.activeCalibrations = {}
 
 # TODO this function has decorator... which one need to mock
 #  def test_submitJobs(calibHandler, mocker):
