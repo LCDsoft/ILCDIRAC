@@ -81,7 +81,7 @@ class CalibrationAgent(AgentModule):
       return S_ERROR('Failed getting job IDs from job DB!')
     jobIDs = res['Value']
     res = jobMonitoringService.getJobsParameters(_convert_to_int_list(
-        jobIDs), ['JobName', 'Status', 'JobId', 'Owner', 'OwnerGroup'])
+        jobIDs), ['JobName', 'Status', 'JobId', 'Owner', 'OwnerGroup', 'OwnerDN'])
     if not res['OK']:
       pass
     jobStatuses = res['Value']
@@ -109,13 +109,19 @@ class CalibrationAgent(AgentModule):
       if not curCalibration in result3.keys():
         result3[curCalibration].update({'Owner': attrDict['Owner']})
         result3[curCalibration].update({'OwnerGroup': attrDict['OwnerGroup']})
+        result3[curCalibration].update({'OwnerDN': attrDict['OwnerDN']})
     return S_OK({'jobStatusVsWorkerId': dict(result1), 'jobStatusVsJobId': dict(result2), 'calibrationOwnership': dict(result3)})
 
-  @executeWithUserProxy
-  def sendKillSignalToJobManager(self, jobIdsToKill):
-    jobManagerService = JobManagerClient()
+  def sendKillSignalToJobManager(self, jobIdsToKill, ownerDN, ownerGroup):
+    jobManagerService = JobManagerClient(useCertificates=True, delegatedDN=ownerDN, delegatedGroup=ownerGroup)
     res = jobManagerService.killJob(jobIdsToKill)
     return res
+
+  #  @executeWithUserProxy
+  #  def sendKillSignalToJobManager(self, jobIdsToKill):
+  #    jobManagerService = JobManagerClient()
+  #    res = jobManagerService.killJob(jobIdsToKill)
+  #    return res
 
   def checkForCalibrationsToBeKilled(self):
     res = self.calibrationService.getCalibrationsToBeKilled()
@@ -131,12 +137,14 @@ class CalibrationAgent(AgentModule):
           self.log.info('No jobs to kill for calibration %s' % iCalibId)
         else:
           jobIdsToKill = self.currentJobStatusesPerJobId[iCalibId].keys()
-          self.sendKillSignalToJobManager(jobIdsToKill, proxyUserName=self.calibrationOwnership[iCalibId]['Owner'],
-                                          proxyUserGroup=self.calibrationOwnership[iCalibId]['OwnerGroup'])
+          #  self.sendKillSignalToJobManager(jobIdsToKill, proxyUserName=self.calibrationOwnership[iCalibId]['Owner'],
+          #                                  proxyUserGroup=self.calibrationOwnership[iCalibId]['OwnerGroup'])
+          self.sendKillSignalToJobManager(jobIdsToKill, self.calibrationOwnership[iCalibId]['OwnerDN'],
+                                          self.calibrationOwnership[iCalibId]['OwnerGroup'])
           if not res['OK']:
             self.log.error('Failed to kill jobs. errMsg: %s' % res['Message'])
           else:
-            self.log.info('Kill jobs: %s' % res['Value'])
+            self.log.info('Kill jobs which belong to calibrations: %s' % res['Value'])
     return S_OK()
 
   RESUBMISSION_RETRIES = 5  # How often the agent tries to resubmit jobs before giving up

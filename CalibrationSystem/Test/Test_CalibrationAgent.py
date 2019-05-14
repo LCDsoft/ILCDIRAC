@@ -162,11 +162,16 @@ class CalibrationAgentTest(unittest.TestCase):
     jobmon_mock = Mock()
     jobmon_mock().getJobs.return_value = S_OK([417251, 12741, 4178, 444, 555])
     jobmon_mock().getJobsParameters.return_value = S_OK({
-        'some_cal_1': {'JobName': 'CalibrationService_calid_64_workerid_1', 'Status': 'Running', 'JobId': 417251, 'Owner': 'ow1', 'OwnerGroup': 'owGr1'},
-        'some_cal_2': {'JobName': 'CalibrationService_calid_64_workerid_2', 'Status': 'Failed', 'JobId': 12741, 'Owner': 'ow1', 'OwnerGroup': 'owGr1'},
-        'some_cal_3': {'JobName': 'CalibrationService_calid_65_workerid_5', 'Status': 'Running', 'JobId': 4178, 'Owner': 'ow2', 'OwnerGroup': 'owGr2'},
-        'some_cal_4': {'JobName': 'CalibrationService_calid_65_workerid_6', 'Status': 'Finished', 'JobId': 444, 'Owner': 'ow2', 'OwnerGroup': 'owGr2'},
-        'some_other_cal': {'JobName': 'CalibrationService_calid_66_workerid_14', 'Status': 'Killed', 'JobId': 555, 'Owner': 'ow3', 'OwnerGroup': 'owGr3'}})
+        'some_cal_1': {'JobName': 'CalibrationService_calid_64_workerid_1', 'Status': 'Running', 'JobId': 417251,
+                       'Owner': 'ow1', 'OwnerGroup': 'owGr1', 'OwnerDN': 'dummy'},
+        'some_cal_2': {'JobName': 'CalibrationService_calid_64_workerid_2', 'Status': 'Failed', 'JobId': 12741,
+                       'Owner': 'ow1', 'OwnerGroup': 'owGr1', 'OwnerDN': 'dummy'},
+        'some_cal_3': {'JobName': 'CalibrationService_calid_65_workerid_5', 'Status': 'Running', 'JobId': 4178,
+                       'Owner': 'ow2', 'OwnerGroup': 'owGr2', 'OwnerDN': 'dummy'},
+        'some_cal_4': {'JobName': 'CalibrationService_calid_65_workerid_6', 'Status': 'Finished', 'JobId': 444,
+                       'Owner': 'ow2', 'OwnerGroup': 'owGr2', 'OwnerDN': 'dummy'},
+        'some_other_cal': {'JobName': 'CalibrationService_calid_66_workerid_14', 'Status': 'Killed', 'JobId': 555,
+                           'Owner': 'ow3', 'OwnerGroup': 'owGr3', 'OwnerDN': 'dummy'}})
     with patch('%s.JobMonitoringClient' % MODULE_NAME, new=jobmon_mock):
       status_dict = self.calag.fetchJobStatuses()
       dict1 = {64: {1: 'Running', 2: 'Failed'},
@@ -175,11 +180,11 @@ class CalibrationAgentTest(unittest.TestCase):
       dict2 = {64: {417251: 'Running', 12741: 'Failed'},
                65: {4178: 'Running', 444: 'Finished'},
                66: {555: 'Killed'}}
-      dict3 = {64: {'Owner': 'ow1', 'OwnerGroup': 'owGr1'},
-               65: {'Owner': 'ow2', 'OwnerGroup': 'owGr2'},
-               66: {'Owner': 'ow3', 'OwnerGroup': 'owGr3'}}
+      dict3 = {64: {'Owner': 'ow1', 'OwnerGroup': 'owGr1', 'OwnerDN': 'dummy'},
+               65: {'Owner': 'ow2', 'OwnerGroup': 'owGr2', 'OwnerDN': 'dummy'},
+               66: {'Owner': 'ow3', 'OwnerGroup': 'owGr3', 'OwnerDN': 'dummy'}}
       assertEqualsImproved(status_dict, S_OK({'jobStatusVsWorkerId': dict1,
                                               'jobStatusVsJobId': dict2, 'calibrationOwnership': dict3}), self)
     jobmon_mock().getJobs.assert_called_once_with({'JobGroup': 'CalibrationService_calib_job'})
-    jobmon_mock().getJobsParameters.assert_called_once_with(
-        [417251, 12741, 4178, 444, 555], ['JobName', 'Status', 'JobId', 'Owner', 'OwnerGroup'])
+    jobmon_mock().getJobsParameters.assert_called_once_with([417251, 12741, 4178, 444, 555], [
+        'JobName', 'Status', 'JobId', 'Owner', 'OwnerGroup', 'OwnerDN'])
