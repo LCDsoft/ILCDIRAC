@@ -966,7 +966,7 @@ overlayEventType = %(overlayEventType)s
     allOptions = dict(self.applicationOptions[appName])
     allOptions.update(optionsDict)
     for option, value in allOptions.items():
-      if option.startswith(('FE.', 'C_')):
+      if option.startswith(('FE.', 'C_', 'additionalName')):
         continue
       gLogger.notice("%s: setting option %s to %s" % (appName, option, value))
       setterFunc = 'set' + option
