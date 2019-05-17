@@ -84,7 +84,7 @@ class ArchiveFiles(OperationHandlerBase):
     """Make sure the archive LFN does not exist yet."""
     archiveLFN = self.parameterDict['ArchiveLFN']
     exists = returnSingleResult(self.fc.isFile(archiveLFN))
-    self.log.debug('Checking for Tarball existance %r' % exists)
+    self.log.debug('Checking for Tarball existence %r' % exists)
     if exists['OK'] and exists['Value']:
       raise RuntimeError('Tarball %r already exists' % archiveLFN)
 
