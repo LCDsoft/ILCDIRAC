@@ -631,7 +631,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
 
     if self.dryrun or prevent_registration:
       LOG.notice('Would have created and registered the following\n',
-                 '\n '.join([' * %s: %s' % (fPath, val) for fPath, val in self.finalMetaDict.iteritems()]))
+                 '\n '.join([' * %s: %s' % (fPath, val) for fPath, val in sorted(self.finalMetaDict.iteritems())]))
       LOG.notice('Would have set this as non searchable metadata', str(self.finalMetaDictNonSearch))
       return S_OK()
 
