@@ -448,7 +448,7 @@ MoveTypes = %(moveTypes)s
         self.eventsPerJobs = eventsPerJobSave if eventsPerJobSave else self.eventsPerJobs
 
       self.numberOfTasks = [int(nbtask.strip()) for nbtask in self.numberOfTasks if nbtask.strip()]
-      self.numberOfTasks = self.numberOfTasks if self.numberOfTasks else [1 for _ in self.energies]
+      self.numberOfTasks = self.numberOfTasks if self.numberOfTasks else [1] * len(self.energies)
       self.taskNames = self.taskNames if self.taskNames else [''] * len(self.energies)
 
       if len(self.processes) != len(self.energies) or \
