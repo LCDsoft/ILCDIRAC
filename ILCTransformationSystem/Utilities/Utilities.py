@@ -11,6 +11,7 @@ class Task(object):
   def __init__(self, metaInput, parameterDict, eventsPerJob,
                metaPrev=None, nbTasks=None, sinFile=None, eventsPerBaseFile=None,
                applicationOptions=None,
+               taskName='',
                ):
     """Initialise task with all the information we need to create a transformation."""
     LOG.notice('Creating task with meta', str(metaInput))
@@ -23,7 +24,7 @@ class Task(object):
     self.eventsPerBaseFile = eventsPerBaseFile
     self.applicationOptions = dict(applicationOptions) if applicationOptions is not None else {}
     self.cliReco = ''
-    self.taskName = ''
+    self.taskName = taskName
     self.sourceName = ''
     self._updateMeta(self.meta)
 
