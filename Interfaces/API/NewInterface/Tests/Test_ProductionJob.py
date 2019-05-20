@@ -179,17 +179,14 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     assertDiracFailsWith(res, "input metadata dictionary must contain at least a key 'prodid' as reference",
                          self)
 
-  def test_setInputDataQuery_finddir_fails( self ):
+  @parameterized.expand([(S_ERROR('some_error'), 'error looking up the catalog'),
+                         (S_OK({}), 'could not find any directories'),
+                         (S_OK({0: 'None'}), 'could not find any directories')])
+  def test_setInputDataQuery_finddir_fails(self, retVal, expectedError):
     self.prodJob.fc.getMetadataFields = Mock(return_value=S_OK({'DirectoryMetaFields': {'ProdID': 19872456}}))
-    self.prodJob.fc.findDirectoriesByMetadata = Mock(return_value=S_ERROR('some_error'))
+    self.prodJob.fc.findDirectoriesByMetadata = Mock(return_value=retVal)
     res = self.prodJob.setInputDataQuery({'ProdID': 19872456})
-    assertDiracFailsWith(res, 'error looking up the catalog', self)
-
-  def test_setInputDataQuery_finddir_invalid( self ):
-    self.prodJob.fc.getMetadataFields = Mock(return_value=S_OK({'DirectoryMetaFields': {'ProdID': 19872456}}))
-    self.prodJob.fc.findDirectoriesByMetadata = Mock(return_value=S_OK({}))
-    res = self.prodJob.setInputDataQuery({'ProdID': 19872456})
-    assertDiracFailsWith(res, 'could not find any directories', self)
+    assertDiracFailsWith(res, expectedError, self)
 
   def test_setInputDataQuery_getdirusermetadata_fails( self ):
     self.prodJob.fc.getMetadataFields = Mock(return_value=S_OK({'DirectoryMetaFields': {'ProdID': 19872456}}))
