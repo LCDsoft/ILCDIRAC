@@ -1,8 +1,4 @@
-#!/usr/local/env python
-"""
-Test user jobfinalization
-
-"""
+"""Test ProductionJob."""
 
 from __future__ import print_function
 import unittest
