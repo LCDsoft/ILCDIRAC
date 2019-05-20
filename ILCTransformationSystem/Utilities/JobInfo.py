@@ -69,6 +69,7 @@ class JobInfo( object ):
   def getJobInformation( self, dILC ):
     """get all the information for the job"""
     jdlParameters = self.__getJDL( dILC )
+    # get taskID from JobName, get inputfile(s) from DownloadInputdata
     self.__getOutputFiles( jdlParameters )
     self.__getTaskID( jdlParameters )
     self.__getInputFile( jdlParameters )
@@ -76,7 +77,7 @@ class JobInfo( object ):
   def getTaskInfo( self, tasksDict, lfnTaskDict ):
     """extract the task information from the taskDict"""
 
-    if self.inputFile is None and self.tType != "MCGeneration":
+    if self.inputFile is None and self.tType == "WithInputFiles":
       raise TaskInfoException("InputFile is None: %s" % str(self) )
 
     if self.taskID not in tasksDict:
