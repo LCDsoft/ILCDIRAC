@@ -235,7 +235,7 @@ class CreateArchiveRequest(BaseRequest):
       if sourceSE in replInfo:
         atSource.append(lfn)
       else:
-        LOG.warn('LFN %r not found at source, only at: %s' % ','.join(replInfo.keys()))
+        LOG.warn('LFN %r not found at source, only at: %s' % (lfn, ','.join(replInfo.keys())))
         notAt.append(lfn)
 
     for lfn, errorMessage in resReplica['Value']['Failed'].iteritems():
