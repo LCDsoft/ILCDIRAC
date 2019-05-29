@@ -244,8 +244,9 @@ class CreateArchiveRequest(BaseRequest):
 
     if failed:
       raise RuntimeError('Failed to get replica information')
-
-    self._replicateSourceFiles(request, notAt)
+    LOG.notice('Found %d files to replicate' % len(notAt))
+    if notAt:
+      self._replicateSourceFiles(request, notAt)
 
   def _replicateSourceFiles(self, request, lfns):
     """Create the replicateAndRegisterRequest.
