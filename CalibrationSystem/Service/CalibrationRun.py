@@ -85,7 +85,7 @@ class CalibrationRun(object):
     self.calibrationFinished = self.settings['startCalibrationFinished']
     #  self.calibrationFinished = False
     self.resultsSuccessfullyCopiedToEos = False
-    self.calibrationStartTime = datetime.now()
+    self.calibrationStartTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     self.calibrationEndTime = None
     self.newPhotonLikelihood = None
     self.ops = Operations()
@@ -657,7 +657,7 @@ class CalibrationRun(object):
           self.currentPhase += 1
         elif self.currentStage == 3:
           self.calibrationFinished = True
-          self.calibrationEndTime = datetime.now()
+          self.calibrationEndTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
           self.log.info('The last step of calibration has been finished')
         else:
           return S_ERROR('%s' % self.currentStage)

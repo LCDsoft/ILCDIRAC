@@ -230,7 +230,7 @@ class CalibrationHandler(RequestHandler):
       calibration.resultsSuccessfullyCopiedToEos = True  # we don't want files to be copied to user EOS
       #  if users want logs they can request it with getResults
       #  command
-      self.idsOfCalibsToBeKilled += [calibIdToKill]
+      CalibrationHandler.idsOfCalibsToBeKilled += [calibIdToKill]
       return S_OK()
     else:
       return S_ERROR('Permission denied. Calibration has been created by other user.')
@@ -482,8 +482,8 @@ class CalibrationHandler(RequestHandler):
   auth_getCalibrationsToBeKilled = ['authenticated']
   types_getCalibrationsToBeKilled = []
   def export_getCalibrationsToBeKilled(self):
-    listToReturn = self.idsOfCalibsToBeKilled
-    self.idsOfCalibsToBeKilled = []
+    listToReturn = CalibrationHandler.idsOfCalibsToBeKilled
+    CalibrationHandler.idsOfCalibsToBeKilled = []
     return S_OK(listToReturn)
 
 #TODO: Add stopping criterion to calibration loop. This should be checked when new parameter sets are calculated

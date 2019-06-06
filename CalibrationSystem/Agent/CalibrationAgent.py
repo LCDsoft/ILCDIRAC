@@ -10,7 +10,7 @@ from DIRAC.Core.Base.AgentModule import AgentModule
 from DIRAC.Core.Base.Client import Client
 from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
-from DIRAC.WorkloadManagementSystem.Client.JobManagerClient import JobManagerClient
+from DIRAC.WorkloadManagementSystem.Client.WMSClient import WMSClient
 
 __RCSID__ = "$Id$"
 
@@ -113,15 +113,9 @@ class CalibrationAgent(AgentModule):
     return S_OK({'jobStatusVsWorkerId': dict(result1), 'jobStatusVsJobId': dict(result2), 'calibrationOwnership': dict(result3)})
 
   def sendKillSignalToJobManager(self, jobIdsToKill, ownerDN, ownerGroup):
-    jobManagerService = JobManagerClient(useCertificates=True, delegatedDN=ownerDN, delegatedGroup=ownerGroup)
+    jobManagerService = WMSClient(useCertificates=True, delegatedDN=ownerDN, delegatedGroup=ownerGroup)
     res = jobManagerService.killJob(jobIdsToKill)
     return res
-
-  #  @executeWithUserProxy
-  #  def sendKillSignalToJobManager(self, jobIdsToKill):
-  #    jobManagerService = JobManagerClient()
-  #    res = jobManagerService.killJob(jobIdsToKill)
-  #    return res
 
   def checkForCalibrationsToBeKilled(self):
     res = self.calibrationService.getCalibrationsToBeKilled()
@@ -137,8 +131,6 @@ class CalibrationAgent(AgentModule):
           self.log.info('No jobs to kill for calibration %s' % iCalibId)
         else:
           jobIdsToKill = self.currentJobStatusesPerJobId[iCalibId].keys()
-          #  self.sendKillSignalToJobManager(jobIdsToKill, proxyUserName=self.calibrationOwnership[iCalibId]['Owner'],
-          #                                  proxyUserGroup=self.calibrationOwnership[iCalibId]['OwnerGroup'])
           self.sendKillSignalToJobManager(jobIdsToKill, self.calibrationOwnership[iCalibId]['OwnerDN'],
                                           self.calibrationOwnership[iCalibId]['OwnerGroup'])
           if not res['OK']:
