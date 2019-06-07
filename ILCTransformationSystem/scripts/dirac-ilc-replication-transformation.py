@@ -59,6 +59,7 @@ def _createTrafo():
     LOG.notice('Parameters: %s' % pformat(parDict))
     resCreate = createDataTransformation(**parDict)
     if not resCreate['OK']:
+      LOG.error('Failed to create the transformation', resCreate['Message'])
       return 1
 
   return 0
