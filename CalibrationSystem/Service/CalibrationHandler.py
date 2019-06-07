@@ -233,7 +233,7 @@ class CalibrationHandler(RequestHandler):
       CalibrationHandler.idsOfCalibsToBeKilled += [calibIdToKill]
       return S_OK()
     else:
-      return S_ERROR('Permission denied. Calibration has been created by other user.')
+      return S_ERROR('Permission denied. Calibration with ID %s has been created by other user.' % calibIdToKill)
 
   auth_cleanCalibrations = ['authenticated']
   types_cleanCalibrations = [list]
@@ -263,8 +263,8 @@ class CalibrationHandler(RequestHandler):
     if calibration.calibrationFinished == False:
       return S_OK('Cannot clean calibration with ID %s. It is still not finished/killed.' % calibIdToClean)
     else:
-      del CalibrationHandler.activeCalibrations[calibrationID]
-      shutil.rmtree('calib%s' % calibrationID)
+      del CalibrationHandler.activeCalibrations[calibIdToClean]
+      shutil.rmtree('calib%s' % calibIdToClean)
       return S_OK('Calibration with ID %s was cleaned.' % calibIdToClean)
 
   auth_getUserCalibrationStatuses = ['authenticated']
@@ -287,8 +287,8 @@ class CalibrationHandler(RequestHandler):
       if calibBelongsToUser:
         calibStatus = calibration.getCurrentStatus()
         if 'calibrationEndTime' in calibStatus.keys():
-          calibStatus['timeLeftBeforeOutputWillBeDeleted'] = (calibration.calibrationEndTime
-                                                              + timedelta(minutes=self.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES) - datetime(now))
+          calibStatus['timeLeftBeforeOutputWillBeDeleted'] = ('%s' % (calibration.calibrationEndTime
+                                                                      + timedelta(minutes=self.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES) - datetime.now()))
         calibStatus['totalNumberOfJobs'] = int(calibration.settings['numberOfJobs'])
         calibStatus['percentageOfFinishedJobs'] = int(
             100.0 * calibration.stepResults[calibration.currentStep].getNumberOfResults()

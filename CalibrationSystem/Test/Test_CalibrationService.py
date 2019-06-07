@@ -476,18 +476,18 @@ def test_killCalibration(calibHandler, mocker):
   # wrong proxyUserName
   res = calibHandler.export_killCalibration(33)
   assert not res['OK']
-  assert res['Message'] == 'Permission denied. Calibration has been created by other user.'
+  assert res['Message'] == 'Permission denied. Calibration with ID 33 has been created by other user.'
   # wrong proxyUserName
   res = calibHandler.export_killCalibrations([33])
   print(res)
   assert res['OK']
-  assert res['Value'][33]['Message'] == 'Permission denied. Calibration has been created by other user.'
+  assert res['Value'][33]['Message'] == 'Permission denied. Calibration with ID 33 has been created by other user.'
   # wrong proxyUserGroup
   calibRun.proxyUserName = 'correctUserName'
   calibRun.proxyUserGroup = 'wrongUserGroup'
   res = calibHandler.export_killCalibration(33)
   assert not res['OK']
-  assert res['Message'] == 'Permission denied. Calibration has been created by other user.'
+  assert res['Message'] == 'Permission denied. Calibration with ID 33 has been created by other user.'
   # everything is correct
   calibRun.proxyUserName = 'correctUserName'
   calibRun.proxyUserGroup = 'correctUserGroup'

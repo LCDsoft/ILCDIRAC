@@ -129,7 +129,7 @@ class CalibrationRun(object):
     outDict['calibrationFinished'] = self.calibrationFinished
     outDict['resultsSuccessfullyCopiedToEos'] = self.resultsSuccessfullyCopiedToEos
     if not self.calibrationEndTime is None:
-      outDict['calibrationEndTime'] = self.calibrationEndTime
+      outDict['calibrationEndTime'] = self.calibrationEndTime.strftime("%Y-%m-%d %H:%M:%S")
     return outDict
 
   def checkForDebugFlagsToStopCalibration(self):
@@ -170,19 +170,20 @@ class CalibrationRun(object):
       if not newKey is None:
         parDict[newKey] = parDict.pop(key)
 
+    res = readParametersFromSteeringFile(self.localSteeringFile, parDict, ['PfoAnalysis'])
+    if not res['OK']:
+      self.log.error('Failed to read parameters from steering file:', res['Message'])
+      return S_ERROR('Failed to read parameters from steering file')
+
     if not self.settings['enableSoftwareCompensation']:
       tmpKey = ".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']" % self.settings['DDPandoraPFANewProcessorName']
       parDict[tmpKey] = 0.0
       tmpDict = {tmpKey: None}
       res = readParametersFromSteeringFile(self.localSteeringFile, tmpDict)
+      # if no such parameter in the steering file --> add it
       if not res['OK']:
         res = addParameterToProcessor(self.localSteeringFile, self.settings['DDPandoraPFANewProcessorName'], {
                                       'name': 'MaxClusterEnergyToApplySoftComp', 'type': 'float', 'value': '0'})
-
-    res = readParametersFromSteeringFile(self.localSteeringFile, parDict, ['PfoAnalysis'])
-    if not res['OK']:
-      self.log.error('Failed to read parameters from steering file:', res['Message'])
-      return S_ERROR('Failed to read parameters from steering file')
 
     self.calibrationConstantsDict = parDict
 
@@ -657,7 +658,7 @@ class CalibrationRun(object):
           self.currentPhase += 1
         elif self.currentStage == 3:
           self.calibrationFinished = True
-          self.calibrationEndTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+          self.calibrationEndTime = datetime.now()
           self.log.info('The last step of calibration has been finished')
         else:
           return S_ERROR('%s' % self.currentStage)
@@ -681,6 +682,7 @@ class CalibrationRun(object):
 
     if self.checkForDebugFlagsToStopCalibration():
       self.currentParameterSet['calibrationIsFinished'] = True
+      self.calibrationFinished = True
 
     # update local steering file after every step. This file will be used if calibration service will be restarted and some calibrations are still are not finished
     res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,

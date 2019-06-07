@@ -219,9 +219,12 @@ class Calibration(MarlinAnalysis):
         self.log.error('Error while updateing steering file. Error message: %s' % res['Message'])
         return res
 
-      # FIXME for debugging
-      if self.currentStage == 3 and self.currentPhase <= 2 and not os.path.exists('newPhotonLikelihood.xml'):
-        #  if self.currentStage == 3 and not os.path.exists('newPhotonLikelihood.xml'):
+      # FIXME for debug purposes:
+      if (self.currentStage == 3) and (not os.path.exists('newPhotonLikelihood.xml')) and (self.currentStep == 0):
+        # there is no newPhotonLikelihood.xml file -> create empty dummy and do not use it
+        open('newPhotonLikelihood.xml', 'a').close()
+
+      if self.currentStage == 3 and not os.path.exists('newPhotonLikelihood.xml'):
         newPhotonLikelihood = self.cali.requestNewPhotonLikelihood()
         while newPhotonLikelihood is None:
           self.log.notice("Waiting for new photon likelihood file for stage 3")
