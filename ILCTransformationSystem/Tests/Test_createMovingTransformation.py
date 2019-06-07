@@ -1,12 +1,15 @@
 """Test the dirac-ilc-moving-transformation script"""
 
 import unittest
+import importlib
+import pytest
 
 from mock import MagicMock as Mock, patch
 
 from DIRAC import S_OK, S_ERROR
 
 from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import Params, checkDatatype
+THE_SCRIPT = 'ILCDIRAC.ILCTransformationSystem.scripts.dirac-ilc-moving-transformation'
 
 __RCSID__ = "$Id$"
 
@@ -121,3 +124,101 @@ class TestMovingParams( unittest.TestCase ):
                 new = Mock( return_value=tMock) ):
       ret = checkDatatype(123, "REC")
       self.assertFalse( ret['OK'], ret.get('Message',"") )
+
+
+@pytest.fixture
+def ParamFix():
+  pInstance = Mock()
+  pClass = Mock(return_value=pInstance)
+  pClass.pInstance = pInstance
+  pInstance.metaKey = 'ProdID'
+  return pClass
+
+
+@pytest.fixture
+def movingModule(mocker, ParamFix):
+  """Fixture for the script module, mocking some parts."""
+  mocker.patch('DIRAC.TransformationSystem.Utilities.ReplicationCLIParameters.getProxyInfo', new=getProxyMock())
+  mocker.patch('DIRAC.TransformationSystem.Utilities.ReplicationCLIParameters.getVOMSVOForGroup',
+               new=Mock(return_value='VOMSED_VO'))
+  theScript = importlib.import_module(THE_SCRIPT)
+  theScript.Script = Mock(name='ScriptMock')
+  theScript.Script.parseCommandLine = Mock(name='pclMock')
+  theScript.getTransformationGroup = Mock(return_value='someGroup')
+  theScript.checkDatatype = Mock(return_value=S_OK('SIM'))
+  theScript.createDataTransformation = Mock(return_value=S_OK())
+  theScript.Params = ParamFix
+  return theScript
+
+
+def test_createTrafo(movingModule):
+  movingModule.Script.getPositionalArgs.return_value = ['12345', 'TargetSE', 'SourceSE', 'SIM']
+  movingModule.Params.pInstance.checkSettings = Mock(name='RetVal', return_value=S_OK())
+  movingModule.Params.pInstance.metaValues = [12345]
+  movingModule.Params.pInstance.targetSE = ['TargetSE']
+  movingModule.Params.pInstance.sourceSE = ['SourceSE']
+  movingModule.Params.pInstance.forcemoving = False
+  movingModule.Params.pInstance.enable = False
+  movingModule.Params.pInstance.datatype = 'SIM'
+  movingModule.Params.pInstance.extraname = ''
+  movingModule.Params.pInstance.extraname = ''
+  parDict = dict(flavour='Moving',
+                 targetSE=['TargetSE'],
+                 sourceSE=['SourceSE'],
+                 metaKey='ProdID',
+                 metaValue=12345,
+                 extraData={'Datatype': 'SIM'},
+                 extraname='',
+                 plugin='BroadcastProcessed',
+                 groupSize=10,
+                 tGroup='someGroup',
+                 enable=False,
+               )
+  assert movingModule._createTrafo() == 0
+  movingModule.createDataTransformation.assert_called_with(**parDict)
+
+
+def test_createTrafo_force(movingModule):
+  movingModule.Script.getPositionalArgs.return_value = ['12345', 'TargetSE', 'SourceSE', 'SIM']
+  movingModule.Params.pInstance.checkSettings = Mock(name='RetVal', return_value=S_OK())
+  movingModule.Params.pInstance.metaValues = [12345]
+  movingModule.Params.pInstance.targetSE = ['TargetSE']
+  movingModule.Params.pInstance.sourceSE = ['SourceSE']
+  movingModule.Params.pInstance.forcemoving = True
+  movingModule.Params.pInstance.enable = False
+  movingModule.Params.pInstance.datatype = 'SIM'
+  movingModule.Params.pInstance.extraname = ''
+  movingModule.Params.pInstance.extraname = ''
+  parDict = dict(flavour='Moving',
+                 targetSE=['TargetSE'],
+                 sourceSE=['SourceSE'],
+                 metaKey='ProdID',
+                 metaValue=12345,
+                 extraData={'Datatype': 'SIM'},
+                 extraname='',
+                 plugin='Broadcast',
+                 groupSize=10,
+                 tGroup='someGroup',
+                 enable=False,
+               )
+  assert movingModule._createTrafo() == 0
+  movingModule.createDataTransformation.assert_called_with(**parDict)
+
+
+def test_createTrafo_dtypeFail(movingModule):
+  movingModule.Params.pInstance.checkSettings = Mock(name='RetVal', return_value=S_OK())
+  movingModule.Params.pInstance.metaValues = [12345]
+  movingModule.checkDatatype = Mock(name='CheckDType', return_value=S_ERROR())
+  assert movingModule._createTrafo() == 1
+
+
+def test_createTrafo_createFail(movingModule):
+  movingModule.Params.pInstance.checkSettings = Mock(name='RetVal', return_value=S_OK())
+  movingModule.Params.pInstance.metaValues = [12345]
+  movingModule.createDataTransformation = Mock(name='createT', return_value=S_ERROR())
+  assert movingModule._createTrafo() == 1
+
+
+def test_createTrafo_notEnougParameters(movingModule):
+  movingModule.Params.pInstance.checkSettings = Mock(name='RetVal', return_value=S_ERROR())
+  assert movingModule._createTrafo() == 1
