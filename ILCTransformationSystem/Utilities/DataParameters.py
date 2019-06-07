@@ -84,10 +84,10 @@ class Params(DParams):
     super(Params, self).registerSwitches(script)
 
     useMessage = []
-    useMessage.append("%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName [-F] [-S 1]"
+    useMessage.append('%s <prodID> <TargetSEs> <SourceSEs> {GEN,SIM,REC,DST} -NExtraName [-F] [-G 10]'
                       % script.scriptName)
     useMessage.extend(['', 'or', ''])
-    useMessage.append('%s --AllFor="<prodID1>, <prodID2>, ..." <TargetSEs> <SourceSEs> -NExtraName [-F] [-S 1]'
+    useMessage.append('%s --AllFor="<prodID1>, <prodID2>, ..." <TargetSEs> <SourceSEs> -NExtraName [-F] [-G 10]'
                       % script.scriptName)
     script.setUsageMessage('\n'.join(useMessage))
 
