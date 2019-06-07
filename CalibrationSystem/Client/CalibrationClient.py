@@ -229,6 +229,18 @@ def killCalibrations(calibIds):
   calibrationService.setServer('Calibration/Calibration')
   return calibrationService.killCalibrations(calibIds)
 
+
+def cleanCalibration(calibId):
+  calibrationService = Client()
+  calibrationService.setServer('Calibration/Calibration')
+  return calibrationService.cleanCalibration(calibId)
+
+
+def cleanCalibrations(calibIds):
+  calibrationService = Client()
+  calibrationService.setServer('Calibration/Calibration')
+  return calibrationService.cleanCalibrations(calibIds)
+
 def getCalibrationStatuses():
   calibrationService = Client()
   calibrationService.setServer('Calibration/Calibration')

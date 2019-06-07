@@ -235,6 +235,38 @@ class CalibrationHandler(RequestHandler):
     else:
       return S_ERROR('Permission denied. Calibration has been created by other user.')
 
+  auth_cleanCalibrations = ['authenticated']
+  types_cleanCalibrations = [list]
+
+  def export_cleanCalibrations(self, inList):
+    outDict = {}
+    for iEl in inList:
+      if not type(iEl) is int:
+        errMsg = ('All elements of input list has to be of integer type.'
+                  ' You have provided elements of following types: %s' % [type(iEl) for iEl in inList])
+        self.log.error(errMsg)
+        return S_ERROR(errMsg)
+    for iEl in inList:
+      outDict[iEl] = self.export_cleanCalibration(iEl)
+    return S_OK(outDict)
+
+  auth_cleanCalibration = ['authenticated']
+  types_cleanCalibration = [int]
+
+  def export_cleanCalibration(self, calibIdToClean):
+    '''Clean temporary calibration results and remove calibration from the list of active calibrations. 
+       If calibration is still not finished - do nothing (if user want to stop it he has kill it first)'''
+    activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
+    if not calibIdToClean in activeCalibrations:
+      return S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (calibIdToClean, activeCalibrations))
+    calibration = CalibrationHandler.activeCalibrations[calibIdToClean]
+    if calibration.calibrationFinished == False:
+      return S_OK('Cannot clean calibration with ID %s. It is still not finished/killed.' % calibIdToClean)
+    else:
+      del CalibrationHandler.activeCalibrations[calibrationID]
+      shutil.rmtree('calib%s' % calibrationID)
+      return S_OK('Calibration with ID %s was cleaned.' % calibIdToClean)
+
   auth_getUserCalibrationStatuses = ['authenticated']
   types_getUserCalibrationStatuses = []
 
@@ -255,7 +287,7 @@ class CalibrationHandler(RequestHandler):
       if calibBelongsToUser:
         calibStatus = calibration.getCurrentStatus()
         if 'calibrationEndTime' in calibStatus.keys():
-          calibStatus['timeLeftBeforeOutputWillBeDeleted'] = (calibration.settings['calibrationEndTime']
+          calibStatus['timeLeftBeforeOutputWillBeDeleted'] = (calibration.calibrationEndTime
                                                               + timedelta(minutes=self.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES) - datetime(now))
         calibStatus['totalNumberOfJobs'] = int(calibration.settings['numberOfJobs'])
         calibStatus['percentageOfFinishedJobs'] = int(
