@@ -84,8 +84,7 @@ class Calibration(MarlinAnalysis):
     fopen = open('DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK', 'w')
     fopen.close()
 
-    #get the path to the detector model, either local or from the software
-    # FIXME compactFile is not used anywhere
+    # get the path to the detector model, either local or from the software
     compactFile = None
     if self.detectorModel:
       resXML = self._getDetectorXML()
@@ -93,6 +92,8 @@ class Calibration(MarlinAnalysis):
         self.log.error("Could not obtain the detector XML file: ", resXML["Message"])
         return resXML
       compactFile = resXML['Value']
+    else:
+      self.log.error('no detectorModel specified! use model which is provided in the template steering file')
 
     res = getEnvironmentScript(self.platform, "marlin", self.applicationVersion, self.getEnvScript)
     if not res['OK']:
@@ -218,6 +219,14 @@ class Calibration(MarlinAnalysis):
       if not res['OK']:
         self.log.error('Error while updateing steering file. Error message: %s' % res['Message'])
         return res
+
+      # update path to the detector model, either local or from the software, if specified in settings
+      if compactFile:
+        res = updateSteeringFile(steeringFileToRun, steeringFileToRun,
+                                 {".//processor[@name='InitDD4hep']/parameter[@name='DD4hepXMLFile']": compactFile})
+        if not res['OK']:
+          self.log.error('Error while updateing steering file. Error message: %s' % res['Message'])
+          return res
 
       # FIXME for debug purposes:
       if (self.currentStage == 3) and (not os.path.exists('newPhotonLikelihood.xml')) and (self.currentStep == 0):
