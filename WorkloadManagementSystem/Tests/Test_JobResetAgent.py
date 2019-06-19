@@ -127,6 +127,13 @@ def failedRemoveRequest():
                        opStatus="Failed", fileStatus="Failed")
 
 
+@pytest.fixture
+def failedRemoveReplicaRequest():
+  """Return failed RemoveReplica Request."""
+  return createRequest(requestID=5, opType='RemoveReplica',
+                       opStatus='Failed', fileStatus='Failed')
+
+
 def test_init(jobResetAgent):
   """Test the constructor."""
   from ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent import JobResetAgent
@@ -291,7 +298,7 @@ def test_treat_Failed_Prod_With_No_Req(jobResetAgent, fakeJobID):
 
 
 def test_treat_Completed_Prod_With_Req(jobResetAgent, fakeJobID, doneRemoveRequest, doneReplicateRequest,
-                                       failedRemoveRequest, failedReplicateRequest):
+                                       failedRemoveRequest, failedReplicateRequest, failedRemoveReplicaRequest):
   """Test for treatCompletedProdWithReq function."""
   jobResetAgent.markJob = MagicMock()
   jobResetAgent.resetRequest = MagicMock()
@@ -321,6 +328,13 @@ def test_treat_Completed_Prod_With_Req(jobResetAgent, fakeJobID, doneRemoveReque
   jobResetAgent.resetRequest.reset_mock()
   jobResetAgent.treatCompletedProdWithReq(fakeJobID, failedRemoveRequest)
   jobResetAgent.markJob.assert_not_called()
+  jobResetAgent.resetRequest.assert_not_called()
+
+  # failed Remove file request should not be reset
+  jobResetAgent.resetRequest.reset_mock()
+  jobResetAgent.markJob.reset_mock()
+  jobResetAgent.treatCompletedProdWithReq(fakeJobID, failedRemoveReplicaRequest)
+  jobResetAgent.markJob.assert_called_once_with(fakeJobID, 'Done')
   jobResetAgent.resetRequest.assert_not_called()
 
   # is waiting
