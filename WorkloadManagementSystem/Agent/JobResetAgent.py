@@ -3,18 +3,25 @@ Job Reset Agent takes care of the following cases
 
 * Finds jobs stuck in staging status and reschedules them if associated files are already staged
 * Finds production jobs in completed status:
+
   * Marks a Job Done if request status is Done
   * Marks a Job Done if no request is found
   * Marks a Job Done if ReplicateAndRegister operation has an error "No such file"
+  * Marks a Job DOne if RemoveReplica cannot be completed. Let DataRecoveryAgent take over
   * Resets Failed requests with ReplicateAndRegister operations if error is other than "No such file"
+
 * Finds production jobs in failed status with minor status "Pending Requests"
+
   * Marks a Job Failed with minor status "Requests Done" if request status is Done
   * Marks a Job Failed with minor status "Requests Done" if no request is found
   * Resets Failed RemoveFile requests
+
 * Finds user jobs in completed status:
+
   * Marks a Job Done if there is no request and minorStatus and appStatus are in final states
   * Marks a Job Done if request status is Done
   * Resets requests if the request status is other than Done
+  * Unregister files if a new file is supposed to be registered
 """
 
 from collections import defaultdict
@@ -47,6 +54,7 @@ FINAL_APP_STATES = ["Job Finished Successfully",
 FINAL_MINOR_STATES = ["Pending Requests",
                       "Application Finished Successfully"]
 
+NO_RESET = 'NO_RESET'
 
 class JobResetAgent(AgentModule):
   """ JobResetAgent """
@@ -223,10 +231,11 @@ class JobResetAgent(AgentModule):
     if not res['OK']:
       return res
 
-    res = self.resetRequest(request.RequestID)
-    if res["OK"]:
-      self.accounting["User"].append({"JobID": jobID, "JobStatus": "Completed", "Treatment": ("Resetting request "
-                                      "with ID: %s and Status: %s" % (request.RequestID, request.Status))})
+    if res['Value'] is None or res['Value'] != NO_RESET:
+      res = self.resetRequest(request.RequestID)
+      if res['OK']:
+        self.accounting['User'].append({'JobID': jobID, 'JobStatus': 'Completed', 'Treatment': ('Resetting request '
+                                        'with ID: %s and Status: %s' % (request.RequestID, request.Status))})
     return res
 
   def treatFailedProdWithReq(self, jobID, request):
@@ -314,6 +323,18 @@ class JobResetAgent(AgentModule):
                                                  request.Status))})
         return res
 
+      if op.Type == 'RemoveReplica' and op.Status == 'Failed':
+        # Just mark the job as Done, because we cannot remove a single replica, let DataRecoveryAgent take care of the rest
+        lfnErrors = [(lfn.LFN, lfn.Error) for lfn in op]
+        self.log.notice("RemoveReplica LFN Status: %s" % lfnErrors)
+        res = self.markJob(jobID, "Done")
+        if res["OK"]:
+          self.accounting["Production"].append({"JobID": jobID,
+                                                "JobStatus": "Completed",
+                                                "Treatment": "Job marked Done because RemoveReplica failed",
+                                                })
+          return res
+
       elif op.Status == "Failed":
         self.log.notice("Cannot handle Operation Type: %s" % op.Type)
 
@@ -334,32 +355,45 @@ class JobResetAgent(AgentModule):
                     (request.RequestID, op.Type, op.Status, op.Error,
                      "\n\t".join(lfn.LFN for lfn in op)))
       failed = False
-      if op.Type != "RegisterFile" or op.Status != 'Failed':
+      if op.Type not in ('RegisterFile', 'ReplicateAndRegister') or op.Status != 'Failed':
         return S_OK()
-      for lfn in op:
-        if lfn.Error is None or "File already registered with alternative metadata" not in lfn.Error:
-          continue
-        self.log.info("Getting user proxy %s (%s)" % (request.OwnerDN, request.OwnerGroup))
-        with UserProxy(proxyUserGroup=request.OwnerGroup, proxyUserDN=request.OwnerDN) as res:
-          if res['OK']:
-            self.log.info('Unregistering LFN: %s' % lfn.LFN)
-            res = self.fcClient.removeFile(lfn.LFN)
-        self.log.info("Tried unregistering:\n%s" % pformat(res))
-        if not res['OK']:
-          self.logError("Failed to unregister file", "%s: %s" % (lfn.LFN, res['Message']))
-          failed = True
-          continue
-        if res['Value'].get('Failed', {}):
-          for failedLFN, reason in res['Value']['Failed'].items():
-            self.logError("Failed to unregister file", "%s: %s" % (failedLFN, reason))
-          failed = True
-          continue
-        self.accounting["User"].append({"JobID": jobID,
-                                        "JobStatus": "Completed",
-                                        "Treatment": "Unregistered LFN %s" % lfn.LFN})
+      if op.Type == 'RegisterFile':
+        for lfn in op:
+          if lfn.Error is None or "File already registered with alternative metadata" not in lfn.Error:
+            continue
+          self.log.info("Getting user proxy %s (%s)" % (request.OwnerDN, request.OwnerGroup))
+          with UserProxy(proxyUserGroup=request.OwnerGroup, proxyUserDN=request.OwnerDN) as res:
+            if res['OK']:
+              self.log.info('Unregistering LFN: %s' % lfn.LFN)
+              res = self.fcClient.removeFile(lfn.LFN)
+          self.log.info("Tried unregistering:\n%s" % pformat(res))
+          if not res['OK']:
+            self.logError("Failed to unregister file", "%s: %s" % (lfn.LFN, res['Message']))
+            failed = True
+            continue
+          if res['Value'].get('Failed', {}):
+            for failedLFN, reason in res['Value']['Failed'].items():
+              self.logError("Failed to unregister file", "%s: %s" % (failedLFN, reason))
+            failed = True
+            continue
+          self.accounting["User"].append({"JobID": jobID,
+                                          "JobStatus": "Completed",
+                                          "Treatment": "Unregistered LFN %s" % lfn.LFN})
 
-      if failed:
-        return S_ERROR("Failed to unregister some files")
+        if failed:
+          return S_ERROR("Failed to unregister some files")
+
+      elif op.Type == 'ReplicateAndRegister':
+        for lfn in op:
+          # if any file is missing, we fail the job
+          if lfn.Error is None or 'No such file or directory' not in lfn.Error:
+            continue
+          res = self.markJob(jobID, 'Failed')
+          if res["OK"]:
+            self.accounting["User"].append({"JobID": jobID, "JobStatus": "Completed",
+                                            "Treatment": "Job Marked Failed because Request cannot be finished, file not found"})
+            return S_OK(NO_RESET)
+
       return S_OK()
 
   def checkJobs(self, jobIDs, treatJobWithNoReq, treatJobWithReq):
