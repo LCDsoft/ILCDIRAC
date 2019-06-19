@@ -194,15 +194,38 @@ def test_moving_createTrafo(movingModule, mocker):
 
 def test_moving_createTrafo_force(movingModule, mocker):
   movingModule.Script.getPositionalArgs.return_value = ['12345', 'TargetSE', 'SourceSE', 'SIM']
+  PARAMS['flavour'] = 'Moving'
+  PARAMS['forcemoving'] = True
   mocker.patch(THE_SCRIPT + '.Params', spec='ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters.Params',
                new=MyParams)
-  PARAMS['flavour'] = 'Moving'
   parDict = dict(flavour='Moving',
                  targetSE=['TargetSE'],
                  sourceSE=['SourceSE'],
                  metaKey='MyKey',
                  metaValue=12345,
                  extraData={'Datatype': 'SIM'},
+                 extraname='',
+                 plugin='Broadcast',
+                 groupSize=10,
+                 tGroup='someGroup',
+                 enable=False,
+               )
+  assert movingModule._createTrafo() == 0
+  movingModule.createDataTransformation.assert_called_with(**parDict)
+
+
+def test_moving_createTrafo_REC(movingModule, mocker):
+  movingModule.Script.getPositionalArgs.return_value = ['12346', 'TargetSE', 'SourceSE', 'REC']
+  PARAMS['flavour'] = 'Moving'
+  PARAMS['forcemoving'] = False
+  mocker.patch(THE_SCRIPT + '.Params', spec='ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters.Params',
+               new=MyParams)
+  parDict = dict(flavour='Moving',
+                 targetSE=['TargetSE'],
+                 sourceSE=['SourceSE'],
+                 metaKey='MyKey',
+                 metaValue=12346,
+                 extraData={'Datatype': 'REC'},
                  extraname='',
                  plugin='Broadcast',
                  groupSize=10,

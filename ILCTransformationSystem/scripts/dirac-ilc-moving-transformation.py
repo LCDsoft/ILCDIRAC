@@ -56,6 +56,9 @@ def _createTrafo():
     if clip.forcemoving:
       LOG.notice('Forced moving: setting plugin to "Broadcast"')
       clip.plugin = 'Broadcast'
+    if datatype == 'REC':
+      LOG.notice('Moving REC files: setting plugin to "Broadcast"')
+      clip.plugin = 'Broadcast'
     retData = checkDatatype(prodID, datatype)
     if not retData['OK']:
       LOG.error("ERROR: %s" % retData['Message'])
