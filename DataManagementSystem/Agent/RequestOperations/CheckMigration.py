@@ -45,9 +45,9 @@ class CheckMigration(OperationHandlerBase):
       for targetSE in targetSESet:
         se = StorageElement(targetSE)
         metaData = returnSingleResult(se.getFileMetadata(opFile.LFN))
-        self.log.notice('MetaData: %s' % pformat(metaData))
+        self.log.debug('MetaData: %s' % pformat(metaData))
         if not metaData['OK']:
-          self.log.error('Failed to get metadata:', metaData['Message'])
+          self.log.error('Failed to get metadata:', '%s: %s' % (opFile.LFN, metaData['Message']))
           migrated = False
           continue
         migrated = metaData['Value'].get('Migrated', 0) == 1 and migrated
