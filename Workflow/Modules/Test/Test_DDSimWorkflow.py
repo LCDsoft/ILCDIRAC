@@ -57,6 +57,83 @@ class TestDDSimAnalysis( unittest.TestCase ):
     os.chdir(self.curdir)
     cleanup(self.tempdir)
 
+
+class TestDDSimAnalysisParticleTable(TestDDSimAnalysis):
+  """test DDSim createParticleTable."""
+
+  def setUp(self):
+    """Help with setup."""
+    super(TestDDSimAnalysisParticleTable, self).setUp()
+    self.logFileName = "python101.log"
+    with open(self.logFileName, "w") as logF:
+      logF.write("logged the logging logs")
+
+  @patch('__builtin__.open', new_callable=mock_open, read_data="export DD4hepINSTALL=\"some/path\"")
+  def test_DDSim_particleTable_success(self, mo):
+    """DDSim.createParticleTable...................................................................."""
+    self.ddsim.extraParticles = [[25, "Maribor", 2, 1500., 10., 100.]]
+    handlers = (mo.return_value, mock_open(read_data=" 2 u 2 0.33000 0.00000 0.00000E+00").return_value)
+    mo.side_effect = handlers
+    with patch("os.path.exists", new=Mock(side_effect=[True])):
+      res = self.ddsim.createParticleTable("Dummy/path", ['SIM.physics.pdgfile = None', 'SIM.physics.list = "AList"'])
+    print(res)
+    self.assertIn("25 Maribor 2 1500.0 10.0 100.0", res['Value'])
+
+  @patch('__builtin__.open', new_callable=mock_open, read_data="export DD4hepINSTALL=\"some/path\"")
+  def test_DDSim_particleTable_success2(self, mo):
+    """DDSim.createParticleTable...................................................................."""
+    self.ddsim.extraParticles = [[13, "mu", 2, 1500., 10., 100.]]
+    handlers = (mo.return_value, mock_open(read_data=" 2 u 2 0.33000 0.00000 0.00000E+00\n"
+                                                     "  13 mu^- -3 0.10566 0.00000 6.58654E+05").return_value)
+    mo.side_effect = handlers
+    with patch("os.path.exists", new=Mock(side_effect=[True])):
+      res = self.ddsim.createParticleTable("Dummy/path", [])
+    print(res)
+    self.assertEqual([' 2 u 2 0.33000 0.00000 0.00000E+00', '13 mu 2 1500.0 10.0 100.0'], res['Value'])
+
+  @patch('__builtin__.open', new_callable=mock_open, read_data=" 2 u 2 0.33000 0.00000 0.00000E+00\n")
+  def test_DDSim_particleTable_success3(self, mo):
+    """DDSim.createParticleTable...................................................................."""
+    self.ddsim.extraParticles = [[13, "mu", 2, 1500., 10., 100.]]
+    with patch("os.path.exists", new=Mock(side_effect=[True])):
+      res = self.ddsim.createParticleTable("Dummy/path", ['SIM.physics.pdgfile = "/here/is/the/file"'])
+      print(res)
+      self.assertEqual([' 2 u 2 0.33000 0.00000 0.00000E+00', '13 mu 2 1500.0 10.0 100.0'], res['Value'])
+
+  @patch("__builtin__.open", mock_open(read_data="export INSTAL=\"some/path\""))
+  def test_DDSim_particleTable_fail(self):
+    """DDSim.createParticleTable...................................................................."""
+    self.ddsim.extraParticles = [[25, "Maribor", 2., 1500., 10., 100.]]
+    res = self.ddsim.createParticleTable("Dummy/path", [])
+    print(res)
+    self.assertIn("Did not find env", res['Message'])
+
+  @patch('__builtin__.open', new_callable=mock_open, read_data=" 2 u 2 0.33000 0.00000 0.00000E+00\n")
+  def test_DDSim_particleTable_fail2(self, mo):
+    """DDSim.createParticleTable...................................................................."""
+    self.ddsim.extraParticles = [[13, "mu", 2, 1500., 10., 100.]]
+    res = self.ddsim.createParticleTable("Dummy/path", ['SIM.physics.pdgfile = "/here/is/the/file"'])
+    print(res)
+    self.assertIn("/here/is/the/file", res['Message'])
+
+  @patch('__builtin__.open', new_callable=mock_open, read_data="read OK")
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0, "AllGood"))))
+  def test_DDSim_resolveDDSimOptions_success(self, mo):
+    """DDSim.resolveDDSimOption...................................................................."""
+    with patch("os.chmod", new=Mock(side_effect=[True])):
+      res = self.ddsim.resolveDDSimOptions("/path/to/end", "CLIC_o2_something")
+    print(res)
+    self.assertIn("read OK", res['Value'])
+
+  @patch('__builtin__.open', new_callable=mock_open, read_data="")
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0, "AllGood"))))
+  def test_DDSim_resolveDDSimOptions_fail(self, mo):
+    """DDSim.resolveDDSimOption...................................................................."""
+    with patch("os.chmod", new=Mock(side_effect=[True])):
+      res = self.ddsim.resolveDDSimOptions("/path/to/end", "CLIC_o2_something")
+    print(res)
+    self.assertIn("empty", res['Message'])
+
 class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
   """ test DDSim runtIt """
 
@@ -281,6 +358,27 @@ class TestDDSimAnalysisRunit( TestDDSimAnalysis ):
       res = self.ddsim.runIt()
     assertDiracSucceeds( res, self )
     self.assertIn( " --printLevel DEBUG ", self.ddsim.extraCLIarguments )
+
+  ########################
+  # Test extra particles #
+  @patch("%s.getEnvironmentScript" % MODULE_NAME, new=Mock(return_value=S_OK("ddsiming.sh")))
+  @patch("%s.DDSimAnalysis._getDetectorXML" % MODULE_NAME, new=Mock(return_value=S_OK("myDet.xml")))
+  @patch("%s.shellCall" % MODULE_NAME, new=Mock(return_value=S_OK((0, "AllGood"))))
+  @patch("%s.getSteeringFileDirName" % MODULE_NAME, new=Mock(return_value=S_OK("SteerFold")))
+  @patch("%s.DDSimAnalysis.createParticleTable" % MODULE_NAME, new=Mock(return_value=S_OK(["test"])))
+  @patch("%s.DDSimAnalysis.resolveDDSimOptions" % MODULE_NAME, new=Mock(return_value=S_OK(["test"])))
+  def test_DDSim_runIt_success_extraParticles(self):
+    """DDSim.runit success with extra particles....................................................."""
+    self.ddsim.platform = "Windows"
+    self.ddsim.applicationLog = self.logFileName
+    self.ddsim.SteeringFile = "mySteering2.py"
+    self.ddsim.NumberOfEvents = 123
+    self.ddsim.extraParticles = [[25, "Maribor", 2., 1500., 10., 100.]]
+    # side effect for Steering1a, Steering1b, Steering2, Script, userlibs, log, logAfter
+    with patch("os.path.exists", new=Mock(side_effect=[False, True, True, False, False, False, True])):
+      res = self.ddsim.runIt()
+    assertDiracSucceeds(res, self)
+    self.assertIn("--physics.pdgfile particle.tbl", self.ddsim.extraCLIarguments)
 
   ###################
   # Test OutputFile #
@@ -704,6 +802,7 @@ class TestDDSimAnalysisDetXMLZip( TestDDSimAnalysis ):
 def runTests():
   """Runs our tests"""
   suite = unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysis )
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(TestDDSimAnalysisParticleTable))
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysisRunit ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysisDetXMLTar ) )
   suite.addTest( unittest.defaultTestLoader.loadTestsFromTestCase( TestDDSimAnalysisDetXMLZip ) )

@@ -43,3 +43,24 @@ def listify(value, cast=None):
   if cast is not None:
     thisList = [cast(val) for val in thisList]
   return thisList
+
+
+def canConvert(value, funType):
+  """Check if value can be converted to a variable of type funType.
+
+  >>> canConvert("5.",int)
+  False
+
+  >>> canConvert("3",int)
+  True
+
+  :param value: variable to be checked for conversion
+  :param funType: function used for conversion e.g. int(), float()
+  :return: True if can be converved to funType, else False
+  :rtype: bool
+  """
+  try:
+    funType(value)
+    return True
+  except ValueError:
+    return False

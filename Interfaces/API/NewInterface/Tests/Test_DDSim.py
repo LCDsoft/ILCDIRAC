@@ -40,6 +40,49 @@ class DDSimTestCase( unittest.TestCase ):
     self.dds.setRandomSeed( [ 'abc' ] )
     self.assertIn( '_checkArgs', self.dds._errorDict )
 
+  def test_addextraparticles_pass(self):
+    """Test if API write correctly."""
+    self.assertFalse(self.dds._errorDict)
+    self.dds.setExtraParticles([[25, "Maribor", 2, 1500., 10., 100.]])
+    self.assertFalse(self.dds._errorDict)
+    assertEqualsImproved(self.dds.extraParticles, [[25, "Maribor", 2, 1500., 10., 100.]], self)
+
+  def test_addextraparticles_pass2(self):
+    """Test if API write correctly."""
+    self.assertFalse(self.dds._errorDict)
+    self.dds.setExtraParticles("25 Maribor 2 1500. 10. -100. -25 Radizel 2 -1500. 10. 100.")
+    self.assertFalse(self.dds._errorDict)
+    assertEqualsImproved(self.dds.extraParticles, [[25, "Maribor", 2, 1500., 10., -100.],
+                                                   [-25, "Radizel", 2, -1500., 10., 100.]], self)
+
+  def test_addextraparticles_fails(self):
+    """Test if API detects wrong input."""
+    self.assertFalse(self.dds._errorDict)
+    ret = self.dds.setExtraParticles('abc')
+    self.assertIn("multiples of 6", ret['Message'])
+    self.assertIn('setExtraParticles', self.dds._errorDict)
+
+  def test_addextraparticles_fail2(self):
+    """Test if API detects wrong input."""
+    self.assertFalse(self.dds._errorDict)
+    ret = self.dds.setExtraParticles("25 Ptuj 2 1500. 10. 100. 10.")
+    self.assertIn("multiples of 6", ret['Message'])
+    self.assertIn('setExtraParticles', self.dds._errorDict)
+
+  def test_addextraparticles_fail3(self):
+    """Test if API detects wrong input."""
+    self.assertFalse(self.dds._errorDict)
+    ret = self.dds.setExtraParticles("25.0 Sentilj 2 1500. 10. 100.")
+    self.assertIn("Cannot convert input string to proper format", ret['Message'])
+    self.assertIn('setExtraParticles', self.dds._errorDict)
+
+  def test_addextraparticles_fail4(self):
+    """Test if API detects wrong input."""
+    self.assertFalse(self.dds._errorDict)
+    ret = self.dds.setExtraParticles("25 Graz 2 a 10. 100.")
+    self.assertIn("Cannot convert input string to proper format", ret['Message'])
+    self.assertIn('setExtraParticles', self.dds._errorDict)
+
   def test_setstartfrom( self ):
     self.assertFalse( self.dds._errorDict )
     self.dds.setStartFrom( 89421 )
@@ -110,6 +153,87 @@ class DDSimTestCase( unittest.TestCase ):
                         'outputDataSE' : '@{OutputSE}' }, self.dds._listofoutput )
     self.assertNotIn( 'nbevts', self.dds.prodparameters )
     self.assertNotIn( 'Process', self.dds.prodparameters )
+
+  def test_checkconsistency_extraparticles(self):
+    """Check if consistency check for extra particles passes."""
+    self.dds.version = '134'
+    self.dds.detectorModel = 'mymodel.det'
+    self.dds.outputFile = 'myoutput.file'
+    self.dds._jobtype = 'User'
+    self.dds.extraParticles = [[25, "Maribor", 2, 1500., 10., 100.]]
+    assertDiracSucceeds(self.dds._checkConsistency(Mock()), self)
+
+  def test_checkconsistency_extraparticles1(self):
+    """Check if consistency check for extra particles detects wrong type."""
+    self.dds.version = '134'
+    self.dds.detectorModel = 'mymodel.det'
+    self.dds.outputFile = 'myoutput.file'
+    self.dds._jobtype = 'User'
+    self.dds.extraParticles = [25, "Maribor", 2, 1500., 10., 100.]
+    assertDiracFailsWith(self.dds._checkConsistency(Mock()), 'Wrong format', self)
+
+  def test_checkconsistency_extraparticles2(self):
+    """Check if consistency check for extra particles detects too long input."""
+    self.dds.version = '134'
+    self.dds.detectorModel = 'mymodel.det'
+    self.dds.outputFile = 'myoutput.file'
+    self.dds._jobtype = 'User'
+    self.dds.extraParticles = [[25, "Maribor", 2, 1500., 10., 100., 10]]
+    assertDiracFailsWith(self.dds._checkConsistency(Mock()), 'Particle property not of correct format', self)
+
+  def test_checkconsistency_extraparticles3(self):
+    """Check if consistency check for extra particles detects first argument correctly."""
+    self.dds.version = '134'
+    self.dds.detectorModel = 'mymodel.det'
+    self.dds.outputFile = 'myoutput.file'
+    self.dds._jobtype = 'User'
+    self.dds.extraParticles = [[25., "Maribor", 2, 1500., 10., 100.]]
+    assertDiracFailsWith(self.dds._checkConsistency(Mock()), 'Particle property ID not int', self)
+
+  def test_checkconsistency_extraparticles4(self):
+    """Check if consistency check for extra particles detects second argument correctly."""
+    self.dds.version = '134'
+    self.dds.detectorModel = 'mymodel.det'
+    self.dds.outputFile = 'myoutput.file'
+    self.dds._jobtype = 'User'
+    self.dds.extraParticles = [[25, 1, 2, 1500., 10., 100.]]
+    assertDiracFailsWith(self.dds._checkConsistency(Mock()), 'Particle property name not string', self)
+
+  def test_checkconsistency_extraparticles5(self):
+    """Check if consistency check for extra particles detects third argument correctly."""
+    self.dds.version = '134'
+    self.dds.detectorModel = 'mymodel.det'
+    self.dds.outputFile = 'myoutput.file'
+    self.dds._jobtype = 'User'
+    self.dds.extraParticles = [[25, "Maribor", 2., 1500., 10., 100.]]
+    assertDiracFailsWith(self.dds._checkConsistency(Mock()), 'Particle property chg not int', self)
+
+  def test_checkconsistency_extraparticles6(self):
+    """Check if consistency check for extra particles detects fourth argument correctly."""
+    self.dds.version = '134'
+    self.dds.detectorModel = 'mymodel.det'
+    self.dds.outputFile = 'myoutput.file'
+    self.dds._jobtype = 'User'
+    self.dds.extraParticles = [[25, "Maribor", 2, 1500, 10., 100.]]
+    assertDiracFailsWith(self.dds._checkConsistency(Mock()), 'Particle property mass not float', self)
+
+  def test_checkconsistency_extraparticles7(self):
+    """Check if consistency check for extra particles detects fifth argument correctly."""
+    self.dds.version = '134'
+    self.dds.detectorModel = 'mymodel.det'
+    self.dds.outputFile = 'myoutput.file'
+    self.dds._jobtype = 'User'
+    self.dds.extraParticles = [[25, "Maribor", 2, 1500., "10.", 100.]]
+    assertDiracFailsWith(self.dds._checkConsistency(Mock()), 'Particle property total width not float', self)
+
+  def test_checkconsistency_extraparticles8(self):
+    """Check if consistency check for extra particles detects sixth argument correctly."""
+    self.dds.version = '134'
+    self.dds.detectorModel = 'mymodel.det'
+    self.dds.outputFile = 'myoutput.file'
+    self.dds._jobtype = 'User'
+    self.dds.extraParticles = [[25, "Maribor", 2, 1500., 10., 'test']]
+    assertDiracFailsWith(self.dds._checkConsistency(Mock()), 'Particle property lifetime not float', self)
 
   def test_checkconsistency_nodetectormodel( self ):
     self.dds.version = 123
