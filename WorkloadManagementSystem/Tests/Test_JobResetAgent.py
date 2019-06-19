@@ -258,6 +258,28 @@ def test_treat_User_Job_With_Req(jobResetAgent, fakeJobID):
   jobResetAgent.resetRequest.assert_not_called()
 
 
+def test_treat_User_Job_With_ReplReg(jobResetAgent, fakeJobID):
+  # ReplicateAndRegister with No such file
+  jobResetAgent.markJob = MagicMock(return_value=S_OK())
+  jobResetAgent.resetRequest = MagicMock()
+  failedRequest = createRequest(requestID=1, opType='ReplicateAndRegister', opStatus='Failed',
+                                fileStatus='Failed', lfnError='No such file or directory', lfn='/ilc/fake/file')
+
+  jobResetAgent.treatUserJobWithReq(fakeJobID, failedRequest)
+  jobResetAgent.markJob.assert_called_once_with(fakeJobID, 'Failed')
+  jobResetAgent.resetRequest.assert_not_called()
+
+  # ReplicateAndRegister with some other error
+  jobResetAgent.markJob = MagicMock()
+  jobResetAgent.resetRequest = MagicMock()
+  failedRequest = createRequest(requestID=1, opType='ReplicateAndRegister', opStatus='Failed',
+                                fileStatus='Failed', lfnError='Failed to replicate', lfn='/ilc/fake/file')
+
+  jobResetAgent.treatUserJobWithReq(fakeJobID, failedRequest)
+  jobResetAgent.markJob.assert_not_called()
+  jobResetAgent.resetRequest.assert_called_once_with(1)
+
+
 def test_treat_Failed_Prod_With_Req(jobResetAgent, doneRemoveRequest, doneReplicateRequest,
                                     failedRemoveRequest, failedReplicateRequest):
   """Test for treatFailedProdWithReq function."""
