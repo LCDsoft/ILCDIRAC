@@ -36,12 +36,12 @@ class CheckMigration(OperationHandlerBase):
   def _run(self):
     """Check for migration bit, set file done when migrated."""
     self.waitingFiles = self.getWaitingFilesList()
-    self.log.notice('Have %d waiting files' % len(self.waitingFiles))
+    self.log.notice('Waiting files:', len(self.waitingFiles))
     targetSESet = set(self.operation.targetSEList)
-    self.log.notice('Target SEs: %s' % ','.join(targetSESet))
+    self.log.notice('Target SEs:', ','.join(targetSESet))
     migrated = True
     for opFile in self.waitingFiles:
-      self.log.notice('Checking %r' % opFile.LFN)
+      self.log.notice('Checking:', opFile.LFN)
       for targetSE in targetSESet:
         se = StorageElement(targetSE)
         metaData = returnSingleResult(se.getFileMetadata(opFile.LFN))
@@ -52,8 +52,10 @@ class CheckMigration(OperationHandlerBase):
           continue
         migrated = metaData['Value'].get('Migrated', 0) == 1 and migrated
       if migrated:
-        self.log.notice('File %r has been migrated.' % opFile.LFN)
+        self.log.notice('File has been migrated:', opFile.LFN)
         opFile.Status = 'Done'
+      else:
+        self.log.notice('File has NOT been migrated:', opFile.LFN)
 
   def setOperation(self, operation):  # pylint: disable=useless-super-delegation
     """Set Operation and request setter.
