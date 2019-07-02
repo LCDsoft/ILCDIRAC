@@ -20,7 +20,7 @@ NEW: (!278) New function :func:`~ILCDIRAC.Interfaces.API.NewInterface.Applicatio
 
 *Workflow
 
-CHANGE: (!272) add setting of ``ProductionOutputData`` job parameter for :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob`s to the ``UploadOutputData`` module in view of speeding up the ``DataRecoveryAgent``
+CHANGE: (!272) add setting of ``ProductionOutputData`` job parameter for :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob` to the ``UploadOutputData`` module in view of speeding up the ``DataRecoveryAgent``
 
 *Core
 
