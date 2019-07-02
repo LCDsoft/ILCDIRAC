@@ -38,14 +38,14 @@ class TransformationInfo(object):
     if not res['OK']:
       raise RuntimeError( "Failed to get transformation tasks: %s" % res['Message'] )
 
-    tasksDict = {}
+    tasksDict = defaultdict(list)
     for task in res['Value']:
       taskID = task['TaskID']
       lfn = task['LFN']
       status = task['Status']
       fileID = task['FileID']
       errorCount = task['ErrorCount']
-      tasksDict[taskID] = dict( FileID=fileID, LFN=lfn, Status=status, ErrorCount=errorCount )
+      tasksDict[taskID].append(dict(FileID=fileID, LFN=lfn, Status=status, ErrorCount=errorCount))
 
     return tasksDict
 
@@ -65,9 +65,9 @@ class TransformationInfo(object):
     if job.status != 'Failed':
       self.__updateJobStatus( job.jobID, "Failed", "Job forced to Failed" )
 
-  def setInputUnused( self, job ):
-    """set the inputfile to unused"""
-    self.__setInputStatus( job, "Unused" )
+  def setInputUnused(self, job):
+    """Set the inputfiles to unused"""
+    self.__setInputStatus(job, 'Unused')
 
   def setInputMaxReset( self, job ):
     """set the inputfile to MaxReset"""
@@ -81,10 +81,10 @@ class TransformationInfo(object):
     """set the inputfile to processed"""
     self.__setInputStatus( job, "Deleted" )
 
-  def __setInputStatus( self, job, status ):
+  def __setInputStatus(self, job, status):
     """set the input file to status"""
     if self.enabled:
-      result = self.tClient.setFileStatusForTransformation(self.tID, status, [job.inputFile], force = True)
+      result = self.tClient.setFileStatusForTransformation(self.tID, status, job.inputFiles, force=True)
       if not result['OK']:
         gLogger.error( "Failed updating status", result['Message'] )
         raise RuntimeError( "Failed updating file status" )
