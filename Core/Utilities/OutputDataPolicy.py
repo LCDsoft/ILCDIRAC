@@ -19,8 +19,10 @@ ILDJOBTYPES = [ 'MCGeneration_ILD',
               ]
 
 class OutputDataPolicy(object):
-  """ This module is called from the TransformationSystem
-  """  
+  """The OutputDataPolicy formats output file names.
+
+  This module is called from the TransformationSystem TaskManager
+  """
   def __init__(self, paramDict):
     self.paramDict = paramDict
 
@@ -51,9 +53,11 @@ class OutputDataPolicy(object):
       LOG.error(result['Message'])
       return result
 
-    if commons['JobType'] in ILDJOBTYPES and commons['InputData']:
+    if commons['JobType'] in ILDJOBTYPES and commons.get('InputData'):
+      inputData = commons['InputData']
+      inputData = inputData[0] if isinstance(inputData, list) else inputData
       for index, outputFile in enumerate( result['Value']['ProductionOutputData'] ):
-        outputFileILD = getProdFilenameFromInput( commons['InputData'], outputFile, prodID, jobID )
+        outputFileILD = getProdFilenameFromInput(inputData, outputFile, prodID, jobID)
         result['Value']['ProductionOutputData'][index] = outputFileILD
         LOG.debug("Changed output file name from '%s' to '%s' " % (outputFile, outputFileILD))
 

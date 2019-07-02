@@ -347,7 +347,7 @@ class TestWhOptCustomTree( unittest.TestCase ):
   def test_changeandreturn_nontrivial( self ):
     with self.assertRaises( KeyError ) as ke:
       self.whop.changeAndReturn( {} )
-    assertEqualsImproved( ke.exception.message, 'type', self )
+    assertEqualsImproved(ke.exception.args[0], 'type', self)
 
   def test_changeandreturn_updatechecks( self ):
     missing_values = { 'testchild1' : [ 'other_option', 'lastoneIpromise' ] }

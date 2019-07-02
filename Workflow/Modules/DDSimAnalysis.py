@@ -35,6 +35,7 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
     self.startFrom = 0
     self.randomSeed = -1
     self.detectorModel = ''
+    self.extraParticles = []
     self.eventstring = ['+++ Initializing event']
 
   def applicationSpecificInputs(self):
@@ -62,7 +63,87 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
 
     return S_OK('Parameters resolved')
 
+  def resolveDDSimOptions(self, envScriptPath, compactFile):
+    """Find all the options combining CLI arguments and steering file.
 
+    :return: S_OK(list of strings of the dump of the ddsim steering file)
+    """
+    scriptName = 'findOptions.sh'
+    script = []
+    script.append('#!/bin/bash')
+    script.append('############################################################')
+    script.append('# Dynamically generated script to resolve DDSim parameters #')
+    script.append('############################################################')
+    script.append('source %s' % envScriptPath)
+    script.append('echo =========')
+    com1 = 'ddsim --dumpSteeringFile'
+    com2 = '--compactFile %(compact)s %(extraArgs)s >& ddsimDump.txt' % dict(compact=compactFile,
+                                                                             extraArgs=self.extraCLIarguments)
+    script.append('%s %s' % (com1, com2))
+    script.append('declare -x appstatus=$?')
+    script.append('exit $appstatus')
+
+    with open(scriptName, 'w') as scriptFile:
+      scriptFile.write("\n".join(script))
+
+    os.chmod(scriptName, 0o755)
+    comm = 'bash "./%s"' % scriptName
+    result = shellCall(0, comm, callbackFunction=self.redirectLogOutput, bufferLimit=20971520)
+    if not result['OK']:
+      return S_ERROR("Could not resolve DDSim options, shell call failed.")
+
+    options = []
+    with open("ddsimDump.txt", "r") as ddsimOptions:
+      options = ddsimOptions.read().splitlines()
+    if not options:
+      return S_ERROR("DDSim steering file dump empty")
+    return S_OK(options)
+
+  def createParticleTable(self, envScriptPath, options):
+    """Resolve the particle.tbl and add or modify the particles.
+
+    :return: S_OK(list of strings of the new/modified particle table)
+    """
+    # Check if in the options a particle.tbl is set
+    particleTableLocation = None
+    for line in options:
+      if "SIM.physics.pdgfile =" in line:
+        if "SIM.physics.pdgfile = None" in line:
+          particleTableLocation = None
+        else:
+          particleTableLocation = line.split('=')[1].strip('" ')
+
+    if not particleTableLocation:
+      # Get the env file and extract the location of DD4hep
+      dd4hepLocation = None
+      with open(envScriptPath, "r") as envScrip:
+        for line in envScrip:
+          if "DD4hepINSTALL" in line:
+            dd4hepLocation = line.split('\"', 1)[-1].split('\"', 1)[0]
+
+        if dd4hepLocation is None:
+          return S_ERROR("Did not find env variable DD4hepINSTALL")
+        # Get the particle table
+        particleTableLocation = "%s/DDG4/examples/particle.tbl" % dd4hepLocation
+
+    if not os.path.exists(particleTableLocation):
+      return S_ERROR("Cannot find particle table at location %s" % particleTableLocation)
+
+    particleTable = None
+    with open(particleTableLocation, "r") as particleTableFile:
+      particleTable = particleTableFile.readlines()
+
+    # First we remove the particles from the table that we want to modify
+    newParticleTable = []
+    removeIDs = {str(extraParticle[0]) for extraParticle in self.extraParticles}
+    for particle in particleTable:
+      if particle.split()[0] not in removeIDs:
+        newParticleTable.append(particle.rstrip())
+
+    # Add new particles to table
+    for particle in self.extraParticles:
+      newParticleTable.append(' '.join([str(f) for f in particle]))
+    return S_OK(newParticleTable)
 
   def runIt(self):
     """
@@ -144,6 +225,17 @@ class DDSimAnalysis(DD4hepMixin, ModuleBase):
 
     if self.OutputFile:
       self.extraCLIarguments += " --outputFile %s " % self.OutputFile
+
+    if self.extraParticles:
+      res = self.resolveDDSimOptions(envScriptPath, compactFile)
+      if not res['OK']:
+        return res
+      resTbl = self.createParticleTable(envScriptPath, res['Value'])
+      if not resTbl['OK']:
+        return resTbl
+      with open("particle.tbl", 'w') as tableFile:
+        tableFile.write("\n".join(resTbl['Value']))
+      self.extraCLIarguments = "%s --physics.pdgfile particle.tbl" % self.extraCLIarguments
 
     scriptName = 'DDSim_%s_Run_%s.sh' % (self.applicationVersion, self.STEP_NUMBER)
     if os.path.exists(scriptName):

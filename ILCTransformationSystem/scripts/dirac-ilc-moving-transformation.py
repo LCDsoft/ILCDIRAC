@@ -13,7 +13,7 @@ Options:
    -F, --Forcemoving           Move GEN or SIM files even if they do not have descendents
    -N, --Extraname string      String to append to transformation name in case one already exists with that name
    -R, --GroupName <value>     TransformationGroup Name, by itself the group of the prodID
-   -S, --GroupSize <value>     Number of Files per transformation task
+   -G, --GroupSize <value>     Number of Files per transformation task
    -x, --Enable                Enable the transformation creation, otherwise dry-run
 
 :since:  Dec 4, 2015
@@ -42,6 +42,9 @@ def registerSwitches(clip, script):
 def _createTrafo():
   """reads command line parameters, makes check and creates replication transformation"""
   clip = Params()
+  clip.flavour = 'Moving'
+  clip.plugin = 'BroadcastProcessed'
+  clip.groupSize = 10
   clip.registerSwitches(Script)
   registerSwitches(clip, Script)
   Script.parseCommandLine()
@@ -50,27 +53,33 @@ def _createTrafo():
     return 1
   for index, prodID in enumerate(clip.metaValues):
     datatype = clip.datatype if clip.datatype else ['GEN', 'SIM', 'REC'][index % 3]
-    plugin = 'Broadcast' if clip.forcemoving or clip.flavour != 'Moving' else 'BroadcastProcessed'
+    if clip.forcemoving:
+      LOG.notice('Forced moving: setting plugin to "Broadcast"')
+      clip.plugin = 'Broadcast'
+    if datatype == 'REC':
+      LOG.notice('Moving REC files: setting plugin to "Broadcast"')
+      clip.plugin = 'Broadcast'
     retData = checkDatatype(prodID, datatype)
     if not retData['OK']:
       LOG.error("ERROR: %s" % retData['Message'])
       return 1
     tGroup = getTransformationGroup(prodID, clip.groupName)
-    parDict = dict(flavour='Moving',
+    parDict = dict(flavour=clip.flavour,
                    targetSE=clip.targetSE,
                    sourceSE=clip.sourceSE,
                    metaKey=clip.metaKey,
                    metaValue=prodID,
                    extraData={'Datatype': datatype},
                    extraname=clip.extraname,
-                   plugin=plugin,
+                   plugin=clip.plugin,
                    groupSize=clip.groupSize,
                    tGroup=tGroup,
                    enable=clip.enable,
                    )
-    LOG.debug("Parameters: %s" % pformat(parDict))
+    LOG.notice('Parameters: %s' % pformat(parDict))
     resCreate = createDataTransformation(**parDict)
     if not resCreate['OK']:
+      LOG.error('Failed to create the transformation', resCreate['Message'])
       return 1
 
   return 0

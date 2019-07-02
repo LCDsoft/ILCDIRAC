@@ -143,6 +143,7 @@ LIST_ATTRIBUTES = ['ignoreMetadata',
                    'processes',
                    'prodIDs',
                    'eventsInSplitFiles',
+                   'taskNames',
                    ]
 
 STRING_ATTRIBUTES = ['configPackage',
@@ -357,6 +358,7 @@ MoveTypes = %(moveTypes)s
     self.processes = []
     self.prodIDs = []
     self.eventsInSplitFiles = []
+    self.taskNames = []
 
     # final destination for files once they have been used
     self.finalOutputSE = self._ops.getValue( 'Production/CLIC/FailOverSE' )
@@ -446,12 +448,15 @@ MoveTypes = %(moveTypes)s
         self.eventsPerJobs = eventsPerJobSave if eventsPerJobSave else self.eventsPerJobs
 
       self.numberOfTasks = [int(nbtask.strip()) for nbtask in self.numberOfTasks if nbtask.strip()]
-      self.numberOfTasks = self.numberOfTasks if self.numberOfTasks else [1 for _ in self.energies]
+      self.numberOfTasks = self.numberOfTasks if self.numberOfTasks else [1] * len(self.energies)
+      self.taskNames = self.taskNames if self.taskNames else [''] * len(self.energies)
 
       if len(self.processes) != len(self.energies) or \
          len(self.energies) != len(self.eventsPerJobs) or \
-         len( self.prodIDs) != len(self.eventsPerJobs):
-        raise AttributeError( "Lengths of Processes, Energies, and EventsPerJobs do not match" )
+         len(self.prodIDs) != len(self.eventsPerJobs) or \
+         len(self.eventsPerJobs) != len(self.taskNames) or \
+         False:
+        raise AttributeError('Lengths of Processes, Energies, EventsPerJobs, AdditionalNames do not match')
 
       if self._flags.gen:
         if len(self.numberOfTasks) != len(self.energies) or \
@@ -551,6 +556,8 @@ MoveGroupSize = %(moveGroupSize)s
 
 ## optional additional name
 # additionalName = %(additionalName)s
+## optional additional names, for for each process, prodID, etc.
+# taskNames =
 
 ## optional marlin CLI options
 # cliReco = %(cliReco)s
@@ -647,21 +654,21 @@ overlayEventType = %(overlayEventType)s
     energyString = self.overlayEvents if self.overlayEvents else energyWithUnit( energy )
     self.cliReco += ' --Config.Overlay=%s ' % energyString
 
-  def createWhizard2Application(self, meta, eventsPerJob, sinFile):
+  def createWhizard2Application(self, task):
     """ create Whizard2 Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard2
 
     whiz = Whizard2()
     whiz.setVersion(self.whizard2Version)
-    whiz.setSinFile(sinFile)
-    whiz.setEvtType(meta['EvtType'])
-    whiz.setNumberOfEvents(eventsPerJob)
-    whiz.setEnergy(meta['Energy'])
-    self._setApplicationOptions("Whizard2", whiz)
+    whiz.setSinFile(task.sinFile)
+    whiz.setEvtType(task.meta['EvtType'])
+    whiz.setNumberOfEvents(task.eventsPerJob)
+    whiz.setEnergy(task.meta['Energy'])
+    self._setApplicationOptions('Whizard2', whiz, task.applicationOptions)
 
     return whiz
 
-  def createDDSimApplication( self ):
+  def createDDSimApplication(self, task):
     """ create DDSim Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
 
@@ -670,13 +677,14 @@ overlayEventType = %(overlayEventType)s
     ddsim.setSteeringFile(self.ddsimSteeringFile)
     ddsim.setDetectorModel( self.detectorModel )
 
-    self._setApplicationOptions("DDSim", ddsim)
+    self._setApplicationOptions('DDSim', ddsim, task.applicationOptions)
 
     return ddsim
 
-  def createOverlayApplication( self, energy ):
+  def createOverlayApplication(self, task):
     """ create Overlay Application """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
+    energy = float(task.meta['Energy'])
     overlay = OverlayInput()
     overlay.setEnergy(energy)
     overlay.setBackgroundType(self.overlayEventType)
@@ -690,11 +698,11 @@ overlayEventType = %(overlayEventType)s
     if self.overlayEvents:
       overlay.setUseEnergyForFileLookup( False )
 
-    self._setApplicationOptions("Overlay", overlay)
+    self._setApplicationOptions('Overlay', overlay, task.applicationOptions)
 
     return overlay
 
-  def createMarlinApplication(self, energy, cliReco, over):
+  def createMarlinApplication(self, task, over):
     """Create Marlin application with or without overlay."""
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
     marlin = Marlin()
@@ -705,32 +713,31 @@ overlayEventType = %(overlayEventType)s
     marlin.setKeepRecFile(False)
 
     if over:
+      energy = float(task.meta['Energy'])
       self.addOverlayOptionsToMarlin( energy )
 
-    self.cliReco = ' '.join([self.cliRecoOption, self.cliReco, cliReco]).strip()
+    self.cliReco = ' '.join([self.cliRecoOption, self.cliReco, task.cliReco]).strip()
     marlin.setExtraCLIArguments(self.cliReco)
     self.cliReco = ''
 
     marlin.setSteeringFile(self.marlinSteeringFile)
 
-    self._setApplicationOptions("Marlin", marlin)
+    self._setApplicationOptions('Marlin', marlin, task.applicationOptions)
 
     return marlin
 
   def createGenerationProduction(self, task):
     """Create generation production."""
-    meta = task.meta
     prodName = task.getProdName(self._machine, 'gen', self.additionalName)
     parameterDict = task.parameterDict
-    eventsPerJob = task.eventsPerJob
     nbTasks = task.nbTasks
-    sinFile = task.sinFile
     gLogger.notice("*" * 80 + "\nCreating generation production: %s " % prodName)
     genProd = self.getProductionJob()
     genProd.setProdType('MCGeneration')
     genProd.setWorkflowName(prodName)
     # Add the application
-    res = genProd.append(self.createWhizard2Application(meta, eventsPerJob, sinFile))
+    print('Task', task)
+    res = genProd.append(self.createWhizard2Application(task))
     if not res['OK']:
       raise RuntimeError("Error creating generation production: %s" % res['Message'])
     genProd.addFinalization(True, True, True, True)
@@ -770,7 +777,7 @@ overlayEventType = %(overlayEventType)s
       raise RuntimeError( "Error creating Simulation Production: %s" % res['Message'] )
     simProd.setWorkflowName(prodName)
     #Add the application
-    res = simProd.append( self.createDDSimApplication() )
+    res = simProd.append(self.createDDSimApplication(task))
     if not res['OK']:
       raise RuntimeError( "Error creating simulation Production: %s" % res[ 'Message' ] )
     simProd.addFinalization(True,True,True,True)
@@ -798,6 +805,7 @@ overlayEventType = %(overlayEventType)s
 
   def createReconstructionProduction(self, task, over):
     """Create reconstruction production."""
+    gLogger.notice('Creating Reconstruction production', task)
     meta = task.meta
     recType = 'rec_overlay' if over else 'rec'
     prodName = task.getProdName(recType, self.detectorModel, self.additionalName)
@@ -818,12 +826,12 @@ overlayEventType = %(overlayEventType)s
 
     #Add overlay if needed
     if over:
-      res = recProd.append( self.createOverlayApplication( float( meta['Energy'] ) ) )
+      res = recProd.append(self.createOverlayApplication(task))
       if not res['OK']:
         raise RuntimeError( "Error appending overlay to reconstruction transformation: %s" % res['Message'] )
 
     #Add reconstruction
-    res = recProd.append(self.createMarlinApplication(float(meta['Energy']), task.cliReco, over))
+    res = recProd.append(self.createMarlinApplication(task, over))
     if not res['OK']:
       raise RuntimeError( "Error appending Marlin to reconstruction production: %s" % res['Message'] )
     recProd.addFinalization(True,True,True,True)
@@ -955,15 +963,18 @@ overlayEventType = %(overlayEventType)s
     prodJob.maxFCFoldersToCheck = 1
     return prodJob
 
-  def _setApplicationOptions(self, appName, app):
+  def _setApplicationOptions(self, appName, app, optionsDict=None):
     """ set options for given application
 
     :param str appName: name of the application, for print out
     :param app: application instance
     """
-
-    for option, value in self.applicationOptions[appName].items():
-      if option.startswith(('FE.', 'C_')):
+    if optionsDict is None:
+      optionsDict = {}
+    allOptions = dict(self.applicationOptions[appName])
+    allOptions.update(optionsDict)
+    for option, value in allOptions.items():
+      if option.startswith(('FE.', 'C_', 'additionalName')):
         continue
       gLogger.notice("%s: setting option %s to %s" % (appName, option, value))
       setterFunc = 'set' + option
@@ -1006,7 +1017,7 @@ overlayEventType = %(overlayEventType)s
         self.createMovingTransformation(meta, pType)
 
   def createTaskDict(self, prodID, process, energy, eventsPerJob, sinFile, nbTasks,
-                     eventsPerBaseFile):
+                     eventsPerBaseFile, taskName):
     """Create a dictionary of tasks for the first level of transformations."""
     taskDict = defaultdict(list)
     metaInput = self.meta(prodID, process, energy)
@@ -1014,24 +1025,26 @@ overlayEventType = %(overlayEventType)s
 
     for parameterDict in self.getParameterDictionary(prodName):
       if self._flags.gen:
-        self.addGenTask(taskDict, Task(metaInput, parameterDict, eventsPerJob, nbTasks=nbTasks, sinFile=sinFile))
+        self.addGenTask(taskDict, Task(metaInput, parameterDict, eventsPerJob, nbTasks=nbTasks, sinFile=sinFile,
+                                       taskName=taskName))
 
       elif self._flags.spl and eventsPerBaseFile == eventsPerJob:
         gLogger.notice("*" * 80 + "\nSkipping split transformation for %s\n" % prodName + "*" * 80)
         if self._flags.sim:
-          self.addSimTask(taskDict, metaInput, Task({}, parameterDict, eventsPerJob))
+          self.addSimTask(taskDict, metaInput, Task({}, parameterDict, eventsPerJob,
+                                                    taskName=taskName))
       elif self._flags.spl:
         taskDict['SPLIT'].append(Task(metaInput, parameterDict, eventsPerJob,
                                       eventsPerBaseFile=eventsPerBaseFile))
       elif self._flags.sim:
-        self.addSimTask(taskDict, metaInput, Task({}, parameterDict, eventsPerJob))
+        self.addSimTask(taskDict, metaInput, Task({}, parameterDict, eventsPerJob, taskName=taskName))
       elif self._flags.rec or self._flags.over:
-        self.addRecTask(taskDict, metaInput, Task({}, parameterDict, eventsPerJob))
+        self.addRecTask(taskDict, metaInput, Task({}, parameterDict, eventsPerJob, taskName=taskName))
 
     return taskDict
 
   def _addTask(self, taskDict, metaInput, originalTask, prodType, applicationName):
-    """Add a task to the given prodType and applicatioName."""
+    """Add a task to the taskDict."""
     options = defaultdict(list)
     nTasks = 0
     for option, value in self.applicationOptions[applicationName].items():
@@ -1045,11 +1058,10 @@ overlayEventType = %(overlayEventType)s
                    parameterDict=originalTask.parameterDict,
                    eventsPerJob=originalTask.eventsPerJob,
                    metaPrev=originalTask.meta,
-                   dryRun=self._flags.dryRun,
                    sinFile=originalTask.sinFile,
                    nbTasks=originalTask.nbTasks,
                    )
-    theTask.sourceName = originalTask.taskName
+    theTask.sourceName = '_'.join([originalTask.sourceName, originalTask.taskName])
     if not nTasks:
       taskDict[prodType].append(theTask)
       return
@@ -1061,7 +1073,8 @@ overlayEventType = %(overlayEventType)s
 
   def addGenTask(self, taskDict, originalTask):
     """Add a gen task with required options."""
-    return self._addTask(taskDict, metaInput={}, originalTask=originalTask, prodType='GEN', applicationName='Whizard2')
+    return self._addTask(taskDict, metaInput=originalTask.meta,
+                         originalTask=originalTask, prodType='GEN', applicationName='Whizard2')
 
   def addRecTask(self, taskDict, metaInput, originalTask):
     """Add a reconstruction task."""
@@ -1092,10 +1105,11 @@ overlayEventType = %(overlayEventType)s
 
   def createAllTransformations(self):
     """Loop over the list of processes, energies and possibly prodIDs to create all the productions."""
-    for energy, process, prodID, eventsPerJob, eventsPerBaseFile, sinFile, nbTasks in \
+    for energy, process, prodID, eventsPerJob, eventsPerBaseFile, sinFile, nbTasks, taskName in \
         izip_longest(self.energies, self.processes, self.prodIDs, self.eventsPerJobs, self.eventsInSplitFiles,
-                     self.whizard2SinFile, self.numberOfTasks, fillvalue=None):
-      taskDict = self.createTaskDict(prodID, process, energy, eventsPerJob, sinFile, nbTasks, eventsPerBaseFile)
+                     self.whizard2SinFile, self.numberOfTasks, self.taskNames, fillvalue=None):
+      taskDict = self.createTaskDict(prodID, process, energy, eventsPerJob, sinFile,
+                                     nbTasks, eventsPerBaseFile, taskName)
       self.createTransformations(taskDict)
 
 

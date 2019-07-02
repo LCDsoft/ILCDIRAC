@@ -110,6 +110,7 @@ class UploadOutputData(ModuleBase):
       self.prodOutputLFNs = tempOutputLFNs.split(";")
     else:
       self.prodOutputLFNs = tempOutputLFNs
+    self.setJobParameter('ProductionOutputData', ';'.join(self.prodOutputLFNs), sendFlag=True)
     
     return S_OK('Parameters resolved')
 

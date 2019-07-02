@@ -56,6 +56,7 @@ def configDict():
           'whizard2SinFile': 'myWhizardSinFile1, myWhizardSinFile2',
           'numberOfTasks': '1, 2',
           'ignoreMetadata': '',
+          'taskNames': 'taskA, taskB',
           }
 
 
@@ -105,6 +106,13 @@ def theChain(opsMock):
     chain = theScript.CLICDetProdChain(params)
 
   return chain
+
+
+@pytest.fixture
+def aTask():
+  """Return aTask with minimal content."""
+  task = Task({'Energy': 300.0}, {}, 333)
+  return task
 
 
 @pytest.fixture
@@ -209,7 +217,7 @@ def test_loadParameters(theChain, cpMock):
     c.loadParameters(parameter)
 
 
-def test_createMarlinApplication(theChain, cpMock):
+def test_createMarlinApplication(theChain, aTask, cpMock):
   """Test creating the marlin application."""
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
 
@@ -219,7 +227,7 @@ def test_createMarlinApplication(theChain, cpMock):
   with patch(SCP, new=Mock(return_value=cpMock)):
     theChain.loadParameters(parameter)
 
-  ret = theChain.createMarlinApplication(300.0, '', over=True)
+  ret = theChain.createMarlinApplication(aTask, over=True)
   assert isinstance(ret, Marlin)
   assert ret.detectortype == 'myDetectorModel'
   assert ret.steeringFile == 'clicReconstruction.xml'
@@ -230,7 +238,7 @@ def test_createMarlinApplication(theChain, cpMock):
     theChain.loadParameters(parameter)
   theChain._flags._over = False
 
-  ret = theChain.createMarlinApplication(300.0, '', over=False)
+  ret = theChain.createMarlinApplication(aTask, over=False)
   assert isinstance(ret, Marlin)
   assert ret.detectortype == 'myDetectorModel'
   assert ret.steeringFile == 'clicReconstruction.xml'
@@ -238,7 +246,7 @@ def test_createMarlinApplication(theChain, cpMock):
   assert ret.extraCLIArguments == '--Config.Tracking=Tracked'
 
 
-def test_createWhizard2Application(theChain, cpMock, opsMock):
+def test_createWhizard2Application(theChain, aTask, cpMock, opsMock):
   """Test creating the whizard2 application."""
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import Whizard2
 
@@ -250,14 +258,16 @@ def test_createWhizard2Application(theChain, cpMock, opsMock):
              new=Mock(return_value=opsMock)):
     theChain.loadParameters(parameter)
 
-  ret = theChain.createWhizard2Application({'ProdID': '123', 'EvtType': 'process', 'Energy': '555', 'Machine': 'clic'},
-                                           100,
-                                           'sinFile')
+  aTask.meta = {'ProdID': '123', 'EvtType': 'process', 'Energy': '555', 'Machine': 'clic'}
+  aTask.eventsPerJob = 100
+  aTask.sinFile = 'sinFile'
+
+  ret = theChain.createWhizard2Application(aTask)
   assert isinstance(ret, Whizard2)
   assert ret.version == 'myWhizardVersion'
 
 
-def test_createDDSimApplication(theChain, cpMock, opsMock):
+def test_createDDSimApplication(theChain, aTask, cpMock, opsMock):
   """Test creating the ddsim application."""
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import DDSim
   parameter = Mock()
@@ -268,7 +278,7 @@ def test_createDDSimApplication(theChain, cpMock, opsMock):
              new=Mock(return_value=opsMock)):
     theChain.loadParameters(parameter)
 
-  ret = theChain.createDDSimApplication()
+  ret = theChain.createDDSimApplication(aTask)
   assert isinstance(ret, DDSim)
   assert ret.steeringFile == 'clic_steer.py'
 
@@ -290,7 +300,7 @@ def test_createSplitApplication(theChain, cpMock):
   assert ret.numberOfEventsPerFile == 100
 
 
-def test_createOverlayApplication(theChain, cpMock):
+def test_createOverlayApplication(theChain, aTask, cpMock):
   """Test creating the overlay application."""
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
   parameter = Mock()
@@ -298,12 +308,13 @@ def test_createOverlayApplication(theChain, cpMock):
   parameter.dumpConfigFile = False
   with patch(SCP, new=Mock(return_value=cpMock)):
     theChain.loadParameters(parameter)
-  ret = theChain.createOverlayApplication(350)
+  aTask.meta['Energy'] = 350
+  ret = theChain.createOverlayApplication(aTask)
   assert isinstance(ret, OverlayInput)
   assert ret.machine == 'clic_opt'
-
+  aTask.meta['Energy'] = 355
   with pytest.raises(RuntimeError, match='No overlay parameters'):
-    ret = theChain.createOverlayApplication(355)
+    ret = theChain.createOverlayApplication(aTask)
 
 
 def test_createSplitProduction(theChain, pMockMod):
@@ -410,14 +421,16 @@ def test_createMovingTransformation(theChain):
     theChain.createMovingTransformation({'ProdID': 666}, "Split")
 
 
-def test_setApplicationOptions(theChain):
+def test_setApplicationOptions(theChain, aTask):
   """Test setting the application options."""
   application = Mock()
   application.setSomeParameter = Mock()
+  aTask.applicationOptions = {'foo': 'bar'}
   theChain.applicationOptions['AppName'] = {'SomeParameter': 'SomeValue', 'FE.foo': ['bar', 'baz'],
                                             'C_Repl': 'longValueWeDoNotwantToRepeat'}
-  theChain._setApplicationOptions('AppName', application)
+  theChain._setApplicationOptions('AppName', application, aTask.applicationOptions)
   application.setSomeParameter.assert_called_once_with('SomeValue')
+  application.setfoo.assert_called_once_with('bar')
 
   from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
   application = Marlin()
@@ -606,7 +619,7 @@ def test_addGenTask(theChain):
 def test_createTaskDict_none(theChain):
   """Test createTaskDict function."""
   taskDict = theChain.createTaskDict(123456, 'ee_qq', 5000, 333, sinFile='file.sin', nbTasks=222,
-                                     eventsPerBaseFile=None)
+                                     eventsPerBaseFile=None, taskName='')
   for pType in ['GEN', 'SIM', 'REC', 'SPLIT']:
     assert not taskDict[pType]
 
@@ -615,7 +628,7 @@ def test_createTaskDict_gen(theChain):
   """Test createTaskDict function."""
   theChain._flags._gen = True
   taskDict = theChain.createTaskDict(123456, 'ee_qq', 5000, 333, sinFile='file.sin', nbTasks=222,
-                                     eventsPerBaseFile=None)
+                                     eventsPerBaseFile=None, taskName='')
   assert len(taskDict['GEN']) == 1
   assert taskDict['GEN'][0].sinFile == 'file.sin'
   assert taskDict['GEN'][0].nbTasks == 222
@@ -629,7 +642,8 @@ def test_createTaskDict_gen(theChain):
 def test_createTaskDict_sim(theChain):
   """Test createTaskDict function."""
   theChain._flags._sim = True
-  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 333, sinFile=None, nbTasks=None, eventsPerBaseFile=None)
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 333, sinFile=None,
+                                     nbTasks=None, eventsPerBaseFile=None, taskName='')
   assert len(taskDict['SIM']) == 1
   assert taskDict['SIM'][0].sinFile is None
   assert taskDict['SIM'][0].nbTasks is None
@@ -641,11 +655,13 @@ def test_createTaskDict_sim_split(theChain):
   theChain._flags._sim = True
   theChain._flags._spl = True
   # no need to split
-  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=25)
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None,
+                                     eventsPerBaseFile=25, taskName='')
   assert not taskDict['SPLIT']
   assert len(taskDict['SIM']) == 1
   # need to split
-  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=400)
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None,
+                                     eventsPerBaseFile=400, taskName='')
   assert len(taskDict['SPLIT']) == 1
   assert not taskDict['SIM']
 
@@ -653,7 +669,8 @@ def test_createTaskDict_sim_split(theChain):
 def test_createTaskDict_nosplit(theChain):
   """Test createTaskDict function."""
   theChain._flags._spl = True
-  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=25)
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None,
+                                     eventsPerBaseFile=25, taskName='')
   assert not taskDict['SPLIT']
   assert not taskDict['SIM']
 
@@ -662,7 +679,8 @@ def test_createTaskDict_rec(theChain):
   """Test createTaskDict function."""
   theChain._flags._rec = True
   theChain.applicationOptions['Marlin']['FE.QueryMachine'] = 'fccee, clic'
-  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None, eventsPerBaseFile=400)
+  taskDict = theChain.createTaskDict(123456, 'ee_qqqq', 5000, 25, sinFile=None, nbTasks=None,
+                                     eventsPerBaseFile=400, taskName='')
   assert len(taskDict['REC']) == 2
   assert taskDict['REC'][0].meta['Machine'] == 'fccee'
   assert taskDict['REC'][1].meta['Machine'] == 'clic'
