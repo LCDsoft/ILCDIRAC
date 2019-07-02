@@ -1,3 +1,49 @@
+[v29r1]
+
+Release date: 2019-07-03
+
+
+*Core
+
+NEW: Based on Dirac v6r21p10
+
+
+
+[v29r0p5]
+
+Release date: 2019-07-02
+
+
+*Interfaces
+
+NEW: (!278) New function :func:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim.DDSim.setExtraParticles` to modify the particle table in :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim`.
+
+*Workflow
+
+CHANGE: (!272) add setting of ``ProductionOutputData`` job parameter for :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob`s to the ``UploadOutputData`` module in view of speeding up the ``DataRecoveryAgent``
+
+*Core
+
+NEW: Based on Dirac v6r20p28
+FIX: (!277) :mod:`ILCDIRAC.Core.Utilities.OutputDataPolicy` : Fix exception when constructing file name from ``inputFilename`` for ILD transformation jobs. The ``inputData`` type was changed from string to list in DIRAC v6r20p17
+
+*ILCTransformationSystem
+
+FIX: (!271) `dirac-clic-make-productions`: fix a problem when creating REC productions when multiple generation productions where created. The transformation name is now created differently to allow this.
+FIX: (!271) `dirac-clic-make-productions`: can now set the ``additionalName`` per application
+FIX: (!271) In :class:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob`. Correct the check for missing directories when checking for meta data
+CHANGE: (!274) `dirac-ilc-moving-transformation` fixed setting of plugin, ``BroadcastProcessed`` is again the default
+CHANGE: (!274) `dirac-ilc-moving-transformation` default ``groupSize`` changed to 10
+CHANGE: (!274) `dirac-ilc-replication-transformation` default ``groupSize`` changed to 10
+FIX: (!275) `dirac-ilc-moving-transformation`: Always use ``Broadcast`` for REC files
+
+*WorkloadManagementSystem
+
+CHANGE: (!270) the :class:`ILCDIRAC.Interfaces.API.NewInterface.ProductionJob.ProductionJob` function ``setClicConfig`` was renamed to ``setCLICConfig`` to correspond to the spelling in UserJob.
+CHANGE: (!270) the ``setConfigPackage`` functions are now defined in :class:`ILCDIRAC.Interfaces.API.NewInterface.Job.Job`, with specialisations in ``UserJob`` or ``ProductionJob``, solves ILCDIRAC-865
+FIX: (!276) The ``JobResetAgent`` treats more error cases, like user jobs with Failover Requests where files are removed, or files are trying to be overwritten in requests
+
+
 [v29r0p4]
 
 Release date: 2019-03-19
