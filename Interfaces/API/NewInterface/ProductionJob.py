@@ -137,14 +137,17 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     self._addParameter( self.workflow, 'ILDConfigPackage', 'JDL', appName+version, 'ILDConfig package' )
     return S_OK()  
 
-  def setClicConfig(self, version):
-    """Define the ClicConfig package to obtain."""
-    return self.setConfigPackage('ClicConfig', version)
 
   def setConfigPackage(self, appName, version):
-    """Define the config package to obtain."""
-    self._addSoftware(appName.lower(), version)
-    self._addParameter(self.workflow, appName + 'Package', 'JDL', appName + version, appName + 'package')
+    """Define the config package to obtain.
+
+    Adds Config package to workflow execution, and sets production parameter.
+    See :func:`ILCDIRAC.Interfaces.API.NewInterface.Job.Job.setConfigPackage`
+
+    :param str appName: name of the ConfigPackage, e.g. 'ClicConfig'
+    :param str version: version of the ConfigPackage
+    """
+    super(ProductionJob, self).setConfigPackage(appName, version)
     self.prodparameters[appName + 'Version'] = version
     return S_OK()
 
@@ -628,7 +631,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
 
     if self.dryrun or prevent_registration:
       LOG.notice('Would have created and registered the following\n',
-                 '\n '.join([' * %s: %s' % (fPath, val) for fPath, val in self.finalMetaDict.iteritems()]))
+                 '\n '.join([' * %s: %s' % (fPath, val) for fPath, val in sorted(self.finalMetaDict.iteritems())]))
       LOG.notice('Would have set this as non searchable metadata', str(self.finalMetaDictNonSearch))
       return S_OK()
 
@@ -691,7 +694,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       if not result['OK']:
         LOG.error('Problem setting parameter %s for production %s and value:\n%s' % (prodID, pname, pvalue))
     else:
-      LOG.notice("Adding %s=%s to transformation" % (str(pname), str(pvalue)))
+      LOG.info("Adding %s=%s to transformation" % (str(pname), str(pvalue)))
       result = S_OK()
     return result
   
@@ -897,11 +900,16 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     :returns: S_OK, S_ERROR
     """
 
+    metaQuery = ' '.join('%s=%s' % (k, v) for k, v in metadata.items())
+    LOG.verbose('Looking for folder with', repr(metaQuery))
     res = self.fc.findDirectoriesByMetadata(metadata)
     if not res['OK']:
       return self._reportError("Error looking up the catalog for available directories")
     elif len(res['Value']) < 1:
-      return self._reportError('Could not find any directories corresponding to the query issued')
+      return self._reportError('Could not find any directories corresponding to the query issued: %s' % metaQuery)
+    for folderId, folder in res['Value'].items():
+      if folderId == 0 or folder == 'None':
+        return self._reportError('Could not find any directories corresponding to the query issued: %s' % metaQuery)
     return res
 
   def setReconstructionBasePaths( self, recPath, dstPath ):

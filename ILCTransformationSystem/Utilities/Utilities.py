@@ -1,6 +1,9 @@
 """Holding helper objects or functions to create transformations."""
 from pprint import pformat
 
+from DIRAC import gLogger
+
+LOG = gLogger.getSubLogger(__name__)
 
 class Task(object):
   """Object holding all information for a task."""
@@ -8,8 +11,10 @@ class Task(object):
   def __init__(self, metaInput, parameterDict, eventsPerJob,
                metaPrev=None, nbTasks=None, sinFile=None, eventsPerBaseFile=None,
                applicationOptions=None,
-               dryRun=True):
+               taskName='',
+               ):
     """Initialise task with all the information we need to create a transformation."""
+    LOG.notice('Creating task with meta', str(metaInput))
     self.meta = dict(metaInput)
     self.parameterDict = dict(parameterDict)
     self.eventsPerJob = eventsPerJob
@@ -17,12 +22,11 @@ class Task(object):
     self.nbTasks = nbTasks
     self.sinFile = sinFile
     self.eventsPerBaseFile = eventsPerBaseFile
-    self.dryRun = dryRun
     self.applicationOptions = dict(applicationOptions) if applicationOptions is not None else {}
     self.cliReco = ''
-    self.taskName = ''
+    self.taskName = taskName
     self.sourceName = ''
-    self._updateMeta(self.meta, self.metaPrev, self.eventsPerJob)
+    self._updateMeta(self.meta)
 
   def __str__(self):
     """Return string representation of Task."""
@@ -32,20 +36,12 @@ class Task(object):
     """Return string representation of Task."""
     return pformat(vars(self), width=150, indent=10)
 
-  def _updateMeta(self, outputDict, inputDict, eventsPerJob):
-    """Add some values from the inputDict to the outputDict.
-
-    Fake the input dataquery result in dryRun mode.
-    """
-    if eventsPerJob is not None:
-      outputDict['NumberOfEvents'] = eventsPerJob
+  def _updateMeta(self, metaDict):
+    """Ensure the meta dict contains the correct NumberOfEvents."""
+    if self.eventsPerJob is not None:
+      metaDict['NumberOfEvents'] = self.eventsPerJob
     if self.eventsPerBaseFile:
-      outputDict['NumberOfEvents'] = self.eventsPerBaseFile
-    if self.dryRun:  # pass the input values to the output
-      for key, value in inputDict.iteritems():
-        if key not in outputDict:
-          outputDict[key] = value
-
+      metaDict['NumberOfEvents'] = self.eventsPerBaseFile
 
   def getProdName(self, *args):
     """Create the production name."""

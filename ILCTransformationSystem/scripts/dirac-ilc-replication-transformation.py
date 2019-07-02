@@ -9,7 +9,7 @@ Example::
 Options:
    -N, --Extraname string      String to append to transformation name in case one already exists with that name
    -R, --GroupName <value>     TransformationGroup Name, by itself the group of the prodID
-   -S, --GroupSize <value>     Number of Files per transformation task
+   -G, --GroupSize <value>     Number of Files per transformation task
    -x, --Enable                Enable the transformation creation, otherwise dry-run
 
 :since:  May 18, 2015
@@ -35,6 +35,7 @@ def registerSwitches(script):
 def _createTrafo():
   """reads command line parameters, makes check and creates replication transformation"""
   clip = Params()
+  clip.groupSize = 10
   clip.registerSwitches(Script)
   registerSwitches(Script)
   Script.parseCommandLine()
@@ -43,7 +44,7 @@ def _createTrafo():
     return 1
   for prodID in clip.metaValues:
     tGroup = getTransformationGroup(prodID, clip.groupName)
-    parDict = dict(flavour='Replication',
+    parDict = dict(flavour=clip.flavour,
                    targetSE=clip.targetSE,
                    sourceSE=clip.sourceSE,
                    metaKey=clip.metaKey,
@@ -55,9 +56,10 @@ def _createTrafo():
                    tGroup=tGroup,
                    enable=clip.enable,
                    )
-    LOG.debug("Parameters: %s" % pformat(parDict))
+    LOG.notice('Parameters: %s' % pformat(parDict))
     resCreate = createDataTransformation(**parDict)
     if not resCreate['OK']:
+      LOG.error('Failed to create the transformation', resCreate['Message'])
       return 1
 
   return 0

@@ -1,14 +1,33 @@
 """Test the dirac-ilc-moving-transformation script"""
 
 import unittest
+import importlib
+import pytest
 
 from mock import MagicMock as Mock, patch
 
 from DIRAC import S_OK, S_ERROR
 
 from ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters import Params, checkDatatype
+THE_SCRIPT = 'ILCDIRAC.ILCTransformationSystem.scripts.dirac-ilc-moving-transformation'
+THE_REPL_SCRIPT = 'ILCDIRAC.ILCTransformationSystem.scripts.dirac-ilc-replication-transformation'
 
 __RCSID__ = "$Id$"
+
+PARAMS = dict(flavour='Moving')
+
+
+class MyParams(Params):
+  """Replacement to set some parameters for Param class"""
+  def __init__(self):
+    self.metaKey = 'MyKey'
+    self.forcemoving = True
+    self.errorMessages = []
+    self.groupName = ''
+    self.extraname = ''
+    self.enable = False
+    for name, val in PARAMS.items():
+      setattr(self, name, val)
 
 
 def getProxyMock(success=True):
@@ -121,3 +140,149 @@ class TestMovingParams( unittest.TestCase ):
                 new = Mock( return_value=tMock) ):
       ret = checkDatatype(123, "REC")
       self.assertFalse( ret['OK'], ret.get('Message',"") )
+
+
+@pytest.fixture
+def mockProxy(mocker):
+  mocker.patch('DIRAC.TransformationSystem.Utilities.ReplicationCLIParameters.getProxyInfo', new=getProxyMock())
+  mocker.patch('DIRAC.TransformationSystem.Utilities.ReplicationCLIParameters.getVOMSVOForGroup',
+               new=Mock(return_value='VOMSED_VO'))
+  return
+
+
+@pytest.fixture
+def movingModule(mockProxy):
+  """Fixture for the script module, mocking some parts."""
+  theScript = importlib.import_module(THE_SCRIPT)
+  theScript.Script = Mock(name='ScriptMock')
+  theScript.Script.parseCommandLine = Mock(name='pclMock')
+  theScript.getTransformationGroup = Mock(return_value='someGroup')
+  theScript.checkDatatype = Mock(return_value=S_OK('SIM'))
+  theScript.createDataTransformation = Mock(return_value=S_OK())
+  return theScript
+
+
+@pytest.fixture
+def replModule(mockProxy):
+  """Fixture for the script module, mocking some parts."""
+  theScript = importlib.import_module(THE_REPL_SCRIPT)
+  theScript.Script = Mock(name='ScriptMock')
+  theScript.Script.parseCommandLine = Mock(name='pclMock')
+  theScript.getTransformationGroup = Mock(return_value='someGroup')
+  theScript.checkDatatype = Mock(return_value=S_OK('SIM'))
+  theScript.createDataTransformation = Mock(return_value=S_OK())
+  return theScript
+
+
+def test_moving_createTrafo(movingModule, mocker):
+  movingModule.Script.getPositionalArgs.return_value = ['12345', 'TargetSE', 'SourceSE', 'SIM']
+  parDict = dict(flavour='Moving',
+                 targetSE=['TargetSE'],
+                 sourceSE=['SourceSE'],
+                 metaKey='TransformationID',
+                 metaValue=12345,
+                 extraData={'Datatype': 'SIM'},
+                 extraname='',
+                 plugin='BroadcastProcessed',
+                 groupSize=10,
+                 tGroup='someGroup',
+                 enable=False,
+               )
+  assert movingModule._createTrafo() == 0
+  movingModule.createDataTransformation.assert_called_with(**parDict)
+
+
+def test_moving_createTrafo_force(movingModule, mocker):
+  movingModule.Script.getPositionalArgs.return_value = ['12345', 'TargetSE', 'SourceSE', 'SIM']
+  PARAMS['flavour'] = 'Moving'
+  PARAMS['forcemoving'] = True
+  mocker.patch(THE_SCRIPT + '.Params', spec='ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters.Params',
+               new=MyParams)
+  parDict = dict(flavour='Moving',
+                 targetSE=['TargetSE'],
+                 sourceSE=['SourceSE'],
+                 metaKey='MyKey',
+                 metaValue=12345,
+                 extraData={'Datatype': 'SIM'},
+                 extraname='',
+                 plugin='Broadcast',
+                 groupSize=10,
+                 tGroup='someGroup',
+                 enable=False,
+               )
+  assert movingModule._createTrafo() == 0
+  movingModule.createDataTransformation.assert_called_with(**parDict)
+
+
+def test_moving_createTrafo_REC(movingModule, mocker):
+  movingModule.Script.getPositionalArgs.return_value = ['12346', 'TargetSE', 'SourceSE', 'REC']
+  PARAMS['flavour'] = 'Moving'
+  PARAMS['forcemoving'] = False
+  mocker.patch(THE_SCRIPT + '.Params', spec='ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters.Params',
+               new=MyParams)
+  parDict = dict(flavour='Moving',
+                 targetSE=['TargetSE'],
+                 sourceSE=['SourceSE'],
+                 metaKey='MyKey',
+                 metaValue=12346,
+                 extraData={'Datatype': 'REC'},
+                 extraname='',
+                 plugin='Broadcast',
+                 groupSize=10,
+                 tGroup='someGroup',
+                 enable=False,
+               )
+  assert movingModule._createTrafo() == 0
+  movingModule.createDataTransformation.assert_called_with(**parDict)
+
+
+def test_moving_createTrafo_dtypeFail(movingModule):
+  movingModule.Script.getPositionalArgs.return_value = ['12345', 'TargetSE', 'SourceSE', 'REC']
+  movingModule.checkDatatype = Mock(name='CheckDType', return_value=S_ERROR())
+  assert movingModule._createTrafo() == 1
+  movingModule.checkDatatype.assert_called_once()
+
+
+def test_moving_createTrafo_createFail(movingModule):
+  movingModule.Script.getPositionalArgs.return_value = ['12345', 'TargetSE', 'SourceSE', 'SIM']
+  movingModule.createDataTransformation = Mock(name='createT', return_value=S_ERROR())
+  assert movingModule._createTrafo() == 1
+  movingModule.createDataTransformation.assert_called_once()
+
+
+def test_moving_createTrafo_notEnougParameters(movingModule):
+  movingModule.Script.getPositionalArgs.return_value = ['12345', 'TargetSE', 'SourceSE']
+  assert movingModule._createTrafo() == 1
+
+
+def test_repl_createTrafo(replModule, mocker):
+  replModule.Script.getPositionalArgs.return_value = ['12345', 'TargetSE', 'SourceSE', 'SIM']
+  mocker.patch(THE_REPL_SCRIPT + '.Params', spec='ILCDIRAC.ILCTransformationSystem.Utilities.DataParameters.Params',
+                        new=MyParams)
+  PARAMS['flavour'] = 'Replication'
+  PARAMS['plugin'] = 'Broadcast'
+  parDict = dict(flavour='Replication',
+                 targetSE=['TargetSE'],
+                 sourceSE=['SourceSE'],
+                 metaKey='MyKey',
+                 metaValue=12345,
+                 extraData={'Datatype': 'SIM'},
+                 extraname='',
+                 plugin='Broadcast',
+                 groupSize=10,
+                 tGroup='someGroup',
+                 enable=False,
+               )
+  assert replModule._createTrafo() == 0
+  replModule.createDataTransformation.assert_called_with(**parDict)
+
+
+def test_repl_createTrafo_createFail(replModule):
+  replModule.Script.getPositionalArgs.return_value = ['12345', 'TargetSE', 'SourceSE', 'SIM']
+  replModule.createDataTransformation = Mock(name='createT', return_value=S_ERROR())
+  assert replModule._createTrafo() == 1
+  replModule.createDataTransformation.assert_called_once()
+
+
+def test_repl_createTrafo_notEnougParameters(replModule):
+  assert replModule._createTrafo() == 1
