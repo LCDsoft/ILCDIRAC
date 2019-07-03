@@ -90,11 +90,13 @@ def makeJiraLink( text ):
   text = re.sub( "(ILCDIRAC-[0-9]+)" , r"`\g<1> <%s\g<1>>`_" % jiraBaseLink, text )
   return text
 
-def makeDIRACLink( text ):
-  """ turn DIRAC Version string into link to dirac release notes"""
-  diracLinkBase="http://lhcbproject.web.cern.ch/lhcbproject/dist/Dirac_project/installSource/releasenotes.DIRAC."
-  text = re.sub( "(v6r[0-9]+p[0-9]+)", r"`\g<1> <%s\g<1>%s>`_" %(diracLinkBase, ".html" ) , text )
+
+def makeDIRACLink(text):
+  """Turn DIRAC Version string into link to dirac release notes."""
+  diracLinkBase = 'http://diracproject.web.cern.ch/diracproject/tars/releasenotes.DIRAC.'
+  text = re.sub('(v6r[0-9]+p[0-9]+)', r'`\g<1> <%s\g<1>%s>`_' % (diracLinkBase, '.html'), text)
   return text
+
 
 def makeILCDIRACMRLink( text ):
   """ turn (!123) into link to merge request """
