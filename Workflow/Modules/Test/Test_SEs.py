@@ -4,233 +4,186 @@ Test upload/replication/download/removal for different StorageElements
 from __future__ import print_function
 import filecmp
 import os
+import random
 import shutil
+import string
 import subprocess
 import sys
 import tempfile
-import unittest
-import random
-import string
 
 from itertools import permutations
 
-from DIRAC.Core.Security import ProxyInfo
-from DIRAC.Core.Base import Script
 import pytest
 
-__RCSID__ = "$Id$"
+from DIRAC.Core.Security import ProxyInfo
+from DIRAC.Core.Base import Script
 
-STORAGEELEMENTS = ["CERN-DIP-4", "CERN-SRM", "CERN-DST-EOS"]
+# mark all tests in this file as integration tests
+pytestmark = pytest.mark.integration  # pylint: disable=invalid-name
+
+__RCSID__ = '$Id$'
+
+STORAGEELEMENTS = ['CERN-DIP-4', 'CERN-SRM', 'CERN-DST-EOS']
 SE_PAIRS = list(permutations(STORAGEELEMENTS, 2))
+
+SE_ARGUMENTS = [(SE, ) for SE in STORAGEELEMENTS]
+
+SE_PAIR_ARGUMENTS = [pytest.param(site1, site2, marks=pytest.mark.timeout(100)) for site1, site2 in SE_PAIRS]
+
 
 def randomFolder():
   """ create a random string of 8 characters """
   return ''.join(random.SystemRandom().choice(string.ascii_lowercase) for _ in xrange(8))
 
-class MetaCreator(type):
-  """ meta class to create all tests for all combination of SEs """
-  # last argument has to be dict
-  def __new__(mcs, name, bases, functionDict): #pylint: disable=redefined-builtin
 
-    def gen_storing(site):
-      """ create storing test for given site """
-      def test(self): #pylint: disable=missing-docstring
-        self.storing_test(site)
-      return test
+def assertOperationSuccessful(result, message):
+  """Check if the DMS operation completed successfully.
 
-    def gen_removal(sitePairs):
-      """ create removal test for given sites """
-      def test(self): #pylint: disable=missing-docstring
-        self.removal_test(*sitePairs)
-      return test
-
-    def gen_replication(sitePairs):
-      """ create replication test for given sites """
-      def test(self): #pylint: disable=missing-docstring
-        self.replication_test(*sitePairs)
-      return test
-
-    ##all storing tests
-    for site in STORAGEELEMENTS:
-      testName = "test_storing_%s" % site
-      testName = testName.ljust(70, '.')
-      functionDict[testName] = gen_storing(site)
-
-    ##all removal tests
-    for sitePairs in SE_PAIRS:
-      testName = "test_removal_%s_%s" % (sitePairs[0], sitePairs[1])
-      testName = testName.ljust(70, '.')
-      functionDict[testName] = gen_removal(sitePairs)
-
-    ##all replication tests
-    for sitePairs in SE_PAIRS:
-      testName = "test_replication_%s_%s" % (sitePairs[0], sitePairs[1])
-      testName = testName.ljust(70, '.')
-      functionDict[testName] = gen_replication(sitePairs)
-
-    return type.__new__(mcs, name, bases, functionDict)
-
-
-
-@pytest.mark.integration
-class SETestCase( unittest.TestCase ):
-  """ Base class for the test cases of the storage elements.
-  requires dirac proxy
+  Success is indicated by the first line consisting of "'Failed: {}'"
+  and the second line consisting of "'Successful': {" followed by the filename (not checked)
   """
+  assert result.count("'Failed': {}") == 1 & result.count("'Successful': {'") == 1, message
 
-  __metaclass__ = MetaCreator
 
-  localtestfile = 'testfile'
-  lfntestfilename = "testfile_uploaded.txt"
-  lfntestfilepath = "/ilc/user/"
-  lfntestfile = ''
-  options = [ '-o', "/Resources/FileCatalogs/LcgFileCatalog/Status=InActive",
-              '-o', "/DIRAC/Setup=ILC-Test",
-            ]
+def removeFileAllowFailing(options):
+  """Remove the random file from the storage elements, if it exists."""
+  try:
+    subprocess.check_output(['dirac-dms-remove-files', options.lfntestfile] + options.options)
+  except subprocess.CalledProcessError:
+    sys.exc_clear()
 
-  @classmethod
-  def setUpClass( cls ):
-    # destroy kerberos token
-    #try:
-    #  subprocess.call(['kdestroy'])
-    #except subprocess.CalledProcessError as err:
-    #  print "WARNING: kdestroy did not succeed."
-    #  print err.output
-    # Constants for the tests
-    Script.parseCommandLine()
-    user = ProxyInfo.getProxyInfo()['Value']['username']
-    SETestCase.lfntestfilepath += '%s/%s/setests/%s/' % (user[0], user, randomFolder())
-    print("Using lfn %s" % SETestCase.lfntestfilepath)
-    SETestCase.lfntestfile = SETestCase.lfntestfilepath + SETestCase.lfntestfilename
 
-  def setUp( self ):
-    """set up the objects"""
-    # Check if file exists already
+def removeFile(options):
+  """Remove the random file from the storage elements."""
+  result = subprocess.check_output(['dirac-dms-remove-files', options.lfntestfile] + options.options)
+  assert result.count('Successfully removed 1 files') == 1, 'Removal of random file failed: ' + result
+
+
+def uploadFile(site, options):
+  """Upload the local random file to the storage elements."""
+  try:
+    result = subprocess.check_output(['dirac-dms-add-file', '-ddd',
+                                      options.lfntestfile,
+                                      options.localtestfile, site] + options.options)
+    assert result.count('Successfully uploaded ') == 1, 'Upload of random file failed'
+  except subprocess.CalledProcessError as err:
+    assert False, err.output
+
+
+def replicateTo(site, options):
+  """Replicate the random file to another storage element and check if it worked."""
+  try:
+    cmd = ['dirac-dms-replicate-lfn', options.lfntestfile, site, '-ddd'] + options.options
+    result = subprocess.check_output(cmd)
+    assertOperationSuccessful(result, 'Failed replicating file')
+  except subprocess.CalledProcessError as err:
+    print('Command failed:' % cmd)
+    print(err.output)
+    assert False
+
+
+def removeDownloadedFile(options):
+  """Remove the lfn test file if it exists locally."""
+  if os.path.exists(options.lfntestfilename):
     try:
-      subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile]+self.options)
-      print("WARN Warning: file already existed on SE:", self.lfntestfile)
-    except subprocess.CalledProcessError:
-      sys.exc_clear()
+      os.unlink(options.lfntestfilename)
+    except EnvironmentError as err:
+      print('failed to remove lfn', repr(err))
 
-    # Make temporary dir to run test in
-    self.curdir = os.getcwd()
-    self.tmpdir = tempfile.mkdtemp("", dir = "./")
-    os.chdir(self.tmpdir)
 
-    # Create testfile with random bits
-    with open(self.localtestfile, 'wb') as fout:
-      fout.write(" My random testfile ")
-      fout.write(os.urandom(1024*1024))
+@pytest.fixture(scope='module')
+def proxySetup():
+  """Ensure dirac commands can be run.
 
-  def tearDown ( self ):
-    self.removeFileAllowFailing()
-    os.chdir(self.curdir)
-    shutil.rmtree( self.tmpdir )
+  Need to execute parseCommandLIne so we can get the proxy information.
+  This fixture is run once for the module.
+  """
+  Script.parseCommandLine()
 
-#For python < 2.7 (executes cmd and grabs output)
-#proc = subprocess.Popen(['python', 'printbob.py',  'arg1 arg2 arg3 arg4'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#print proc.communicate()[0]
 
-  def storing_test( self, site ):
-    """Uploads the file to a given SE, then retrieves it and checks for equality
-    """
-    self.uploadFile(site)
-    # get file from SE, check for equivalence
-    result = subprocess.check_output(["dirac-dms-get-file", "-ddd", self.lfntestfile]+self.options)
-    self.assertOperationSuccessful(result,
-                                   "Retrieval of random file from storage element to local failed: " + result)
+@pytest.fixture
+def opt(proxySetup):
+  """Options to be used in the tests."""
+  user = ProxyInfo.getProxyInfo()['Value']['username']
 
-    self.assertTrue(filecmp.cmp(self.localtestfile, self.lfntestfilename), "Received wrong file")
-    self.removeFile()
+  class Options(object):
+    localtestfile = 'testfile'
+    lfntestfilename = 'testfile_uploaded.txt'
+    lfntestfilepath = '/ilc/user/'
+    lfntestfilepath += '%s/%s/setests/%s/' % (user[0], user, randomFolder())
+    lfntestfile = os.path.join(lfntestfilepath, lfntestfilename)
+    options = ['-o', '/Resources/FileCatalogs/LcgFileCatalog/Status=InActive',
+                   '-o', '/DIRAC/Setup=ILC-Test',
+                   ]
+    print('Using lfn %s' % lfntestfilepath)
+  return Options()
 
-  def replication_test( self, site1, site2 ):
-    """Replicates file to other SE, checks if it is replicated there.
-    """
-    self.uploadFile(site1)
-    # Replicate file to SE2, remove replica from SE1, get file, rm from all
-    self.replicateTo(site2)
 
-    result = subprocess.check_output(["dirac-dms-remove-replicas", self.lfntestfile, site1]+self.options)
-    self.assertTrue(result.count("Successfully removed") == 1,
-                    "Failed removing replica of random file: " + result)
+@pytest.fixture
+def randomFile(opt):
+  """Set up the objects."""
+  # Check if file exists already
+  try:
+    subprocess.check_output(['dirac-dms-remove-files', opt.lfntestfile] + opt.options)
+    print('WARN Warning: file already existed on SE:', opt.lfntestfile)
+  except subprocess.CalledProcessError:
+    sys.exc_clear()
 
-    result = subprocess.check_output(["dirac-dms-get-file", self.lfntestfile]+self.options)
-    self.assertOperationSuccessful(result,
-                                   "Retrieval of random file from storage element to local failed: " + result)
+  # Make temporary dir to run test in
+  opt.curdir = os.getcwd()
+  opt.tmpdir = tempfile.mkdtemp('', dir='./')
+  os.chdir(opt.tmpdir)
 
-    self.assertTrue(filecmp.cmp(self.localtestfile, self.lfntestfilename),
-                    "Received wrong file")
-    self.removeDownloadedFile()
+  # Create testfile with random bits
+  with open(opt.localtestfile, 'wb') as fout:
+    fout.write(' My random testfile ')
+    fout.write(os.urandom(1024 * 1024))
+  yield
+  # tear down
+  removeFileAllowFailing(opt)
+  os.chdir(opt.curdir)
+  shutil.rmtree(opt.tmpdir)
 
-  def removal_test( self, site1, site2 ):
-    """Uploads file to SE1, replicates to SE2, removes file and checks if retrieve fails
-    """
-    self.uploadFile(site1)
-    self.replicateTo(site2)
 
-    result = subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile]+self.options)
-    self.assertTrue(result.count("Successfully removed 1 files") == 1,
-                    "Removal of random file failed: " + result)
+@pytest.mark.parametrize(('site',), SE_ARGUMENTS)
+def test_storing(randomFile, opt, site):
+  """Upload the file to a given SE, then retrieve it and check for equality."""
+  uploadFile(site, opt)
+  # get file from SE, check for equivalence
+  result = subprocess.check_output(['dirac-dms-get-file', '-ddd', opt.lfntestfile] + opt.options)
+  assertOperationSuccessful(result, 'Retrieval of random file from storage element to local failed: ' + result)
+  assert filecmp.cmp(opt.localtestfile, opt.lfntestfilename), 'Stored wrong file'
+  removeFile(opt)
 
-    try:
-      result = subprocess.check_output(["dirac-dms-get-file", self.lfntestfile]+self.options)
-      self.fail("Get file should not succeed")
-    except subprocess.CalledProcessError as err:
-      self.assertTrue(err.output.count("ERROR") >= 1,
-                      "File not removed from SE even though it should be: " + err.output)
 
-  def uploadFile( self, site ):
-    """Adds the local random file to the storage elements
-    """
-    try:
-      result = subprocess.check_output(["dirac-dms-add-file", "-ddd",
-                                        self.lfntestfile,
-                                        self.localtestfile, site]+self.options)
-      self.assertTrue(result.count("Successfully uploaded ") == 1,
-                      "Upload of random file failed")
-    except subprocess.CalledProcessError as err:
-      self.fail( err.output )
+@pytest.mark.parametrize(('site1', 'site2'), SE_PAIR_ARGUMENTS)
+def test_replication(randomFile, opt, site1, site2):
+  """Replicate file to other SE, check if it is replicated there."""
+  uploadFile(site1, opt)
+  # Replicate file to SE2, remove replica from SE1, get file, rm from all
+  replicateTo(site2, opt)
 
-  def removeFile ( self ):
-    """Removes the random file from the storage elements
-    """
-    result = subprocess.check_output( ["dirac-dms-remove-files",
-                                       self.lfntestfile]+self.options)
-    self.assertTrue(result.count("Successfully removed 1 files") == 1,
-                    "Removal of random file failed: " + result)
+  result = subprocess.check_output(['dirac-dms-remove-replicas', opt.lfntestfile, site1] + opt.options)
+  assert result.count('Successfully removed') == 1, 'Failed removing replica of random file: ' + result
 
-  def assertOperationSuccessful( self, result, message ):
-    """Checks if the DMS operation completed successfully. This is indicated by the first line consisting of "'Failed: {}'"
-    and the second line consisting of "'Successful': {" followed by the filename (not checked)
-    """
-    self.assertTrue(result.count("'Failed': {}") == 1 &
-                    result.count("'Successful': {'") == 1, message)
+  result = subprocess.check_output(['dirac-dms-get-file', opt.lfntestfile] + opt.options)
+  assertOperationSuccessful(result, 'Retrieval of random file from storage element to local failed: ' + result)
 
-  def replicateTo( self, site ):
-    """Replicates the random file to another storage element and checks if it worked
-    """
-    try:
-      cmd = ["dirac-dms-replicate-lfn",
-             self.lfntestfile, site, "-ddd"]+self.options
-      result = subprocess.check_output( cmd )
-      self.assertOperationSuccessful(result, "Failed replicating file")
-    except subprocess.CalledProcessError as err:
-      print(err.output)
-      raise RuntimeError( "Command %s failed " % cmd )
+  assert filecmp.cmp(opt.localtestfile, opt.lfntestfilename), 'Received wrong file'
+  removeDownloadedFile(opt)
 
-  def removeFileAllowFailing ( self ):
-    """Removes the random file from the storage elements, if it exists.
-    If it doesn't exist, nothing happens
-    """
-    try:
-      subprocess.check_output(["dirac-dms-remove-files", self.lfntestfile]+self.options)
-    except subprocess.CalledProcessError:
-      sys.exc_clear()
 
-  def removeDownloadedFile( self ):
-    """ remove the lfn test file if it exists locally """
-    if os.path.exists( self.lfntestfilename ):
-      try:
-        os.unlink ( self.lfntestfilename )
-      except EnvironmentError as err:
-        print("failed to remove lfn", repr(err))
+@pytest.mark.parametrize(('site1', 'site2'), SE_PAIR_ARGUMENTS)
+def test_removal(randomFile, opt, site1, site2):
+  """Upload file to SE1, replicate to SE2, remove file and ensure retrieve fails."""
+  uploadFile(site1, opt)
+  replicateTo(site2, opt)
+
+  result = subprocess.check_output(['dirac-dms-remove-files', opt.lfntestfile] + opt.options)
+  assert result.count('Successfully removed 1 files') == 1, 'Removal of random file failed: ' + result
+
+  try:
+    result = subprocess.check_output(['dirac-dms-get-file', opt.lfntestfile] + opt.options)
+    assert False, 'Get file should not succeed'
+  except subprocess.CalledProcessError as err:
+    assert err.output.count('ERROR') >= 1, 'File not removed from SE even though it should be: ' + err.output

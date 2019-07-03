@@ -58,7 +58,7 @@ variables:
     - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
-    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock flake8 flake8-docstrings flake8-commas caniusepython3 parameterized
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock pytest-timeout flake8 flake8-docstrings flake8-commas caniusepython3 parameterized
     - if [ "${DIRAC_USE_DIRACOS}" == "no" ]; then pip install --upgrade ${PYTHON_PACKAGES} ; fi
     - cd ..
     - tar czf installation.tar.gz installation
@@ -311,6 +311,7 @@ setests:SL6Prod:
   <<: *seTests
   <<: *prod
   <<: *sl6integration
+  allow_failure: true
 
 setests:CC7:
   <<: *seTests
@@ -321,6 +322,7 @@ setests:CC7Prod:
   <<: *seTests
   <<: *prod
   <<: *cc7integration
+  allow_failure: true
 
 compiledoc:
   <<: *sl6docker
