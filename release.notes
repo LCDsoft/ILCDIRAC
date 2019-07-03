@@ -2,6 +2,11 @@
 
 Release date: 2019-07-03
 
+*ILCTransformationSystem
+
+CHANGE: (!279) `dirac-ilc-add-tasks-to-prod` now also works for 'Standard' MCGeneration transformations
+CHANGE: (!279) `dirac-ilc-add-tasks-to-prod` instead of mandatory options with flags (-t, -p) the script also accepts positional arguments
+NEW: (!279) `dirac-ilc-add-tasks-to-prod` new flag ``--Total`` to set the MaxNumberOfTasks to the given number of tasks, instead of adding to the number of tasks. Total has to be larger than current max number of tasks
 
 *Core
 
