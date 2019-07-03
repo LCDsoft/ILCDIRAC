@@ -55,7 +55,7 @@ variables:
     - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
-    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock flake8 psutil flake8-docstrings flake8-commas caniusepython3 parameterized
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock pytest-timeout flake8 psutil flake8-docstrings flake8-commas caniusepython3 parameterized
     - cd ..
   artifacts:
      paths:

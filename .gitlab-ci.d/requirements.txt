@@ -1,3 +1,4 @@
+# This file is used on github. See gitlab.yml for installed python packages
 GSI>=0.6.5
 MySQL-python>=1.2.5
 jinja2
