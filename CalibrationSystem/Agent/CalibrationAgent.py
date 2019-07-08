@@ -81,9 +81,10 @@ class CalibrationAgent(AgentModule):
       return S_ERROR('Failed getting job IDs from job DB!')
     jobIDs = res['Value']
     res = jobMonitoringService.getJobsParameters(_convert_to_int_list(
-        jobIDs), ['JobName', 'Status', 'JobId', 'Owner', 'OwnerGroup', 'OwnerDN'])
+        jobIDs), ['JobName', 'Status', 'JobID', 'Owner', 'OwnerGroup', 'OwnerDN'])
     if not res['OK']:
-      pass
+      self.log.error(res['Message'])
+      return S_ERROR(res['Message'])
     jobStatuses = res['Value']
     #TODO: Secure for failure
     # Possible statuses in DIRAC: Received	Job is received by the DIRAC WMS
@@ -105,7 +106,7 @@ class CalibrationAgent(AgentModule):
       curCalibration = CalibrationAgent.__getCalibrationIDFromJobName(jobName)
       result1[curCalibration].update({CalibrationAgent.__getWorkerIDFromJobName(jobName):
                                       attrDict['Status']})
-      result2[curCalibration].update({attrDict['JobId']: attrDict['Status']})
+      result2[curCalibration].update({attrDict['JobID']: attrDict['Status']})
       if not curCalibration in result3.keys():
         result3[curCalibration].update({'Owner': attrDict['Owner']})
         result3[curCalibration].update({'OwnerGroup': attrDict['OwnerGroup']})

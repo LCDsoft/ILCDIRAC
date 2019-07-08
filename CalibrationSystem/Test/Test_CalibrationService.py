@@ -22,6 +22,7 @@ from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
     assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls, \
     assertDiracFails
 from ILCDIRAC.CalibrationSystem.Client.DetectorSettings import createCalibrationSettings
+from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 
 __RCSID__ = "$Id$"
 
@@ -163,6 +164,14 @@ def test_readInitialParameterDict(copiedFccSteeringFile, mocker):
   newRun = CalibrationRun(calibID, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   res = newRun.readInitialParameterDict()
   assert res['OK']
+  # check if MaxClusterEnergyToApplySoftComp string have been added to the steering file
+  tmpKey = ".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']" % 'MyDDMarlinPandora_10ns'
+  tmpDict = {tmpKey: None}
+  res = readParametersFromSteeringFile('calib' + str(calibID) + '/fccReconstruction.xml', tmpDict)
+  if not res['OK']:
+    assert False
+  assert tmpDict == {tmpKey: '0'}
+
 
 def test_initializeHandler(mocker):
   mocker.patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=['calib2', 'calib4', 'calib78']))

@@ -4,6 +4,7 @@ The CalibrationRun ???
 
 import glob
 import os
+import threading
 from collections import defaultdict
 from xml.etree import ElementTree as et
 from datetime import datetime
@@ -68,6 +69,7 @@ class CalibrationRun(object):
   """
 
   def __init__(self, calibrationID, inputFiles, calibSettingsDict):
+    self.lock = threading.Lock()
     self.calibrationID = calibrationID
     self.settings = calibSettingsDict
     self.inputFiles = inputFiles
@@ -110,6 +112,7 @@ class CalibrationRun(object):
     # Remove the unpicklable entries.
     del state['log']
     del state['ops']
+    del state['lock']
     return state
 
   def __setstate__(self, state):
@@ -117,6 +120,7 @@ class CalibrationRun(object):
     self.__dict__.update(state)
     # Restore unpicklable entries
     self.ops = Operations()
+    self.lock = threading.Lock()
     self.log = LOG.getSubLogger('[%s]' % self.calibrationID)
 
   def getCurrentStatus(self):
@@ -184,6 +188,11 @@ class CalibrationRun(object):
       if not res['OK']:
         res = addParameterToProcessor(self.localSteeringFile, self.settings['DDPandoraPFANewProcessorName'], {
                                       'name': 'MaxClusterEnergyToApplySoftComp', 'type': 'float', 'value': '0'})
+        print("self.settings['DDPandoraPFANewProcessorName']: %s" % self.settings['DDPandoraPFANewProcessorName'])
+        print('out of addParameterToProcessor: %s' % res)
+        print('self.localSteeringFile: %s' % self.localSteeringFile)
+        if not res['OK']:
+          self.log.error('Message from addParameterToProcessor function: %s' % res['Message'])
 
     self.calibrationConstantsDict = parDict
 
@@ -313,7 +322,10 @@ class CalibrationRun(object):
     :type result: `python:list`
     :returns: None
     """
+    self.lock.acquire()
     self.stepResults[stepID].addResult(workerID, result)
+    saveCalibrationRun(self)
+    self.lock.release()
     #FIXME: Do we add old step results? Current status is no, ensured in CalibrationHandler
     #FIXME: Do we delete old interim results?
 
@@ -328,16 +340,18 @@ class CalibrationRun(object):
     if self.currentStep > stepIDOnWorker:
       return S_OK(dict(self.currentParameterSet))
     else:
-      self.log.info('No new parameter set available yet. Current step in service: %s, step on worker: %s'
-                    % (self.currentStep, stepIDOnWorker))
+      self.log.verbose('No new parameter set available yet. Current step in service: %s, step on worker: %s'
+                       % (self.currentStep, stepIDOnWorker))
       return S_OK()
 
   def getNewPhotonLikelihood(self):
     if self.newPhotonLikelihood:
       return S_OK(self.newPhotonLikelihood)
     else:
-      return S_ERROR('No new photon likelihood file available yet. Current stage and phase in service: %s, %s'
-                     % (self.currentStage, self.currentPhase))
+      errMsg = ('No new parameter set available yet. Current step in service: %s, step on worker: %s'
+                % (self.currentStep, stepIDOnWorker))
+      self.log.verbose(errMsg)
+      return S_ERROR(errMsg)
 
   def __addLists(self, list1, list2):
     """ Adds two lists together by adding the first element, second element, and so on. Throws an exception

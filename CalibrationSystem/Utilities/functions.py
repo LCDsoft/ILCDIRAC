@@ -191,8 +191,13 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup, exceptions=No
     else:
       if isinstance(iVal, (float, int)):
         iVal = str(iVal)
-      if not iVal in iElement.text:
-        LOG.info('%s:\t"%s" --> "%s"' % (iPar, iElement.text, iVal))
+
+      if iElement.text is None:
+        if not iVal in iElement.get('value'):
+          LOG.info('%s:\t"%s" --> "%s"' % (iPar, iElement.get('value'), iVal))
+      else:
+        if not iVal in iElement.text:
+          LOG.info('%s:\t"%s" --> "%s"' % (iPar, iElement.text, iVal))
       iElement.text = iVal
 
   res = tree.write(outFileName)
@@ -210,7 +215,10 @@ def readValueFromSteeringFile(fileName, xPath):
   tree = et.parse(fileName)
   iElement = tree.find(xPath)
   if iElement is not None:
-    return iElement.text
+    if iElement.text is None:
+      return iElement.get('value')
+    else:
+      return iElement.text
   else:
     return None
 
@@ -244,7 +252,10 @@ def readParametersFromSteeringFile(inFileName, parameterDict, exceptions=None):
     if iElement is None:
       return S_ERROR("Cannot read parameter from the steering file! Parameter: %s; inFileName: %s" % (iPar, inFileName))
     else:
-      parameterDict[iPar] = iElement.text
+      if iElement.text is None:
+        parameterDict[iPar] = iElement.get('value')
+      else:
+        parameterDict[iPar] = iElement.text
 
   return S_OK()
 

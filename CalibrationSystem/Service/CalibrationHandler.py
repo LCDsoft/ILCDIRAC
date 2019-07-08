@@ -67,11 +67,14 @@ class CalibrationHandler(RequestHandler):
         cls.log.error(errMsg)
         shutil.rmtree('calib%s' % iCalibID)
       else:
-        CalibrationHandler.activeCalibrations[iCalibID] = loadCalibrationRun(iCalibID)
+        CalibrationHandler.activeCalibrations[iCalibID] = tmpCalibRun
 
     if len(notFinishedCalibIDs) > 0:
-      cls.log.info('Recovering is finished. Managed to recover following calibrations: %s' %
-                   CalibrationHandler.activeCalibrations.keys())
+      cls.log.always('Recovering is finished. Managed to recover following calibrations: %s. Detailed info:' %
+                     CalibrationHandler.activeCalibrations.keys())
+      for _, iCalib in CalibrationHandler.activeCalibrations.iteritems():
+        cls.log.always('Calib #%s: isFinished: %s; stage: %s; phase: %s; step: %s' % (iCalib.calibrationID,
+                                                                                      iCalib.calibrationFinished, iCalib.currentStage, iCalib.currentPhase, iCalib.currentStep))
 
     # TODO ask Andre if we want to stop service or just delete calibratino with ID greate than calibrationCounter?
     if max(notFinishedCalibIDs or [0]) > cls.calibrationCounter:
@@ -665,6 +668,21 @@ class CalibrationHandler(RequestHandler):
     calibration.currentParameterSet = parameterSet
     calibration.calibrationFinished = calFinished
     return S_OK()
+
+  auth_setFractionOfFinishedJobsNeededToStartNextStep = ['all']
+  types_setFractionOfFinishedJobsNeededToStartNextStep = [int, float]
+
+  def export_setFractionOfFinishedJobsNeededToStartNextStep(self, calibrationID, fraction):
+    calibration = CalibrationHandler.activeCalibrations.get(calibrationID, None)
+    if not calibration:
+      return S_ERROR('Calibration with ID %s not in active calibrations.' % calibrationID)
+    if fraction <= 0.0 or fraction > 1.0:
+      return S_ERROR('fractionOfFinishedJobsNeededToStartNextStep cannot be outside of range (0.0, 1.0]. Input value: %s' % fraction)
+    calibration.settings['fractionOfFinishedJobsNeededToStartNextStep'] = fraction
+    returnMsg = 'Setup fractionOfFinishedJobsNeededToStartNextStep = %s for calibID: %s' % (fraction, calibrationID)
+    self.log.info(returnMsg)
+    return S_OK(returnMsg)
+
 
   auth_getopts = ['all']
   types_getopts = [basestring]

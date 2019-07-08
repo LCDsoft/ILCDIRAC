@@ -152,6 +152,7 @@ class CalibrationClient(object):
     res = self.calibrationService.getNewParameters(self.calibrationID, self.currentStep)
     if res['OK']:
       returnValue = res['Value']
+      # FIXME calibrationRun state will be updated number of worker times while only one time is enough
       if returnValue is not None:
         self.currentPhase = returnValue['currentPhase']
         self.currentStage = returnValue['currentStage']
@@ -202,6 +203,11 @@ class CalibrationClient(object):
 
     return S_ERROR('Could not report result back to CalibrationService.')
 
+
+def setFractionOfFinishedJobsNeededToStartNextStep(calibIds, fraction):
+  calibrationService = Client()
+  calibrationService.setServer('Calibration/Calibration')
+  return calibrationService.setFractionOfFinishedJobsNeededToStartNextStep(calibIds, fraction)
 
 def createCalibration(inputFiles, calibSettings):
   """ Starts a calibration.
