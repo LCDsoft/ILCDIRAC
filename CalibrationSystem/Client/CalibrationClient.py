@@ -7,7 +7,7 @@ about the results of their reconstruction
 from DIRAC.Core.Base.Client import Client
 from DIRAC import S_OK, S_ERROR, gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
-from ILCDIRAC.CalibrationSystem.Client.DetectorSettings import CalibrationSettings
+from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import CalibrationSettings
 
 __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
@@ -223,12 +223,16 @@ def createCalibration(inputFiles, calibSettings):
   calibrationService.setServer('Calibration/Calibration')
   return calibrationService.createCalibration(inputFiles, dict(calibSettings.settingsDict))
 
-
 def killCalibration(calibId):
   calibrationService = Client()
   calibrationService.setServer('Calibration/Calibration')
   return calibrationService.killCalibration(calibId)
 
+
+def changeEosDirectoryToCopyTo(calibId, newPath):
+  calibrationService = Client()
+  calibrationService.setServer('Calibration/Calibration')
+  return calibrationService.export_changeEosDirectoryToCopyTo(calibId, newPath)
 
 def killCalibrations(calibIds):
   calibrationService = Client()

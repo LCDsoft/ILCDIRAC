@@ -21,7 +21,7 @@ from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import loadCalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.functions import printSet
-from ILCDIRAC.CalibrationSystem.Client.DetectorSettings import CalibrationSettings
+from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import CalibrationSettings
 
 __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
@@ -114,6 +114,27 @@ class CalibrationHandler(RequestHandler):
     usernameAndGroupDict = {'group': credDict['group'], 'username': credDict['username']}
     return S_OK(usernameAndGroupDict)
 
+  def _checkClientRequest(self, calibId):
+
+    activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
+    if not calibId in activeCalibrations:
+      return S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (calibId, activeCalibrations))
+
+    res = self._getUsernameAndGroup()
+    if not res['OK']:
+      return S_ERROR('Error while retrieving proxy user name or group.')
+    usernameAndGroup = res['Value']
+
+    calibration = CalibrationHandler.activeCalibrations[calibId]
+    if (calibration.proxyUserName == usernameAndGroup['username']
+            and calibration.proxyUserGroup == usernameAndGroup['group']):
+      return S_OK()
+    else:
+      return S_ERROR('Permission denied. Calibration with ID %s has been created by other user.' % calibId)
+
+    #  TODO
+    #  def _checkTypesOfInputArguments():
+
   def initialize(self):
     """ Initializes a single response, setting required variables. Called once /per request/.
     """
@@ -137,23 +158,32 @@ class CalibrationHandler(RequestHandler):
     :rtype: dict
     """
 
-    reuiredFields = set(['gamma', 'kaon', 'muon', 'zuds'])
+    for iKey, iVal in calibSettingsDict.items():
+      keysWithNoneValues = []
+      if iVal is None:
+        keysWithNoneValues.append(iKey)
+      if len(keysWithNoneValues) > 0:
+        errMsg = "Following settings have None values: %s. All settings have to be set up." % keysWithNoneValues
+        self.log.error(errMsg)
+        return S_ERROR(errMsg)
+
+    requiredFields = set(['gamma', 'kaon', 'muon', 'zuds'])
     providedFields = set(inputFiles.keys())
 
-    if reuiredFields != providedFields:
+    if requiredFields != providedFields:
       errMsg = ("First input dictionary doesn't contain required fields. Missing fields: %s; unused extra fields: %s"
-                % (printSet(set(reuiredFields) - set(providedFields)),
-                   printSet(set(providedFields) - set(reuiredFields))))
+                % (printSet(set(requiredFields) - set(providedFields)),
+                   printSet(set(providedFields) - set(requiredFields))))
       self.log.error(errMsg)
       return S_ERROR(errMsg)
 
-    reuiredFields = set(CalibrationSettings().settingsDict.keys())
+    requiredFields = set(CalibrationSettings().settingsDict.keys())
     providedFields = set(calibSettingsDict.keys())
 
-    if reuiredFields != providedFields:
+    if requiredFields != providedFields:
       errMsg = ("Second input dictionary doesn't contain required fields. Missing fields: %s; unused extra fields: %s"
-                % (printSet(set(reuiredFields) - set(providedFields)),
-                   printSet(set(providedFields) - set(reuiredFields))))
+                % (printSet(set(requiredFields) - set(providedFields)),
+                   printSet(set(providedFields) - set(requiredFields))))
       self.log.error(errMsg)
       return S_ERROR(errMsg)
 
@@ -210,23 +240,34 @@ class CalibrationHandler(RequestHandler):
       outDict[iEl] = self.export_killCalibration(iEl)
     return S_OK(outDict)
 
+  auth_changeEosDirectoryToCopyTo = ['authenticated']
+  types_changeEosDirectoryToCopyTo = [int, str]
+
+  def export_changeEosDirectoryToCopyTo(self, calibId, newPath):
+    '''Update "outputPath" settings of the target calibration.'''
+
+    if not (isinstance(newPath, str) and isinstance(calibId, int)):
+      return S_ERROR('Wrong types of input argumetns. Required types: [int, str]. Provided types: [%s, %s]'
+                     % (type(calibId), type(newPath)))
+
+    res = self._checkClientRequest(calibId)
+    if res == S_OK():
+      calibration = CalibrationHandler.activeCalibrations[calibId]
+      self.log.info('Calibration #%s: "outputPath" setting is changed from "%s" to "%s"'
+                    % (calibId, calibration.settings['outputPath'], newPath))
+      calibration.settings['outputPath'] = newPath
+      calibration.resultsSuccessfullyCopiedToEos = False
+    return res
+
   auth_killCalibration = ['authenticated']
   types_killCalibration = [int]
   def export_killCalibration(self, calibIdToKill):
     '''Send kill signal to all jobs associated with the calibration; mark calibration as finished; keeps all
        intermediate results on the server in case user want to inspect some of them'''
-    activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
-    if not calibIdToKill in activeCalibrations:
-      return S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (calibIdToKill, activeCalibrations))
 
-    res = self._getUsernameAndGroup()
-    if not res['OK']:
-      return S_ERROR('Error while retrieving proxy user name or group.')
-    usernameAndGroup = res['Value']
-
-    calibration = CalibrationHandler.activeCalibrations[calibIdToKill]
-    if (calibration.proxyUserName == usernameAndGroup['username']
-            and calibration.proxyUserGroup == usernameAndGroup['group']):
+    res = self._checkClientRequest(calibIdToKill)
+    if res == S_OK():
+      calibration = CalibrationHandler.activeCalibrations[calibIdToKill]
       if calibration.calibrationFinished == False:
         calibration.calibrationFinished = True
         calibration.calibrationEndTime = datetime.now()
@@ -234,9 +275,7 @@ class CalibrationHandler(RequestHandler):
       #  if users want logs they can request it with getResults
       #  command
       CalibrationHandler.idsOfCalibsToBeKilled += [calibIdToKill]
-      return S_OK()
-    else:
-      return S_ERROR('Permission denied. Calibration with ID %s has been created by other user.' % calibIdToKill)
+    return res
 
   auth_cleanCalibrations = ['authenticated']
   types_cleanCalibrations = [list]

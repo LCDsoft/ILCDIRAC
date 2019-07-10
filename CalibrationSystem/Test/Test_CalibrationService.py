@@ -14,14 +14,14 @@ from shutil import copyfile
 from DIRAC import S_OK, S_ERROR, gLogger
 from mock import call, patch, MagicMock as Mock
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
-from ILCDIRAC.CalibrationSystem.Client.DetectorSettings import CalibrationSettings
+from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import CalibrationSettings
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler
 from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
     assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
     assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls, \
     assertDiracFails
-from ILCDIRAC.CalibrationSystem.Client.DetectorSettings import createCalibrationSettings
+from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import createCalibrationSettings
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 
 __RCSID__ = "$Id$"
@@ -94,6 +94,13 @@ def test_createCalibration(calibHandler):
   inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
 
   # wrong input: missing argument in the first input dict
+  res = calibHandler.export_createCalibration(inputData, clicSettings.settingsDict)
+  assert not res['OK']
+  assert "Following settings have None values: ['outputPath']. All settings have to be set up." in res['Message']
+  cldSettings.settingsDict['outputPath'] = 'dummy_outputPath'
+  clicSettings.settingsDict['outputPath'] = 'dummy_outputPath'
+
+  # wrong input: missing argument in the first input dict
   res = calibHandler.export_createCalibration({'zuds': [], 'gamma': [], 'muon': []}, clicSettings.settingsDict)
   assert not res['OK']
   assert "First input dictionary doesn't contain required fields." in res['Message']
@@ -106,6 +113,7 @@ def test_createCalibration(calibHandler):
 
   # wrong input: unused extra argument in the second input dict
   wrongSettings = createCalibrationSettings('CLD').settingsDict
+  wrongSettings['outputPath'] = 'dummy_outputPath'
   wrongSettings['dummy'] = 'dummy'
   res = calibHandler.export_createCalibration(inputData, wrongSettings)
   assert not res['OK']
@@ -113,6 +121,7 @@ def test_createCalibration(calibHandler):
 
   # wrong input: missing argument in the second input dict
   wrongSettings = createCalibrationSettings('CLD').settingsDict
+  wrongSettings['outputPath'] = 'dummy_outputPath'
   del wrongSettings['detectorModel']
   res = calibHandler.export_createCalibration(inputData, wrongSettings)
   assert not res['OK']
@@ -308,6 +317,7 @@ def test_export_submitResult(calibHandler, mocker):
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
   calibSettings = createCalibrationSettings('CLIC')
+  calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
   res = calibHandler.export_createCalibration(
       {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
   if not res['OK']:
@@ -356,6 +366,7 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
   calibSettings = createCalibrationSettings('CLIC')
+  calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
   print('calibSettings.settingsDict: %s' % calibSettings.settingsDict)
 
   res = calibHandler.export_createCalibration(
@@ -477,6 +488,7 @@ def test_killCalibration(calibHandler, mocker):
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
       return_value={'OK': True, 'Value': {'username': 'correctUserName', 'group': 'correctUserGroup'}}))
   calibSetting = createCalibrationSettings('CLIC')
+  calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
   calibRun = CalibrationRun(33, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   calibRun.proxyUserName = 'wrongUserName'
   calibRun.proxyUserGroup = 'correctUserGroup'
@@ -506,6 +518,34 @@ def test_killCalibration(calibHandler, mocker):
   assert calibRun.calibrationFinished == True
   assert calibRun.resultsSuccessfullyCopiedToEos == True
   assert not calibRun.calibrationEndTime is None
+
+  # clean up
+  CalibrationHandler.activeCalibrations = {}
+
+
+def test_changeEosDirectoryToCopyTo(calibHandler, mocker):
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
+               new=Mock(return_value=Mock(), name='Class'))
+  mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
+      return_value={'OK': True, 'Value': {'username': 'correctUserName', 'group': 'correctUserGroup'}}))
+  calibSetting = createCalibrationSettings('CLIC')
+  calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
+  calibRun = CalibrationRun(33, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  calibRun.proxyUserName = 'correctUserName'
+  calibRun.proxyUserGroup = 'correctUserGroup'
+  CalibrationHandler.activeCalibrations[33] = calibRun
+
+  # wrong proxyUserName
+  res = calibHandler.export_changeEosDirectoryToCopyTo(33, 'newEosPath')
+  assert res['OK']
+  assert CalibrationHandler.activeCalibrations[33].settings['outputPath'] == 'newEosPath'
+  assert CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos == False
+
+  CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos == True
+  res = calibHandler.export_changeEosDirectoryToCopyTo(33, 'newEosPath2')
+  assert res['OK']
+  assert CalibrationHandler.activeCalibrations[33].settings['outputPath'] == 'newEosPath2'
+  assert CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos == False
 
   # clean up
   CalibrationHandler.activeCalibrations = {}
@@ -638,6 +678,7 @@ class CalibrationHandlerTest(unittest.TestCase):
           tmpDict = {782145: 815, 72453: 421, 189455: 100, 954692: 0, 29485: 1040}
           for iCalID in tmpDict.keys():  # creates Calibrations with IDs 1-50
             calibSettings = createCalibrationSettings('CLIC')
+            calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
             calibSettings.settingsDict['numberOfJobs'] = tmpDict[iCalID]
             iCalibRun = CalibrationRun(iCalID, {'muon': [], 'kaon': [], 'gamma': [],
                                                 'zuds': []}, calibSettings.settingsDict)
@@ -665,6 +706,7 @@ class CalibrationHandlerTest(unittest.TestCase):
 
   def test_getnewparams_newparams(self):
     calibSetting = createCalibrationSettings('CLIC')
+    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
     testRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     testRun.currentStep = 36
     testRun.currentParameterSet = {'dummy': 2435}
@@ -679,6 +721,7 @@ class CalibrationHandlerTest(unittest.TestCase):
                           new=Mock(return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}})):
           for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
             calibSettings = createCalibrationSettings('CLIC')
+            calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
             res = self.calh.export_createCalibration(
                 {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
             if not res['OK']:
@@ -757,6 +800,7 @@ class CalibrationHandlerTest(unittest.TestCase):
     test_list_1 = [1, 148]
     test_list_2 = [-3, 0.2]
     calibSetting = createCalibrationSettings('CLIC')
+    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
     testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([-2, 148.2], res, self)
@@ -766,6 +810,7 @@ class CalibrationHandlerTest(unittest.TestCase):
     test_list_1 = [9013, -137.25, 90134, 4278, -123, 'abc', ['a', False]]
     test_list_2 = [0, 93, -213, 134, 98245, 'aifjg', ['some_entry', {}]]
     calibSetting = createCalibrationSettings('CLIC')
+    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
     testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([9013, -44.25, 89921, 4412, 98122, 'abcaifjg',
@@ -775,6 +820,7 @@ class CalibrationHandlerTest(unittest.TestCase):
     test_list_1 = []
     test_list_2 = []
     calibSetting = createCalibrationSettings('CLIC')
+    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
     testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
     assertEqualsImproved([], res, self)
@@ -783,6 +829,7 @@ class CalibrationHandlerTest(unittest.TestCase):
     test_list_1 = [1, 83, 0.2, -123]
     test_list_2 = [1389, False, '']
     calibSetting = createCalibrationSettings('CLIC')
+    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
     testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     with pytest.raises(ValueError) as ve:
       testobj._CalibrationRun__addLists(test_list_1, test_list_2)

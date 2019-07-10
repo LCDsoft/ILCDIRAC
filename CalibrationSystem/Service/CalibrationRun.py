@@ -179,7 +179,7 @@ class CalibrationRun(object):
       self.log.error('Failed to read parameters from steering file:', res['Message'])
       return S_ERROR('Failed to read parameters from steering file')
 
-    if not self.settings['enableSoftwareCompensation']:
+    if self.settings['disableSoftwareCompensation']:
       tmpKey = ".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']" % self.settings['DDPandoraPFANewProcessorName']
       parDict[tmpKey] = 0.0
       tmpDict = {tmpKey: None}

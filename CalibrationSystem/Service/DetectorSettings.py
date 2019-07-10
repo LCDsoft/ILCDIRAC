@@ -25,11 +25,9 @@ class CalibrationSettings(object):
     self.settingsDict['marlinVersion'] = 'ILCSoft-2019-04-01_gcc62'
     # FIXME temprorary field, since currently there is only on item in CS which corresponds to ILCSoft-2019-02-20_gcc62 (for any marlin version)
     self.settingsDict['marlinVersion_CS'] = 'ILCSoft-2019-02-20_gcc62'
-    # FIXME TODO make this argument empty... and then check if it was filled by user... maybe even introduce check that all arguments are set up!
-    self.settingsDict['outputPath'] = '/ilc/user/o/oviazlo/clic_caloCalib/output/'
     # fraction of all jobs must have finished in order for the next step to begin.
     self.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] = 0.9
-    self.settingsDict['enableSoftwareCompensation'] = False
+    self.settingsDict['disableSoftwareCompensation'] = True
     self.settingsDict['DDPandoraPFANewProcessorName'] = 'MyDDMarlinPandora'
     self.settingsDict['DDCaloDigiName'] = 'MyDDCaloDigi'
 
@@ -46,6 +44,9 @@ class CalibrationSettings(object):
     self.settingsDict['startCalibrationFinished'] = False
     self.settingsDict['stopStage'] = sys.maxsize
     self.settingsDict['stopPhase'] = sys.maxsize
+
+    # these settings have no default values... they have to be set up by user
+    self.settingsDict['outputPath'] = None
 
   def printSettings(self):
     print('%-59s %s' % ('Settings', 'Value'))
