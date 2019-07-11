@@ -58,7 +58,7 @@ variables:
     - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
-    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock pytest-timeout flake8 flake8-docstrings flake8-commas caniusepython3 parameterized
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock pytest-timeout flake8 flake8-docstrings flake8-commas caniusepython3 parameterized future
     - if [ "${DIRAC_USE_DIRACOS}" == "no" ]; then pip install --upgrade ${PYTHON_PACKAGES} ; fi
     - cd ..
     - tar czf installation.tar.gz installation

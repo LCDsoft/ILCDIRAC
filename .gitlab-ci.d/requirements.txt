@@ -26,3 +26,4 @@ rst2pdf>=0.93
 flake8
 psutil
 codecov
+future
