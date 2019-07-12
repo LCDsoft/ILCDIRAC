@@ -13,7 +13,6 @@ from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
 
 __RCSID__ = "$Id$"
 
-#pylint: disable=global-variable-undefined
 class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
   """ Tests the base functionality of the class """
 
@@ -23,38 +22,13 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
     dataman_import_mock.getFile.return_value = None
     self.dm_backup = sys.modules.get( 'DIRAC.DataManagementSystem.Client.DataManager', -1 )
     sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = dataman_import_mock
-    global dataman_mock
-    dataman_mock = Mock()
+    self.dataman_mock = Mock()
 
   def tearDown( self ):
     if self.dm_backup != -1:
       sys.modules['DIRAC.DataManagementSystem.Client.DataManager'] = self.dm_backup
     else:
       del sys.modules['DIRAC.DataManagementSystem.Client.DataManager']
-
-  def test_importfails( self ): #pylint: disable=no-self-use
-    """ Rather stupid test. The handling of an ImportError in hashlib internally imports hashlib as well...
-    """
-    try:
-      import builtins
-    except ImportError:
-      import __builtin__ as builtins
-    realimport = builtins.__import__
-    global importcounter
-    importcounter = 0
-    def myimport(name, globals=globals(), locals=locals(), fromlist=[], level=-1): #pylint: disable=missing-docstring, redefined-builtin, dangerous-default-value
-      global importcounter
-      if name == 'hashlib' :
-        if importcounter == 4:
-          importcounter = importcounter+1 # Necessary!
-          raise ImportError
-        else:
-          importcounter = importcounter+1
-      return realimport(name, globals, locals, fromlist, level)
-    backup_import = builtins.__import__
-    builtins.__import__ = myimport
-    from ILCDIRAC.Core.Utilities.TARsoft import createLock #pylint: disable=unused-variable
-    builtins.__import__ = backup_import
 
   def test_createlock( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import createLock
@@ -198,21 +172,19 @@ class TestTARsoft( unittest.TestCase ): #pylint: disable=too-many-public-methods
       assertDiracFailsWith( result, 'exception during url retrieve: test_io_exception', self )
 
   def test_download_file_from_datman( self ):
-    global dataman_mock
-    dataman_mock.getFile.return_value=S_OK()
-    with patch('%s.DataManager' % MODULE_NAME, new=Mock(return_value=dataman_mock)):
+    self.dataman_mock.getFile.return_value=S_OK()
+    with patch('%s.DataManager' % MODULE_NAME, new=Mock(return_value=self.dataman_mock)):
       from ILCDIRAC.Core.Utilities.TARsoft import downloadFile
       assertDiracSucceeds( downloadFile( '/my/datamanager/directory', 'app/tarball', '/other_folder/' ), self )
-      dataman_mock.getFile.assert_called_once_with( '/my/datamanager/directory/app/tarball' )
+      self.dataman_mock.getFile.assert_called_once_with( '/my/datamanager/directory/app/tarball' )
 
   def test_download_file_from_datman_fails( self ):
-    global dataman_mock
-    dataman_mock.getFile.return_value=S_ERROR('datman_test_err')
-    with patch('%s.DataManager' % MODULE_NAME, new=Mock(return_value=dataman_mock)):
+    self.dataman_mock.getFile.return_value=S_ERROR('datman_test_err')
+    with patch('%s.DataManager' % MODULE_NAME, new=Mock(return_value=self.dataman_mock)):
       from ILCDIRAC.Core.Utilities.TARsoft import downloadFile
       assertDiracFailsWith( downloadFile( '/unavailable/datman/dir/', 'mytestappv2/tarball',
                                           '/other_folder/' ), 'datman_test_err', self )
-      dataman_mock.getFile.assert_called_once_with( '/unavailable/datman/dir/mytestappv2/tarball' )
+      self.dataman_mock.getFile.assert_called_once_with( '/unavailable/datman/dir/mytestappv2/tarball' )
 
   def test_md5_check( self ):
     from ILCDIRAC.Core.Utilities.TARsoft import tarMd5Check

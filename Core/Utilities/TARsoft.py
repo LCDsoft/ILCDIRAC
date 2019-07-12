@@ -8,18 +8,24 @@ Also installs all dependencies for the applications
 '''
 __RCSID__ = "$Id$"
 
-from DIRAC import gLogger, S_OK, S_ERROR
-from ILCDIRAC.Core.Utilities.ResolveDependencies            import resolveDeps
-from ILCDIRAC.Core.Utilities.PrepareLibs                    import removeLibc, getLibsToIgnore
-from DIRAC.DataManagementSystem.Client.DataManager          import DataManager
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations    import Operations
-from ILCDIRAC.Core.Utilities.WasteCPU                       import wasteCPUCycles
-import os, urllib, tarfile, subprocess, shutil, time
+import hashlib
+import os
+import shutil
+import subprocess
+import time
+import urllib
+
+import tarfile
 from tarfile import TarError
-try:                      #FIXME: Deprecated import?
-  import hashlib as md5
-except ImportError:
-  import md5
+
+from DIRAC import gLogger, S_OK, S_ERROR
+from DIRAC.DataManagementSystem.Client.DataManager import DataManager
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
+from ILCDIRAC.Core.Utilities.ResolveDependencies import resolveDeps
+from ILCDIRAC.Core.Utilities.PrepareLibs import removeLibc, getLibsToIgnore
+
+from ILCDIRAC.Core.Utilities.WasteCPU import wasteCPUCycles
+
 
 LOG = gLogger.getSubLogger(__name__)
 
@@ -131,7 +137,7 @@ def tarMd5Check(app_tar_base, md5sum ):
   tar_ball_md5 = ''
   try:
     with open(app_tar_base) as myFile:
-      tar_ball_md5 = md5.md5(myFile.read()).hexdigest()
+      tar_ball_md5 = hashlib.md5(myFile.read()).hexdigest()
   except IOError:
     LOG.warn("Failed to get tar ball md5, try without")
     md5sum = ''
@@ -367,7 +373,7 @@ def check(app, area, res_from_install):
           return S_ERROR("Incomplete install: The file %s is missing" % fin)
         fmd5 = ''
         try:
-          fmd5 = md5.md5(open(fin).read()).hexdigest()
+          fmd5 = hashlib.md5(open(fin).read()).hexdigest()
         except IOError:
           LOG.error("Failed to compute md5 sum")
           return S_ERROR("Failed to compute md5 sum")
