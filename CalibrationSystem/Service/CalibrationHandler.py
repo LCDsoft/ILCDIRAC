@@ -196,6 +196,10 @@ class CalibrationHandler(RequestHandler):
       return res
     groupedInputFiles = res['Value']
 
+    res = self.__inputVariablesSanityCheck(calibSettingsDict)
+    if not res['OK']:
+      return res
+
     CalibrationHandler.calibrationCounter += 1
     self.saveStatus()
     calibrationID = CalibrationHandler.calibrationCounter
@@ -409,7 +413,9 @@ class CalibrationHandler(RequestHandler):
           del CalibrationHandler.activeCalibrations[calibrationID]
           shutil.rmtree('calib%s' % calibrationID)
       elif self.finalInterimResultReceived(calibration, calibration.currentStep):
-        calibration.endCurrentStep()
+        res = calibration.endCurrentStep()
+        if not res['OK']:
+          return res
     return S_OK()
 
   def finalInterimResultReceived(self, calibration, stepID):
@@ -575,6 +581,88 @@ class CalibrationHandler(RequestHandler):
     for job_result in results:
       success = success and job_result['OK']
     return not success
+
+  def __inputVariablesSanityCheck(self, inputSettings):
+
+    settingsDictCopy = dict(inputSettings)
+
+    def checkType(inType, containerType=None):
+      errMsg = 'Invalid type of input settings for argument: %s'
+      vals = {key: settingsDictCopy[key] for key in keys}
+      for key, val in vals.iteritems():
+        if containerType is None:
+          if not isinstance(val, inType):
+            return errMsg % key
+        else:
+          for containerElement in val:
+            if not isinstance(containerElement, inType):
+              return errMsg % key
+      return None
+
+    keys = ['disableSoftwareCompensation', 'startCalibrationFinished']
+    msg = checkType(bool)
+    if msg:
+      return S_ERROR(msg)
+
+    keys = ['startStage', 'startPhase', 'stopStage', 'stopPhase', 'nHcalLayers']
+    msg = checkType(int)
+    if msg:
+      return S_ERROR(msg)
+
+    keys = ['digitisationAccuracy', 'pandoraPFAAccuracy', 'fractionOfFinishedJobsNeededToStartNextStep']
+    msg = checkType(float)
+    if msg:
+      return S_ERROR(msg)
+
+    keys = ['platform', 'marlinVersion', 'marlinVersion_CS', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName',
+            'detectorModel', 'steeringFile', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName']
+    msg = checkType(str)
+    if msg:
+      return S_ERROR(msg)
+
+    keys = ['ecalBarrelCosThetaRange', 'ecalEndcapCosThetaRange', 'hcalBarrelCosThetaRange', 'hcalEndcapCosThetaRange']
+    msg = checkType(float, list)
+    if msg:
+      return S_ERROR(msg)
+
+    def checkVal(validRange, isList=False):
+      errMsg = 'Invalid value of input settings for argument: %s;'
+      errMsg += ' Valid value range: %s' % validRange
+      vals = {key: settingsDictCopy[key] for key in keys}
+      for key, val in vals.iteritems():
+        if not isList:
+          if val < validRange[0] or val > validRange[1]:
+            return errMsg % key
+        else:
+          for containerElement in val:
+            if containerElement < validRange[0] or containerElement > validRange[1]:
+              return errMsg % key
+      return None
+
+    keys = ['startStage']
+    msg = checkVal([1, 3])
+    if msg:
+      return S_ERROR(msg)
+
+    keys = ['startPhase']
+    msg = checkVal([0, 5])
+    if msg:
+      return S_ERROR(msg)
+
+    keys = ['digitisationAccuracy', 'pandoraPFAAccuracy', 'fractionOfFinishedJobsNeededToStartNextStep']
+    msg = checkVal([0.0, 1.0])
+    if msg:
+      return S_ERROR(msg)
+
+    keys = ['ecalBarrelCosThetaRange', 'ecalEndcapCosThetaRange', 'hcalBarrelCosThetaRange', 'hcalEndcapCosThetaRange']
+    msg = checkVal([0.0, 1.0], isList=True)
+    if msg:
+      return S_ERROR(msg)
+
+    return S_OK()
+
+
+
 
   def __regroupInputFile(self, inputFiles, numberOfJobs):
     """ Function to regroup inputFiles dict according to numberOfJobs. Output dict will have a format:

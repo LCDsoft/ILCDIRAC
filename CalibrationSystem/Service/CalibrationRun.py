@@ -406,7 +406,8 @@ class CalibrationRun(object):
 
     :returns: None
     """
-    self.log.info('Start execution of endCurrentStep')
+    self.log.info('Start execution of endCurrentStep. Stage %s; Phase: %s; Step: %s' %
+                  (self.currentStage, self.currentPhase, self.currentStep))
 
     if self.calibrationFinished:
       return S_ERROR('Calibration is finished. Do not call endCurrentStep() anymore!')
@@ -593,8 +594,9 @@ class CalibrationRun(object):
       Absorber_Scintillator_Ratio = ((Absorber_Thickness_EndCap * Scintillator_Thickness_Ring)
                                      / (Absorber_Thickness_Ring * Scintillator_Thickness_EndCap))
 
+      kaonKineticEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HCalDigi) - 0.49767
       calibHcalOther = (directionCorrectionRatio * mipPeakRatio * Absorber_Scintillator_Ratio * calibHcalEndcap *
-                        kineticEnergy / hcalMeanEndcap)
+                        kaonKineticEnergy / hcalMeanEndcap)
 
       self.calibrationConstantsDict[
           self.getKey('CalibrHCALOther')] = calibHcalOther
@@ -697,6 +699,7 @@ class CalibrationRun(object):
     if self.checkForDebugFlagsToStopCalibration():
       self.currentParameterSet['calibrationIsFinished'] = True
       self.calibrationFinished = True
+      self.calibrationEndTime = datetime.now()
 
     # update local steering file after every step. This file will be used if calibration service will be restarted and some calibrations are still are not finished
     res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,

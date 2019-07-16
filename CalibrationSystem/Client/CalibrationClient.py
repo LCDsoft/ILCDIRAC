@@ -232,7 +232,7 @@ def killCalibration(calibId):
 def changeEosDirectoryToCopyTo(calibId, newPath):
   calibrationService = Client()
   calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.export_changeEosDirectoryToCopyTo(calibId, newPath)
+  return calibrationService.changeEosDirectoryToCopyTo(calibId, newPath)
 
 def killCalibrations(calibIds):
   calibrationService = Client()

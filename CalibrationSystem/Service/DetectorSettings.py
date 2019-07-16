@@ -59,7 +59,7 @@ class CLDSettings(CalibrationSettings):
   def __init__(self):
     super(CLDSettings, self).__init__()
     self.settingsDict['detectorModel'] = 'FCCee_o1_v04'
-    self.settingsDict['ecalBarrelCosThetaRange'] = [-0.1, 0.643]
+    self.settingsDict['ecalBarrelCosThetaRange'] = [0.0, 0.643]
     self.settingsDict['ecalEndcapCosThetaRange'] = [0.766, 0.94]
     self.settingsDict['hcalBarrelCosThetaRange'] = [0.15, 0.485]
     self.settingsDict['hcalEndcapCosThetaRange'] = [0.72, 0.94]
@@ -74,7 +74,7 @@ class CLICSettings(CalibrationSettings):
   def __init__(self):
     super(CLICSettings, self).__init__()
     self.settingsDict['detectorModel'] = 'CLIC_o3_v14'
-    self.settingsDict['ecalBarrelCosThetaRange'] = [-0.1, 0.65]
+    self.settingsDict['ecalBarrelCosThetaRange'] = [0.0, 0.65]
     self.settingsDict['ecalEndcapCosThetaRange'] = [0.8, 0.92]
     self.settingsDict['hcalBarrelCosThetaRange'] = [0.2, 0.6]
     self.settingsDict['hcalEndcapCosThetaRange'] = [0.8, 0.9]

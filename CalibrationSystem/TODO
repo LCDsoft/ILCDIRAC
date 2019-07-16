@@ -3,7 +3,7 @@
 
 [to be tested]
 - different user cases which can potentially fail calibration
-- implement function calibrationClient.killCalibration() (aldo kill all jobs)
+- implement function calibrationClient.killCalibration() (also kill all jobs)
 
 [open issues]
 - calibration files are not deletes after expiration time... 
@@ -16,6 +16,9 @@
 - calibration service, endCurrentStep(): we use hardcoded strings to acess calib. constants from the parameter dict (e.g. we use specific names for processors, but they can be changed by the user). Allow for user specify parameter dict himself
 - fccee steering files. There are two copies of DDCaloDigi and DDPandoraPFANewProcessor processors (we use which one to use according to integration time window). How should we deal with this situation? Should we ask user to provide name of processor to be used?
 - there are a few calorimeter constants used to calculate one calibration constant: Absorber_Thickness_EndCap, Scintillator_Thickness_Ring and so on. They are similar for CLICdet/CLD but maybe not for ILD. To fix this.
+- always after recovering calibration run copy to EOS starts... looks like something wrong is there
+- files are not deleted after time is up. timeLeftBeforeOutputWillBeDeleted becomes negative but files are not deleted and calibration is not deleted either.
+- what happen is current stage == 0? it wil run...
 
 [to implement]
 - allow user to specify steering and PandoraSetings files to use
@@ -42,14 +45,10 @@
 - Workflow: make number of cycles to waste (wasteCPUCycles) configurable from CS
 - Workflow: if no response from CS for too long - stop requesting new parameters and kill the job (???)
 
-[comments from code review, 5 May 2019]
+[finished implementations]
 [DONE] implement function calibrationClient.getCalibrationStatus() (add timestamp when calibration was created)
 [DONE] implement function calibrationClient.killCalibration() (aldo kill all jobs)
 [DONE] implement function calibrationClient.changeEosDirectotoryToCopyTo()
-
-
-
-[toDO, 2019_jul08]
 [DONE] move Client/DetectorSettings.py files to Service
 [DONE] possibility to disable SoftwareCompensation
 [DONE] check if all settings passed by user when creating calibration have non-None values
