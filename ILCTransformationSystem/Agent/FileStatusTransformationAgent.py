@@ -25,7 +25,8 @@ from collections import defaultdict
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
 from DIRAC.Core.Utilities.PrettyPrint import printTable
-
+from DIRAC.Core.Utilities.List import breakListIntoChunks
+from DIRAC.Core.Utilities.Proxy import UserProxy
 from DIRAC.FrameworkSystem.Client.NotificationClient import NotificationClient
 from DIRAC.TransformationSystem.Client.TransformationClient import TransformationClient
 from DIRAC.RequestManagementSystem.Client.ReqClient import ReqClient
@@ -83,7 +84,7 @@ class FileStatusTransformationAgent(AgentModule):
   def beginExecution(self):
     """ Reload the configurations before every cycle """
     self.enabled = self.am_getOption('EnableFlag', False)
-    self.shifterProxy = self.am_setOption('shifterProxy', 'DataManager')
+    #self.shifterProxy = self.am_setOption('shifterProxy', 'DataManager')
     self.transformationTypes = self.am_getOption('TransformationTypes', ["Replication"])
     self.transformationStatuses = self.am_getOption('TransformationStatuses', ["Active"])
     self.transformationFileStatuses = self.am_getOption(
@@ -178,7 +179,7 @@ class FileStatusTransformationAgent(AgentModule):
         self.sendNotification(transID, sourceSEs=trans['SourceSE'], targetSEs=trans['TargetSE'])
         continue
 
-      res = self.processTransformation(transID, trans['SourceSE'], trans['TargetSE'], trans['DataTransType'])
+      res = self.processTransformation(transID, trans['SourceSE'], trans['TargetSE'], trans['DataTransType'], trans)
       if not res['OK']:
         self.log.error('Failure to process transformation with ID:', transID)
         continue
@@ -466,33 +467,38 @@ class FileStatusTransformationAgent(AgentModule):
 
     return S_OK(result)
 
-  def existsOnSE(self, storageElements, lfns):
+  def existsOnSE(self, storageElements, lfns, transInfoDict):
     """ checks if the given files exist physically on a list of storage elements"""
 
     result = {}
     result['Failed'] = {}
     result['Successful'] = {}
+    authorDN = transInfoDict['AuthorDN']
+    authorGroup = transInfoDict['AuthorGroup']
 
     if not lfns:
       return S_OK(result)
 
     voName = lfns[0].split('/')[1]
-    for se in storageElements:
-      res = StorageElement(se, vo=voName).exists(lfns)
-      if not res['OK']:
-        return res
-      for lfn, status in res['Value']['Successful'].iteritems():
-        if lfn not in result['Successful']:
-          result['Successful'][lfn] = status
-
-        if not status:
-          result['Successful'][lfn] = False
-
-      result['Failed'][se] = res['Value']['Failed']
-
+    with UserProxy(proxyUserDN=authorDN, proxyUserGroup=authorGroup) as proxyResult:
+      if not proxyResult['OK']:
+        return S_ERROR('Failed to get a proxy: %s' % proxyResult['Message'])
+      for se in storageElements:
+        for lfnChunk in breakListIntoChunks(lfns, 200):
+          self.log.notice('Checking LFNs at', '%s: %s' %(se, len(lfnChunk)))
+          res = StorageElement(se, vo=voName).exists(lfnChunk)
+          if not res['OK']:
+            return res
+          for lfn, status in res['Value']['Successful'].iteritems():
+            if lfn not in result['Successful']:
+              result['Successful'][lfn] = status
+            if not status:
+              result['Successful'][lfn] = False
+          result['Failed'].setdefault(se, {}).update(res['Value']['Failed'])
+  
     return S_OK(result)
 
-  def exists(self, storageElements, lfns):
+  def exists(self, storageElements, lfns, transInfoDict):
     """ checks if files exists on both file catalog and storage elements """
 
     fcRes = self.existsInFC(storageElements, lfns)
@@ -510,7 +516,7 @@ class FileStatusTransformationAgent(AgentModule):
     if not checkLFNsOnStorage:
       return fcRes
 
-    seRes = self.existsOnSE(storageElements, checkLFNsOnStorage)
+    seRes = self.existsOnSE(storageElements, checkLFNsOnStorage, transInfoDict)
     if not seRes['OK']:
       self.logError('Failure to determine if files exist on SE ', "%s" % seRes['Message'])
       return seRes
@@ -528,7 +534,7 @@ class FileStatusTransformationAgent(AgentModule):
 
     return fcRes
 
-  def processTransformation(self, transID, sourceSE, targetSEs, transType):
+  def processTransformation(self, transID, sourceSE, targetSEs, transType, transInfoDict):
     """ process transformation for a given transformation ID """
 
     actions = {}
@@ -560,13 +566,13 @@ class FileStatusTransformationAgent(AgentModule):
       if not lfns:
         continue
 
-      res = self.exists(sourceSE, lfns)
+      res = self.exists(sourceSE, lfns, transInfoDict)
       if not res['OK']:
         continue
 
       resultSourceSe = res['Value']['Successful']
 
-      res = self.exists(targetSEs, lfns)
+      res = self.exists(targetSEs, lfns, transInfoDict)
       if not res['OK']:
         continue
       resultTargetSEs = res['Value']['Successful']
