@@ -908,7 +908,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     elif len(res['Value']) < 1:
       return self._reportError('Could not find any directories corresponding to the query issued: %s' % metaQuery)
     for folderId, folder in res['Value'].items():
-      if folderId == 0 or folder == 'None':
+      if (folderId == 0 or folder == 'None') and not self.dryrun:
         return self._reportError('Could not find any directories corresponding to the query issued: %s' % metaQuery)
     return res
 
