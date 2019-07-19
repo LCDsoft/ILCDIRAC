@@ -2,7 +2,8 @@
 
 import unittest
 import sys
-from mock import MagicMock
+from contextlib import contextmanager
+from mock import MagicMock, patch
 
 import ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent as FST
 from ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent import FileStatusTransformationAgent
@@ -12,6 +13,24 @@ from DIRAC import S_OK, S_ERROR, gLogger
 import DIRAC
 
 __RCSID__ = "$Id$"
+
+
+@contextmanager
+def mockedUserProxy(*_args, **_kwargs):
+  """Context manager to replace the UserProxy context manager."""
+  try:
+    yield S_OK()
+  finally:
+    pass
+
+
+@contextmanager
+def mockedUserProxyError(*_args, **_kwargs):
+  """Context manager to replace the UserProxy context manager."""
+  try:
+    yield S_ERROR()
+  finally:
+    pass
 
 
 class TestFSTAgent(unittest.TestCase):
@@ -129,9 +148,8 @@ class TestFSTAgent(unittest.TestCase):
                                                                        'Status': self.fstAgent.transformationStatuses,
                                                                        'Type': self.fstAgent.transformationTypes})
 
-    self.fstAgent.tClient.getTransformations.return_value = S_OK([{'Status': 'Active',
-                                                                   'TransformationID': self.fakeTransID,
-                                                                   'Type': 'Replication'}])
+    transInfoDict = {'Status': 'Active', 'TransformationID': self.fakeTransID, 'Type': 'Replication'}
+    self.fstAgent.tClient.getTransformations.return_value = S_OK([transInfoDict])
     self.fstAgent.tClient.getTransformationParameters.return_value = S_ERROR()
     self.fstAgent.execute()
     self.fstAgent.processTransformation.assert_not_called()
@@ -149,7 +167,7 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.processTransformation.reset_mock()
     self.fstAgent.execute()
     self.fstAgent.processTransformation.assert_called_once_with(self.fakeTransID, ['CERN-SRM'], ['CERN-DST-EOS'],
-                                                                FST.REPLICATION_TRANS)
+                                                                FST.REPLICATION_TRANS, transInfoDict)
 
   def test_send_notification(self):
     """ Test for sendNotification function """
@@ -317,6 +335,7 @@ class TestFSTAgent(unittest.TestCase):
     self.assertFalse(res['Successful'][fileAllRepLost])
     self.assertFalse(res['Successful'][fileRemoved])
 
+  @patch('ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent.UserProxy', new=mockedUserProxy)
   def test_exists_on_storage_element(self):
     """ Test if the existsOnSE function correctly determines if a file
         exists on all provided Storage Elements or not """
@@ -337,6 +356,8 @@ class TestFSTAgent(unittest.TestCase):
     # some error to get file status on SE
     fileFailed = '/ilc/file/file4'
 
+    authorInfoDict = {'AuthorDN': 'A_DN', 'AuthorGroup': 'A_GROUP'}
+
     files = [fileExists, fileOneRepLost, fileAllRepLost, fileFailed]
 
     se1Result = S_OK({'Successful': {fileExists: True, fileOneRepLost: True, fileAllRepLost: False, fileFailed: True},
@@ -347,21 +368,29 @@ class TestFSTAgent(unittest.TestCase):
 
     SeModule.StorageElementItem.exists = MagicMock()
     SeModule.StorageElementItem.exists.return_value = S_ERROR()
-    res = self.fstAgent.existsOnSE(storageElements, files)
+    res = self.fstAgent.existsOnSE(storageElements, files, authorInfoDict)
     self.assertFalse(res['OK'])
 
-    res = self.fstAgent.existsOnSE(storageElements, [])
+    res = self.fstAgent.existsOnSE(storageElements, [], authorInfoDict)
     self.assertTrue(res['OK'])
     self.assertEquals(res['Value']['Successful'], {})
     self.assertEquals(res['Value']['Failed'], {})
 
     SeModule.StorageElementItem.exists.side_effect = [se1Result, se2Result]
-    res = self.fstAgent.existsOnSE(storageElements, files)['Value']
+    res = self.fstAgent.existsOnSE(storageElements, files, authorInfoDict)['Value']
 
     self.assertTrue(res['Successful'][fileExists])
     self.assertFalse(res['Successful'][fileAllRepLost])
     self.assertFalse(res['Successful'][fileOneRepLost])
     self.assertTrue(len(res['Failed']), 1)
+
+  def test_exists_on_storage_element_failProxy(self):
+    """Test when failing to get a proxy"""
+    with patch('ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent.UserProxy',
+               new=mockedUserProxyError):
+      authorInfoDict = {'AuthorDN': 'A_DN', 'AuthorGroup': 'A_GROUP'}
+      res = self.fstAgent.existsOnSE([], ['/vo/lfns'], authorInfoDict)
+      self.assertFalse(res['OK'])
 
   def test_exists(self):
     """ Tests if the exists function correctly determines if a file exists in File Catalog and Storage Elements """
@@ -382,26 +411,30 @@ class TestFSTAgent(unittest.TestCase):
     # file does not exists in FC
     fileRemoved = '/ilc/file/file4'
 
+    transInfoDict = [{'TransformationID': 1, 'SourceSE': ['CERN'], 'TargetSE': ['DESY'], 'DataTransType': 'x',
+                      'AuthorDN': 'A_DN', 'AuthorGroup': 'A_GROUP'}]
+
     files = [fileExists, fileOneRepLostOnSE, fileAllRepLostOnSEs, fileRemoved]
 
     self.fstAgent.existsInFC = MagicMock()
     self.fstAgent.existsOnSE = MagicMock()
 
     self.fstAgent.existsInFC.return_value = S_ERROR()
-    res = self.fstAgent.exists(storageElements, files)
+
+    res = self.fstAgent.exists(storageElements, files, transInfoDict)
     self.assertFalse(res['OK'])
 
     # if no files were found in FC, no need to check the lfns on storage
     self.fstAgent.existsInFC.return_value = S_OK({'Successful': {fileRemoved: False},
                                                   'Failed': {}})
-    self.fstAgent.exists(storageElements, [fileRemoved])
+    self.fstAgent.exists(storageElements, [fileRemoved], transInfoDict)
     self.fstAgent.existsOnSE.not_called()
 
     self.fstAgent.existsInFC.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLostOnSE: True,
                                                                  fileAllRepLostOnSEs: True, fileRemoved: False},
                                                   'Failed': {}})
     self.fstAgent.existsOnSE.return_value = S_ERROR()
-    res = self.fstAgent.exists(storageElements, files)
+    res = self.fstAgent.exists(storageElements, files, transInfoDict)
     self.assertFalse(res['OK'])
 
     self.fstAgent.existsOnSE.return_value = S_OK({'Successful': {},
@@ -409,13 +442,13 @@ class TestFSTAgent(unittest.TestCase):
                                                                    fileOneRepLostOnSE: "permission denied",
                                                                    fileAllRepLostOnSEs: "permission denied"},
                                                              se2: {}}})
-    res = self.fstAgent.exists(storageElements, files)
+    res = self.fstAgent.exists(storageElements, files, transInfoDict)
     self.assertFalse(res['OK'])
 
     self.fstAgent.existsOnSE.return_value = S_OK({'Successful': {fileExists: True, fileOneRepLostOnSE: False,
                                                                  fileAllRepLostOnSEs: False},
                                                   'Failed': {se1: {}, se2: {}}})
-    res = self.fstAgent.exists(storageElements, files)['Value']['Successful']
+    res = self.fstAgent.exists(storageElements, files, transInfoDict)['Value']['Successful']
     self.assertTrue(res[fileExists])
     self.assertFalse(res[fileOneRepLostOnSE])
     self.assertFalse(res[fileAllRepLostOnSEs])
@@ -515,7 +548,7 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.setFileStatus.not_called()
     self.fstAgent.setFileStatus.assert_called_once_with(self.fakeTransID, transFiles, 'Assigned')
 
-  def _exists(self, se, lfns):
+  def _exists(self, se, lfns, _transInfoDict):
     """ returns lfns availability information """
     result = {}
     for lfn in lfns:
@@ -539,6 +572,8 @@ class TestFSTAgent(unittest.TestCase):
     fileAvailable = {'TransformationID': self.fakeTransID, 'TaskID': 3, 'LFN': self.available}
     fileNotAvailable = {'TransformationID': self.fakeTransID, 'TaskID': 4, 'LFN': self.notAvailable}
 
+    authorInfoDict = {'AuthorDN': 'A_DN', 'AuthorGroup': 'A_GROUP'}
+
     transFiles = [fileNotAvailableOnSrc, fileNotAvailableOnDst, fileAvailable, fileNotAvailable]
 
     # all trans files have failed requests
@@ -553,13 +588,15 @@ class TestFSTAgent(unittest.TestCase):
     # all file statuses should be processed even if getTransformationFiles returns an error for some status
     self.fstAgent.transformationFileStatuses = ['Assigned', 'Problematic']
     self.fstAgent.tClient.getTransformationFiles.return_value = S_ERROR()
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS,
+                                        authorInfoDict)
     self.assertEquals(len(self.fstAgent.tClient.getTransformationFiles.mock_calls), 2)
 
     # all file statuses should be processed even if no transformation files are found for some status
     self.fstAgent.tClient.getTransformationFiles.reset_mock()
     self.fstAgent.tClient.getTransformationFiles.return_value = S_OK([])
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS,
+                                        authorInfoDict)
     self.assertEquals(len(self.fstAgent.tClient.getTransformationFiles.mock_calls), 2)
 
     # all file statuses should be processed even if we get a failure to determine if transformation files
@@ -567,7 +604,8 @@ class TestFSTAgent(unittest.TestCase):
     self.fstAgent.tClient.getTransformationFiles.reset_mock()
     self.fstAgent.tClient.getTransformationFiles.return_value = S_OK(transFiles)
     self.fstAgent.exists.return_value = S_ERROR()
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS,
+                                        authorInfoDict)
     self.assertEquals(len(self.fstAgent.tClient.getTransformationFiles.mock_calls), 2)
 
     self.fstAgent.tClient.getTransformationFiles.return_value = S_OK(transFiles)
@@ -576,14 +614,16 @@ class TestFSTAgent(unittest.TestCase):
 
     # check replication transformation treatment for assigned files
     self.fstAgent.setFileStatus.reset_mock()
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS,
+                                        authorInfoDict)
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc, fileAvailable], 'Processed')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst], 'Unused')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     # check moving transformation treatment for assigned files
     self.fstAgent.setFileStatus.reset_mock()
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS,
+                                        authorInfoDict)
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc], 'Processed')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst, fileAvailable], 'Unused')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
@@ -592,13 +632,15 @@ class TestFSTAgent(unittest.TestCase):
 
     # check replication transformation treatment for processed files
     self.fstAgent.setFileStatus.reset_mock()
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS,
+                                        authorInfoDict)
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst], 'Unused')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     # check moving transformation treatment for processed files
     self.fstAgent.setFileStatus.reset_mock()
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS,
+                                        authorInfoDict)
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst, fileAvailable], 'Unused')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
@@ -606,14 +648,16 @@ class TestFSTAgent(unittest.TestCase):
 
     # check replication transformation treatment for problematic files
     self.fstAgent.setFileStatus.reset_mock()
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS,
+                                        authorInfoDict)
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc, fileAvailable], 'Processed')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst], 'Unused')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     # check moving transformation treatment for problematic files
     self.fstAgent.setFileStatus.reset_mock()
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS,
+                                        authorInfoDict)
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc], 'Processed')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnDst, fileAvailable], 'Unused')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
@@ -622,13 +666,15 @@ class TestFSTAgent(unittest.TestCase):
 
     # check replication transformation treatment for unused files
     self.fstAgent.setFileStatus.reset_mock()
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.REPLICATION_TRANS,
+                                        authorInfoDict)
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc], 'Processed')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
     # check moving transformation treatment for unused files
     self.fstAgent.setFileStatus.reset_mock()
-    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS)
+    self.fstAgent.processTransformation(self.fakeTransID, self.sourceSE, self.targetSE, FST.MOVING_TRANS,
+                                        authorInfoDict)
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailableOnSrc], 'Processed')
     self.fstAgent.setFileStatus.assert_any_call(self.fakeTransID, [fileNotAvailable], 'Deleted')
 
