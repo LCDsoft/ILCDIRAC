@@ -129,7 +129,13 @@ class DiracILCTestCase( unittest.TestCase ):
                  '148' : { 'State' : 'Done', 1 : False, True : 941, 'values_' : 'keys' } }
     repo_mock.readRepository.return_value = S_OK( ret_dict )
     self.dilc.jobRepo = repo_mock
-    with patch('%s.DiracILC.parameters' % MODULE_NAME, new=Mock(side_effect=[S_OK({'UploadedOutputData':'/my/test/lfn1'}),S_ERROR(),S_OK({}),S_OK({'some_entries':'some_values',1:True,'UploadedOutputData':'/more_lfns/append/testlfn.log'})])) as param_mock:
+    with patch('%s.DiracILC.getJobParameters' % MODULE_NAME,
+               new=Mock(side_effect=[S_OK({'UploadedOutputData': '/my/test/lfn1'}),
+                                     S_ERROR(),
+                                     S_OK({}),
+                                     S_OK({'some_entries': 'some_values',
+                                           1: True,
+                                           'UploadedOutputData': '/more_lfns/append/testlfn.log'})])) as param_mock:
       assertEqualsImproved( self.dilc.retrieveRepositoryOutputDataLFNs( [ 'Done', 'secret_teststate' ] ),
                             [ '/my/test/lfn1', '/more_lfns/append/testlfn.log' ], self )
       assertMockCalls( param_mock, [ 3, 5, 7, 148 ], self )

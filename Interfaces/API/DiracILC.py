@@ -129,7 +129,7 @@ class DiracILC(Dirac):
       if 'State' in jobDict and ( jobDict['State'] in requestedStates ):
         if ( 'UserOutputData' in jobDict and ( not int( jobDict['UserOutputData'] ) ) ) or \
            ( 'UserOutputData' not in jobDict ):
-          params = self.parameters(int(jobID))
+          params = self.getJobParameters(int(jobID))
           if params['OK']:
             if 'UploadedOutputData' in params['Value']:
               lfn = params['Value']['UploadedOutputData']
