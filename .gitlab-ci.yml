@@ -229,6 +229,25 @@ pylint:PY3K:
     when: on_failure
     expire_in: 2 days
 
+.prodTests_template: &prodTests
+  stage: integration
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - export HOME=/root/
+    - cd installation/ILCDIRAC
+    - source ../bashrc
+    - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
+    - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
+    - unset PYTHONOPTIMIZE
+    - cd Tests/productionTest/
+    - dirac-clic-make-productions -f test_prod.conf --additionalName=$RANDOM
+  coverage: '/\d+\%\s*$/'
+  <<: *retry_policy
+  artifacts:
+    when: on_failure
+    expire_in: 2 days
+
 .prodOnly: &prod
   only:
     - branches@CLICdp/iLCDirac/ILCDIRAC
@@ -272,6 +291,10 @@ jobTests:CC7:
 jobTests:CC7Prod:
   <<: *jobTests
   <<: *prod
+  <<: *cc7integration
+
+prodTests:CC7:
+  <<: *prodTests
   <<: *cc7integration
 
 .seTests_template: &seTests

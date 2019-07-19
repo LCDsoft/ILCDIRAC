@@ -1119,7 +1119,12 @@ if __name__ == "__main__":
   Script.parseCommandLine()
   from ILCDIRAC.Core.Utilities.CheckAndGetProdProxy import checkOrGetGroupProxy
   CHECKGROUP = checkOrGetGroupProxy(['ilc_prod', 'fcc_prod'])
-  if not CHECKGROUP['OK']:
+  if CHECKGROUP['OK']:
+    pass
+  elif CLIP.dryRun:
+    gLogger.notice('Did not find correct group, dryRun enabled, assuming "ilc_prod"')
+    CHECKGROUP = S_OK('ilc_prod')
+  else:
     exit(1)
   try:
     CHAIN = CLICDetProdChain(params=CLIP, group=CHECKGROUP['Value'])
@@ -1127,3 +1132,5 @@ if __name__ == "__main__":
   except (AttributeError, RuntimeError) as excp:
     if str(excp) != '':
       gLogger.exception('Failure to create transformations', lException=excp)
+      exit(1)
+  exit(0)
