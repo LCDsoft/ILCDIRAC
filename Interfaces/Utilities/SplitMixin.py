@@ -186,7 +186,7 @@ class SplitMixin(object):
 
     data = breakListIntoChunks(self._data, self._numberOfFilesPerJob)
 
-    LOG.notice("Job splitting: submission consists of %d job(s)" % len(self._data))
+    LOG.notice('Job splitting: submission consists of %d job(s)' % len(data))
 
     return [('InputData', data, 'ParametricInputData')]
 
