@@ -202,6 +202,26 @@ class CalibrationRun(object):
     self.currentParameterSet['parameters'] = self.calibrationConstantsDict
     self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
 
+    if self.settings['nEcalThickLayers'] > 0:
+      tmpKey = ".//processor[@name='%s']/parameter[@name='ECALLayers']" % self.settings['DDCaloDigiName']
+      # +1 is just for safety
+      valToSetup = '%s %s' % (self.settings['nEcalThinLayers'],
+                              self.settings['nEcalThinLayers'] + self.settings['nEcalThickLayers'] + 1)
+      tmpDict = {tmpKey: None}
+      res = readParametersFromSteeringFile(self.localSteeringFile, tmpDict)
+      # if no such parameter in the steering file --> add it
+      if not res['OK']:
+        res = addParameterToProcessor(self.localSteeringFile, self.settings['DDCaloDigiName'],
+                                      {'name': 'ECALLayers', 'type': 'IntVec', 'value': valToSetup})
+        if not res['OK']:
+          self.log.error('Message from addParameterToProcessor function: %s' % res['Message'])
+      else:
+        res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,
+                                 {tmpKey: valToSetup})
+        if not res['OK']:
+          self.log.error('Error while updating local steering file. Error message: %s' % res['Message'])
+          return res
+
     return S_OK()
 
   def getCalibrationID(self):
@@ -448,7 +468,8 @@ class CalibrationRun(object):
                                  '-i', self.settings['ecalEndcapCosThetaRange'][0], '-j', self.settings['ecalEndcapCosThetaRange'][1]],
                                 ilcSoftInitScript)
 
-      # this parameter is written in format "value value" in the xml steering file
+      # this parameter can be written in format "value value" in the xml steering file in case of ECAL layout which has
+      # layers with different thicknesses
       prevStepCalibConstBarrel = float(self.calibrationConstantsDict[self.getKey('CalibrECAL')].split()[0])
       prevStepCalibConstEndcap = prevStepCalibConstBarrel * float(self.calibrationConstantsDict[
           self.getKey('ECALEndcapCorrectionFactor')])
@@ -470,7 +491,7 @@ class CalibrationRun(object):
       meanEndcap = float(res['Value'][1].split('\n')[0])
 
       self.calibrationConstantsDict[self.getKey('CalibrECAL')] = (
-          '%s %s' % (calibConstBarrel, calibConstBarrel))
+          '%s %s' % (calibConstBarrel, self.settings['ecalResponseCorrectionForThickLayers'] * calibConstBarrel))
       self.calibrationConstantsDict[self.getKey('ECALEndcapCorrectionFactor')] = (
           calibConstEndcap / calibConstBarrel)
 
@@ -724,6 +745,7 @@ class CalibrationRun(object):
     filesToCopy.append("calib%s/Calibration.txt" % (self.calibrationID))
     filesToCopy += glob.glob("calib%s/*.C" % (self.calibrationID))
     filesToCopy += glob.glob("calib%s/*.png" % (self.calibrationID))
+    filesToCopy += glob.glob("calib%s/*_INPUT" % (self.calibrationID))
 
     self.log.info('Start copying output of the calibration to user directory : %s' % self.settings['outputPath'])
     self.log.info('Files to copy: %s' % filesToCopy)

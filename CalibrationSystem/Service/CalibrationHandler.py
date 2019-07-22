@@ -627,16 +627,17 @@ class CalibrationHandler(RequestHandler):
 
     def checkVal(validRange, isList=False):
       errMsg = 'Invalid value of input settings for argument: %s;'
-      errMsg += ' Valid value range: %s' % validRange
+      errMsg += ' Valid value range: %s;' % validRange
+      errMsg += ' Provided value: %s'
       vals = {key: settingsDictCopy[key] for key in keys}
       for key, val in vals.iteritems():
         if not isList:
           if val < validRange[0] or val > validRange[1]:
-            return errMsg % key
+            return errMsg % (key, val)
         else:
           for containerElement in val:
             if containerElement < validRange[0] or containerElement > validRange[1]:
-              return errMsg % key
+              return errMsg % (key, containerElement)
       return None
 
     keys = ['startStage']

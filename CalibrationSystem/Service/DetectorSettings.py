@@ -31,6 +31,11 @@ class CalibrationSettings(object):
     self.settingsDict['DDPandoraPFANewProcessorName'] = 'MyDDMarlinPandora'
     self.settingsDict['DDCaloDigiName'] = 'MyDDCaloDigi'
 
+    self.settingsDict['nEcalThinLayers'] = 40
+    self.settingsDict['nEcalThickLayers'] = 0
+    # correction factor which is applied to responce of thick layers of ECAL; if all layer have the same thickness, this factor have to be 1.0
+    self.settingsDict['ecalResponseCorrectionForThickLayers'] = 1.0
+
     # following settings has to be setup for daughter classes
     self.settingsDict['detectorModel'] = None
     self.settingsDict['ecalBarrelCosThetaRange'] = None

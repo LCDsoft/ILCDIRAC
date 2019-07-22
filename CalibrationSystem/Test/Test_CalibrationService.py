@@ -83,6 +83,7 @@ def copiedFccSteeringFile():
   yield workdirName
   try:
     shutil.rmtree(workdirName)
+    #  pass
   except EnvironmentError as e:
     print("Failed to delete directory: %s; ErrMsg: %s" % (workdirName, str(e)))
     assert False
@@ -174,12 +175,24 @@ def test_readInitialParameterDict(copiedFccSteeringFile, mocker):
   res = newRun.readInitialParameterDict()
   assert res['OK']
   # check if MaxClusterEnergyToApplySoftComp string have been added to the steering file
-  tmpKey = ".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']" % 'MyDDMarlinPandora_10ns'
+  tmpKey = ".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']" % calibSetting.settingsDict['DDPandoraPFANewProcessorName']
   tmpDict = {tmpKey: None}
   res = readParametersFromSteeringFile('calib' + str(calibID) + '/fccReconstruction.xml', tmpDict)
-  if not res['OK']:
-    assert False
+  assert res['OK']
   assert tmpDict == {tmpKey: '0'}
+  # check case when nEcalThickLayers are not zero
+  calibSetting.settingsDict['nEcalThinLayers'] = 40
+  calibSetting.settingsDict['nEcalThickLayers'] = 34
+  calibSetting.settingsDict['ecalResponseCorrectionForThickLayers'] = 2.4
+  newRun = CalibrationRun(calibID, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  res = newRun.readInitialParameterDict()
+  assert res['OK']
+  tmpKey = ".//processor[@name='%s']/parameter[@name='ECALLayers']" % calibSetting.settingsDict['DDCaloDigiName']
+  tmpDict = {tmpKey: None}
+  res = readParametersFromSteeringFile('calib' + str(calibID) + '/fccReconstruction.xml', tmpDict)
+  assert res['OK']
+  assert tmpDict[tmpKey] == '%s %s' % (calibSetting.settingsDict['nEcalThinLayers'],
+                                       calibSetting.settingsDict['nEcalThinLayers'] + calibSetting.settingsDict['nEcalThickLayers'] + 1)
 
 
 def test_initializeHandler(mocker):
