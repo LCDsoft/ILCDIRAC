@@ -524,25 +524,39 @@ class CalibrationHandler(RequestHandler):
     :rtype: dict
     """
 
-    failedPairs = []
-    for calibrationID, workerID in failedJobs:
-      if calibrationID not in CalibrationHandler.activeCalibrations:
-        failedPairs.append((calibrationID, workerID))
-        continue
+    #  failedPairs = []
+    #  for calibrationID, workerID in failedJobs:
+    #    if calibrationID not in CalibrationHandler.activeCalibrations:
+    #      failedPairs.append((calibrationID, workerID))
+    #      continue
 
     for iCalib in CalibrationHandler.activeCalibrations:
       jobsToResubmit = []
       for calibrationID, workerID in failedJobs:
-        if calibrationID == iCalib.getCalibrationID():
+        if calibrationID == iCalib:
           jobsToResubmit.append(workerID)
       if jobsToResubmit:
-        iCalib.submitJobs(jobsToResubmit)  # pylint: disable=unexpected-keyword-arg
+        newRun = CalibrationHandler.activeCalibrations[iCalib]
+        res = self._getUsernameAndGroup()
+        if not res['OK']:
+          return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
+                         % (calibrationID))
+        usernameAndGroup = res['Value']
+        self.log.info('Retrieve user proxy - userName = %s, userGroup = %s'
+                      % (usernameAndGroup['username'], usernameAndGroup['group']))
 
-    if failedPairs:
-      result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs)
-      result['failed_pairs'] = failedPairs
-      return result
-    else:
+        newRun.proxyUserName = usernameAndGroup['username']
+        newRun.proxyUserGroup = usernameAndGroup['group']
+        newRun.submitJobs(jobsToResubmit, proxyUserName=newRun.proxyUserName,
+                          proxyUserGroup=newRun.proxyUserGroup)  # pylint: disable=unexpected-keyword-arg
+
+    #  if failedPairs:
+    #    result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs)
+    #    result['failed_pairs'] = failedPairs
+    #    return result
+    #  else:
+    #    return S_OK()
+
       return S_OK()
 
   auth_getNumberOfJobsPerCalibration = ['authenticated']
@@ -557,6 +571,21 @@ class CalibrationHandler(RequestHandler):
     result = {}
     for calibrationID in CalibrationHandler.activeCalibrations:
       result[calibrationID] = CalibrationHandler.activeCalibrations[calibrationID].settings['numberOfJobs']
+    return S_OK(result)
+
+  auth_getRunningCalibrations = ['authenticated']
+  types_getRunningCalibrations = []
+
+  def export_getRunningCalibrations(self):
+    """ Returns a list of not finished calibrations
+
+    :returns: S_OK containing the the list of calibrationIDs
+    :rtype: list
+    """
+    result = []
+    for calibrationID in CalibrationHandler.activeCalibrations:
+      if CalibrationHandler.activeCalibrations[calibrationID].calibrationFinished == False:
+        result.append(calibrationID)
     return S_OK(result)
 
   auth_getCalibrationsToBeKilled = ['authenticated']

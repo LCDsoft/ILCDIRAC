@@ -59,9 +59,40 @@ class CalibrationAgent(AgentModule):
       return res
     targetJobNumbers = res['Value']
     self.currentCalibrations = list(targetJobNumbers.keys())
+
+    res = self.calibrationService.getRunningCalibrations()
+    if not res['OK']:
+      return res
+    runningCalibs = res['Value']  # list of unfinished calibrations
+    currentJobStatusesPerWorker_runningCalibs = {}
+    targetJobNumbers_runningCalibs = {}
+    for iCalib in runningCalibs:
+      try:
+        currentJobStatusesPerWorker_runningCalibs[iCalib] = self.currentJobStatusesPerWorker[iCalib]
+        targetJobNumbers_runningCalibs[iCalib] = targetJobNumbers[iCalib]
+      except:
+        errMsg = 'Error while retriving information for calibration #%s' % iCalib
+        self.log.error(errMsg)
+        return S_ERROR(errMsg)
+
+    # DEBUG
+    self.log.error('SASHA: targetJobNumbers_runningCalibs: %s' % targetJobNumbers_runningCalibs)
+    self.log.error('SASHA: currentJobStatusesPerWorker_runningCalibs: %s' % currentJobStatusesPerWorker_runningCalibs)
+    jobToResubmitted = self.__calculateJobsToBeResubmitted(
+        currentJobStatusesPerWorker_runningCalibs, targetJobNumbers_runningCalibs)
+    self.log.error('SASHA: __calculateJobsToBeResubmitted: %s' % jobToResubmitted)
+
+    #  TODO FIXME job submission requires ['ilc_user', 'calice_user'] proxy. Calibration Agent doesn't have it.
+    #  2019-07-26 13:27:11 UTC Calibration/Calibration/ILCDIRAC.Interfaces.API.NewInterface.UserJob ERROR: Not allowed to submit a job, you need a ['ilc_user', 'cali
+    res = self.requestResubmission(jobToResubmitted)
+    if not res['OK']:
+      return res
+
+
     #  self.log.info('Execute execute. currentJobStatusesPerWorker : %s, targetJobNumbers: %s' % (self.currentJobStatusesPerWorker, targetJobNumbers))
     # TODO temporarily switched off resubmission. For testing purpose
-    #  self.requestResubmission( self.__calculateJobsToBeResubmitted( currentStatuses, targetJobNumbers ) )
+
+    #  self.requestResubmission( self.__calculateJobsToBeResubmitted(self.currentJobStatusesPerWorker, targetJobNumbers ) )
     res = self.calibrationService.checkForStepIncrement()
     if not res['OK']:
       return res
@@ -157,12 +188,13 @@ class CalibrationAgent(AgentModule):
       # Thus, this method would need a list of all resubmissions that have yet to be done, which is updated
       # in each iteration. once it is empty, the method returns. If it takes too long, RuntimeError is raised
       if result['OK']:
-        return
-      else:
-        jobs_to_resubmit = result['failed_pairs']
+        return S_OK()
+      #  else:
+      #    jobs_to_resubmit = result['failed_pairs']
     raise RuntimeError('Cannot resubmit the necessary failed jobs. Problem: %s' % result)
 
   JOB_STATUS_ENDED = ['Failed', 'Killed', 'Done', 'Completed']
+  JOB_STATUS_FAILED = ['Failed', 'Killed']
   JOB_STATUS_RUNNING = ['Running', 'Waiting', 'Checking', 'Staging']
   RESUBMISSION_THRESHOLD = 0.13  # When this percentage of jobs failed for good, resubmit new ones #FIXME: Tune this parameter
   def __calculateJobsToBeResubmitted(self, jobStatusDict, targetNumberDict):
@@ -185,7 +217,7 @@ class CalibrationAgent(AgentModule):
         if jobStatus in CalibrationAgent.JOB_STATUS_RUNNING:
           possibly_successful_jobs.append(workerID)  # FIXME: Currently unused
           # FIXME JOB_STATUS_ENDED contains also 'Done' and 'Completed' statuses. These don't mean that job were failed, right?
-        elif jobStatus in CalibrationAgent.JOB_STATUS_ENDED:
+        elif jobStatus in CalibrationAgent.JOB_STATUS_FAILED:
           failed_jobs.append(workerID)
       failed_ratio = float(len(failed_jobs)) / float(targetNumberDict[calibrationID])
       if failed_ratio > CalibrationAgent.RESUBMISSION_THRESHOLD:
