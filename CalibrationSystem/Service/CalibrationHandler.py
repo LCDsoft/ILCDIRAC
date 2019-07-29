@@ -21,6 +21,7 @@ from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import loadCalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.functions import printSet
+from ILCDIRAC.CalibrationSystem.Utilities.functions import saveCalibrationRun
 from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import CalibrationSettings
 
 __RCSID__ = "$Id$"
@@ -278,6 +279,7 @@ class CalibrationHandler(RequestHandler):
       calibration.resultsSuccessfullyCopiedToEos = True  # we don't want files to be copied to user EOS
       #  if users want logs they can request it with getResults
       #  command
+      saveCalibrationRun(calibration)
       CalibrationHandler.idsOfCalibsToBeKilled += [calibIdToKill]
     return res
 
@@ -539,6 +541,7 @@ class CalibrationHandler(RequestHandler):
         calibRun = CalibrationHandler.activeCalibrations[iCalib]
         calibRun.submitJobs(jobsToResubmit, proxyUserName=calibRun.proxyUserName,
                             proxyUserGroup=calibRun.proxyUserGroup)  # pylint: disable=unexpected-keyword-arg
+    return S_OK()
 
     #  if failedPairs:
     #    result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs)
@@ -547,7 +550,6 @@ class CalibrationHandler(RequestHandler):
     #  else:
     #    return S_OK()
 
-      return S_OK()
 
   auth_getNumberOfJobsPerCalibration = ['authenticated']
   types_getNumberOfJobsPerCalibration = []
