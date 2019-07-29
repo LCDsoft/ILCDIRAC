@@ -140,8 +140,9 @@ class OverlayInputTestCase( unittest.TestCase ):
     self.olin._ops = ops_mock
     self.olin.machine = 'myTestMachineVeryRare'
     self.olin.energy = 198
-    assertDiracFailsWith( self.olin._checkFinalConsistency(),
-                          'machine mytestmachineveryrare does not have overlay data', self )
+    res = self.olin._checkFinalConsistency()
+    assertDiracFailsWith(res,
+                         "machine 'mytestmachineveryrare' does not have overlay data", self)
 
   def test_checkfinalconsistency_energynotfound( self ):
     self.olin.energy = 824
