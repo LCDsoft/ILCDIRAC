@@ -536,19 +536,9 @@ class CalibrationHandler(RequestHandler):
         if calibrationID == iCalib:
           jobsToResubmit.append(workerID)
       if jobsToResubmit:
-        newRun = CalibrationHandler.activeCalibrations[iCalib]
-        res = self._getUsernameAndGroup()
-        if not res['OK']:
-          return S_ERROR('Error while retrieving proxy user name or group. CalibrationID = %s'
-                         % (calibrationID))
-        usernameAndGroup = res['Value']
-        self.log.info('Retrieve user proxy - userName = %s, userGroup = %s'
-                      % (usernameAndGroup['username'], usernameAndGroup['group']))
-
-        newRun.proxyUserName = usernameAndGroup['username']
-        newRun.proxyUserGroup = usernameAndGroup['group']
-        newRun.submitJobs(jobsToResubmit, proxyUserName=newRun.proxyUserName,
-                          proxyUserGroup=newRun.proxyUserGroup)  # pylint: disable=unexpected-keyword-arg
+        calibRun = CalibrationHandler.activeCalibrations[iCalib]
+        calibRun.submitJobs(jobsToResubmit, proxyUserName=calibRun.proxyUserName,
+                            proxyUserGroup=calibRun.proxyUserGroup)  # pylint: disable=unexpected-keyword-arg
 
     #  if failedPairs:
     #    result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs)

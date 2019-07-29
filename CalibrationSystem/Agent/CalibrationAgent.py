@@ -76,23 +76,20 @@ class CalibrationAgent(AgentModule):
         return S_ERROR(errMsg)
 
     # DEBUG
-    self.log.error('SASHA: targetJobNumbers_runningCalibs: %s' % targetJobNumbers_runningCalibs)
-    self.log.error('SASHA: currentJobStatusesPerWorker_runningCalibs: %s' % currentJobStatusesPerWorker_runningCalibs)
+    #  self.log.error('SASHA: targetJobNumbers_runningCalibs: %s' % targetJobNumbers_runningCalibs)
+    #  self.log.error('SASHA: currentJobStatusesPerWorker_runningCalibs: %s' % currentJobStatusesPerWorker_runningCalibs)
     jobToResubmitted = self.__calculateJobsToBeResubmitted(
         currentJobStatusesPerWorker_runningCalibs, targetJobNumbers_runningCalibs)
-    self.log.error('SASHA: __calculateJobsToBeResubmitted: %s' % jobToResubmitted)
+    #  self.log.error('SASHA: __calculateJobsToBeResubmitted: %s' % jobToResubmitted)
 
-    #  TODO FIXME job submission requires ['ilc_user', 'calice_user'] proxy. Calibration Agent doesn't have it.
-    #  2019-07-26 13:27:11 UTC Calibration/Calibration/ILCDIRAC.Interfaces.API.NewInterface.UserJob ERROR: Not allowed to submit a job, you need a ['ilc_user', 'cali
     res = self.requestResubmission(jobToResubmitted)
     if not res['OK']:
       return res
 
-
     #  self.log.info('Execute execute. currentJobStatusesPerWorker : %s, targetJobNumbers: %s' % (self.currentJobStatusesPerWorker, targetJobNumbers))
     # TODO temporarily switched off resubmission. For testing purpose
 
-    #  self.requestResubmission( self.__calculateJobsToBeResubmitted(self.currentJobStatusesPerWorker, targetJobNumbers ) )
+    #  self.requestResubmission(self.__calculateJobsToBeResubmitted(self.currentJobStatusesPerWorker, targetJobNumbers ))
     res = self.calibrationService.checkForStepIncrement()
     if not res['OK']:
       return res
