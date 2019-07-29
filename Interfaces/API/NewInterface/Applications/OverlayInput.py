@@ -57,64 +57,66 @@ class OverlayInput(LCUtilityApplication):
     self.processorName = ''
 
   def setMachine(self, machine):
-    """ Define the machine to use, clic_cdr or ilc_dbd
-    """
-    self._checkArgs( { 'machine' : types.StringTypes } )
+    """Define the machine to use."""
+    self._checkArgs({'machine': types.StringTypes})
     self.machine = machine
 
   def setProdID(self, pid):
-    """ Define the prodID to use as input, experts only
-    """
-    self._checkArgs( {'pid': types.IntType})
+    """Define the prodID to use as input, experts only."""
+    self._checkArgs({'pid': types.IntType})
     self.prodID = pid
     return S_OK()
 
   def setUseEnergyForFileLookup(self, useEnergyForFileLookup):
-    """
-    Sets the flag to use the energy meta data in the search of the background files.
+    """Set the flag to use the energy meta data in the search of the background files.
+
     Disable the energy when you want to use files created for a different energy than the signal events
 
     :param bool useEnergyForFileLookup: Use the Energy in the metadata search or not
     """
-    self._checkArgs( {'useEnergyForFileLookup': types.BooleanType } )
+    self._checkArgs({'useEnergyForFileLookup': types.BooleanType})
     self.useEnergyForFileLookup = useEnergyForFileLookup
     return S_OK()
 
-  def setOverlayBXPerSigEvt( self, bxoverlay):
+  def setOverlayBXPerSigEvt(self, bxoverlay):
     """ Define number bunch crossings to overlay for each signal event.
+
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
     Alias for :func:`setBXOverlay`
 
     :param int bxoverlay: Bunch crossings to overlay.
     """
-    self._checkArgs( { 'bxoverlay' : types.IntType } )
+    self._checkArgs({'bxoverlay': types.IntType})
     self.bxToOverlay = bxoverlay
     return S_OK()
 
   def setBXOverlay(self, bxoverlay):
     """ Define number bunch crossings to overlay for each signal event.
+
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
 
     :param int bxoverlay: Bunch crossings to overlay.
     """
-    return self.setOverlayBXPerSigEvt( bxoverlay )
+    return self.setOverlayBXPerSigEvt(bxoverlay)
 
-  def setOverlayEvtsPerBX( self, ggtohadint ):
+  def setOverlayEvtsPerBX(self, ggtohadint):
     """ Define the number of overlay events per bunch crossing.
+
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
 
     :param float ggtohadint: optional number of overlay events interactions per bunch crossing
 
     """
-    self._checkArgs( { 'ggtohadint' : types.FloatType } )
+    self._checkArgs({'ggtohadint': types.FloatType})
     self.numberOfGGToHadronInteractions = ggtohadint
     return S_OK()
 
   def setGGToHadInt(self, ggtohadint):
-    """ Define the number of overlay events per bunch crossing.
+    """Define the number of overlay events per bunch crossing.
+
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
 
@@ -122,17 +124,18 @@ class OverlayInput(LCUtilityApplication):
 
     :param float ggtohadint: optional number of overlay events interactions per bunch crossing
     """
-    return self.setOverlayEvtsPerBX( ggtohadint )
+    return self.setOverlayEvtsPerBX(ggtohadint)
 
   def setNbSigEvtsPerJob(self, nbsigevtsperjob):
-    """ Set the number of signal events per job.
+    """Set the number of signal events per job.
+
     This is used to determine the number of required overlay events.
     It does not modify any of the actual application parameters using the overly input.
 
     :param int nbsigevtsperjob: Number of signal events per job
 
     """
-    self._checkArgs( { 'nbsigevtsperjob' : types.IntType } )
+    self._checkArgs({'nbsigevtsperjob': types.IntType})
 
     self.numberOfSignalEventsPerJob = nbsigevtsperjob
     return S_OK()
@@ -140,23 +143,25 @@ class OverlayInput(LCUtilityApplication):
 
   def setDetectorModel(self, detectormodel):
     """ Set the detector type for the background files.
+
     Files are defined in the ConfigurationSystem: Operations/Overlay/<Accelerator>/<energy>/<Detector>
 
-    :param str detectormodel: Detector type. Must be 'CLIC_ILD_CDR' or 'CLIC_SID_CDR' or 'sidloi3' or 'ILD_o1_v05'
+    :param str detectormodel: Detector type
 
     """
-    self._checkArgs( { 'detectormodel' : types.StringTypes } )
+    self._checkArgs({'detectormodel': types.StringTypes})
 
     self.detectorModel = detectormodel
     return S_OK()
 
   def setPathToFiles(self, path):
-    """ Sets the path to where the overlay files are located.
+    """Set the path to where the overlay files are located.
+
     Setting this option will ignore all other settings!
 
     :param str path: LFN path to the folder containing the overlay files
     """
-    self._checkArgs( { 'path' : types.StringTypes } )
+    self._checkArgs({'path': types.StringTypes})
     self.pathToOverlayFiles = path
     return S_OK()
 
@@ -169,12 +174,10 @@ class OverlayInput(LCUtilityApplication):
     :param str backgroundEventType: Background type.
 
     """
-    self._checkArgs( { 'backgroundEventType' : types.StringTypes } )
+    self._checkArgs({'backgroundEventType': types.StringTypes})
 
     self.backgroundEventType = backgroundEventType
     return S_OK()
-
-
 
   def setBackgroundType(self, backgroundType):
     """Define the background type
@@ -185,34 +188,25 @@ class OverlayInput(LCUtilityApplication):
     return self.setBkgEvtType(backgroundType)
 
   def setProcessorName(self, processorName):
-    """Set the processorName to set the input files for. Necessary if multiple
-    invocations of the overlay processor happen in marlin for example.
+    """Set the processorName to set the input files for.
+
+    Necessary if multiple invocations of the overlay processor happen in marlin for example.
     Different processors must use different background types
 
     :param str processorName: Name of the Processor these input files are for
-
     """
-    self._checkArgs( { 'processorName' : types.StringTypes } )
+    self._checkArgs({'processorName': types.StringTypes})
     self.processorName = processorName
     return S_OK()
 
-
   def setNumberOfSignalEventsPerJob(self, numberSignalEvents):
     """Alternative to :func:`setNbSigEvtsPerJob`
+
     Number used to determine the number of background files needed.
 
     :param int numberSignalEvents: Number of signal events per job
     """
     return self.setNbSigEvtsPerJob(numberSignalEvents)
-
-#  def setProdIDToUse(self,prodid):
-#    """ Optional parameter: Define the production ID to use as input
-#
-#    :param int prodid: Production ID
-#    """
-#    self._checkArgs({"prodid" : types.IntType})
-#    self.prodid = prodid
-#    return S_OK()
 
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
@@ -297,7 +291,7 @@ class OverlayInput(LCUtilityApplication):
         return S_ERROR("Number of signal event per job is not defined")
     else:
       self.prodparameters['detectorModel'] = self.detectorModel
-      self.prodparameters['BXOverlay']  = self.bxToOverlay
+      self.prodparameters['BXOverlay'] = self.bxToOverlay
       self.prodparameters['GGtoHadInt'] = self.numberOfGGToHadronInteractions
 
     return S_OK()
