@@ -60,7 +60,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'ILCDIRAC'
-copyright = u'2010--2018,CERN'
+copyright = u'2010--2019,CERN'
 author = u'S.Sposs,R.Ete,C.Grefe,P.Majewski,A.Sailer,M.Petric,J.Ebbing'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -348,6 +348,6 @@ autodoc_member_order = 'bysource'
 autodoc_mock_imports = ['GSI', 'MySQLdb', 'sqlalchemy', 'lcg_util', 'suds'
                         ]
 
-intersphinx_mapping = {'DIRAC': ('https://dirac.readthedocs.io/en/rel-v6r20', None),
+intersphinx_mapping = {'DIRAC': ('https://dirac.readthedocs.io/en/rel-v6r21', None),
                        'python': ('https://docs.python.org/2.7', None),
                        }
