@@ -141,18 +141,29 @@ class CalibrationHandler(RequestHandler):
     """
     pass
 
+  def __checkForRequiredFields(self, requiredFields, providedFields, errMsg=""):
+    if set(requiredFields) != set(providedFields):
+      errMsg = ("%s Missing fields: %s; unused extra fields: %s"
+                % (errMsg,
+                   printSet(set(requiredFields) - set(providedFields)),
+                   printSet(set(providedFields) - set(requiredFields))))
+      self.log.error(errMsg)
+      return S_ERROR(errMsg)
+    return S_OK()
+
   # TODO split this function to two: first one just create CalibrationRun instance and returns it (to allow user to
   # setup different settings); second one - submits jobs
   auth_createCalibration = ['authenticated']
-  #  types_createCalibration = [dict, int, basestring, basestring, basestring]
-  #  def export_createCalibration(self, inputFiles, numberOfJobs, marlinVersion, steeringFile, detectorModel):
-  types_createCalibration = [dict, dict]
-  def export_createCalibration(self, inputFiles, calibSettingsDict):
+  types_createCalibration = [dict, dict, dict]
+
+  def export_createCalibration(self, inputFiles, numberOfEventsPerFile, calibSettingsDict):
     """ Called by users to create a calibration run (series of calibration iterations)
 
     :param basestring marlinVersion: Version of the Marlin application to be used for reconstruction
     :param dict inputFiles: Input files for the calibration. Dictionary.
     :type inputFiles: `python:dict`
+    :param dict numberOfEventsPerFile: Number of events per type of input file. Dictionary.
+    :type  numberOfEventsPerFile: `python:dict`
     :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
     :param basestring steeringFile: Steering file used in the calibration, LFN
     :returns: S_OK containing ID of the calibration, used to retrieve results etc
@@ -168,25 +179,32 @@ class CalibrationHandler(RequestHandler):
         self.log.error(errMsg)
         return S_ERROR(errMsg)
 
-    requiredFields = set(['gamma', 'kaon', 'muon', 'zuds'])
-    providedFields = set(inputFiles.keys())
+    requiredFields = ['gamma', 'kaon', 'muon', 'zuds']
+    providedFields = inputFiles.keys()
+    res = self.__checkForRequiredFields(requiredFields, providedFields,
+                                        "Dict of input files doesn't contains all required fields.")
+    if not res['OK']:
+      return res
 
-    if requiredFields != providedFields:
-      errMsg = ("First input dictionary doesn't contain required fields. Missing fields: %s; unused extra fields: %s"
-                % (printSet(set(requiredFields) - set(providedFields)),
-                   printSet(set(providedFields) - set(requiredFields))))
-      self.log.error(errMsg)
-      return S_ERROR(errMsg)
+    providedFields = numberOfEventsPerFile.keys()
+    res = self.__checkForRequiredFields(requiredFields, providedFields,
+                                        "Dict of number of events per type of input file doesn't contains all required fields.")
+    if not res['OK']:
+      return res
+
+    for _, iVal in numberOfEventsPerFile.iteritems():
+      if not isinstance(iVal, int) or iVal <= 0:
+        errMsg = "Wrong values for numberOfEventsPerFile dict"
+        self.log.error(errMsg)
+        return S_ERROR(errMsg)
+        break
 
     requiredFields = set(CalibrationSettings().settingsDict.keys())
     providedFields = set(calibSettingsDict.keys())
-
-    if requiredFields != providedFields:
-      errMsg = ("Second input dictionary doesn't contain required fields. Missing fields: %s; unused extra fields: %s"
-                % (printSet(set(requiredFields) - set(providedFields)),
-                   printSet(set(providedFields) - set(requiredFields))))
-      self.log.error(errMsg)
-      return S_ERROR(errMsg)
+    res = self.__checkForRequiredFields(requiredFields, providedFields,
+                                        "Dict of calibration settings doesn't contains all required fields.")
+    if not res['OK']:
+      return res
 
     inputFileDictLoweredKeys = {}
     for iKey, iList in inputFiles.iteritems():
@@ -690,9 +708,6 @@ class CalibrationHandler(RequestHandler):
       return S_ERROR(msg)
 
     return S_OK()
-
-
-
 
   def __regroupInputFile(self, inputFiles, numberOfJobs):
     """ Function to regroup inputFiles dict according to numberOfJobs. Output dict will have a format:

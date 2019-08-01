@@ -96,45 +96,59 @@ def test_createCalibration(calibHandler):
   cldSettings = createCalibrationSettings('CLD')
   clicSettings = createCalibrationSettings('CLIC')
   inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
+  numberOfEventsPerFile = {'zuds': 33, 'gamma': 33, 'muon': 33, 'kaon': 33}
 
   # wrong input: missing argument in the first input dict
-  res = calibHandler.export_createCalibration(inputData, clicSettings.settingsDict)
+  res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, clicSettings.settingsDict)
   assert not res['OK']
   assert "Following settings have None values: ['outputPath']. All settings have to be set up." in res['Message']
   cldSettings.settingsDict['outputPath'] = 'dummy_outputPath'
   clicSettings.settingsDict['outputPath'] = 'dummy_outputPath'
 
   # wrong input: missing argument in the first input dict
-  res = calibHandler.export_createCalibration({'zuds': [], 'gamma': [], 'muon': []}, clicSettings.settingsDict)
+  res = calibHandler.export_createCalibration(
+      {'zuds': [], 'gamma': [], 'muon': []}, numberOfEventsPerFile, clicSettings.settingsDict)
   assert not res['OK']
-  assert "First input dictionary doesn't contain required fields." in res['Message']
+  assert "doesn't contains all required fields." in res['Message']
 
   # wrong input: unused extra argument in the first input dict
   res = calibHandler.export_createCalibration({'zuds': [], 'gamma': [], 'muon': [], 'kaon': [], 'wonderParticle': []},
-                                              clicSettings.settingsDict)
+                                              numberOfEventsPerFile, clicSettings.settingsDict)
   assert not res['OK']
-  assert "First input dictionary doesn't contain required fields." in res['Message']
+  assert "doesn't contains all required fields." in res['Message']
 
-  # wrong input: unused extra argument in the second input dict
+  # wrong input: unused extra argument in the third input dict
   wrongSettings = createCalibrationSettings('CLD').settingsDict
   wrongSettings['outputPath'] = 'dummy_outputPath'
   wrongSettings['dummy'] = 'dummy'
-  res = calibHandler.export_createCalibration(inputData, wrongSettings)
+  res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, wrongSettings)
   assert not res['OK']
-  assert "Second input dictionary doesn't contain required fields." in res['Message']
+  assert "doesn't contains all required fields." in res['Message']
 
-  # wrong input: missing argument in the second input dict
+  # wrong input: missing argument in the third input dict
   wrongSettings = createCalibrationSettings('CLD').settingsDict
   wrongSettings['outputPath'] = 'dummy_outputPath'
   del wrongSettings['detectorModel']
-  res = calibHandler.export_createCalibration(inputData, wrongSettings)
+  res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, wrongSettings)
   assert not res['OK']
-  assert "Second input dictionary doesn't contain required fields." in res['Message']
+  assert "doesn't contains all required fields." in res['Message']
 
   # wrong input: swapped input dictionaries
-  res = calibHandler.export_createCalibration(cldSettings.settingsDict, inputData)
+  res = calibHandler.export_createCalibration(cldSettings.settingsDict, inputData, numberOfEventsPerFile)
   assert not res['OK']
-  assert "First input dictionary doesn't contain required fields." in res['Message']
+  assert "doesn't contains all required fields." in res['Message']
+
+  # wrong input: wrong values in numberOfEventsPerFile
+  wrongNumberOfEventsPerFile = {'zuds': 0, 'gamma': 33, 'muon': 33, 'kaon': 33}
+  res = calibHandler.export_createCalibration(inputData, wrongNumberOfEventsPerFile, clicSettings.settingsDict)
+  assert not res['OK']
+  assert "numberOfEventsPerFile" in res['Message']
+
+  # wrong input: wrong values in numberOfEventsPerFile
+  wrongNumberOfEventsPerFile = {'zuds': 1, 'gamma': 33.5, 'muon': 33, 'kaon': 33}
+  res = calibHandler.export_createCalibration(inputData, wrongNumberOfEventsPerFile, clicSettings.settingsDict)
+  assert not res['OK']
+  assert "numberOfEventsPerFile" in res['Message']
 
 def addPfoAnalysisProcessor(mainSteeringMarlinRecoFile):
   mainTree = et.ElementTree()
@@ -331,10 +345,12 @@ def test_export_submitResult(calibHandler, mocker):
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
+  inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
+  numberOfEventsPerFile = {'zuds': 33, 'gamma': 33, 'muon': 33, 'kaon': 33}
+
   calibSettings = createCalibrationSettings('CLIC')
   calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
-  res = calibHandler.export_createCalibration(
-      {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
+  res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, calibSettings.settingsDict)
   if not res['OK']:
     print('Error message:\t%s' % res['Message'])
     assert False
@@ -384,8 +400,9 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
   print('calibSettings.settingsDict: %s' % calibSettings.settingsDict)
 
-  res = calibHandler.export_createCalibration(
-      {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
+  inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
+  numberOfEventsPerFile = {'zuds': 33, 'gamma': 33, 'muon': 33, 'kaon': 33}
+  res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, calibSettings.settingsDict)
   print('calibHandler.export_createCalibration: %s' % res)
   if not res['OK']:
     print(res['Message'])
@@ -755,6 +772,8 @@ class CalibrationHandlerTest(unittest.TestCase):
                                    testRun.currentParameterSet, self)
 
   def test_getnewparams_inactive_calibration(self):
+    inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
+    numberOfEventsPerFile = {'zuds': 33, 'gamma': 33, 'muon': 33, 'kaon': 33}
     with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
       with patch.object(self.calh, '_CalibrationHandler__regroupInputFile', new=Mock(return_value={'OK': True, 'Value': []})):
         with patch.object(self.calh, '_getUsernameAndGroup',
@@ -762,8 +781,7 @@ class CalibrationHandlerTest(unittest.TestCase):
           for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
             calibSettings = createCalibrationSettings('CLIC')
             calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
-            res = self.calh.export_createCalibration(
-                {'muon': [], 'kaon': [], 'gamma': [], 'zuds': []}, calibSettings.settingsDict)
+            res = self.calh.export_createCalibration(inputData, numberOfEventsPerFile, calibSettings.settingsDict)
             if not res['OK']:
               print(res['Message'])
               assert False
