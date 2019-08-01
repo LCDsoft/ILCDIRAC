@@ -64,7 +64,9 @@ def calibHandler():
   for iCalID in list(CalibrationHandler.activeCalibrations.keys()):
     try:
       dirToDelete = 'calib%s' % iCalID
-      shutil.rmtree(dirToDelete)
+      if os.path.exists(dirToDelete):
+        shutil.rmtree(dirToDelete)
+        #  pass
     except EnvironmentError as e:
       print("Failed to delete directory: %s" % dirToDelete, str(e))
       assert False
@@ -77,12 +79,13 @@ def copiedFccSteeringFile():
   calibID = 1
   workdirName = 'calib%s' % calibID
   if not os.path.exists(workdirName):
-      os.makedirs(workdirName)
+    os.makedirs(workdirName)
   src = '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/fccReconstruction.xml'
   copyfile(src, '%s/fccReconstruction.xml' % workdirName)
   yield workdirName
   try:
-    shutil.rmtree(workdirName)
+    if os.path.exists(workdirName):
+      shutil.rmtree(workdirName)
     #  pass
   except EnvironmentError as e:
     print("Failed to delete directory: %s; ErrMsg: %s" % (workdirName, str(e)))
@@ -193,7 +196,6 @@ def test_readInitialParameterDict(copiedFccSteeringFile, mocker):
   assert res['OK']
   assert tmpDict[tmpKey] == '%s %s' % (calibSetting.settingsDict['nEcalThinLayers'],
                                        calibSetting.settingsDict['nEcalThinLayers'] + calibSetting.settingsDict['nEcalThickLayers'] + 1)
-
 
 def test_initializeHandler(mocker):
   mocker.patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=['calib2', 'calib4', 'calib78']))
@@ -471,14 +473,13 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   #  print('nSignalEvents: %s' % nSignalEvents)
   #  print('nBackgroundEvents: %s' % nBackgroundEvents)
 
-
 def test_simple_killCalibration(calibHandler, mocker):
   CalibrationHandler.activeCalibrations[27] = 'dummy27'
   CalibrationHandler.activeCalibrations[31] = 'dummy31'
   CalibrationHandler.activeCalibrations[20] = 'dummy20'
 
   # wrong calibrationID
-  res = calibHandler.export_killCalibration(2)
+  res = calibHandler.export_killCalibration(2, 'dummy')
   assert res['OK']
   assert res['Value'] == 'No calibration with ID: %s was found. Active calibrations: %s' % (2, [27, 20, 31])
 
@@ -495,46 +496,50 @@ def test_simple_killCalibration(calibHandler, mocker):
   CalibrationHandler.activeCalibrations = {}
 
 
-def test_killCalibration(calibHandler, mocker):
+def test_killCalibration(calibHandler, copiedFccSteeringFile, mocker):
+  from ILCDIRAC.CalibrationSystem.Utilities.functions import saveCalibrationRun
+  calibID = int(copiedFccSteeringFile.split('calib')[-1])
+  print('calibID: %s' % calibID)
+
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
                new=Mock(return_value=Mock(), name='Class'))
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
       return_value={'OK': True, 'Value': {'username': 'correctUserName', 'group': 'correctUserGroup'}}))
   calibSetting = createCalibrationSettings('CLIC')
   calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
-  calibRun = CalibrationRun(33, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  calibRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   calibRun.proxyUserName = 'wrongUserName'
   calibRun.proxyUserGroup = 'correctUserGroup'
-  CalibrationHandler.activeCalibrations[33] = calibRun
+  CalibrationHandler.activeCalibrations[1] = calibRun
+  saveCalibrationRun(calibRun)
 
   # wrong proxyUserName
-  res = calibHandler.export_killCalibration(33)
+  res = calibHandler.export_killCalibration(1, 'dummy')
   assert not res['OK']
-  assert res['Message'] == 'Permission denied. Calibration with ID 33 has been created by other user.'
+  assert res['Message'] == 'Permission denied. Calibration with ID 1 has been created by other user.'
   # wrong proxyUserName
-  res = calibHandler.export_killCalibrations([33])
+  res = calibHandler.export_killCalibrations([1])
   print(res)
   assert res['OK']
-  assert res['Value'][33]['Message'] == 'Permission denied. Calibration with ID 33 has been created by other user.'
+  assert res['Value'][1]['Message'] == 'Permission denied. Calibration with ID 1 has been created by other user.'
   # wrong proxyUserGroup
   calibRun.proxyUserName = 'correctUserName'
   calibRun.proxyUserGroup = 'wrongUserGroup'
-  res = calibHandler.export_killCalibration(33)
+  res = calibHandler.export_killCalibration(1, 'dummy')
   assert not res['OK']
-  assert res['Message'] == 'Permission denied. Calibration with ID 33 has been created by other user.'
+  assert res['Message'] == 'Permission denied. Calibration with ID 1 has been created by other user.'
   # everything is correct
   calibRun.proxyUserName = 'correctUserName'
   calibRun.proxyUserGroup = 'correctUserGroup'
-  res = calibHandler.export_killCalibration(33)
+  res = calibHandler.export_killCalibration(1, 'dummy')
   assert res['OK']
-  assert CalibrationHandler.idsOfCalibsToBeKilled == [33]
+  assert CalibrationHandler.idsOfCalibsToBeKilled == [1]
   assert calibRun.calibrationFinished == True
   assert calibRun.resultsSuccessfullyCopiedToEos == True
   assert not calibRun.calibrationEndTime is None
 
   # clean up
   CalibrationHandler.activeCalibrations = {}
-
 
 def test_changeEosDirectoryToCopyTo(calibHandler, mocker):
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',

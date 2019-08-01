@@ -97,6 +97,8 @@ class CalibrationRun(object):
     # DEBUG properties:
     self.stopStage = self.settings['stopStage']
     self.stopPhase = self.settings['stopPhase']
+    self.nFailedJobs = 0
+    self.calibrationRunStatus = 'Starting'
 
     #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
     #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
@@ -125,6 +127,7 @@ class CalibrationRun(object):
 
   def getCurrentStatus(self):
     outDict = {}
+    outDict['calibrationRunStatus'] = self.calibrationRunStatus
     outDict['calibrationID'] = self.calibrationID
     outDict['currentStage'] = self.currentStage
     outDict['currentPhase'] = self.currentPhase
@@ -695,6 +698,7 @@ class CalibrationRun(object):
           self.currentPhase += 1
         elif self.currentStage == 3:
           self.calibrationFinished = True
+          self.calibrationRunStatus = "Calibration is succesfully finished."
           self.calibrationEndTime = datetime.now()
           self.log.info('The last step of calibration has been finished')
         else:
@@ -721,6 +725,8 @@ class CalibrationRun(object):
       self.currentParameterSet['calibrationIsFinished'] = True
       self.calibrationFinished = True
       self.calibrationEndTime = datetime.now()
+      self.calibrationRunStatus = "Calibration is succesfully finished. It reached requested stopStage: % and stopPhase: %s" % (
+          self.stopStage, self.stopPhase)
 
     # update local steering file after every step. This file will be used if calibration service will be restarted and some calibrations are still are not finished
     res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,

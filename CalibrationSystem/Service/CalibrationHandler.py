@@ -242,7 +242,7 @@ class CalibrationHandler(RequestHandler):
         self.log.error(errMsg)
         return S_ERROR(errMsg)
     for iEl in inList:
-      outDict[iEl] = self.export_killCalibration(iEl)
+      outDict[iEl] = self.export_killCalibration(iEl, 'killed by user request')
     return S_OK(outDict)
 
   auth_changeEosDirectoryToCopyTo = ['authenticated']
@@ -265,8 +265,9 @@ class CalibrationHandler(RequestHandler):
     return res
 
   auth_killCalibration = ['authenticated']
-  types_killCalibration = [int]
-  def export_killCalibration(self, calibIdToKill):
+  types_killCalibration = [int, str]
+
+  def export_killCalibration(self, calibIdToKill, errMsg):
     '''Send kill signal to all jobs associated with the calibration; mark calibration as finished; keeps all
        intermediate results on the server in case user want to inspect some of them'''
 
@@ -279,6 +280,7 @@ class CalibrationHandler(RequestHandler):
       calibration.resultsSuccessfullyCopiedToEos = True  # we don't want files to be copied to user EOS
       #  if users want logs they can request it with getResults
       #  command
+      calibration.calibrationRunStatus = errMsg
       saveCalibrationRun(calibration)
       CalibrationHandler.idsOfCalibsToBeKilled += [calibIdToKill]
     return res
@@ -539,8 +541,14 @@ class CalibrationHandler(RequestHandler):
           jobsToResubmit.append(workerID)
       if jobsToResubmit:
         calibRun = CalibrationHandler.activeCalibrations[iCalib]
-        calibRun.submitJobs(jobsToResubmit, proxyUserName=calibRun.proxyUserName,
-                            proxyUserGroup=calibRun.proxyUserGroup)  # pylint: disable=unexpected-keyword-arg
+        calibRun.nFailedJobs += len(jobsToResubmit)
+        if calibRun.nFailedJobs < calibRun.settings['numberOfJobs']:
+          calibRun.submitJobs(jobsToResubmit, proxyUserName=calibRun.proxyUserName,
+                              proxyUserGroup=calibRun.proxyUserGroup)  # pylint: disable=unexpected-keyword-arg
+        else:
+          errMsg = 'Number of failed jobs are larger than total number of jobs. Something wrong with this calibration run. Kill it!'
+          self.log.error(errMsg)
+          self.export_killCalibration(iCalib, errMsg)
     return S_OK()
 
     #  if failedPairs:

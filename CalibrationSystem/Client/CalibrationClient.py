@@ -226,7 +226,7 @@ def createCalibration(inputFiles, calibSettings):
 def killCalibration(calibId):
   calibrationService = Client()
   calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.killCalibration(calibId)
+  return calibrationService.killCalibration(calibId, 'killed by user request')
 
 
 def changeEosDirectoryToCopyTo(calibId, newPath):
