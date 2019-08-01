@@ -568,6 +568,28 @@ def test_changeEosDirectoryToCopyTo(calibHandler, mocker):
   # clean up
   CalibrationHandler.activeCalibrations = {}
 
+
+def test_resubmitjobs(calibHandler, mocker):
+  mocker.patch.object(calibHandler, 'export_killCalibration', new=Mock(return_value={'OK': True, 'Value': []}))
+  tmpMock1 = Mock(name='calibRunMock')
+  tmpMock1.submitJobs = Mock(return_value=S_OK())
+  tmpMock1.settings.__getitem__ = Mock(return_value=5)
+  tmpMock1.nFailedJobs = 1
+
+  mocker.spy(tmpMock1, 'submitJobs')
+  mocker.spy(calibHandler, 'export_killCalibration')
+
+  CalibrationHandler.activeCalibrations[27] = tmpMock1
+  failedJobs = ((27, 123), (27, 443), (27, 554))
+
+  calibHandler.export_resubmitJobs(failedJobs)  # nJobs == 5; nFailedJobs == 3+1
+  assert tmpMock1.submitJobs.call_count == 1
+  assert calibHandler.export_killCalibration.call_count == 0
+  calibHandler.export_resubmitJobs(failedJobs)  # nJobs == 5; nFailedJobs == 3+3+1
+  assert tmpMock1.submitJobs.call_count == 1
+  assert calibHandler.export_killCalibration.call_count == 1
+
+
 # TODO this function has decorator... which one need to mock
 #  def test_submitJobs(calibHandler, mocker):
 #    calibSetting = createCalibrationSettings('CLIC')
