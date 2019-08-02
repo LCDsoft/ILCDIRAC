@@ -294,6 +294,11 @@ class Calibration(MarlinAnalysis):
       if pattern in iKey:
         return iKey
     self.log.error('Cannot find XPath inside the parameter dict which contains pattern: %s' % pattern)
+    #  try:
+    #    if pattern in iKey:
+    #      return iKey
+    #  except:
+    #    self.log.error('Cannot find XPath inside the parameter dict which contains pattern: %s' % pattern)
     return None
 
   def resolveInputSlcioFilesAndAddToParameterDict(self, allSlcioFiles, parameterDict):
@@ -334,7 +339,14 @@ class Calibration(MarlinAnalysis):
       self.log.error(errorMessage)
       return S_ERROR(errorMessage)
 
-    res = resolveIFpaths(inputDataDict[iType])
+    lfnList = inputDataDict[iType][0]
+    numberOfEventsToSkip = inputDataDict[iType][1]
+    numberOfEventsToProcess = inputDataDict[iType][2]
+
+    parameterDict[self.getKey(parameterDict, 'SkipNEvents')] = numberOfEventsToSkip
+    parameterDict[self.getKey(parameterDict, 'MaxRecordNumber')] = numberOfEventsToProcess
+
+    res = resolveIFpaths(lfnList)
     if not res['OK']:
       self.log.error("Failed to resolve path to input slcio files: %s" % res)
       return res

@@ -281,7 +281,7 @@ class CalibrationRun(object):
       # get input files
       fileList = []
       for _, iList in self.inputFiles[curWorkerID].iteritems():
-        fileList += iList
+        fileList += iList[0]
       lcioFiles = fileList
 
       # create user job

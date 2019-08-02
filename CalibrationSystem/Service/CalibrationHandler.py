@@ -22,6 +22,7 @@ from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import loadCalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.functions import printSet
 from ILCDIRAC.CalibrationSystem.Utilities.functions import saveCalibrationRun
+from ILCDIRAC.CalibrationSystem.Utilities.functions import splitFilesAcrossJobs
 from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import CalibrationSettings
 
 __RCSID__ = "$Id$"
@@ -210,10 +211,12 @@ class CalibrationHandler(RequestHandler):
     for iKey, iList in inputFiles.iteritems():
       inputFileDictLoweredKeys[iKey.lower()] = iList
 
-    res = self.__regroupInputFile(inputFileDictLoweredKeys, calibSettingsDict['numberOfJobs'])
-    if not res['OK']:
-      return res
-    groupedInputFiles = res['Value']
+    groupedInputFiles = splitFilesAcrossJobs(
+        inputFileDictLoweredKeys, numberOfEventsPerFile, calibSettingsDict['numberOfJobs'])
+    #  res = self.__regroupInputFile(inputFileDictLoweredKeys, calibSettingsDict['numberOfJobs'])
+    #  if not res['OK']:
+    #    return res
+    #  groupedInputFiles = res['Value']
 
     res = self.__inputVariablesSanityCheck(calibSettingsDict)
     if not res['OK']:
@@ -709,41 +712,41 @@ class CalibrationHandler(RequestHandler):
 
     return S_OK()
 
-  def __regroupInputFile(self, inputFiles, numberOfJobs):
-    """ Function to regroup inputFiles dict according to numberOfJobs. Output dict will have a format:
-    list of files = outDict[iJob][fileType]
-
-    :param inputFiles: Input list of files for the calibration. Dictionary.
-    :type inputFiles: `python:dict`
-    :param int numberOfJobs: Number of jobs to run
-    :returns: S_OK with 'Value' element being a new regroupped dict or S_ERROR
-    :rtype: dict
-    """
-    tmpDict = {}
-    for iKey, iList in inputFiles.iteritems():
-      if len(iList) < numberOfJobs:
-        return S_ERROR('Too many jobs for provided input data. numberOfJobs==%s which is larger than number of '
-                       'availables files for key %s: nFiles==%s' % (numberOfJobs, iKey, len(iList)))
-      nFilesPerJob = int(len(iList) / numberOfJobs)
-      nLeftoverFiles = len(iList) - nFilesPerJob * numberOfJobs
-      newDict = {}
-      for i in range(0, numberOfJobs):
-        newDict[i] = []
-        for j in range(0, nFilesPerJob):
-          j = nFilesPerJob * i + j
-          newDict[i].append(iList[j])
-        if i < nLeftoverFiles:
-          newDict[i].append(iList[nFilesPerJob * numberOfJobs + i])
-      tmpDict[iKey] = newDict
-
-    outDict = {}
-    for iJob in range(0, numberOfJobs):
-      newDict = {}
-      for iType in [x.lower() for x in inputFiles.keys()]:
-        newDict[iType] = tmpDict[iType][iJob]
-      outDict[iJob] = newDict
-
-    return S_OK(outDict)
+  #  def __regroupInputFile(self, inputFiles, numberOfJobs):
+  #    """ Function to regroup inputFiles dict according to numberOfJobs. Output dict will have a format:
+  #    list of files = outDict[iJob][fileType]
+  #
+  #    :param inputFiles: Input list of files for the calibration. Dictionary.
+  #    :type inputFiles: `python:dict`
+  #    :param int numberOfJobs: Number of jobs to run
+  #    :returns: S_OK with 'Value' element being a new regroupped dict or S_ERROR
+  #    :rtype: dict
+  #    """
+  #    tmpDict = {}
+  #    for iKey, iList in inputFiles.iteritems():
+  #      if len(iList) < numberOfJobs:
+  #        return S_ERROR('Too many jobs for provided input data. numberOfJobs==%s which is larger than number of '
+  #                       'availables files for key %s: nFiles==%s' % (numberOfJobs, iKey, len(iList)))
+  #      nFilesPerJob = int(len(iList) / numberOfJobs)
+  #      nLeftoverFiles = len(iList) - nFilesPerJob * numberOfJobs
+  #      newDict = {}
+  #      for i in range(0, numberOfJobs):
+  #        newDict[i] = []
+  #        for j in range(0, nFilesPerJob):
+  #          j = nFilesPerJob * i + j
+  #          newDict[i].append(iList[j])
+  #        if i < nLeftoverFiles:
+  #          newDict[i].append(iList[nFilesPerJob * numberOfJobs + i])
+  #      tmpDict[iKey] = newDict
+  #
+  #    outDict = {}
+  #    for iJob in range(0, numberOfJobs):
+  #      newDict = {}
+  #      for iType in [x.lower() for x in inputFiles.keys()]:
+  #        newDict[iType] = tmpDict[iType][iJob]
+  #      outDict[iJob] = newDict
+  #
+  #    return S_OK(outDict)
 
 ####################################################################
 #                                                                  #

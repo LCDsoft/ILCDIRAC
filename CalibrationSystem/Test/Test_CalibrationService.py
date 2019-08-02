@@ -318,30 +318,30 @@ def test_finalInterimResultReceived(calibHandler, mocker):
   calibRun.stepResults[calibRun.currentStep].addResult(nJobsTmp, 'dummy')
   assert calibHandler.finalInterimResultReceived(calibRun, calibRun.currentStep)
 
-def test_regroupInputFile(calibHandler, mocker):
-  inputFileDir = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'], 'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'], 'gamma': [
-      'gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'], 'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
-
-  numberOfJobs = 4
-  res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
-  assert res['OK']
-  groupedDict = res['Value']
-  for iKey in inputFileDir.keys():
-    assert len(groupedDict[0][iKey]) == 2
-    assert len(groupedDict[1][iKey]) == 1
-
-  numberOfJobs = 2
-  res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
-  assert res['OK']
-  groupedDict = res['Value']
-  for iKey in inputFileDir.keys():
-    assert len(groupedDict[0][iKey]) == 3
-    assert len(groupedDict[1][iKey]) == 2
+#  def test_regroupInputFile(calibHandler, mocker):
+#    inputFileDir = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'], 'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'], 'gamma': ['gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'], 'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
+#
+#    numberOfJobs = 4
+#    res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
+#    assert res['OK']
+#    groupedDict = res['Value']
+#    for iKey in inputFileDir.keys():
+#      assert len(groupedDict[0][iKey]) == 2
+#      assert len(groupedDict[1][iKey]) == 1
+#
+#    numberOfJobs = 2
+#    res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
+#    assert res['OK']
+#    groupedDict = res['Value']
+#    for iKey in inputFileDir.keys():
+#      assert len(groupedDict[0][iKey]) == 3
+#      assert len(groupedDict[1][iKey]) == 2
 
 def test_export_submitResult(calibHandler, mocker):
   mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
-  mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile',
-                      new=Mock(return_value={'OK': True, 'Value': []}))
+  #  mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile', new=Mock(return_value={'OK': True, 'Value': []}))
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.splitFilesAcrossJobs',
+               new=Mock(return_value={'OK': True, 'Value': []}))
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
@@ -391,8 +391,9 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   opsMock.getValue.return_value = os.path.join(fileDir, 'testing')
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
                new=Mock(return_value=opsMock, name='Class'))
-  mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile',
-                      new=Mock(return_value={'OK': True, 'Value': []}))
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.splitFilesAcrossJobs',
+               new=Mock(return_value={'OK': True, 'Value': []}))
+  #  mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile', new=Mock(return_value={'OK': True, 'Value': []}))
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
@@ -729,7 +730,7 @@ class CalibrationHandlerTest(unittest.TestCase):
 
   def test_getnumberofjobs(self):
     with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
-      with patch.object(self.calh, '_CalibrationHandler__regroupInputFile', new=Mock(return_value={'OK': True, 'Value': []})):
+      with patch('ILCDIRAC.CalibrationSystem.Utilities.functions.splitFilesAcrossJobs', new=Mock(return_value={'OK': True, 'Value': []})):
         with patch.object(self.calh, '_getUsernameAndGroup',
                           new=Mock(return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}})):
           tmpDict = {782145: 815, 72453: 421, 189455: 100, 954692: 0, 29485: 1040}
@@ -772,10 +773,11 @@ class CalibrationHandlerTest(unittest.TestCase):
                                    testRun.currentParameterSet, self)
 
   def test_getnewparams_inactive_calibration(self):
+    print (dir(self.calh))
     inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
     numberOfEventsPerFile = {'zuds': 33, 'gamma': 33, 'muon': 33, 'kaon': 33}
     with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
-      with patch.object(self.calh, '_CalibrationHandler__regroupInputFile', new=Mock(return_value={'OK': True, 'Value': []})):
+      with patch('ILCDIRAC.CalibrationSystem.Utilities.functions.splitFilesAcrossJobs', new=Mock(return_value={'OK': True, 'Value': []})):
         with patch.object(self.calh, '_getUsernameAndGroup',
                           new=Mock(return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}})):
           for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50

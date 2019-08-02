@@ -115,7 +115,6 @@ def test_addParameterToProcessor(produceRandomTextFile, copyFccSteeringFile, moc
   assert not res['OK']
   assert ("parameter with name %s already exists" % 'dummyValue') in res['Message']
 
-
 def test_updateSteeringFile(copyClicSteeringFile, readEmptyParameterDict):
   initialParDict = readEmptyParameterDict
 
@@ -167,3 +166,43 @@ def test_readParametersFromSteeringFile(copyClicSteeringFile, readEmptyParameter
     if iVal is None:
       someValuesAreNone = True
   assert not someValuesAreNone
+
+
+def test_splitFilesAcrossJobs(mocker):
+  from ILCDIRAC.CalibrationSystem.Utilities.functions import splitFilesAcrossJobs
+  inputFiles = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'], 'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'], 'gamma': [
+      'gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'], 'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
+  nEventsPerFile = {'muon': 20, 'kaon': 24, 'gamma': 25, 'zuds': 30}
+
+  def printOut(nJobs):
+    print "\nnEventsPerFile: %s" % nEventsPerFile
+    print "nTotalEvents:"
+    for iKey in inputFiles.keys():
+      print "%s: %s" % (iKey, len(inputFiles[iKey]) * nEventsPerFile[iKey])
+    print ""
+
+    outDict = splitFilesAcrossJobs(inputFiles, nEventsPerFile, nJobs)
+    for i in range(0, nJobs):
+      print "Job #%s:" % i
+      for iKey, iVal in outDict[i].iteritems():
+        print "%s\t --> %s" % (iKey, iVal)
+
+  nJobs = 5
+  printOut(nJobs)
+  outDict = splitFilesAcrossJobs(inputFiles, nEventsPerFile, nJobs)
+  for i in range(0, nJobs):
+    for iKey, iVal in outDict[i].iteritems():
+      assert len(iVal[0]) == 1
+      assert iVal[1] == 0
+      assert iVal[2] == nEventsPerFile[iKey]
+
+  nJobs = 2
+  printOut(nJobs)
+  outDict = splitFilesAcrossJobs(inputFiles, nEventsPerFile, nJobs)
+  for i in range(0, nJobs):
+    for iKey, iVal in outDict[i].iteritems():
+      assert len(iVal[0]) == 3
+      assert iVal[1] == 0 or iVal[1] == nEventsPerFile[iKey] / 2
+      assert iVal[2] == len(inputFiles[iKey]) * nEventsPerFile[iKey] / 2
+
+  #  assert False

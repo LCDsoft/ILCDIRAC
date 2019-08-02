@@ -400,3 +400,45 @@ def addParameterToProcessor(mainSteeringMarlinRecoFile, processorName, parameter
     of.write(root_str)
 
   return S_OK()
+
+
+def splitFilesAcrossJobs(inputFiles, nEventsPerFile, nJobs):
+  """ Function to regroup inputFiles dict according to number of jobs.
+  Output dict will have a format:
+  - arguments of dict: [iJob][iFileType]
+  - values of dict: tuple (ordered list of files, startFromEventNumber, nEventsToProcess)
+
+  :param inputFiles: Input list of files for the calibration. Dictionary.
+  :type inputFiles: `python:dict`
+  :param nEventsPerFile: number of events per file
+  :type nEventsPerFile: `python:dict`
+  :param int nJobs: Number of jobs to run
+  :returns: S_OK with 'Value' element being a new regroupped dict or S_ERROR
+  :rtype: dict
+  """
+
+  tmpDict = {}
+  for iKey, iList in inputFiles.iteritems():
+    nEventsPerJob = int(len(iList) * nEventsPerFile[iKey] / nJobs)
+
+    newDict = {}
+    for i in range(0, nJobs):
+      newDict[i] = []
+      indexOfFirstEventInJob = nEventsPerJob * i
+      indexOfLastEventInJob = nEventsPerJob * (i + 1) - 1
+      indexOfFirstFile = int((indexOfFirstEventInJob) / nEventsPerFile[iKey])
+      indexOfLastFile = int((indexOfLastEventInJob) / nEventsPerFile[iKey])
+      fileListForJob = iList[indexOfFirstFile:indexOfLastFile + 1]
+      startFromEventNumber = indexOfFirstEventInJob - indexOfFirstFile * nEventsPerFile[iKey]
+      newDict[i] += (fileListForJob, startFromEventNumber, nEventsPerJob)
+
+    tmpDict[iKey] = newDict
+
+  outDict = {}
+  for iJob in range(0, nJobs):
+    newDict = {}
+    for iType in inputFiles.keys():
+      newDict[iType] = tmpDict[iType][iJob]
+    outDict[iJob] = newDict
+
+  return outDict

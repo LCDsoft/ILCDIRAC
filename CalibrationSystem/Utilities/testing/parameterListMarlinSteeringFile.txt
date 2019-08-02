@@ -1,4 +1,6 @@
 .//global/parameter[@name='LCIOInputFiles']
+.//global/parameter[@name='SkipNEvents']
+.//global/parameter[@name='MaxRecordNumber']
 .//processor[@type='InitializeDD4hep']/parameter[@name='DD4hepXMLFile']
 .//processor[@type='PfoAnalysis']/parameter[@name='RootFile']
 .//processor[@name='MyDDCaloDigi']/parameter[@name='CalibrECAL']
