@@ -261,7 +261,7 @@ class CalibrationHandler(RequestHandler):
   def export_killCalibrations(self, inList):
     outDict = {}
     for iEl in inList:
-      if not type(iEl) is int:
+      if not isinstance(iEl, int):
         errMsg = ('All elements of input list has to be of integer type.'
                   ' You have provided elements of following types: %s' % [type(iEl) for iEl in inList])
         self.log.error(errMsg)

@@ -44,4 +44,8 @@
     <parameter name="RootFile" type="string">pfoAnalysis_XXXX.root </parameter>
     <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
     <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+    <!--Number of bins in MuonDirectionCorrectedCaloHitEnergy histogram-->
+    <parameter name="NBinsMuonCaloHitEnergyHist" type="int">500</parameter>
+    <!--Upper value of x-range of MuonDirectionCorrectedCaloHitEnergy histogram-->
+    <parameter name="XUpperValueMuonCaloHitEnergyHist" type="float">0.02</parameter>
   </processor>
