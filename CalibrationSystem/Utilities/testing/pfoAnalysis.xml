@@ -47,5 +47,5 @@
     <!--Number of bins in MuonDirectionCorrectedCaloHitEnergy histogram-->
     <parameter name="NBinsMuonCaloHitEnergyHist" type="int">500</parameter>
     <!--Upper value of x-range of MuonDirectionCorrectedCaloHitEnergy histogram-->
-    <parameter name="XUpperValueMuonCaloHitEnergyHist" type="float">0.02</parameter>
+    <parameter name="XUpperValueMuonCaloHitEnergyHist" type="float">0.002</parameter>
   </processor>
