@@ -11,15 +11,15 @@ from datetime import datetime
 from datetime import timedelta
 from xml.etree import ElementTree as et
 from shutil import copyfile
-from DIRAC import S_OK, S_ERROR, gLogger
-from mock import call, patch, MagicMock as Mock
+from DIRAC import S_OK, gLogger
+from mock import call, patch
+from mock import MagicMock as Mock
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
-from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import CalibrationSettings
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler
 from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
     assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
-    assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls, \
+    assertDiracSucceedsWith, assertDiracSucceedsWith_equals, \
     assertDiracFails
 from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import createCalibrationSettings
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
@@ -32,7 +32,6 @@ MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Service.CalibrationHandler'
 @pytest.fixture
 def readParameterDict():
   from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
-  import os
 
   fileDir = os.path.join(os.environ['DIRAC'], "ILCDIRAC", "CalibrationSystem", "Utilities", "testing")
   fileToRead = os.path.join(fileDir, 'parameterListMarlinSteeringFile.txt')
@@ -150,6 +149,20 @@ def test_createCalibration(calibHandler):
   assert not res['OK']
   assert "numberOfEventsPerFile" in res['Message']
 
+  # nJobs > nEvents (0 files for kaons)
+  inputData = {'zuds': ["dummy.slcio"], 'gamma': ["dummy.slcio"], 'muon': ["dummy.slcio"], 'kaon': []}
+  numberOfEventsPerFile = {'zuds': 133, 'gamma': 133, 'muon': 133, 'kaon': 133}
+  res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, clicSettings.settingsDict)
+  assert not res['OK']
+  assert 'kaon' in res['Message']
+
+  # nJobs > nEvents (33 events for muons while nJobs = 100)
+  inputData = {'zuds': ["dummy.slcio"], 'gamma': ["dummy.slcio"], 'muon': ["dummy.slcio"], 'kaon': ["dummy.slcio"]}
+  numberOfEventsPerFile = {'zuds': 133, 'gamma': 133, 'muon': 33, 'kaon': 133}
+  res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, clicSettings.settingsDict)
+  assert not res['OK']
+  assert 'muon' in res['Message']
+
 def addPfoAnalysisProcessor(mainSteeringMarlinRecoFile):
   mainTree = et.ElementTree()
   mainTree.parse(mainSteeringMarlinRecoFile)
@@ -261,6 +274,7 @@ def test_endCurrentStepBasicWorkflow(copiedFccSteeringFile, readParameterDict, m
   addPfoAnalysisProcessor('%s/%s' % (steeringFileName, calibSetting.settingsDict['steeringFile']))
   newRun = CalibrationRun(calibID, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   res = newRun.readInitialParameterDict()
+  assert res['OK']
   newRun.calibrationConstantsDict[".//processor[@type='PfoAnalysis']/parameter[@name='RootFile']"] = 'pfoAnalysis.root'
 
   mocker.patch.object(CalibrationRun, '_CalibrationRun__mergePandoraLikelihoodXmlFiles',
@@ -345,8 +359,8 @@ def test_export_submitResult(calibHandler, mocker):
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
-  inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
-  numberOfEventsPerFile = {'zuds': 33, 'gamma': 33, 'muon': 33, 'kaon': 33}
+  inputData = {'zuds': ["dummy.slcio"], 'gamma': ["dummy.slcio"], 'muon': ["dummy.slcio"], 'kaon': ["dummy.slcio"]}
+  numberOfEventsPerFile = {'zuds': 133, 'gamma': 133, 'muon': 133, 'kaon': 133}
 
   calibSettings = createCalibrationSettings('CLIC')
   calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
@@ -382,6 +396,7 @@ def test_export_submitResult(calibHandler, mocker):
   import filecmp
   assert filecmp.cmp(fileToRead, outFile)
 
+
 def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
   fileDir = utilities.__path__[0]
@@ -401,8 +416,8 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
   print('calibSettings.settingsDict: %s' % calibSettings.settingsDict)
 
-  inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
-  numberOfEventsPerFile = {'zuds': 33, 'gamma': 33, 'muon': 33, 'kaon': 33}
+  inputData = {'zuds': ["dummy.slcio"], 'gamma': ["dummy.slcio"], 'muon': ["dummy.slcio"], 'kaon': ["dummy.slcio"]}
+  numberOfEventsPerFile = {'zuds': 133, 'gamma': 133, 'muon': 133, 'kaon': 133}
   res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, calibSettings.settingsDict)
   print('calibHandler.export_createCalibration: %s' % res)
   if not res['OK']:
@@ -577,7 +592,7 @@ def test_changeEosDirectoryToCopyTo(calibHandler, mocker):
   assert CalibrationHandler.activeCalibrations[33].settings['outputPath'] == 'newEosPath'
   assert CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos == False
 
-  CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos == True
+  CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos = True
   res = calibHandler.export_changeEosDirectoryToCopyTo(33, 'newEosPath2')
   assert res['OK']
   assert CalibrationHandler.activeCalibrations[33].settings['outputPath'] == 'newEosPath2'
@@ -774,8 +789,8 @@ class CalibrationHandlerTest(unittest.TestCase):
 
   def test_getnewparams_inactive_calibration(self):
     print (dir(self.calh))
-    inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
-    numberOfEventsPerFile = {'zuds': 33, 'gamma': 33, 'muon': 33, 'kaon': 33}
+    inputData = {'zuds': ["dummy.slcio"], 'gamma': ["dummy.slcio"], 'muon': ["dummy.slcio"], 'kaon': ["dummy.slcio"]}
+    numberOfEventsPerFile = {'zuds': 133, 'gamma': 133, 'muon': 133, 'kaon': 133}
     with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
       with patch('ILCDIRAC.CalibrationSystem.Utilities.functions.splitFilesAcrossJobs', new=Mock(return_value={'OK': True, 'Value': []})):
         with patch.object(self.calh, '_getUsernameAndGroup',

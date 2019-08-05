@@ -8,7 +8,6 @@ from collections import defaultdict
 from DIRAC import S_OK, S_ERROR
 from DIRAC.Core.Base.AgentModule import AgentModule
 from DIRAC.Core.Base.Client import Client
-from DIRAC.Core.Utilities.Proxy import executeWithUserProxy
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
 from DIRAC.WorkloadManagementSystem.Client.WMSClient import WMSClient
 

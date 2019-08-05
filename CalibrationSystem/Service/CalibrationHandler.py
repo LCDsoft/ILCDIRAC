@@ -157,7 +157,7 @@ class CalibrationHandler(RequestHandler):
   auth_createCalibration = ['authenticated']
   types_createCalibration = [dict, dict, dict]
 
-  def export_createCalibration(self, inputFiles, numberOfEventsPerFile, calibSettingsDict):
+  def export_createCalibration(self, _inputFiles, _numberOfEventsPerFile, calibSettingsDict):
     """ Called by users to create a calibration run (series of calibration iterations)
 
     :param basestring marlinVersion: Version of the Marlin application to be used for reconstruction
@@ -170,6 +170,13 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK containing ID of the calibration, used to retrieve results etc
     :rtype: dict
     """
+
+    inputFiles = {}
+    for iKey, iVal in _inputFiles.iteritems():
+      inputFiles[iKey.lower()] = iVal
+    numberOfEventsPerFile = {}
+    for iKey, iVal in _numberOfEventsPerFile.iteritems():
+      numberOfEventsPerFile[iKey.lower()] = iVal
 
     for iKey, iVal in calibSettingsDict.items():
       keysWithNoneValues = []
@@ -193,12 +200,11 @@ class CalibrationHandler(RequestHandler):
     if not res['OK']:
       return res
 
-    for _, iVal in numberOfEventsPerFile.iteritems():
+    for iKey, iVal in numberOfEventsPerFile.iteritems():
       if not isinstance(iVal, int) or iVal <= 0:
-        errMsg = "Wrong values for numberOfEventsPerFile dict"
+        errMsg = "Wrong values for numberOfEventsPerFile dict for input file type: %s" % iKey
         self.log.error(errMsg)
         return S_ERROR(errMsg)
-        break
 
     requiredFields = set(CalibrationSettings().settingsDict.keys())
     providedFields = set(calibSettingsDict.keys())
@@ -207,16 +213,14 @@ class CalibrationHandler(RequestHandler):
     if not res['OK']:
       return res
 
-    inputFileDictLoweredKeys = {}
-    for iKey, iList in inputFiles.iteritems():
-      inputFileDictLoweredKeys[iKey.lower()] = iList
+    for iKey, iVal in numberOfEventsPerFile.iteritems():
+      if iVal * len(inputFiles[iKey]) < calibSettingsDict['numberOfJobs']:
+        errMsg = ("number of jobs (%s jobs) is larger than total number of provided events (%s events) for file type: %s"
+                  % (calibSettingsDict['numberOfJobs'], iVal * len(inputFiles[iKey]), iKey))
+        self.log.error(errMsg)
+        return S_ERROR(errMsg)
 
-    groupedInputFiles = splitFilesAcrossJobs(
-        inputFileDictLoweredKeys, numberOfEventsPerFile, calibSettingsDict['numberOfJobs'])
-    #  res = self.__regroupInputFile(inputFileDictLoweredKeys, calibSettingsDict['numberOfJobs'])
-    #  if not res['OK']:
-    #    return res
-    #  groupedInputFiles = res['Value']
+    groupedInputFiles = splitFilesAcrossJobs(inputFiles, numberOfEventsPerFile, calibSettingsDict['numberOfJobs'])
 
     res = self.__inputVariablesSanityCheck(calibSettingsDict)
     if not res['OK']:
@@ -312,7 +316,7 @@ class CalibrationHandler(RequestHandler):
   def export_cleanCalibrations(self, inList):
     outDict = {}
     for iEl in inList:
-      if not type(iEl) is int:
+      if not isinstance(iEl, int):
         errMsg = ('All elements of input list has to be of integer type.'
                   ' You have provided elements of following types: %s' % [type(iEl) for iEl in inList])
         self.log.error(errMsg)
@@ -568,6 +572,7 @@ class CalibrationHandler(RequestHandler):
                               proxyUserGroup=calibRun.proxyUserGroup)  # pylint: disable=unexpected-keyword-arg
         else:
           errMsg = 'Number of failed jobs are larger than total number of jobs. Something wrong with this calibration run. Kill it!'
+          # TODO FIXME test it! initial test failed...
           self.log.error(errMsg)
           self.export_killCalibration(iCalib, errMsg)
     return S_OK()

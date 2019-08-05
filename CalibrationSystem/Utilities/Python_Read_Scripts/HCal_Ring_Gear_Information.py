@@ -1,9 +1,4 @@
-import os
-import re
-import random
-import dircache
 import sys
-import math
 
 
 def find_between(s, first, last):

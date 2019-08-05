@@ -6,7 +6,6 @@ import glob
 import os
 import threading
 from collections import defaultdict
-from xml.etree import ElementTree as et
 from datetime import datetime
 import shutil
 
@@ -24,7 +23,6 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import saveCalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.functions import addParameterToProcessor
 from ILCDIRAC.CalibrationSystem.Utilities.mergePandoraLikelihoodData import mergeLikelihoods
-import ILCDIRAC.CalibrationSystem.Utilities as utilities
 from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
 from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
@@ -332,6 +330,7 @@ class CalibrationRun(object):
       res = curJob.submit(dirac, mode='wms')
       results.append(res)
 
+    self.calibrationRunStatus = 'Running'
     saveCalibrationRun(self)
 
     return results

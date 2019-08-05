@@ -7,7 +7,6 @@ about the results of their reconstruction
 from DIRAC.Core.Base.Client import Client
 from DIRAC import S_OK, S_ERROR, gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
-from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import CalibrationSettings
 
 __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
@@ -209,7 +208,8 @@ def setFractionOfFinishedJobsNeededToStartNextStep(calibIds, fraction):
   calibrationService.setServer('Calibration/Calibration')
   return calibrationService.setFractionOfFinishedJobsNeededToStartNextStep(calibIds, fraction)
 
-def createCalibration(inputFiles, calibSettings):
+
+def createCalibration(inputFiles, numberOfEventsPerFile, calibSettings):
   """ Starts a calibration.
 
   :param inputFiles: Input files for the calibration: dictionary of keys GAMMA, KAON, and MUON to list of lfns
@@ -221,7 +221,7 @@ def createCalibration(inputFiles, calibSettings):
 
   calibrationService = Client()
   calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.createCalibration(inputFiles, dict(calibSettings.settingsDict))
+  return calibrationService.createCalibration(inputFiles, numberOfEventsPerFile, dict(calibSettings.settingsDict))
 
 def killCalibration(calibId):
   calibrationService = Client()

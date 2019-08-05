@@ -4,7 +4,6 @@ Unit tests for the CalibrationSystem/Utilities/functions.py
 
 import pytest
 import os
-import unittest
 import string
 import random
 import tempfile
@@ -64,10 +63,10 @@ def copyClicSteeringFile():
 def produceRandomTextFile():
   f = tempfile.NamedTemporaryFile(delete=False)
   nLines = random.randint(2, 20)
-  for iLine in range(0, nLines):
+  for _ in range(0, nLines):
     nSymbolsInLine = random.randint(0, 120)
     line = ''
-    for iSymbol in range(0, nSymbolsInLine):
+    for _ in range(0, nSymbolsInLine):
       line += random.choice(string.ascii_letters + '       ')
     f.write(line)
   f.close()
@@ -162,7 +161,7 @@ def test_readParametersFromSteeringFile(copyClicSteeringFile, readEmptyParameter
   assert res['OK']
 
   someValuesAreNone = False
-  for iKey, iVal in parDict.iteritems():
+  for _, iVal in parDict.iteritems():
     if iVal is None:
       someValuesAreNone = True
   assert not someValuesAreNone

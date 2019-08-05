@@ -12,7 +12,6 @@ ILCDIRAC.Workflow.Modules.Calibration Called by Job Agent.
 import os
 import shutil
 
-from xml.etree import ElementTree as et
 from ILCDIRAC.Core.Utilities.WasteCPU import wasteCPUCycles
 from DIRAC.Core.Utilities.Subprocess import shellCall
 from DIRAC import S_OK, S_ERROR, gLogger

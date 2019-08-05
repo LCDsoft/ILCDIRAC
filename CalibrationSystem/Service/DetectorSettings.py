@@ -3,7 +3,7 @@
 """
 
 import sys
-from DIRAC import S_OK, S_ERROR, gLogger
+from DIRAC import S_OK, gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.objectFactory import ObjectFactory
 
 __RCSID__ = "$Id$"

@@ -2,9 +2,7 @@
 ???
 """
 
-from DIRAC import S_OK, S_ERROR, gLogger
-from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
-from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
+from DIRAC import S_OK, gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.objectFactory import ObjectFactory
 
 __RCSID__ = "$Id$"

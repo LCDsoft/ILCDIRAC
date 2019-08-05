@@ -11,7 +11,6 @@
 
 #!/usr/bin/python
 
-import os
 import xml.etree.ElementTree as ET
 from DIRAC import S_OK, S_ERROR
 

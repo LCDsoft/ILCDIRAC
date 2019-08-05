@@ -2,16 +2,11 @@
 Unit tests for the CalibrationClient
 """
 
-import pytest
-import os
-from DIRAC import S_OK, S_ERROR, gLogger
-from mock import call, patch, MagicMock as Mock
-from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import createCalibration
-from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import createCalibrationSettings
+from DIRAC import S_OK, S_ERROR
+from mock import call, patch
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
     assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
-    assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls, \
-    assertDiracFails
+    assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls
 
 __RCSID__ = "$Id$"
 

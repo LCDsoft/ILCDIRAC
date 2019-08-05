@@ -3,14 +3,12 @@
 import re
 import os
 import fnmatch
-import csv
 import tempfile
 import pickle
 from xml.etree import ElementTree as et
 
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.Utilities.Subprocess import shellCall
-from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
 LOG = gLogger.getSubLogger(__name__)
 
@@ -133,9 +131,9 @@ def validateExistenceOfWordsInFile(inFile, words):
   """ TODO
 
   """
-  with open(inFile) as file:
+  with open(inFile) as iFile:
     for iWord in words:
-      if iWord not in file:
+      if iWord not in iFile:
         return S_ERROR('Word %s is not found in template file: %s' % (iWord, inFile))
   return S_OK()
 
@@ -198,9 +196,12 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup, exceptions=No
       else:
         if not iVal in iElement.text:
           LOG.info('%s:\t"%s" --> "%s"' % (iPar, iElement.text, iVal))
+      # remove value attribute since we write value to the text field
+      if 'value' in iElement.attrib:
+        del iElement.attrib['value']
       iElement.text = iVal
 
-  res = tree.write(outFileName)
+  tree.write(outFileName)
   return S_OK()
 
 def readValueFromSteeringFile(fileName, xPath):
@@ -266,7 +267,7 @@ def testUpdateOfSteeringFileWithNewParameters():
   parDict = readParameterDict()
   print parDict
   currentParameters = readParametersFromSteeringFile(inFileName, parDict)
-  print parDict
+  print currentParameters
 
   outFileName = 'testing/out1.xml'
   res = updateSteeringFile(inFileName, outFileName, {
@@ -307,7 +308,7 @@ def convert_and_execute(command_list, fileToSource=''):
 
 def searchFilesWithPattern(dirName, filePattern):
   matches = []
-  for root, dirnames, filenames in os.walk(dirName):
+  for root, _, filenames in os.walk(dirName):
     for filename in fnmatch.filter(filenames, filePattern):
       matches.append(os.path.join(root, filename))
   return matches
