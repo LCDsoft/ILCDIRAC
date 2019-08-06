@@ -614,6 +614,17 @@ class CalibrationHandler(RequestHandler):
         result.append(calibrationID)
     return S_OK(result)
 
+  auth_getActiveCalibrations = ['authenticated']
+  types_getActiveCalibrations = []
+
+  def export_getActiveCalibrations(self):
+    """ Returns a list of all active calibrations
+
+    :returns: S_OK containing the the list of calibrationIDs
+    :rtype: list
+    """
+    return S_OK(CalibrationHandler.activeCalibrations)
+
   auth_getCalibrationsToBeKilled = ['authenticated']
   types_getCalibrationsToBeKilled = []
   def export_getCalibrationsToBeKilled(self):

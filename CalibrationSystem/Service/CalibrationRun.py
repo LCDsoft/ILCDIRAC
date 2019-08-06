@@ -285,8 +285,8 @@ class CalibrationRun(object):
       # create user job
       curJob = UserJob()
       curJob.check = False  # Necessary to turn off user confirmation
-      curJob.setName('CalibrationService_calid_%s_workerid_%s' % (self.calibrationID, curWorkerID))
-      curJob.setJobGroup('CalibrationService_calib_job')
+      curJob.setName('PandoraCaloCalibration_calid_%s_workerid_%s' % (self.calibrationID, curWorkerID))
+      curJob.setJobGroup('PandoraCaloCalibration_calid_%s' % self.calibrationID)
       if 'CLIC' in self.settings['detectorModel']:
         # needed to copy files form ClicPerformance package
         curJob.setCLICConfig(self.settings['marlinVersion'].rsplit("_", 1)[0])

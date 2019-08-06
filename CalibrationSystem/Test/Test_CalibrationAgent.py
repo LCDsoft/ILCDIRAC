@@ -34,37 +34,37 @@ class CalibrationAgentTest(unittest.TestCase):
 
   def test_getworkerid(self):
     assertEqualsImproved(self.calag._CalibrationAgent__getWorkerIDFromJobName(
-        'CalibrationService_calid_149814_workerid_813102'), 813102, self)
+        'PandoraCaloCalibration_calid_149814_workerid_813102'), 813102, self)
 
   def test_getcalibrationid(self):
     assertEqualsImproved(self.calag._CalibrationAgent__getCalibrationIDFromJobName(
-        'CalibrationService_calid_149814_workerid_813102'), 149814, self)
+        'PandoraCaloCalibration_calid_149814_workerid_813102'), 149814, self)
 
   def test_getworkerid_splitfails(self):
     with self.assertRaises(IndexError):
-      self.calag._CalibrationAgent__getWorkerIDFromJobName('CalibrationServicecalid149814workerid813102')
+      self.calag._CalibrationAgent__getWorkerIDFromJobName('PandoraCaloCalibrationcalid149814workerid813102')
 
   def test_getcalibrationid_splitfails(self):
     with self.assertRaises(IndexError):
-      self.calag._CalibrationAgent__getCalibrationIDFromJobName('CalibrationServicecalid149814workerid813102')
+      self.calag._CalibrationAgent__getCalibrationIDFromJobName('PandoraCaloCalibrationcalid149814workerid813102')
 
   def test_getworkerid_noidgiven(self):
     with self.assertRaises(ValueError):
-      self.calag._CalibrationAgent__getWorkerIDFromJobName('CalibrationService_calid_149814_workerid_')
+      self.calag._CalibrationAgent__getWorkerIDFromJobName('PandoraCaloCalibration_calid_149814_workerid_')
 
   def test_getcalibrationid_noidgiven(self):
     with self.assertRaises(ValueError):
-      self.calag._CalibrationAgent__getCalibrationIDFromJobName('CalibrationService_calid_')
+      self.calag._CalibrationAgent__getCalibrationIDFromJobName('PandoraCaloCalibration_calid_')
 
   def test_getworkerid_conversion_fails(self):
     with self.assertRaises(ValueError):
       assertEqualsImproved(self.calag._CalibrationAgent__getWorkerIDFromJobName(
-          'CalibrationService_calid_sixteen_workerid_twenty'), 813102, self)
+          'PandoraCaloCalibration_calid_sixteen_workerid_twenty'), 813102, self)
 
   def test_getcalibrationid_conversion_fails(self):
     with self.assertRaises(ValueError):
       assertEqualsImproved(self.calag._CalibrationAgent__getCalibrationIDFromJobName(
-          'CalibrationService_calid_sixteen_workerid_twenty'), 149814, self)
+          'PandoraCaloCalibration_calid_sixteen_workerid_twenty'), 149814, self)
 
   def test_calcjobresubmittal(self):  # pylint: disable=too-many-branches
     workermappings = [{}, {}, {}, {}]
@@ -159,32 +159,47 @@ class CalibrationAgentTest(unittest.TestCase):
   #    self.calag.requestResubmission( [ ( 2, 1843 ), ( 3, 19485 ), ( 3, 13135 ), ( 3, 1835 ), ( 6, 39105 ) ] )
 
   def test_fetchJobStatuses(self):
-    jobmon_mock = Mock()
-    jobmon_mock().getJobs.return_value = S_OK([417251, 12741, 4178, 444, 555])
+    jobmon_mock = Mock(name='jobmon_mock')
+
+    def mock_getJobs(inDict):
+      if '64' in inDict['JobGroup']:
+        return S_OK([417251, 12741])
+      elif '65' in inDict['JobGroup']:
+        return S_OK([4178, 444])
+      elif '66' in inDict['JobGroup']:
+        return S_OK([555])
+      else:
+        return S_ERROR()
+
+    jobmon_mock().getJobs.side_effect = mock_getJobs
     jobmon_mock().getJobsParameters.return_value = S_OK({
-        'some_cal_1': {'JobName': 'CalibrationService_calid_64_workerid_1', 'Status': 'Running', 'JobID': 417251,
+        'some_cal_1': {'JobName': 'PandoraCaloCalibration_calid_64_workerid_1', 'Status': 'Running', 'JobID': 417251,
                        'Owner': 'ow1', 'OwnerGroup': 'owGr1', 'OwnerDN': 'dummy'},
-        'some_cal_2': {'JobName': 'CalibrationService_calid_64_workerid_2', 'Status': 'Failed', 'JobID': 12741,
+        'some_cal_2': {'JobName': 'PandoraCaloCalibration_calid_64_workerid_2', 'Status': 'Failed', 'JobID': 12741,
                        'Owner': 'ow1', 'OwnerGroup': 'owGr1', 'OwnerDN': 'dummy'},
-        'some_cal_3': {'JobName': 'CalibrationService_calid_65_workerid_5', 'Status': 'Running', 'JobID': 4178,
+        'some_cal_3': {'JobName': 'PandoraCaloCalibration_calid_65_workerid_5', 'Status': 'Running', 'JobID': 4178,
                        'Owner': 'ow2', 'OwnerGroup': 'owGr2', 'OwnerDN': 'dummy'},
-        'some_cal_4': {'JobName': 'CalibrationService_calid_65_workerid_6', 'Status': 'Finished', 'JobID': 444,
+        'some_cal_4': {'JobName': 'PandoraCaloCalibration_calid_65_workerid_6', 'Status': 'Finished', 'JobID': 444,
                        'Owner': 'ow2', 'OwnerGroup': 'owGr2', 'OwnerDN': 'dummy'},
-        'some_other_cal': {'JobName': 'CalibrationService_calid_66_workerid_14', 'Status': 'Killed', 'JobID': 555,
+        'some_other_cal': {'JobName': 'PandoraCaloCalibration_calid_66_workerid_14', 'Status': 'Killed', 'JobID': 555,
                            'Owner': 'ow3', 'OwnerGroup': 'owGr3', 'OwnerDN': 'dummy'}})
+    calibservice_mock = Mock(name='calibServiceMock')
+    calibservice_mock().getActiveCalibrations.return_value = S_OK([64, 65, 66])
     with patch('%s.JobMonitoringClient' % MODULE_NAME, new=jobmon_mock):
-      status_dict = self.calag.fetchJobStatuses()
-      dict1 = {64: {1: 'Running', 2: 'Failed'},
-               65: {5: 'Running', 6: 'Finished'},
-               66: {14: 'Killed'}}
-      dict2 = {64: {417251: 'Running', 12741: 'Failed'},
-               65: {4178: 'Running', 444: 'Finished'},
-               66: {555: 'Killed'}}
-      dict3 = {64: {'Owner': 'ow1', 'OwnerGroup': 'owGr1', 'OwnerDN': 'dummy'},
-               65: {'Owner': 'ow2', 'OwnerGroup': 'owGr2', 'OwnerDN': 'dummy'},
-               66: {'Owner': 'ow3', 'OwnerGroup': 'owGr3', 'OwnerDN': 'dummy'}}
-      assertEqualsImproved(status_dict, S_OK({'jobStatusVsWorkerId': dict1,
-                                              'jobStatusVsJobId': dict2, 'calibrationOwnership': dict3}), self)
-    jobmon_mock().getJobs.assert_called_once_with({'JobGroup': 'CalibrationService_calib_job'})
+      with patch('%s.Client' % MODULE_NAME, new=calibservice_mock):
+        self.calag.initialize()
+        status_dict = self.calag.fetchJobStatuses()
+        dict1 = {64: {1: 'Running', 2: 'Failed'},
+                 65: {5: 'Running', 6: 'Finished'},
+                 66: {14: 'Killed'}}
+        dict2 = {64: {417251: 'Running', 12741: 'Failed'},
+                 65: {4178: 'Running', 444: 'Finished'},
+                 66: {555: 'Killed'}}
+        dict3 = {64: {'Owner': 'ow1', 'OwnerGroup': 'owGr1', 'OwnerDN': 'dummy'},
+                 65: {'Owner': 'ow2', 'OwnerGroup': 'owGr2', 'OwnerDN': 'dummy'},
+                 66: {'Owner': 'ow3', 'OwnerGroup': 'owGr3', 'OwnerDN': 'dummy'}}
+        assertEqualsImproved(status_dict, S_OK({'jobStatusVsWorkerId': dict1,
+                                                'jobStatusVsJobId': dict2, 'calibrationOwnership': dict3}), self)
+    jobmon_mock().getJobs.assert_called_with({'JobGroup': 'PandoraCaloCalibration_calid_66'})
     jobmon_mock().getJobsParameters.assert_called_once_with([417251, 12741, 4178, 444, 555], [
         'JobName', 'Status', 'JobID', 'Owner', 'OwnerGroup', 'OwnerDN'])

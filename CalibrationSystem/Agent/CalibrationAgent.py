@@ -103,11 +103,21 @@ class CalibrationAgent(AgentModule):
     :rtype: dict
     """
     jobMonitoringService = JobMonitoringClient()
-    res = jobMonitoringService.getJobs({'JobGroup': 'CalibrationService_calib_job'})
+    jobIDs = []
+    res = self.calibrationService.getActiveCalibrations()
     if not res['OK']:
-      self.log.error("Failed getting job IDs from job DB! Error:", res['Message'])
-      return S_ERROR('Failed getting job IDs from job DB!')
-    jobIDs = res['Value']
+      return res
+    activeCalibrations = res['Value']
+    print("jobMonitoringService: %s" % jobMonitoringService)
+    print("self.calibrationService: %s" % self.calibrationService)
+    print("activeCalibrations: %s" % activeCalibrations)
+    for iCalib in activeCalibrations:
+      res = jobMonitoringService.getJobs({'JobGroup': 'PandoraCaloCalibration_calid_%s' % iCalib})
+      if not res['OK']:
+        self.log.error("Failed getting job IDs from job DB! Error:", res['Message'])
+        return S_ERROR('Failed getting job IDs from job DB!')
+      jobIDs += res['Value']
+    print('jobIDs: %s' % jobIDs)
     res = jobMonitoringService.getJobsParameters(_convert_to_int_list(
         jobIDs), ['JobName', 'Status', 'JobID', 'Owner', 'OwnerGroup', 'OwnerDN'])
     if not res['OK']:
