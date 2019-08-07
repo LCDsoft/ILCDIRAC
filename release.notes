@@ -1,3 +1,20 @@
+[v29r1p1]
+
+*ILCTransformationSystem
+
+CHANGE: (!284) The :mod:`~ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent` now obtains the proxy of the transformation owner to check files. It no longer uses a ``shifterProxy``
+
+*Interfaces
+
+FIX: (!282) :mod:`~ILCDIRAC.Interfaces.NewInterface.ProductionJob`: return success in checkFindDirectories when running ``dryRun`` mode, fixes problem with `dirac-clic-make-productions` in dryRun mode
+NEW: (!285) New function ``printAvailableOptions`` in :class:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput.OverlayInput`
+CHANGE: (!285) If the ``OverlayInput`` consistency check fails, a list of available options partially compatible with the requested settings is printed
+
+*Test
+
+NEW: (!282) add CI test to run `dirac-clic-make-productions` in dryRun mode
+
+
 [v29r1]
 
 Release date: 2019-07-03
