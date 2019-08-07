@@ -245,6 +245,7 @@ pylint:PY3K:
     GIT_STRATEGY: none
   script:
     - export HOME=/root/
+    - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
     - source ../bashrc
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
