@@ -139,6 +139,7 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
 
   def test_setInputDataQuery(self):
     """Test the inputDataQuery method."""
+    self.assertFalse(self.prodJob.dryrun)
     self.prodJob.fc.getMetadataFields = Mock(return_value=S_OK({'DirectoryMetaFields': {'ProdID': 19872456}}))
     self.prodJob.fc.findDirectoriesByMetadata = Mock(return_value=S_OK({'abc': 'testdir123'}))
     self.prodJob.fc.getDirectoryUserMetadata = Mock(return_value=S_OK({'EvtType': 'electron party'}))
@@ -146,6 +147,19 @@ class ProductionJobSetInputDataQuery( ProductionJobTestCase ):
     res = self.prodJob.setInputDataQuery({'ProdID': 19872456})
     assertDiracSucceeds(res, self)
     # TODO check output of method
+    assertEqualsImproved(self.prodJob.energy, Decimal('7'), self)
+
+  def test_setInputDataQuery_dryrun(self):
+    """Test the inputDataQuery method."""
+    self.prodJob.dryrun = True
+    self.assertTrue(self.prodJob.dryrun)
+    self.prodJob.fc.getMetadataFields = Mock(return_value=S_OK({'DirectoryMetaFields': {'ProdID': 'int',
+                                                                                        'EvtType': 'string'}}))
+    self.prodJob.fc.findDirectoriesByMetadata = Mock(return_value=S_OK({0: 'None'}))
+    self.prodJob.fc.getDirectoryUserMetadata = Mock(return_value=S_OK({}))
+    self.prodJob.energycat = '7'
+    res = self.prodJob.setInputDataQuery({'ProdID': 1007, 'EvtType': 'Martini'})
+    assertDiracSucceeds(res, self)
     assertEqualsImproved(self.prodJob.energy, Decimal('7'), self)
 
   # TODO fix here

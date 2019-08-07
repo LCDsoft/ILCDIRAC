@@ -140,8 +140,9 @@ class OverlayInputTestCase( unittest.TestCase ):
     self.olin._ops = ops_mock
     self.olin.machine = 'myTestMachineVeryRare'
     self.olin.energy = 198
-    assertDiracFailsWith( self.olin._checkFinalConsistency(),
-                          'machine mytestmachineveryrare does not have overlay data', self )
+    res = self.olin._checkFinalConsistency()
+    assertDiracFailsWith(res,
+                         "machine 'mytestmachineveryrare' does not have overlay data", self)
 
   def test_checkfinalconsistency_energynotfound( self ):
     self.olin.energy = 824
@@ -218,26 +219,58 @@ class OverlayInputTestCase( unittest.TestCase ):
     with patch.object(inspect.getmodule(OverlayInput), 'allowedBkg', new=Mock(return_value=S_OK(13987))):
       assertDiracSucceeds( self.olin._checkFinalConsistency(), self )
 
+  def test_printAvailableOptions(self):
+    """Tests for printAvailableOptions.
 
+    As there are no return values we check that the proper log messages are printed to error or notice.
+    """
+    confMock = Mock()
+    confMock.getConfigurationTree.return_value = S_ERROR('')
+    logMock = Mock(name='Logger')
+    with patch.object(inspect.getmodule(OverlayInput), 'gConfig', new=confMock), \
+         patch.object(inspect.getmodule(OverlayInput), 'LOG', new=logMock):
+      self.olin.printAvailableOptions()
+    logMock.error.assert_called_once()
 
+    confMock = Mock()
+    confMock.getConfigurationTree.return_value = S_OK({'/Operations/Defaults/Overlay/CLIC/1tev/DET/SUSY': 12,
+                                                       '/Operations/Defaults/Overlay/Not_CLIC/1tev/DET/BKG_TYPE': 14,
+                                                       '/Operations/Defaults/Overlay/CLIC/1tev/Other_DET/BKG_TYPE': 15,
+                                                       '/Operations/Defaults/Overlay/CLIC/1tev/DET': 13,
+                                                     })
 
+    logMock.reset()
+    with patch.object(inspect.getmodule(OverlayInput), 'gConfig', new=confMock), \
+         patch.object(inspect.getmodule(OverlayInput), 'LOG', new=logMock):
+      self.olin.printAvailableOptions()
+    logMock.info.assert_not_called()  # make sure we use notice
 
+    logMock.reset()
+    with patch.object(inspect.getmodule(OverlayInput), 'gConfig', new=confMock), \
+         patch.object(inspect.getmodule(OverlayInput), 'LOG', new=logMock):
+      self.olin.printAvailableOptions(detModel='DET')
+    logMock.info.assert_not_called()
+    logMock.notice.assert_any_call('Printing options compatible with')
+    logMock.notice.assert_any_call(' * DetModel = DET')
 
+    logMock.reset()
+    with patch.object(inspect.getmodule(OverlayInput), 'gConfig', new=confMock), \
+         patch.object(inspect.getmodule(OverlayInput), 'LOG', new=logMock):
+      self.olin.printAvailableOptions(energy=2000)
+    logMock.info.assert_not_called()
+    logMock.notice.assert_any_call('Printing options compatible with')
+    logMock.notice.assert_any_call(' * Energy = 2tev')
 
+    logMock.reset()
+    with patch.object(inspect.getmodule(OverlayInput), 'gConfig', new=confMock), \
+         patch.object(inspect.getmodule(OverlayInput), 'LOG', new=logMock):
+      self.olin.printAvailableOptions(machine='CLIC')
+    logMock.info.assert_not_called()
+    logMock.notice.assert_any_call('Printing options compatible with')
+    logMock.notice.assert_any_call(' * Machine = CLIC')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    logMock.reset()
+    with patch.object(inspect.getmodule(OverlayInput), 'gConfig', new=confMock), \
+         patch.object(inspect.getmodule(OverlayInput), 'LOG', new=logMock):
+      self.olin.printAvailableOptions(energy=2000, machine='FCCee', detModel='NO_DET')
+    logMock.notice.assert_any_call('No overlay options compatible with your selection')
