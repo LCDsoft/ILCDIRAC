@@ -180,7 +180,7 @@ def collateReleaseNotes( prs ):
             line = "%s: (!%s) %s" % (splitline[0], prid, splitline[1].strip() )
           systemChangesDict[system].append( line )
 
-    for system, changes in systemChangesDict.iteritems():
+    for system, changes in sorted(systemChangesDict.iteritems()):
       if not system:
         continue
       releaseNotes += "*%s\n\n" % system
