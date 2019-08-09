@@ -1,6 +1,4 @@
-"""
-Unit tests for the CalibrationSystem/Utilities/functions.py
-"""
+"""Unit tests for the CalibrationSystem/Utilities/functions.py."""
 
 import pytest
 import os
@@ -19,16 +17,19 @@ MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Utilities.functions'
 
 
 def copySteeringFile(tag, calibID):
+  """Copy steering files to local test directory."""
   workdirName = 'calib%s' % calibID
   if not os.path.exists(workdirName):
     os.makedirs(workdirName)
 
   if tag == 'CLIC':
-    src = '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/clicConfig/clicReconstruction.xml'
+    src = ('/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/clicConfig/'
+           'clicReconstruction.xml')
     shutil.copyfile(src, '%s/clicReconstruction.xml' % workdirName)
     return '%s/clicReconstruction.xml' % workdirName
   elif tag == 'FCCee':
-    src = '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/fccReconstruction.xml'
+    src = ('/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/'
+           'fccReconstruction.xml')
     shutil.copyfile(src, '%s/fccReconstruction.xml' % workdirName)
     return '%s/fccReconstruction.xml' % workdirName
   else:
@@ -36,6 +37,7 @@ def copySteeringFile(tag, calibID):
 
 
 def cleanDir(calibID):
+  """Remove test directory."""
   workdirName = 'calib%s' % calibID
   if os.path.exists(workdirName):
     try:
@@ -47,6 +49,7 @@ def cleanDir(calibID):
 
 @pytest.yield_fixture
 def copyFccSteeringFile():
+  """Copy FCC steering file."""
   calibID = 1
   yield copySteeringFile('FCCee', calibID)
   cleanDir(calibID)
@@ -54,6 +57,7 @@ def copyFccSteeringFile():
 
 @pytest.yield_fixture
 def copyClicSteeringFile():
+  """Copy CLIC steering file."""
   calibID = 1
   yield copySteeringFile('CLIC', calibID)
   cleanDir(calibID)
@@ -61,6 +65,7 @@ def copyClicSteeringFile():
 
 @pytest.yield_fixture
 def produceRandomTextFile():
+  """Produce random text."""
   f = tempfile.NamedTemporaryFile(delete=False)
   nLines = random.randint(2, 20)
   for _ in range(0, nLines):
@@ -76,8 +81,9 @@ def produceRandomTextFile():
 
 @pytest.fixture
 def readEmptyParameterDict():
+  """Read parameters from the file."""
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
-  fileDir = os.path.join(utilities.__path__[0], 'testing')
+  fileDir = os.path.join(utilities.__path__[0], 'auxiliaryFiles')
 
   inFileName = os.path.join(fileDir, 'parameterListMarlinSteeringFile.txt')
   parDict = readParameterDict(inFileName)
@@ -86,7 +92,9 @@ def readEmptyParameterDict():
       del parDict[iKey]
   return parDict
 
+
 def test_addParameterToProcessor(produceRandomTextFile, copyFccSteeringFile, mocker):
+  """Test adding of parameter to processor in Marlin steering file."""
   # non-existing input file
   res = addParameterToProcessor('dummy.xml', 'dummyProc', {'name': 'dummyValue'})
   assert not res['OK']
@@ -114,7 +122,9 @@ def test_addParameterToProcessor(produceRandomTextFile, copyFccSteeringFile, moc
   assert not res['OK']
   assert ("parameter with name %s already exists" % 'dummyValue') in res['Message']
 
+
 def test_updateSteeringFile(copyClicSteeringFile, readEmptyParameterDict):
+  """Test updateSteeringFile."""
   initialParDict = readEmptyParameterDict
 
   parDict1 = dict(initialParDict)
@@ -125,7 +135,9 @@ def test_updateSteeringFile(copyClicSteeringFile, readEmptyParameterDict):
   #  parDict1[key1] = "dummyDummyRootFile.root"
   #  key2 = "global/parameter[@name='LCIOInputFiles']"
   #  parDict1[key2] = "in1.slcio, in2.slcio"
-  #  self.assertTrue(len(parDict1) == len(initialParDict), "two dictionaries have to be the same size. len1: %s; len2: %s" % (len(parDict1), len(initialParDict)))
+  #  self.assertTrue(len(parDict1) == len(initialParDict),
+  #                  "two dictionaries have to be the same size. len1: %s; len2: %s"
+  #                  % (len(parDict1), len(initialParDict)))
 
   outFileName = os.path.join(os.path.dirname(inFileName), 'out1.xml')
   res = updateSteeringFile(inFileName, outFileName, parDict1)
@@ -143,8 +155,9 @@ def test_updateSteeringFile(copyClicSteeringFile, readEmptyParameterDict):
 
 
 def test_readParameterDict(readEmptyParameterDict):
+  """Test readParameterDict."""
   parDict = readEmptyParameterDict
-  assert not '' in parDict.keys()
+  assert '' not in parDict.keys()
 
   allValuesAreNone = True
   for iKey, iVal in parDict.iteritems():
@@ -154,6 +167,7 @@ def test_readParameterDict(readEmptyParameterDict):
 
 
 def test_readParametersFromSteeringFile(copyClicSteeringFile, readEmptyParameterDict):
+  """Test readParametersFromSteeringFile."""
   parDict = readEmptyParameterDict
   inFileName = copyClicSteeringFile
   res = readParametersFromSteeringFile(inFileName, parDict)
@@ -168,9 +182,12 @@ def test_readParametersFromSteeringFile(copyClicSteeringFile, readEmptyParameter
 
 
 def test_splitFilesAcrossJobs(mocker):
+  """Test splitting of file across jobs."""
   from ILCDIRAC.CalibrationSystem.Utilities.functions import splitFilesAcrossJobs
-  inputFiles = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'], 'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'], 'gamma': [
-      'gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'], 'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
+  inputFiles = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'],
+                'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'],
+                'gamma': ['gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'],
+                'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
   nEventsPerFile = {'muon': 20, 'kaon': 24, 'gamma': 25, 'zuds': 30}
 
   def printOut(nJobs):

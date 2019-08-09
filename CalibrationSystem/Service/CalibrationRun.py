@@ -1,6 +1,4 @@
-"""
-The CalibrationRun ???
-"""
+"""CalibrationRun class."""
 
 import glob
 import os
@@ -33,16 +31,19 @@ __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
 
 
-#pylint: disable=no-self-use
+# pylint: disable=no-self-use
 class CalibrationResult(object):
-  """ Wrapper class to store information about calibration computation interim results. Stores results
-  from all worker nodes from a single step. """
+  """Wrapper class to store information about calibration computation interim results.
+
+  Stores results from all worker nodes from a single step.
+  """
 
   def __init__(self):
+    """Initialize."""
     self.results = dict()
 
   def addResult(self, workerID, result):
-    """ Adds a result from a given worker to the object
+    """Add a result from a given worker to the object.
 
     :param int workerID: ID of the worker providing the result
     :param result: list of floats representing the returned histogram
@@ -52,7 +53,7 @@ class CalibrationResult(object):
     self.results[workerID] = result
 
   def getNumberOfResults(self):
-    """ Return number of interim results stored in this wrapper
+    """Return number of interim results stored in this wrapper.
 
     :returns: Number of histograms stored in this object
     :rtype: int
@@ -61,18 +62,20 @@ class CalibrationResult(object):
 
 
 class CalibrationRun(object):
-  """ Object that stores information about a single run of the calibration software.
+  """Object that stores information about a single run of the calibration software.
+
   Includes files, current parameter set, software version, the workers running as well as
   the results of each step.
   """
 
   def __init__(self, calibrationID, inputFiles, calibSettingsDict):
+    """Initialize."""
     self.lock = threading.Lock()
     self.calibrationID = calibrationID
     self.settings = calibSettingsDict
     self.inputFiles = inputFiles
     self.log = LOG.getSubLogger('[%s]' % calibrationID)
-    if 'LFN:' in self.settings['steeringFile']:
+    if self.settings['steeringFile'].lower().startswith('lfn:'):
       self.settings['steeringFile'] = self.settings['steeringFile'].split(':')[1]
     self.localSteeringFile = os.path.join("calib%s/" % self.calibrationID,
                                           os.path.basename(self.settings['steeringFile']))
@@ -98,16 +101,16 @@ class CalibrationRun(object):
     self.nFailedJobs = 0
     self.calibrationRunStatus = 'Starting'
 
-    #self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
-    #self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
-    #FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs
-    #to be accessed by the agent in the case of resubmission
+    # self.workerJobs = [] ##FIXME: Disabled because not used? Maybe in submit initial jobs
+    # self.activeWorkers = dict() ## dict between calibration and worker node? ##FIXME:Disabled because not used?
+    # FIXME: Probably need to store a mapping workerID -> part of calibration that worker is working on. This then needs
+    # to be accessed by the agent in the case of resubmission
 
-  # two functions below are required to dump instance of calibrationRun to local file
   def __getstate__(self):
-    # Copy the object's state from self.__dict__ which contains
-    # all our instance attributes. Always use the dict.copy()
-    # method to avoid modifying the original state.
+    """Copy the object's state from self.__dict__ which contains all instance attributes.
+
+    This implementatin is required to dump instance of calibrationRun to local file.
+    """
     state = self.__dict__.copy()
     # Remove the unpicklable entries.
     del state['log']
@@ -116,7 +119,10 @@ class CalibrationRun(object):
     return state
 
   def __setstate__(self, state):
-    # Restore instance attributes
+    """Restore the object's state from self.__dict__ which contains all instance attributes.
+
+    This implementatin is required to dump instance of calibrationRun to local file.
+    """
     self.__dict__.update(state)
     # Restore unpicklable entries
     self.ops = Operations()
@@ -124,6 +130,7 @@ class CalibrationRun(object):
     self.log = LOG.getSubLogger('[%s]' % self.calibrationID)
 
   def getCurrentStatus(self):
+    """Return dict with calibration current status."""
     outDict = {}
     outDict['calibrationRunStatus'] = self.calibrationRunStatus
     outDict['calibrationID'] = self.calibrationID
@@ -133,19 +140,20 @@ class CalibrationRun(object):
     outDict['calibrationStartTime'] = self.calibrationStartTime
     outDict['calibrationFinished'] = self.calibrationFinished
     outDict['resultsSuccessfullyCopiedToEos'] = self.resultsSuccessfullyCopiedToEos
-    if not self.calibrationEndTime is None:
+    if self.calibrationEndTime is not None:
       outDict['calibrationEndTime'] = self.calibrationEndTime.strftime("%Y-%m-%d %H:%M:%S")
     return outDict
 
   def checkForDebugFlagsToStopCalibration(self):
+    """Check if calibration reached stopPhase and stopStage values."""
     if (self.stopStage <= self.currentParameterSet['currentStage']
             and self.stopPhase <= self.currentParameterSet['currentPhase']):
       return True
     else:
       return False
 
-
   def readInitialParameterDict(self):
+    """Read initial parameters for calibration."""
     self.log.info('running readInitialParameterDict')
 
     dataMan = DataManager()
@@ -158,12 +166,12 @@ class CalibrationRun(object):
 
     try:
       shutil.copyfile(self.localSteeringFile, "%s_INPUT" % self.localSteeringFile)
-    except IOError as e:
+    except IOError:
       self.log.error("Cannot make a copy of input steering file: %s_INPUT. This doesn't affect operation." %
                      self.localSteeringFile)
 
     # FIXME this path will be different in production version probably... update it
-    parListFileName = os.path.join(utilities.__path__[0], 'testing/parameterListMarlinSteeringFile.txt')
+    parListFileName = os.path.join(utilities.__path__[0], 'auxiliaryFiles/parameterListMarlinSteeringFile.txt')
 
     parDict = readParameterDict(parListFileName)
     for key in list(parDict.keys()):
@@ -172,7 +180,7 @@ class CalibrationRun(object):
         newKey = key.replace('MyDDMarlinPandora', self.settings['DDPandoraPFANewProcessorName'])
       if 'MyDDCaloDigi' in key:
         newKey = key.replace('MyDDCaloDigi', self.settings['DDCaloDigiName'])
-      if not newKey is None:
+      if newKey is not None:
         parDict[newKey] = parDict.pop(key)
 
     res = readParametersFromSteeringFile(self.localSteeringFile, parDict, ['PfoAnalysis'])
@@ -181,7 +189,8 @@ class CalibrationRun(object):
       return S_ERROR('Failed to read parameters from steering file')
 
     if self.settings['disableSoftwareCompensation']:
-      tmpKey = ".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']" % self.settings['DDPandoraPFANewProcessorName']
+      tmpKey = (".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']"
+                % self.settings['DDPandoraPFANewProcessorName'])
       parDict[tmpKey] = 0.0
       tmpDict = {tmpKey: None}
       res = readParametersFromSteeringFile(self.localSteeringFile, tmpDict)
@@ -226,27 +235,18 @@ class CalibrationRun(object):
     return S_OK()
 
   def getCalibrationID(self):
+    """Get calibration ID."""
     return self.calibrationID
-
-  # TODO this function is only for debugging purpose
-  def dumpSelfArguments(self):
-    for iEl in dir(self):
-      if "__" not in iEl:
-        iElVal = eval("self." + iEl)
-        if isinstance(iElVal, (float, int, basestring, list, dict, tuple)):
-          print("%s: %s" % (iEl, eval("self." + iEl)))
 
   @executeWithUserProxy
   def submitJobs(self, idsOfWorkerNodesToSubmitTo=None):
-    """ Submit the calibration jobs to the workers for the first time.
-    Use a specially crafted application that runs repeated Marlin reconstruction steps
+    """Submit the calibration jobs to the workers for the first time.
 
     :param idsOfWorkerNodesToSubmitTo: list of integers representing IDs of worker nodes to submit jobs to;
                                        if None submit to all allocated nodes
     :returns: S_OK or S_ERROR
     :rtype: dict
     """
-
     self.log.info('running submitJobs')
     res = self.readInitialParameterDict()
     self.log.info('read initial parameter dict')
@@ -336,7 +336,7 @@ class CalibrationRun(object):
     return results
 
   def addResult(self, stepID, workerID, result):
-    """ Add a reconstruction result to the list of other results
+    """Add a reconstruction result to the list of other results.
 
     :param int stepID: ID of the step
     :param int workerID: ID of the worker providing the result
@@ -348,11 +348,11 @@ class CalibrationRun(object):
     self.stepResults[stepID].addResult(workerID, result)
     saveCalibrationRun(self)
     self.lock.release()
-    #FIXME: Do we add old step results? Current status is no, ensured in CalibrationHandler
-    #FIXME: Do we delete old interim results?
+    # FIXME: Do we add old step results? Current status is no, ensured in CalibrationHandler
+    # FIXME: Do we delete old interim results?
 
   def getNewParameters(self, stepIDOnWorker):
-    """ Returns the current parameters
+    """Return current parameters.
 
     :param int stepIDOnWorker: The ID of the step the worker just completed.
     :returns: If the computation is finished, returns S_OK containing a success message string. If there is a new
@@ -367,32 +367,33 @@ class CalibrationRun(object):
       return S_OK()
 
   def getNewPhotonLikelihood(self):
+    """Return new photon likelihood."""
     if self.newPhotonLikelihood:
       return S_OK(self.newPhotonLikelihood)
     else:
-      errMsg = ('No new parameter set available yet. Current step in service: %s, step on worker: %s'
-                % (self.currentStep, stepIDOnWorker))
+      errMsg = ('No new parameter set available yet. Current step in service: %s'
+                % (self.currentStep))
       self.log.verbose(errMsg)
       return S_ERROR(errMsg)
 
-  def __addLists(self, list1, list2):
-    """ Adds two lists together by adding the first element, second element, and so on. Throws an exception
-    if the lists have a different number of elements.
-
-    :param list1: List that should be added element-wise to another
-    :type list1: `python:list`
-    :param list2: Other list that should be added element-wise
-    :type list2: `python:list`
-    :returns: The list [list1[0]+list2[0], list1[1]+list2[1], ...]
-    :rtype: list
-    """
-    if len(list1) != len(list2):
-      raise ValueError('The two lists do not have the same number of elements. \n List 1: %s \n List 2: %s'
-                       % (list1, list2))
-    result = []
-    for first_elem, second_elem in zip(list1, list2):
-      result.append(first_elem + second_elem)
-    return result
+  #  def __addLists(self, list1, list2):
+  #    """Add two lists together by adding the first element, second element, and so on. Throws an exception
+  #    if the lists have a different number of elements.
+  #
+  #    :param list1: List that should be added element-wise to another
+  #    :type list1: `python:list`
+  #    :param list2: Other list that should be added element-wise
+  #    :type list2: `python:list`
+  #    :returns: The list [list1[0]+list2[0], list1[1]+list2[1], ...]
+  #    :rtype: list
+  #    """
+  #    if len(list1) != len(list2):
+  #      raise ValueError('The two lists do not have the same number of elements. \n List 1: %s \n List 2: %s'
+  #                       % (list1, list2))
+  #    result = []
+  #    for first_elem, second_elem in zip(list1, list2):
+  #      result.append(first_elem + second_elem)
+  #    return result
 
   def __mergePandoraLikelihoodXmlFiles(self):
     self.log.info('SASHA __mergePandoraLikelihoodXmlFiles')
@@ -416,6 +417,7 @@ class CalibrationRun(object):
       return S_ERROR('Failed to merge photon likelihoods')
 
   def getKey(self, pattern):
+    """Return key from calibrationConstantsDict which contain input pattern."""
     for iKey in self.calibrationConstantsDict:
       if pattern in iKey:
         return iKey
@@ -423,8 +425,7 @@ class CalibrationRun(object):
     return None
 
   def endCurrentStep(self):
-    """ Calculates the new parameter set based on the results from the computations and prepares the object
-    for the next step. (StepCounter increased, ...)
+    """Calculate new parameter set and prepare the object for the next step.
 
     :returns: None
     """
@@ -444,10 +445,12 @@ class CalibrationRun(object):
 
     self.log.info('calibrationFile: %s' % calibrationFile)
 
-    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.settings['platform'],
-                                                                                                self.settings['marlinVersion_CS'], "PandoraAnalysis"), None)
-    ilcSoftInitScript = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.settings['platform'],
-                                                                                                       self.settings['marlinVersion_CS'], "CVMFSEnvScript"), None)
+    scriptPath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s"
+                                   % (self.settings['platform'], self.settings['marlinVersion_CS'], "PandoraAnalysis"),
+                                   None)
+    ilcSoftInitScript = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s"
+                                          % (self.settings['platform'], self.settings['marlinVersion_CS'],
+                                             "CVMFSEnvScript"), None)
 
     pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
 
@@ -462,13 +465,13 @@ class CalibrationRun(object):
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.settings['digitisationAccuracy'], '-d', fileDir, '-e', '90', '-g', 'Barrel',
-                                 '-i', self.settings['ecalBarrelCosThetaRange'][0], '-j', self.settings['ecalBarrelCosThetaRange'][1]],
-                                ilcSoftInitScript)
+                                 '-i', self.settings['ecalBarrelCosThetaRange'][0], '-j',
+                                 self.settings['ecalBarrelCosThetaRange'][1]], ilcSoftInitScript)
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.settings['digitisationAccuracy'], '-d', fileDir, '-e', '90', '-g', 'EndCap',
-                                 '-i', self.settings['ecalEndcapCosThetaRange'][0], '-j', self.settings['ecalEndcapCosThetaRange'][1]],
-                                ilcSoftInitScript)
+                                 '-i', self.settings['ecalEndcapCosThetaRange'][0], '-j',
+                                 self.settings['ecalEndcapCosThetaRange'][1]], ilcSoftInitScript)
 
       # this parameter can be written in format "value value" in the xml steering file in case of ECAL layout which has
       # layers with different thicknesses
@@ -507,13 +510,13 @@ class CalibrationRun(object):
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.settings['digitisationAccuracy'], '-d', fileDir, '-e', '90', '-g', 'Barrel',
-                                 '-i', self.settings['hcalBarrelCosThetaRange'][0], '-j', self.settings['hcalBarrelCosThetaRange'][1]],
-                                ilcSoftInitScript)
+                                 '-i', self.settings['hcalBarrelCosThetaRange'][0], '-j',
+                                 self.settings['hcalBarrelCosThetaRange'][1]], ilcSoftInitScript)
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
                                  '-c', self.settings['digitisationAccuracy'], '-d', fileDir, '-e', '90', '-g', 'EndCap',
-                                 '-i', self.settings['hcalEndcapCosThetaRange'][0], '-j', self.settings['hcalEndcapCosThetaRange'][1]],
-                                ilcSoftInitScript)
+                                 '-i', self.settings['hcalEndcapCosThetaRange'][0], '-j',
+                                 self.settings['hcalEndcapCosThetaRange'][1]], ilcSoftInitScript)
 
       prevStepCalibConstBarrel = float(self.calibrationConstantsDict[
           self.getKey('CalibrHCALBarrel')])
@@ -618,8 +621,8 @@ class CalibrationRun(object):
                                      / (Absorber_Thickness_Ring * Scintillator_Thickness_EndCap))
 
       kaonKineticEnergy = CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HCalDigi) - 0.49767
-      calibHcalOther = (directionCorrectionRatio * mipPeakRatio * Absorber_Scintillator_Ratio * calibHcalEndcap *
-                        kaonKineticEnergy / hcalMeanEndcap)
+      calibHcalOther = (directionCorrectionRatio * mipPeakRatio * Absorber_Scintillator_Ratio * calibHcalEndcap
+                        * kaonKineticEnergy / hcalMeanEndcap)
 
       self.calibrationConstantsDict[
           self.getKey('CalibrHCALOther')] = calibHcalOther
@@ -657,8 +660,8 @@ class CalibrationRun(object):
       binary = os.path.join(scriptPath, 'PandoraPFACalibrate_HadronicScale_ChiSquareMethod')
 
       res = convert_and_execute([binary, '-a', inputFilesPattern, '-b', truthEnergy,
-                                 '-c', self.settings['pandoraPFAAccuracy'], '-d', fileDir, '-e', self.settings['nHcalLayers']],
-                                ilcSoftInitScript)
+                                 '-c', self.settings['pandoraPFAAccuracy'], '-d', fileDir, '-e',
+                                 self.settings['nHcalLayers']], ilcSoftInitScript)
 
       pythonReadScript = os.path.join(pythonReadScriptPath, 'Had_Extract.py')
       prevStepCalibConstHcalToHad = float(self.calibrationConstantsDict[
@@ -724,10 +727,11 @@ class CalibrationRun(object):
       self.currentParameterSet['calibrationIsFinished'] = True
       self.calibrationFinished = True
       self.calibrationEndTime = datetime.now()
-      self.calibrationRunStatus = "Calibration is succesfully finished. It reached requested stopStage: % and stopPhase: %s" % (
-          self.stopStage, self.stopPhase)
+      self.calibrationRunStatus = ("Calibration is succesfully finished. It reached requested stopStage: % and"
+                                   " stopPhase: %s" % (self.stopStage, self.stopPhase))
 
-    # update local steering file after every step. This file will be used if calibration service will be restarted and some calibrations are still are not finished
+    # update local steering file after every step. This file will be used if calibration service will be restarted and
+    # some calibrations are still are not finished
     res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,
                              self.calibrationConstantsDict, ["PfoAnalysis"])
     saveCalibrationRun(self)
@@ -736,7 +740,7 @@ class CalibrationRun(object):
 
   @executeWithUserProxy
   def copyResultsToEos(self):
-
+    """Copy output files from the calibration to EOS."""
     res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,
                              self.calibrationConstantsDict, ["PfoAnalysis"])
     if not res['OK']:

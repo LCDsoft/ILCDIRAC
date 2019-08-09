@@ -1,20 +1,20 @@
 """
+The CalibrationHandler controls all calibration runs.
+
 The CalibrationHandler collates (calibration results) and distributes (input parameters) information from
 the calibration worker nodes and allows the creation of calibration runs. It will (re-)submit jobs and
-distribute reconstruction workloads among them
+distribute reconstruction workloads among them.
 """
 
 import os
 import re
-import copy
 import math
-import pickle
 import shutil
 import glob
 from datetime import datetime
 from datetime import timedelta
 
-from DIRAC import S_OK, S_ERROR, gLogger, gConfig
+from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from DIRAC.Core.Utilities import DErrno
 from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
@@ -24,15 +24,17 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import printSet
 from ILCDIRAC.CalibrationSystem.Utilities.functions import saveCalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.functions import splitFilesAcrossJobs
 from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import CalibrationSettings
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 
 __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
 
 
 class WorkerInfo(object):
-  """ Wrapper class to store information needed by workers to compute their result. """
+  """Wrapper class to store information needed by workers to compute their result."""
+
   def __init__(self, parameterSet, offset):
-    """ Creates a new WorkerInfo object, passed to the worker nodes to enable them to compute their results.
+    """Create a new WorkerInfo object, passed to the worker nodes to enable them to compute their results.
 
     :param object parameterSet: The histogram to use for the calibration.
     :param int offset: The offset in the event file, used to determine starting point of this computation.
@@ -41,23 +43,27 @@ class WorkerInfo(object):
     self.offset = offset
 
   def getInfo(self):
+    """Return worker info."""
     return (self.parameterSet, self.offset)
 
 
 class CalibrationHandler(RequestHandler):
-  """ Handles the information exchange between worker nodes and the service """
+  """Handles the information exchange between worker nodes and the service."""
+
   @classmethod
   def initializeHandler(cls, _):
-    """ Initializes the handler, setting required variables. Called once in the beginning of the service """
+    """Initialize the handler, setting required variables. Called once in the beginning of the service."""
     cls.activeCalibrations = {}
     cls.idsOfCalibsToBeKilled = []
     cls.calibrationCounter = cls.loadStatus()
     cls.log = LOG
+    cls.ops = Operations()
     # FIXME this parameter should be read from CS
-    cls.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES = 7 * 24 * 60
+    cls.timeToKeepCalibrationResultsInMinutes = cls.ops.getValue('Calibration/timeToKeepCalibrationResultsInMinutes',
+                                                                 7 * 24 * 60)  # TODO add this to CS
 
     # try to find not finished calibrations
-    notFinishedCalibIDs = [int(re.findall('\d+', x)[0]) for x in glob.glob('calib*')]
+    notFinishedCalibIDs = [int(re.findall(r'\d+', x)[0]) for x in glob.glob('calib*')]
     if len(notFinishedCalibIDs) > 0:
       cls.log.info('Recovering calibrations after restart of CalibrationSystem service...')
 
@@ -76,12 +82,16 @@ class CalibrationHandler(RequestHandler):
                      CalibrationHandler.activeCalibrations.keys())
       for _, iCalib in CalibrationHandler.activeCalibrations.iteritems():
         cls.log.always('Calib #%s: isFinished: %s; stage: %s; phase: %s; step: %s' % (iCalib.calibrationID,
-                                                                                      iCalib.calibrationFinished, iCalib.currentStage, iCalib.currentPhase, iCalib.currentStep))
+                                                                                      iCalib.calibrationFinished,
+                                                                                      iCalib.currentStage,
+                                                                                      iCalib.currentPhase,
+                                                                                      iCalib.currentStep))
 
     # TODO ask Andre if we want to stop service or just delete calibratino with ID greate than calibrationCounter?
     if max(notFinishedCalibIDs or [0]) > cls.calibrationCounter:
       errMsg = ('Something went wrong during an attempt to pickup unfinished calibrations during CalibrationHandler'
-                ' initialization. calibrationCounter: %s is behind one of the picked up calibration IDs: %s\n Stop the service!'
+                ' initialization. calibrationCounter: %s is behind one of the picked up calibration IDs: %s\n Stop the'
+                ' service!'
                 % (cls.calibrationCounter, notFinishedCalibIDs))
       cls.log.error(errMsg)
       return S_ERROR(errMsg)
@@ -89,12 +99,14 @@ class CalibrationHandler(RequestHandler):
     return S_OK()
 
   def saveStatus(self):
+    """Save id of the last calibration to file."""
     fileName = "status"
     with open(fileName, 'w') as f:
       f.write("%s" % self.calibrationCounter)
 
   @classmethod
   def loadStatus(cls):
+    """Read id of the last calibration from the file."""
     fileName = "status"
     if os.path.exists(fileName):
       with open(fileName, 'r') as f:
@@ -103,7 +115,7 @@ class CalibrationHandler(RequestHandler):
       return 0
 
   def _getUsernameAndGroup(self):
-    """ Returns name of the group and name of the user of the proxy the user is currently having
+    """Return name of the group and name of the user of the proxy the user is currently having.
 
     :returns: S_OK with value being dict with 'group' and 'username' entries or S_ERROR
     :rtype: `python:dict`
@@ -119,7 +131,7 @@ class CalibrationHandler(RequestHandler):
   def _checkClientRequest(self, calibId):
 
     activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
-    if not calibId in activeCalibrations:
+    if calibId not in activeCalibrations:
       return S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (calibId, activeCalibrations))
 
     res = self._getUsernameAndGroup()
@@ -128,19 +140,11 @@ class CalibrationHandler(RequestHandler):
     usernameAndGroup = res['Value']
 
     calibration = CalibrationHandler.activeCalibrations[calibId]
-    if (calibration.proxyUserName == usernameAndGroup['username']
-            and calibration.proxyUserGroup == usernameAndGroup['group']):
+    if calibration.proxyUserName == usernameAndGroup['username'] \
+       and calibration.proxyUserGroup == usernameAndGroup['group']:
       return S_OK()
     else:
       return S_ERROR('Permission denied. Calibration with ID %s has been created by other user.' % calibId)
-
-    #  TODO
-    #  def _checkTypesOfInputArguments():
-
-  def initialize(self):
-    """ Initializes a single response, setting required variables. Called once /per request/.
-    """
-    pass
 
   def __checkForRequiredFields(self, requiredFields, providedFields, errMsg=""):
     if set(requiredFields) != set(providedFields):
@@ -157,8 +161,8 @@ class CalibrationHandler(RequestHandler):
   auth_createCalibration = ['authenticated']
   types_createCalibration = [dict, dict, dict]
 
-  def export_createCalibration(self, _inputFiles, _numberOfEventsPerFile, calibSettingsDict):
-    """ Called by users to create a calibration run (series of calibration iterations)
+  def export_createCalibration(self, inputFiles, numberOfEventsPerFile, calibSettingsDict):
+    """Create calibration run (series of calibration iterations).
 
     :param basestring marlinVersion: Version of the Marlin application to be used for reconstruction
     :param dict inputFiles: Input files for the calibration. Dictionary.
@@ -170,21 +174,15 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK containing ID of the calibration, used to retrieve results etc
     :rtype: dict
     """
-
-    inputFiles = {}
-    for iKey, iVal in _inputFiles.iteritems():
-      inputFiles[iKey.lower()] = iVal
-    numberOfEventsPerFile = {}
-    for iKey, iVal in _numberOfEventsPerFile.iteritems():
-      numberOfEventsPerFile[iKey.lower()] = iVal
+    inputFiles = {iKey.lower(): iVal for iKey, iVal in inputFiles.iteritems()}
+    numberOfEventsPerFile = {iKey.lower(): iVal for iKey, iVal in numberOfEventsPerFile.iteritems()}
 
     for iKey, iVal in calibSettingsDict.items():
       keysWithNoneValues = []
       if iVal is None:
         keysWithNoneValues.append(iKey)
-      if len(keysWithNoneValues) > 0:
+      if keysWithNoneValues:
         errMsg = "Following settings have None values: %s. All settings have to be set up." % keysWithNoneValues
-        self.log.error(errMsg)
         return S_ERROR(errMsg)
 
     requiredFields = ['gamma', 'kaon', 'muon', 'zuds']
@@ -196,7 +194,8 @@ class CalibrationHandler(RequestHandler):
 
     providedFields = numberOfEventsPerFile.keys()
     res = self.__checkForRequiredFields(requiredFields, providedFields,
-                                        "Dict of number of events per type of input file doesn't contains all required fields.")
+                                                    "Dict of number of events per type of input file doesn't contains"
+                                                    " all required fields.")
     if not res['OK']:
       return res
 
@@ -215,8 +214,8 @@ class CalibrationHandler(RequestHandler):
 
     for iKey, iVal in numberOfEventsPerFile.iteritems():
       if iVal * len(inputFiles[iKey]) < calibSettingsDict['numberOfJobs']:
-        errMsg = ("number of jobs (%s jobs) is larger than total number of provided events (%s events) for file type: %s"
-                  % (calibSettingsDict['numberOfJobs'], iVal * len(inputFiles[iKey]), iKey))
+        errMsg = ("number of jobs (%s jobs) is larger than total number of provided events (%s events) for file type:"
+                  " %s" % (calibSettingsDict['numberOfJobs'], iVal * len(inputFiles[iKey]), iKey))
         self.log.error(errMsg)
         return S_ERROR(errMsg)
 
@@ -259,12 +258,12 @@ class CalibrationHandler(RequestHandler):
   types_killCalibrations = [list]
 
   def export_killCalibrations(self, inList):
+    """Kill set of calibrations."""
     outDict = {}
     for iEl in inList:
       if not isinstance(iEl, int):
         errMsg = ('All elements of input list has to be of integer type.'
                   ' You have provided elements of following types: %s' % [type(iEl) for iEl in inList])
-        self.log.error(errMsg)
         return S_ERROR(errMsg)
     for iEl in inList:
       outDict[iEl] = self.export_killCalibration(iEl, 'killed by user request')
@@ -274,8 +273,7 @@ class CalibrationHandler(RequestHandler):
   types_changeEosDirectoryToCopyTo = [int, str]
 
   def export_changeEosDirectoryToCopyTo(self, calibId, newPath):
-    '''Update "outputPath" settings of the target calibration.'''
-
+    """Update "outputPath" settings of the target calibration."""
     if not (isinstance(newPath, str) and isinstance(calibId, int)):
       return S_ERROR('Wrong types of input argumetns. Required types: [int, str]. Provided types: [%s, %s]'
                      % (type(calibId), type(newPath)))
@@ -293,13 +291,15 @@ class CalibrationHandler(RequestHandler):
   types_killCalibration = [int, str]
 
   def export_killCalibration(self, calibIdToKill, errMsg):
-    '''Send kill signal to all jobs associated with the calibration; mark calibration as finished; keeps all
-       intermediate results on the server in case user want to inspect some of them'''
+    """Kill calibration run.
 
+    Send kill signal to all jobs associated with the calibration; mark calibration as finished; keeps all
+    intermediate results on the server in case user want to inspect some of them
+    """
     res = self._checkClientRequest(calibIdToKill)
     if res == S_OK():
       calibration = CalibrationHandler.activeCalibrations[calibIdToKill]
-      if calibration.calibrationFinished == False:
+      if not calibration.calibrationFinished:
         calibration.calibrationFinished = True
         calibration.calibrationEndTime = datetime.now()
       calibration.resultsSuccessfullyCopiedToEos = True  # we don't want files to be copied to user EOS
@@ -314,6 +314,7 @@ class CalibrationHandler(RequestHandler):
   types_cleanCalibrations = [list]
 
   def export_cleanCalibrations(self, inList):
+    """Remove calibration run from list of active calibrations and delete all associated files."""
     outDict = {}
     for iEl in inList:
       if not isinstance(iEl, int):
@@ -329,13 +330,16 @@ class CalibrationHandler(RequestHandler):
   types_cleanCalibration = [int]
 
   def export_cleanCalibration(self, calibIdToClean):
-    '''Clean temporary calibration results and remove calibration from the list of active calibrations. 
-       If calibration is still not finished - do nothing (if user want to stop it he has kill it first)'''
+    """Clean temporary calibration results and remove calibration from the list of active calibrations.
+
+    If calibration is still not finished - do nothing (if user want to stop it he has kill it first).
+    """
     activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
-    if not calibIdToClean in activeCalibrations:
-      return S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (calibIdToClean, activeCalibrations))
+    if calibIdToClean not in activeCalibrations:
+      return S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (calibIdToClean,
+                                                                                     activeCalibrations))
     calibration = CalibrationHandler.activeCalibrations[calibIdToClean]
-    if calibration.calibrationFinished == False:
+    if not calibration.calibrationFinished:
       return S_OK('Cannot clean calibration with ID %s. It is still not finished/killed.' % calibIdToClean)
     else:
       del CalibrationHandler.activeCalibrations[calibIdToClean]
@@ -346,6 +350,7 @@ class CalibrationHandler(RequestHandler):
   types_getUserCalibrationStatuses = []
 
   def export_getUserCalibrationStatuses(self):
+    """Get status of all active calibration runs."""
     res = self._getUsernameAndGroup()
     if not res['OK']:
       return S_ERROR('Error while retrieving proxy user name or group.')
@@ -353,30 +358,32 @@ class CalibrationHandler(RequestHandler):
 
     statuses = []
 
-    calibList = list(CalibrationHandler.activeCalibrations.keys())
-    calibList.sort()
+    calibList = sorted(CalibrationHandler.activeCalibrations.keys())
     for calibrationID in calibList:
       calibration = CalibrationHandler.activeCalibrations[calibrationID]
-      calibBelongsToUser = (calibration.proxyUserName == usernameAndGroup['username']
-                            and calibration.proxyUserGroup == usernameAndGroup['group'])
-      if calibBelongsToUser:
-        calibStatus = calibration.getCurrentStatus()
-        if 'calibrationEndTime' in calibStatus.keys():
-          calibStatus['timeLeftBeforeOutputWillBeDeleted'] = ('%s' % (calibration.calibrationEndTime
-                                                                      + timedelta(minutes=self.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES) - datetime.now()))
-        calibStatus['totalNumberOfJobs'] = int(calibration.settings['numberOfJobs'])
-        calibStatus['percentageOfFinishedJobs'] = int(
-            100.0 * calibration.stepResults[calibration.currentStep].getNumberOfResults()
-            / calibration.settings['numberOfJobs'])
-        calibStatus['fractionOfFinishedJobsNeededToStartNextStep'] = int(
-            100.0 * calibration.settings['fractionOfFinishedJobsNeededToStartNextStep'])
-        statuses.append(calibStatus)
+      calibBelongsToUser = calibration.proxyUserName == usernameAndGroup['username'] \
+                           and calibration.proxyUserGroup == usernameAndGroup['group']
+      if not calibBelongsToUser:
+        continue
+      calibStatus = calibration.getCurrentStatus()
+      if 'calibrationEndTime' in calibStatus.keys():
+        calibStatus['timeLeftBeforeOutputWillBeDeleted'] = (
+            '%s' % calibration.calibrationEndTime + timedelta(minutes=self.timeToKeepCalibrationResultsInMinutes)
+            - datetime.now())
+      calibStatus['totalNumberOfJobs'] = int(calibration.settings['numberOfJobs'])
+      calibStatus['percentageOfFinishedJobs'] = int(
+          100.0 * calibration.stepResults[calibration.currentStep].getNumberOfResults()
+          / calibration.settings['numberOfJobs'])
+      calibStatus['fractionOfFinishedJobsNeededToStartNextStep'] = int(
+          100.0 * calibration.settings['fractionOfFinishedJobsNeededToStartNextStep'])
+      statuses.append(calibStatus)
     return(S_OK(statuses))
 
   auth_submitResult = ['authenticated']
   types_submitResult = [int, int, int, int, int, basestring]
+
   def export_submitResult(self, calibrationID, stageID, phaseID, stepID, workerID, rootFileContent):
-    """ Called from the worker node to report the result of the calibration to the service
+    """Report result of the calibration to the service.
 
     :param int calibrationID: ID of the current calibration run
     :param int phaseID: ID of the stage the calibration is currently in
@@ -393,7 +400,7 @@ class CalibrationHandler(RequestHandler):
     if not calibration:
       return S_ERROR('Calibration with ID %d not found.' % calibrationID)
     if stepID is calibration.currentStep:  # Only add result if it belongs to current step. Else ignore (it's ok)
-      ## FIXME: use mkdir -p like implementation
+      # FIXME: use mkdir -p like implementation
       dirName = "calib%s/stage%s/phase%s/step%s" % (calibrationID, stageID, phaseID, stepID)
       if not os.path.exists(dirName):
         try:
@@ -415,10 +422,11 @@ class CalibrationHandler(RequestHandler):
 
   auth_checkForStepIncrement = ['authenticated']
   types_checkForStepIncrement = []
-  def export_checkForStepIncrement(self):
-    """ Should only be called by the agent. Periodically checks whether there are any running
-    Calibrations that received enough results to start the next step.
 
+  def export_checkForStepIncrement(self):
+    """Check whether there are any running Calibrations that received enough results to start the next step.
+
+    Should only be called by the agent.
     :returns: S_OK when the check has been ended.
     :rtype: dict
     """
@@ -435,7 +443,8 @@ class CalibrationHandler(RequestHandler):
             return res
           else:
             calibration.resultsSuccessfullyCopiedToEos = True
-        if (datetime.now() - calibration.calibrationEndTime).seconds / 60.0 >= self.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES:
+        if ((datetime.now() - calibration.calibrationEndTime).seconds
+              / 60.0 >= self.timeToKeepCalibrationResultsInMinutes):
           if not calibration.resultsSuccessfullyCopiedToEos:
             self.log.error('Calibration results have not been copied properly...')
           self.log.info('Removing calibration %s from the active calibration list and clean up local directory')
@@ -448,15 +457,15 @@ class CalibrationHandler(RequestHandler):
     return S_OK()
 
   def finalInterimResultReceived(self, calibration, stepID):
-    """ Called periodically. Checks for the given calibration if we now have enough results to compute
-    a new ParameterSet.
+    """Check number of finished jobs and start next step if number os larger than a certain threshold.
 
+    Called periodically.
     :param CalibrationRun calibration: The calibration to check
     :param int stepID: The ID of the current step of that calibration
     :returns: True if enough results have been submitted, False otherwise
     :rtype: bool
     """
-    #FIXME: Find out of this is susceptible to race condition
+    # FIXME: Find out of this is susceptible to race condition
     numberOfResults = calibration.stepResults[stepID].getNumberOfResults()
     maxNumberOfJobs = calibration.settings['numberOfJobs']
     startNextStep = numberOfResults >= math.ceil(
@@ -467,9 +476,11 @@ class CalibrationHandler(RequestHandler):
 
   auth_getNewParameters = ['authenticated']
   types_getNewParameters = [int, int]
-  def export_getNewParameters(self, calibrationID, stepIDOnWorker):
-    """ Called by the worker node to retrieve the parameters for the next iteration of the calibration
 
+  def export_getNewParameters(self, calibrationID, stepIDOnWorker):
+    """Retrieve parameters for the next step of the calibration.
+
+    Called by the worker node.
     :param int calibrationID: ID of the calibration being run on the worker
     :param int stepIDOnWorker: current step ID on the worker node
     :returns: S_ERROR in case of error (e.g. inactive calibration asking for params),
@@ -493,8 +504,9 @@ class CalibrationHandler(RequestHandler):
   types_getNewPhotonLikelihood = [int]
 
   def export_getNewPhotonLikelihood(self, calibrationID):
-    """ Called by the worker node to retrieve the parameters for the next iteration of the calibration
+    """Retrieve new photon likelihood file for new step of the calibration.
 
+    Called by the worker node.
     :param int calibrationID: ID of the calibration being run on the worker
     :returns: S_ERROR in case of error (e.g. inactive calibration asking for params),
               S_OK with the parameter set and the id of the current step
@@ -516,8 +528,9 @@ class CalibrationHandler(RequestHandler):
   types_getInputDataDict = [int, int]
 
   def export_getInputDataDict(self, calibrationID, workerID):
-    """ Called by the worker node to retrieve the parameters for the next iteration of the calibration
+    """Retrieve dict with input files and number of events to run and to skip.
 
+    Called by the worker node.
     :param int calibrationID: ID of the calibration being run on the worker
     :returns: S_ERROR in case of error (e.g. inactive calibration asking for params),
               S_OK with the parameter set and the id of the current step
@@ -544,21 +557,15 @@ class CalibrationHandler(RequestHandler):
 
   auth_resubmitJobs = ['authenticated']
   types_resubmitJobs = [list]
+
   def export_resubmitJobs(self, failedJobs):
-    """ Takes a list of workerIDs and resubmits a job with the current parameterset there
+    """Resubmit failed jobs.
 
     :param failedJobs: List of pairs of the form (calibrationID, workerID)
     :type failedJobs: `python:list`
     :returns: S_OK if successful, else a S_ERROR with a pair (errorstring, list_of_failed_id_pairs)
     :rtype: dict
     """
-
-    #  failedPairs = []
-    #  for calibrationID, workerID in failedJobs:
-    #    if calibrationID not in CalibrationHandler.activeCalibrations:
-    #      failedPairs.append((calibrationID, workerID))
-    #      continue
-
     for iCalib in CalibrationHandler.activeCalibrations:
       jobsToResubmit = []
       for calibrationID, workerID in failedJobs:
@@ -571,26 +578,20 @@ class CalibrationHandler(RequestHandler):
           calibRun.submitJobs(jobsToResubmit, proxyUserName=calibRun.proxyUserName,
                               proxyUserGroup=calibRun.proxyUserGroup)  # pylint: disable=unexpected-keyword-arg
         else:
-          errMsg = 'Number of failed jobs are larger than total number of jobs. Something wrong with this calibration run. Kill it!'
+          errMsg = ('Number of failed jobs are larger than total number of jobs. Something wrong with this calibration'
+                    ' run. Kill it!')
           # TODO FIXME test it! initial test failed...
           self.log.error(errMsg)
           self.export_killCalibration(iCalib, errMsg)
     return S_OK()
 
-    #  if failedPairs:
-    #    result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: %s' % failedPairs)
-    #    result['failed_pairs'] = failedPairs
-    #    return result
-    #  else:
-    #    return S_OK()
-
-
   auth_getNumberOfJobsPerCalibration = ['authenticated']
   types_getNumberOfJobsPerCalibration = []
-  def export_getNumberOfJobsPerCalibration(self):
-    """ Returns a dictionary that maps active calibration IDs to the number of initial jobs they submitted.
-    Used by the agent to determine when to resubmit jobs.
 
+  def export_getNumberOfJobsPerCalibration(self):
+    """Return a dictionary that maps active calibration IDs to the number of initial jobs they submitted.
+
+    Used by the agent to determine when to resubmit jobs.
     :returns: S_OK containing the dictionary with mapping calibrationID -> numberOfJobs
     :rtype: dict
     """
@@ -603,14 +604,14 @@ class CalibrationHandler(RequestHandler):
   types_getRunningCalibrations = []
 
   def export_getRunningCalibrations(self):
-    """ Returns a list of not finished calibrations
+    """Return a list of unfinished calibrations.
 
     :returns: S_OK containing the the list of calibrationIDs
     :rtype: list
     """
     result = []
     for calibrationID in CalibrationHandler.activeCalibrations:
-      if CalibrationHandler.activeCalibrations[calibrationID].calibrationFinished == False:
+      if not CalibrationHandler.activeCalibrations[calibrationID].calibrationFinished:
         result.append(calibrationID)
     return S_OK(result)
 
@@ -618,7 +619,7 @@ class CalibrationHandler(RequestHandler):
   types_getActiveCalibrations = []
 
   def export_getActiveCalibrations(self):
-    """ Returns a list of all active calibrations
+    """Return a list of all active calibrations.
 
     :returns: S_OK containing the the list of calibrationIDs
     :rtype: list
@@ -627,17 +628,19 @@ class CalibrationHandler(RequestHandler):
 
   auth_getCalibrationsToBeKilled = ['authenticated']
   types_getCalibrationsToBeKilled = []
+
   def export_getCalibrationsToBeKilled(self):
+    """Return list of calibrations to be killed."""
     listToReturn = CalibrationHandler.idsOfCalibsToBeKilled
     CalibrationHandler.idsOfCalibsToBeKilled = []
     return S_OK(listToReturn)
 
-#TODO: Add stopping criterion to calibration loop. This should be checked when new parameter sets are calculated
-#In that case, the calibration should be removed from activeCalibrations and the result stored.
-#Should we then kill all jobs of that calibration?
+# TODO: Add stopping criterion to calibration loop. This should be checked when new parameter sets are calculated
+# In that case, the calibration should be removed from activeCalibrations and the result stored.
+# Should we then kill all jobs of that calibration?
 
   def _calibration_creation_failed(self, results):
-    """ Returns whether or not the creation of all calibration jobs was successful.
+    """Return whether or not the creation of all calibration jobs was successful.
 
     :param results: List of S_OK/S_ERROR dicts that were returned by the submission call
     :returns: True if everything was successful, False otherwise
@@ -727,161 +730,3 @@ class CalibrationHandler(RequestHandler):
       return S_ERROR(msg)
 
     return S_OK()
-
-  #  def __regroupInputFile(self, inputFiles, numberOfJobs):
-  #    """ Function to regroup inputFiles dict according to numberOfJobs. Output dict will have a format:
-  #    list of files = outDict[iJob][fileType]
-  #
-  #    :param inputFiles: Input list of files for the calibration. Dictionary.
-  #    :type inputFiles: `python:dict`
-  #    :param int numberOfJobs: Number of jobs to run
-  #    :returns: S_OK with 'Value' element being a new regroupped dict or S_ERROR
-  #    :rtype: dict
-  #    """
-  #    tmpDict = {}
-  #    for iKey, iList in inputFiles.iteritems():
-  #      if len(iList) < numberOfJobs:
-  #        return S_ERROR('Too many jobs for provided input data. numberOfJobs==%s which is larger than number of '
-  #                       'availables files for key %s: nFiles==%s' % (numberOfJobs, iKey, len(iList)))
-  #      nFilesPerJob = int(len(iList) / numberOfJobs)
-  #      nLeftoverFiles = len(iList) - nFilesPerJob * numberOfJobs
-  #      newDict = {}
-  #      for i in range(0, numberOfJobs):
-  #        newDict[i] = []
-  #        for j in range(0, nFilesPerJob):
-  #          j = nFilesPerJob * i + j
-  #          newDict[i].append(iList[j])
-  #        if i < nLeftoverFiles:
-  #          newDict[i].append(iList[nFilesPerJob * numberOfJobs + i])
-  #      tmpDict[iKey] = newDict
-  #
-  #    outDict = {}
-  #    for iJob in range(0, numberOfJobs):
-  #      newDict = {}
-  #      for iType in [x.lower() for x in inputFiles.keys()]:
-  #        newDict[iType] = tmpDict[iType][iJob]
-  #      outDict[iJob] = newDict
-  #
-  #    return S_OK(outDict)
-
-####################################################################
-#                                                                  #
-#         Testcode, not to be used by production code              #
-#                                                                  #
-####################################################################
-  auth_testGetInitVals = ['all']  # FIXME: Restrict to test usage only
-  types_testGetInitVals = []
-
-  def export_testGetInitVals(self):
-    """ Called only by test methods! Resets the service so it can be tested.
-
-    :returns: S_OK on success. (Should always succeed)
-    :rtype: dict
-    """
-    return S_OK((self.activeCalibrations, self.calibrationCounter))
-
-  auth_testGetVals = ['all']  # FIXME: Restrict to test usage only
-  types_testGetVals = []
-
-  def export_testGetVals(self):
-    """ Called only by test methods! Resets the service so it can be tested.
-
-    :returns: S_OK on success. (Should always succeed)
-    :rtype: dict
-    """
-    pandoraAnalysisCalibExecutablePath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" %
-                                                           (self.platform, self.appversion, "PandoraAnalysis"), None)
-    ilcSoftInitScript = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s" % (self.platform,
-                                                                                                       self.appversion, "CVMFSEnvScript"), None)
-    marlinPandoraScriptsPath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s"
-                                                 % (self.platform, self.appversion, "MarlinPandora"), None)
-
-    return S_OK((ilcSoftInitScript, marlinPandoraScriptsPath, pandoraAnalysisCalibExecutablePath))
-
-  auth_testCreateRun = ['all']  # FIXME: Restrict to test usage only
-  types_testCreateRun = []
-
-  def export_testCreateRun(self):
-    """ Called only by test methods! Resets the service so it can be tested.
-
-    :returns: S_OK on success. (Should always succeed)
-    :rtype: dict
-    """
-    newRun = CalibrationRun(1, 'dummy.txt', {0: "dummyInFile.slcio"}, 1, 'dummyMarlinVersion', 'dummyDetectorModel')
-
-    return S_OK(newRun.getCalibrationID())
-
-  auth_resetService = ['all']  # FIXME: Restrict to test usage only
-  types_resetService = []
-  def export_resetService(self):
-    """ Called only by test methods! Resets the service so it can be tested.
-
-    :returns: S_OK on success. (Should always succeed)
-    :rtype: dict
-    """
-    CalibrationHandler.activeCalibrations = {}
-    CalibrationHandler.calibrationCounter = 0
-    return S_OK()
-
-  auth_getInternals = ['all']  # FIXME: Restrict to test usage only
-  types_getInternals = []
-  def export_getInternals(self):
-    """ Called only by test methods! Returns the class variables of this service,
-    exposing its internals and making it testable.
-    The activeCalibration dictionary is serialized using the dumps method from the pickle module.
-    This is done since for an unknown reason one cannot return objects of custom (i.e. non-default python)
-    classes through a service (else a socket timeout occurs).
-
-    :returns: S_OK containing a tuple with the active calibrations dict (serialized with the pickle module) and
-              the calibrationCounter
-    :rtype: dict
-    """
-    return S_OK((pickle.dumps(CalibrationHandler.activeCalibrations),
-                 copy.deepcopy(CalibrationHandler.calibrationCounter)))
-
-  auth_setRunValues = ['all']
-  types_setRunValues = [int, int, object, bool]
-  def export_setRunValues(self, calibrationID, currentStep, parameterSet, calFinished):
-    """ Sets the values of the calibration with ID calibrationID. It is put to step currentStep,
-    gets the parameterSet as current parameter set and the stepFinished status.
-
-    :param int calibrationID: ID of the calibration whose values are to be changed.
-    :param int currentStpe: step the calibration is set to.
-    :param int parameterSet: New parameterSet for the CalibrationRun
-    :param bool calFinished: New calibrationFinished status for the CalibrationRun
-    :returns: S_OK after it has finished
-    :rtype: dict
-    """
-    calibration = CalibrationHandler.activeCalibrations.get(calibrationID, None)
-    if not calibration:
-      return S_ERROR('Calibration with ID %s not in active calibrations.' % calibrationID)
-    calibration.currentStep = currentStep
-    calibration.currentParameterSet = parameterSet
-    calibration.calibrationFinished = calFinished
-    return S_OK()
-
-  auth_setFractionOfFinishedJobsNeededToStartNextStep = ['all']
-  types_setFractionOfFinishedJobsNeededToStartNextStep = [int, float]
-
-  def export_setFractionOfFinishedJobsNeededToStartNextStep(self, calibrationID, fraction):
-    calibration = CalibrationHandler.activeCalibrations.get(calibrationID, None)
-    if not calibration:
-      return S_ERROR('Calibration with ID %s not in active calibrations.' % calibrationID)
-    if fraction <= 0.0 or fraction > 1.0:
-      return S_ERROR('fractionOfFinishedJobsNeededToStartNextStep cannot be outside of range (0.0, 1.0]. Input value: %s' % fraction)
-    calibration.settings['fractionOfFinishedJobsNeededToStartNextStep'] = fraction
-    returnMsg = 'Setup fractionOfFinishedJobsNeededToStartNextStep = %s for calibID: %s' % (fraction, calibrationID)
-    self.log.info(returnMsg)
-    return S_OK(returnMsg)
-
-
-  auth_getopts = ['all']
-  types_getopts = [basestring]
-  def export_getopts(self, option):
-    """ Returns the value of the option stored in the gConfig that this service accesses.
-
-    :param basestring option: name of the option to be queried
-    :returns: S_OK containing the value of the option
-    :rtype: dict
-    """
-    return S_OK(gConfig.getValue(option))

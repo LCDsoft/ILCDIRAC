@@ -1,6 +1,4 @@
-"""
-Unit tests for the CalibrationService
-"""
+"""Unit tests for the CalibrationService."""
 
 import unittest
 import pytest
@@ -11,16 +9,15 @@ from datetime import datetime
 from datetime import timedelta
 from xml.etree import ElementTree as et
 from shutil import copyfile
-from DIRAC import S_OK, gLogger
-from mock import call, patch
+from DIRAC import S_OK, S_ERROR
+from mock import patch
 from mock import MagicMock as Mock
 from DIRAC.Core.DISET.RequestHandler import RequestHandler
 from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationHandler
 from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationRun
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
+from ILCDIRAC.Tests.Utilities.GeneralUtils import \
     assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
-    assertDiracSucceedsWith, assertDiracSucceedsWith_equals, \
-    assertDiracFails
+    assertDiracSucceedsWith_equals
 from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import createCalibrationSettings
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
 
@@ -31,9 +28,10 @@ MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Service.CalibrationHandler'
 
 @pytest.fixture
 def readParameterDict():
+  """Read parameter list."""
   from ILCDIRAC.CalibrationSystem.Utilities.functions import readParameterDict
 
-  fileDir = os.path.join(os.environ['DIRAC'], "ILCDIRAC", "CalibrationSystem", "Utilities", "testing")
+  fileDir = os.path.join(os.environ['DIRAC'], "ILCDIRAC", "CalibrationSystem", "Utilities", "auxiliaryFiles")
   fileToRead = os.path.join(fileDir, 'parameterListMarlinSteeringFile.txt')
   parDict = readParameterDict(fileToRead)
   for iKey in parDict.keys():
@@ -46,6 +44,7 @@ def readParameterDict():
 
 @pytest.yield_fixture
 def calibHandler():
+  """Create calibration handler."""
   CalibrationHandler.initializeHandler(None)
   RequestHandler._rh__initializeClass(Mock(), Mock(), Mock(), Mock())
   calibHandler = CalibrationHandler({}, Mock())
@@ -56,7 +55,7 @@ def calibHandler():
   if os.path.exists('status'):
     try:
       os.remove('status')
-    except:
+    except OSError:
       print("Failed to clean up CalibrationHandler fixture. Cannot delete file 'status'")
       assert False
   # clean up output directory
@@ -75,11 +74,13 @@ def calibHandler():
 
 @pytest.fixture
 def copiedFccSteeringFile():
+  """Copy steering file for testing."""
   calibID = 1
   workdirName = 'calib%s' % calibID
   if not os.path.exists(workdirName):
     os.makedirs(workdirName)
-  src = '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/fccReconstruction.xml'
+  src = ('/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/'
+         'fccReconstruction.xml')
   copyfile(src, '%s/fccReconstruction.xml' % workdirName)
   yield workdirName
   try:
@@ -92,6 +93,7 @@ def copiedFccSteeringFile():
 
 
 def test_createCalibration(calibHandler):
+  """Test createCalibration."""
   cldSettings = createCalibrationSettings('CLD')
   clicSettings = createCalibrationSettings('CLIC')
   inputData = {'zuds': [], 'gamma': [], 'muon': [], 'kaon': []}
@@ -163,15 +165,17 @@ def test_createCalibration(calibHandler):
   assert not res['OK']
   assert 'muon' in res['Message']
 
+
 def addPfoAnalysisProcessor(mainSteeringMarlinRecoFile):
+  """Add pfoAnalysis processor to the steering file."""
   mainTree = et.ElementTree()
   mainTree.parse(mainSteeringMarlinRecoFile)
   mainRoot = mainTree.getroot()
 
-  #FIXME TODO properly find path to the file
+  # FIXME TODO properly find path to the file
   # this file should only contains PfoAnalysis processor
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
-  pfoAnalysisProcessorFile = os.path.join(utilities.__path__[0], 'testing/pfoAnalysis.xml')
+  pfoAnalysisProcessorFile = os.path.join(utilities.__path__[0], 'auxiliaryFiles/pfoAnalysis.xml')
   if not os.path.exists(pfoAnalysisProcessorFile):
     return S_ERROR("cannot find xml file with pfoAnalysis processor")
   tmpTree = et.parse(pfoAnalysisProcessorFile)
@@ -193,6 +197,7 @@ def addPfoAnalysisProcessor(mainSteeringMarlinRecoFile):
 
 
 def test_readInitialParameterDict(copiedFccSteeringFile, mocker):
+  """Test readInitialParameterDict."""
   calibSetting = createCalibrationSettings('CLD')
   calibSetting.settingsDict['DDPandoraPFANewProcessorName'] = 'MyDDMarlinPandora_10ns'
   calibSetting.settingsDict['DDCaloDigiName'] = 'MyDDCaloDigi_10ns'
@@ -205,7 +210,8 @@ def test_readInitialParameterDict(copiedFccSteeringFile, mocker):
   res = newRun.readInitialParameterDict()
   assert res['OK']
   # check if MaxClusterEnergyToApplySoftComp string have been added to the steering file
-  tmpKey = ".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']" % calibSetting.settingsDict['DDPandoraPFANewProcessorName']
+  tmpKey = (".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']"
+            % calibSetting.settingsDict['DDPandoraPFANewProcessorName'])
   tmpDict = {tmpKey: None}
   res = readParametersFromSteeringFile('calib' + str(calibID) + '/fccReconstruction.xml', tmpDict)
   assert res['OK']
@@ -222,9 +228,12 @@ def test_readInitialParameterDict(copiedFccSteeringFile, mocker):
   res = readParametersFromSteeringFile('calib' + str(calibID) + '/fccReconstruction.xml', tmpDict)
   assert res['OK']
   assert tmpDict[tmpKey] == '%s %s' % (calibSetting.settingsDict['nEcalThinLayers'],
-                                       calibSetting.settingsDict['nEcalThinLayers'] + calibSetting.settingsDict['nEcalThickLayers'] + 1)
+                                       calibSetting.settingsDict['nEcalThinLayers']
+                                       + calibSetting.settingsDict['nEcalThickLayers'] + 1)
+
 
 def test_initializeHandler(mocker):
+  """Test initializeHandler."""
   mocker.patch('%s.glob.glob' % MODULE_NAME, new=Mock(return_value=['calib2', 'calib4', 'calib78']))
   mocker.patch('%s.loadCalibrationRun' % MODULE_NAME, new=Mock())
   mocker.patch.object(CalibrationHandler, 'loadStatus', new=Mock(return_value=0))
@@ -236,11 +245,14 @@ def test_initializeHandler(mocker):
   res = CalibrationHandler.initializeHandler(None)
   assert res['OK']
 
+
 def mimic_convert_and_execute(inList, _=''):
+  """Mimic expected output."""
   from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
   if True in ['ECal_Digi_Extract.py' in str(iEl) for iEl in inList] and True in ['Mean' in str(iEl) for iEl in inList]:
     return S_OK((0, '%s\n' % CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ECalDigi)))
-  elif True in ['HCal_Digi_Extract.py' in str(iEl) for iEl in inList] and True in ['Mean' in str(iEl) for iEl in inList]:
+  elif (True in ['HCal_Digi_Extract.py' in str(iEl) for iEl in inList]
+        and True in ['Mean' in str(iEl) for iEl in inList]):
     return S_OK((0, '%s\n' % CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.HCalDigi)))
   elif True in ['EM_Extract.py' in str(iEl) for iEl in inList] and True in ['Mean' in str(iEl) for iEl in inList]:
     return S_OK((0, '%s\n' % CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ElectroMagEnergy)))
@@ -253,6 +265,7 @@ def mimic_convert_and_execute(inList, _=''):
 
 
 def test_endCurrentStepBasicWorkflow(copiedFccSteeringFile, readParameterDict, mocker):
+  """Test endCurrentStepBasicWorkflow."""
   opsMock = Mock(name='instance')
   opsMock.getValue.return_value = 'dummy'
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
@@ -300,12 +313,13 @@ def test_endCurrentStepBasicWorkflow(copiedFccSteeringFile, readParameterDict, m
 
 
 def test_export_checkForStepIncrement(calibHandler, mocker):
+  """Test export_checkForStepIncrement."""
   calibSetting = createCalibrationSettings('CLIC')
   calibRun = CalibrationRun(27, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   calibRun.calibrationFinished = True
   calibRun.calibrationEndTime = datetime.now() - timedelta(minutes=9, seconds=59, milliseconds=10)
   CalibrationHandler.activeCalibrations[27] = calibRun
-  CalibrationHandler.TIME_TO_KEEP_CALIBRATION_RESULTS_IN_MINUTES = 10
+  CalibrationHandler.timeToKeepCalibrationResultsInMinutes = 10
 
   mocker.patch.object(calibRun, 'copyResultsToEos', new=Mock(return_value=S_OK()))
   mocker.patch('%s.shutil' % MODULE_NAME, new=Mock())
@@ -321,11 +335,12 @@ def test_export_checkForStepIncrement(calibHandler, mocker):
 
 
 def test_finalInterimResultReceived(calibHandler, mocker):
+  """Test finalInterimResultReceived."""
   calibSetting = createCalibrationSettings('CLIC')
   calibSetting.settingsDict['numberOfJobs'] = 200
   calibRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
-  nJobsTmp = int(calibSetting.settingsDict['numberOfJobs'] *
-                 calibSetting.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] - 1)
+  nJobsTmp = int(calibSetting.settingsDict['numberOfJobs']
+                 * calibSetting.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] - 1)
   for i in range(0, nJobsTmp):
     calibRun.stepResults[calibRun.currentStep].addResult(i, 'dummy')
   assert not calibHandler.finalInterimResultReceived(calibRun, calibRun.currentStep)
@@ -333,7 +348,10 @@ def test_finalInterimResultReceived(calibHandler, mocker):
   assert calibHandler.finalInterimResultReceived(calibRun, calibRun.currentStep)
 
 #  def test_regroupInputFile(calibHandler, mocker):
-#    inputFileDir = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'], 'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'], 'gamma': ['gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'], 'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
+  #  inputFileDir = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'],
+  #                  'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'],
+  #                  'gamma': ['gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'],
+  #                  'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
 #
 #    numberOfJobs = 4
 #    res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, numberOfJobs)
@@ -351,9 +369,12 @@ def test_finalInterimResultReceived(calibHandler, mocker):
 #      assert len(groupedDict[0][iKey]) == 3
 #      assert len(groupedDict[1][iKey]) == 2
 
+
 def test_export_submitResult(calibHandler, mocker):
+  """Test export_submitResult."""
   mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
-  #  mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile', new=Mock(return_value={'OK': True, 'Value': []}))
+  #  mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile',
+  #                      new=Mock(return_value={'OK': True, 'Value': []}))
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.splitFilesAcrossJobs',
                new=Mock(return_value={'OK': True, 'Value': []}))
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
@@ -373,7 +394,7 @@ def test_export_submitResult(calibHandler, mocker):
 
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
   fileDir = utilities.__path__[0]
-  fileToRead = os.path.join(fileDir, 'testing/pfoAnalysis.xml')
+  fileToRead = os.path.join(fileDir, 'auxiliaryFiles/pfoAnalysis.xml')
   from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
   tmpFile = binaryFileToString(fileToRead)
 
@@ -387,7 +408,7 @@ def test_export_submitResult(calibHandler, mocker):
   if not res['OK']:
     print res
     assert False
-  assert res['OK'] == True
+  assert res['OK']
 
   outFile = CalibrationHandler.activeCalibrations[calibID].stepResults[stepID].results[workerID]
   assert os.path.exists(outFile)
@@ -398,17 +419,19 @@ def test_export_submitResult(calibHandler, mocker):
 
 
 def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
+  """Test mergePandoraLikelihoodXmlFiles."""
   import ILCDIRAC.CalibrationSystem.Utilities as utilities
   fileDir = utilities.__path__[0]
 
   mocker.patch.object(CalibrationRun, 'submitJobs', new=Mock())
   opsMock = Mock(name='instance')
-  opsMock.getValue.return_value = os.path.join(fileDir, 'testing')
+  opsMock.getValue.return_value = os.path.join(fileDir, 'auxiliaryFiles')
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
                new=Mock(return_value=opsMock, name='Class'))
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.splitFilesAcrossJobs',
                new=Mock(return_value={'OK': True, 'Value': []}))
-  #  mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile', new=Mock(return_value={'OK': True, 'Value': []}))
+  #  mocker.patch.object(calibHandler, '_CalibrationHandler__regroupInputFile',
+  #                      new=Mock(return_value={'OK': True, 'Value': []}))
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
       return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}}))
 
@@ -424,7 +447,9 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
     print(res['Message'])
     assert False
 
-  fileToRead = os.path.join(fileDir, 'testing/PandoraLikelihoodData9EBin.xml')
+  import ILCDIRAC as ilcdirac
+  fileDir = ilcdirac.__path__[0]
+  fileToRead = os.path.join(fileDir, 'Testfiles/PandoraLikelihoodData9EBin.xml')
   if not os.path.exists(fileToRead):
     assert False
   from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
@@ -478,7 +503,7 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
     with open(inFileList[0]) as file2:
       diffLines = set(file1).symmetric_difference(file2)
   diffLines = list(diffLines)
-  diffLines = [re.split('\>|\<', iLine) for iLine in diffLines]
+  diffLines = [re.split(r'\>|\<', iLine) for iLine in diffLines]
 
   # since we merge a few copies of the same file, likelihood functions has to be identical in input and output files
   # the only difference has to be in the number of events in NSignalEvents and NBackgroundEvents fields (lines)
@@ -506,7 +531,9 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
   #  print('nSignalEvents: %s' % nSignalEvents)
   #  print('nBackgroundEvents: %s' % nBackgroundEvents)
 
+
 def test_simple_killCalibration(calibHandler, mocker):
+  """Test killCalibration."""
   CalibrationHandler.activeCalibrations[27] = 'dummy27'
   CalibrationHandler.activeCalibrations[31] = 'dummy31'
   CalibrationHandler.activeCalibrations[20] = 'dummy20'
@@ -530,6 +557,7 @@ def test_simple_killCalibration(calibHandler, mocker):
 
 
 def test_killCalibration(calibHandler, copiedFccSteeringFile, mocker):
+  """Test killCalibration."""
   from ILCDIRAC.CalibrationSystem.Utilities.functions import saveCalibrationRun
   calibID = int(copiedFccSteeringFile.split('calib')[-1])
   print('calibID: %s' % calibID)
@@ -567,14 +595,16 @@ def test_killCalibration(calibHandler, copiedFccSteeringFile, mocker):
   res = calibHandler.export_killCalibration(1, 'dummy')
   assert res['OK']
   assert CalibrationHandler.idsOfCalibsToBeKilled == [1]
-  assert calibRun.calibrationFinished == True
-  assert calibRun.resultsSuccessfullyCopiedToEos == True
-  assert not calibRun.calibrationEndTime is None
+  assert calibRun.calibrationFinished
+  assert calibRun.resultsSuccessfullyCopiedToEos
+  assert calibRun.calibrationEndTime is not None
 
   # clean up
   CalibrationHandler.activeCalibrations = {}
 
+
 def test_changeEosDirectoryToCopyTo(calibHandler, mocker):
+  """Test changeEosDirectoryToCopyTo."""
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
                new=Mock(return_value=Mock(), name='Class'))
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
@@ -590,19 +620,20 @@ def test_changeEosDirectoryToCopyTo(calibHandler, mocker):
   res = calibHandler.export_changeEosDirectoryToCopyTo(33, 'newEosPath')
   assert res['OK']
   assert CalibrationHandler.activeCalibrations[33].settings['outputPath'] == 'newEosPath'
-  assert CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos == False
+  assert not CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos
 
   CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos = True
   res = calibHandler.export_changeEosDirectoryToCopyTo(33, 'newEosPath2')
   assert res['OK']
   assert CalibrationHandler.activeCalibrations[33].settings['outputPath'] == 'newEosPath2'
-  assert CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos == False
+  assert not CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos
 
   # clean up
   CalibrationHandler.activeCalibrations = {}
 
 
 def test_resubmitjobs(calibHandler, mocker):
+  """Test rusibmit jobs."""
   mocker.patch.object(calibHandler, 'export_killCalibration', new=Mock(return_value={'OK': True, 'Value': []}))
   tmpMock1 = Mock(name='calibRunMock')
   tmpMock1.submitJobs = Mock(return_value=S_OK())
@@ -628,7 +659,10 @@ def test_resubmitjobs(calibHandler, mocker):
 #    calibSetting = createCalibrationSettings('CLIC')
 #    calibSetting.settingsDict['numberOfJobs'] = 4
 #
-#    inputFileDir = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'], 'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'], 'gamma': ['gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'], 'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
+  #  inputFileDir = {'muon': ['muon1', 'muon2', 'muon3', 'muon4', 'muon5'],
+  #                  'kaon': ['kaon1', 'kaon2', 'kaon3', 'kaon4', 'kaon5'],
+  #                  'gamma': ['gamma1', 'gamma2', 'gamma3', 'gamma4', 'gamma5'],
+  #                  'zuds': ['zuds1', 'zuds2', 'zuds3', 'zuds4', 'zuds5']}
 #    res = calibHandler._CalibrationHandler__regroupInputFile(inputFileDir, calibSetting.settingsDict['numberOfJobs'])
 #    groupedDict = res['Value']
 #
@@ -644,18 +678,19 @@ def test_resubmitjobs(calibHandler, mocker):
 #    assert res == []
 #    assert False
 
-#pylint: disable=protected-access,too-many-public-methods,,no-member
+# pylint: disable=protected-access,too-many-public-methods,,no-member
 
 
 class CalibrationHandlerTest(unittest.TestCase):
-  """ Tests the implementation of the methods of the CalibrationService classes """
+  """Test the implementation of the methods of the CalibrationService classes."""
 
   @classmethod
   def setUpClass(cls):
+    """Set up class."""
     CalibrationHandler.initializeHandler(None)
 
   def setUp(self):
-    """ Create a CalibrationHandler instance so we can check some basic functionality. """
+    """Create a CalibrationHandler instance so we can check some basic functionality."""
     self.transport_mock = Mock()
     RequestHandler._rh__initializeClass(Mock(), Mock(), Mock(), Mock())
     self.calh = CalibrationHandler({}, self.transport_mock)
@@ -665,10 +700,11 @@ class CalibrationHandlerTest(unittest.TestCase):
     #                                 'pandora_calibration_scripts', self.appversion), None)
 
   def tearDown(self):
+    """Clean up."""
     if os.path.exists('status'):
       try:
         os.remove('status')
-      except:
+      except OSError:
         print("Failed to clean up CalibrationHandler fixture. Cannot delete file 'status'")
         assert False
     # clean up output directory
@@ -744,8 +780,10 @@ class CalibrationHandlerTest(unittest.TestCase):
   #      assertEqualsImproved( [ ( 198735, 1357 ) ], res[ 'failed_pairs' ], self )
 
   def test_getnumberofjobs(self):
+    """Test get number of jobs."""
     with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
-      with patch('ILCDIRAC.CalibrationSystem.Utilities.functions.splitFilesAcrossJobs', new=Mock(return_value={'OK': True, 'Value': []})):
+      with patch('ILCDIRAC.CalibrationSystem.Utilities.functions.splitFilesAcrossJobs',
+                 new=Mock(return_value={'OK': True, 'Value': []})):
         with patch.object(self.calh, '_getUsernameAndGroup',
                           new=Mock(return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}})):
           tmpDict = {782145: 815, 72453: 421, 189455: 100, 954692: 0, 29485: 1040}
@@ -778,6 +816,7 @@ class CalibrationHandlerTest(unittest.TestCase):
   #                                   None, self)
 
   def test_getnewparams_newparams(self):
+    """Test get new params."""
     calibSetting = createCalibrationSettings('CLIC')
     calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
     testRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
@@ -788,11 +827,13 @@ class CalibrationHandlerTest(unittest.TestCase):
                                    testRun.currentParameterSet, self)
 
   def test_getnewparams_inactive_calibration(self):
+    """Test get new params."""
     print (dir(self.calh))
     inputData = {'zuds': ["dummy.slcio"], 'gamma': ["dummy.slcio"], 'muon': ["dummy.slcio"], 'kaon': ["dummy.slcio"]}
     numberOfEventsPerFile = {'zuds': 133, 'gamma': 133, 'muon': 133, 'kaon': 133}
     with patch.object(CalibrationRun, 'submitJobs', new=Mock()):
-      with patch('ILCDIRAC.CalibrationSystem.Utilities.functions.splitFilesAcrossJobs', new=Mock(return_value={'OK': True, 'Value': []})):
+      with patch('ILCDIRAC.CalibrationSystem.Utilities.functions.splitFilesAcrossJobs',
+                 new=Mock(return_value={'OK': True, 'Value': []})):
         with patch.object(self.calh, '_getUsernameAndGroup',
                           new=Mock(return_value={'OK': True, 'Value': {'username': 'oviazlo', 'group': 'ilc_users'}})):
           for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
@@ -804,36 +845,6 @@ class CalibrationHandlerTest(unittest.TestCase):
               assert False
           assertDiracFailsWith(self.calh.export_getNewParameters(135, 913),
                                'CalibrationID is not in active calibrations: 135', self)
-
-  #  @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations')
-  #  def test_endcurrentstep( self, opsMock ):
-  #    from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationRun
-  #    #  opsMock = Mock(name='OpsMock')
-  #    opsMock.getValue.return_value = 'dummy'
-  #    #  with patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.Operations', new=Mock(return_value=opsMock)):
-  #    newRun = CalibrationRun(1, 'dummy_steeringFile', 'dummy_ilcsoftPath', ['dummy_inputFiles1', 'dummy_inputFiles2'], 1)
-  #    newRun.dumpSelfArguments()
-  #    newRun.endCurrentStep()
-  #    newRun.dumpSelfArguments()
-  #    self.assertTrue( True, 'dummy' )
-
-
-  #  def test_calibrun_init_mock( self ):
-  #    instanceMock = Mock(name='instanceMock')
-  #    instanceMock.getValue.return_value = 'dummy'
-  #    from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationRun
-  #    with patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.Operations', new=Mock(return_value=instanceMock)):
-  #      newRun = CalibrationRun(1, 'dummy_steeringFile', 'dummy_ilcsoftPath', ['dummy_inputFiles1', 'dummy_inputFiles2'], 1)
-  #      assert newRun.ops.getValue() == 'dummy'
-  #
-  #  @patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.Operations', name='OpsMock')
-  #  def test_calibrun_init_mock_v2( self, classMock ):
-  #    classMock.return_value=Mock(name='instanceMock')
-  #    from ILCDIRAC.CalibrationSystem.Service.CalibrationHandler import CalibrationRun
-  #    classMock.return_value.getValue.return_value = 'dummy'
-  #    newRun = CalibrationRun(1, 'dummy_steeringFile', 'dummy_ilcsoftPath', ['dummy_inputFiles1', 'dummy_inputFiles2'], 1)
-  #    assert newRun.ops.getValue() == 'dummy'
-
 
   #  @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.getValue', return_value='dummyReturnString')
   #  def test_endcurrentstep( self, mock_operations ):
@@ -870,45 +881,46 @@ class CalibrationHandlerTest(unittest.TestCase):
   #    self.assertFalse( self.calh.activeCalibrations[ 1 ].calibrationFinished,
   #                      'Expecting calibration to be finished' )
 
-  def test_addlists_work( self ):
-    # Simple case
-    test_list_1 = [1, 148]
-    test_list_2 = [-3, 0.2]
-    calibSetting = createCalibrationSettings('CLIC')
-    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
-    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
-    res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
-    assertEqualsImproved([-2, 148.2], res, self)
+  #  def test_addlists_work( self ):
+  #    # Simple case
+  #    test_list_1 = [1, 148]
+  #    test_list_2 = [-3, 0.2]
+  #    calibSetting = createCalibrationSettings('CLIC')
+  #    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
+  #    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  #    res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
+  #    assertEqualsImproved([-2, 148.2], res, self)
+  #
+  #  def test_addlists_work_2(self):
+  #    # More complex case
+  #    test_list_1 = [9013, -137.25, 90134, 4278, -123, 'abc', ['a', False]]
+  #    test_list_2 = [0, 93, -213, 134, 98245, 'aifjg', ['some_entry', {}]]
+  #    calibSetting = createCalibrationSettings('CLIC')
+  #    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
+  #    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  #    res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
+  #    assertEqualsImproved([9013, -44.25, 89921, 4412, 98122, 'abcaifjg',
+  #                          ['a', False, 'some_entry', {}]], res, self)
+  #
+  #  def test_addlists_empty(self):
+  #    test_list_1 = []
+  #    test_list_2 = []
+  #    calibSetting = createCalibrationSettings('CLIC')
+  #    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
+  #    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  #    res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
+  #    assertEqualsImproved([], res, self)
+  #
+  #  def test_addlists_incompatible(self):
+  #    test_list_1 = [1, 83, 0.2, -123]
+  #    test_list_2 = [1389, False, '']
+  #    calibSetting = createCalibrationSettings('CLIC')
+  #    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
+  #    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+  #    with pytest.raises(ValueError) as ve:
+  #      testobj._CalibrationRun__addLists(test_list_1, test_list_2)
+  #    assertInImproved('the two lists do not have the same number of elements', ve.__str__().lower(), self)
 
-  def test_addlists_work_2(self):
-    # More complex case
-    test_list_1 = [9013, -137.25, 90134, 4278, -123, 'abc', ['a', False]]
-    test_list_2 = [0, 93, -213, 134, 98245, 'aifjg', ['some_entry', {}]]
-    calibSetting = createCalibrationSettings('CLIC')
-    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
-    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
-    res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
-    assertEqualsImproved([9013, -44.25, 89921, 4412, 98122, 'abcaifjg',
-                          ['a', False, 'some_entry', {}]], res, self)
-
-  def test_addlists_empty(self):
-    test_list_1 = []
-    test_list_2 = []
-    calibSetting = createCalibrationSettings('CLIC')
-    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
-    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
-    res = testobj._CalibrationRun__addLists(test_list_1, test_list_2)
-    assertEqualsImproved([], res, self)
-
-  def test_addlists_incompatible(self):
-    test_list_1 = [1, 83, 0.2, -123]
-    test_list_2 = [1389, False, '']
-    calibSetting = createCalibrationSettings('CLIC')
-    calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
-    testobj = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
-    with pytest.raises(ValueError) as ve:
-      testobj._CalibrationRun__addLists(test_list_1, test_list_2)
-    assertInImproved('the two lists do not have the same number of elements', ve.__str__().lower(), self)
-
-  def atest_resubmitJob(self):
+  def test_resubmitJob(self):
+    """Test resubmit jobs."""
     pass  # FIXME: Finish atest once corresponding method is written

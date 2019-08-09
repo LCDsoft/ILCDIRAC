@@ -1,19 +1,11 @@
-"""
-Unit tests for the Calibration.py file
-"""
+"""Unit tests for the Calibration.py file."""
 
-import unittest
 import pytest
 import os
 import shutil
-from mock import mock_open, patch, MagicMock as Mock
+from mock import MagicMock as Mock
 from ILCDIRAC.Workflow.Modules.Calibration import Calibration
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
-    assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
-    assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls, \
-    assertDiracFails
-from ILCDIRAC.Tests.Utilities.FileUtils import FileUtil
-from DIRAC import S_OK, S_ERROR
+from DIRAC import S_OK
 from ILCDIRAC.CalibrationSystem.Utilities.functions import searchFilesWithPattern
 
 __RCSID__ = "$Id$"
@@ -23,6 +15,7 @@ MODULE_NAME = 'ILCDIRAC.Workflow.Modules.Calibration'
 
 @pytest.fixture
 def calib():
+  """Create calibration run."""
   calib = Calibration()
   calib.applicationName = "Testing"
   calib.applicationVersion = "vTest"
@@ -32,9 +25,8 @@ def calib():
   calib.log = Mock()
   calib.detectorModel = 'FCCee_o1_v03'
 
-  import ILCDIRAC.CalibrationSystem.Utilities as utilities
-  # FIXME this path will be different in production version probably... update it
-  calib.SteeringFile = os.path.join(utilities.__path__[0], 'testing/in1.xml')
+  import ILCDIRAC as ilcdirac
+  calib.SteeringFile = os.path.join(ilcdirac.__path__[0], 'Testfiles/clicReconstruction.xml')
 
   yield calib  # provide the fixture value
 
@@ -58,8 +50,8 @@ def calib():
   #  assert False
 
 
-
 def test_runScript_properInputArguments(calib, mocker):
+  """Test CalibrationRun.runScrip function."""
   mocker.patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK()))
   mocker.patch('os.remove', new=Mock(return_value=True))
   inputxml = 'file1.xml'
@@ -77,7 +69,8 @@ def test_runScript_properInputArguments(calib, mocker):
 
 paramDictList = [
     {'OK': True, 'Value': {'currentStep': 0, 'currentStage': 1, 'currentPhase': 0, 'parameters': {
-        "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationEndCap']": 'ECALTOHAD_YYYY'}, 'calibrationIsFinished': False}},
+        "processor[@name='MyDDMarlinPandora']/parameter[@name='ECalToHadGeVCalibrationEndCap']": 'ECALTOHAD_YYYY'},
+        'calibrationIsFinished': False}},
     {'OK': True, 'Value': {'currentStep': 1, 'currentStage': 1,
                            'currentPhase': 1, 'parameters': {}, 'calibrationIsFinished': False}},
     {'OK': True, 'Value': {'currentStep': 2, 'currentStage': 1,
@@ -100,14 +93,17 @@ paramDictList = [
                            'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
     {'OK': True, 'Value': {'currentStep': 11, 'currentStage': 3,
                            'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': False}},
-    {'OK': True, 'Value': {'currentStep': 12, 'currentStage': 3, 'currentPhase': 4, 'parameters': {}, 'calibrationIsFinished': True}}]
+    {'OK': True, 'Value': {'currentStep': 12, 'currentStage': 3, 'currentPhase': 4, 'parameters': {},
+     'calibrationIsFinished': True}}]
 
 
 @pytest.fixture
 def helper_copyFiles():
-
-  dirsToCopy = ['/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/CalibrationPandoraSettings',
-                '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/PandoraSettingsFCCee'
+  """Copy steering file to local test directory."""
+  dirsToCopy = ['/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig'
+                '/CalibrationPandoraSettings',
+                '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig'
+                '/PandoraSettingsFCCee'
                 ]
   for iDir in dirsToCopy:
     try:
@@ -130,7 +126,7 @@ def helper_copyFiles():
 
 
 def test_runIt_simple(calib, mocker):
-
+  """Test runIt function."""
   mocker.patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK()))
   mocker.patch('%s.os.remove' % MODULE_NAME, return_value=True)
   mocker.patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value={'OK': True, 'Value': 'dummy_EnvScript'}))
@@ -153,8 +149,7 @@ def test_runIt_simple(calib, mocker):
 
 
 def test_runIt_updatingSteeringFile(helper_copyFiles, calib, mocker):
-  helper_copyFiles
-
+  """Test runtIt and updateSteeringFile functions."""
   mocker.patch('%s.shellCall' % MODULE_NAME, new=Mock(return_value=S_OK()))
   mocker.patch('%s.os.remove' % MODULE_NAME, return_value=True)
   mocker.patch('%s.getEnvironmentScript' % MODULE_NAME, new=Mock(return_value={'OK': True, 'Value': 'dummy_EnvScript'}))
@@ -175,10 +170,50 @@ def test_runIt_updatingSteeringFile(helper_copyFiles, calib, mocker):
   assert calib.currentStep == 11
 
 
-initialParameterDict = {".//global/parameter[@name='MaxRecordNumber']": "10", ".//global/parameter[@name='SkipNEvents']": "1", ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='ECALBarrelTimeWindowMax']": ' 10 ', ".//global/parameter[@name='LCIOInputFiles']": '\n      /afs/cern.ch/work/e/eleogran/public/mu_sim/mu_validation_50kevents.slcio\n    ', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='MuonToMipCalibration']": '20703.9', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='ECALEndcapCorrectionFactor']": '1.03245503522', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToHadGeVCalibrationEndCap']": '1.11490774181', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='HCalToMipCalibration']": '45.6621', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='HCalToEMGeVCalibration']": '1.01776966108', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToHadGeVCalibrationBarrel']": '1.11490774181', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='HCalToHadGeVCalibration']": '1.00565042407', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='PandoraSettingsXmlFile']": ' PandoraSettingsFCCee/PandoraSettingsDefault.xml ',
-                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToMipCalibration']": '175.439', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToEMGeVCalibration']": '1.01776966108', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='HCALEndcapTimeWindowMax']": ' 10 ', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrHCALBarrel']": '45.9956826061', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrHCALEndcap']": '46.9252540291', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrECAL']": '37.5227197175 37.5227197175', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrHCALOther']": '57.4588011802', ".//parameter[@name='MaxClusterEnergyToApplySoftComp']": 0, ".//processor[@type='InitializeDD4hep']/parameter[@name='DD4hepXMLFile']": '\n      /cvmfs/clicdp.cern.ch/iLCSoft/builds/nightly/x86_64-slc6-gcc62-opt/lcgeo/HEAD/FCCee/compact/FCCee_o1_v04/FCCee_o1_v04.xml\n    ', ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='MaxHCalHitHadronicEnergy']": '10000000.', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='ECALEndcapTimeWindowMax']": ' 10 ', ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='HCALBarrelTimeWindowMax']": ' 10 ', ".//processor[@name='RootFile']": None}
+initialParameterDict = {".//global/parameter[@name='MaxRecordNumber']": "10",
+                        ".//global/parameter[@name='SkipNEvents']": "1",
+                        ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='ECALBarrelTimeWindowMax']": ' 10 ',
+                        ".//global/parameter[@name='LCIOInputFiles']": '\n      /afs/cern.ch/work/e/eleogran/public/'
+                                                                       'mu_sim/mu_validation_50kevents.slcio\n    ',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='MuonToMipCalibration']":
+                        '20703.9',
+                        ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='ECALEndcapCorrectionFactor']":
+                        '1.03245503522',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToHadGeVCalibrationEndCap']":
+                        '1.11490774181',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='HCalToMipCalibration']":
+                        '45.6621',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='HCalToEMGeVCalibration']":
+                        '1.01776966108',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToHadGeVCalibrationBarrel']":
+                        '1.11490774181',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='HCalToHadGeVCalibration']":
+                        '1.00565042407',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='PandoraSettingsXmlFile']":
+                        ' PandoraSettingsFCCee/PandoraSettingsDefault.xml ',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToMipCalibration']":
+                        '175.439',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='ECalToEMGeVCalibration']":
+                        '1.01776966108',
+                        ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='HCALEndcapTimeWindowMax']": ' 10 ',
+                        ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrHCALBarrel']": '45.9956826061',
+                        ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrHCALEndcap']": '46.9252540291',
+                        ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrECAL']":
+                        '37.5227197175 37.5227197175',
+                        ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='CalibrHCALOther']": '57.4588011802',
+                        ".//parameter[@name='MaxClusterEnergyToApplySoftComp']": 0,
+                        ".//processor[@type='InitializeDD4hep']/parameter[@name='DD4hepXMLFile']":
+                        '\n      /cvmfs/clicdp.cern.ch/iLCSoft/builds/nightly/x86_64-slc6-gcc62-opt/lcgeo/HEAD/FCCee/'
+                        'compact/FCCee_o1_v04/FCCee_o1_v04.xml\n    ',
+                        ".//processor[@name='MyDDMarlinPandora_10ns']/parameter[@name='MaxHCalHitHadronicEnergy']":
+                        '10000000.',
+                        ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='ECALEndcapTimeWindowMax']": ' 10 ',
+                        ".//processor[@name='MyDDCaloDigi_10ns']/parameter[@name='HCALBarrelTimeWindowMax']": ' 10 ',
+                        ".//processor[@name='RootFile']": None}
+
 
 def test_resolveInputSlcioFilesAndAddToParameterDict(calib, mocker):
+  """Test resolveInputSlcioFilesAndAddToParameterDict function."""
   tmpDataDict = {'zuds': (['zuds.slcio'], 1, 24), 'gamma': (['gamma.slcio'], 2, 20),
                  'muon': (['muon.slcio'], 5, 28), 'kaon': (['kaon.slcio'], 8, 31)}
   tmpListOfFiles = ['zuds.slcio', 'gamma.slcio', 'muon.slcio', 'kaon.slcio']

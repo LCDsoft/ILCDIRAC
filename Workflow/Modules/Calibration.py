@@ -1,13 +1,13 @@
-'''
-Run Pandora Calorimeter calibration
+"""Run Pandora Calorimeter calibration.
 
+Runs on each worker node.
 ILCDIRAC.Workflow.Modules.Calibration Called by Job Agent.
 
 :since: March, 2019
 
 :author: Jan Hendrik Ebbing
 :author: Oleksandr Viazlo
-'''
+"""
 
 import os
 import shutil
@@ -26,15 +26,16 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import readValueFromSteering
 from ILCDIRAC.CalibrationSystem.Utilities.functions import addPfoAnalysisProcessor
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import stringToBinaryFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readParametersFromSteeringFile
+from ILCDIRAC.CalibrationSystem.Utilities.functions import addParameterToProcessor
 
 __RCSID__ = '$Id$'
 
 
 class Calibration(MarlinAnalysis):
-  """Define the Calibration part of the workflow
-  """
+  """Define the Calibration part of the workflow."""
 
   def __init__(self):
+    """Initialize."""
     super(Calibration, self).__init__()
     self.applicationName = "Calibration"
     self.currentStep = None
@@ -46,9 +47,10 @@ class Calibration(MarlinAnalysis):
     self.log = None
 
   def runIt(self):
-    """
+    """Execute.
+
     Called by Job Agent
-    
+
     Execute the following:
       - resolve where the soft was installed
       - prepare the list of file to feed Marlin with
@@ -57,7 +59,6 @@ class Calibration(MarlinAnalysis):
 
     :return: S_OK(), S_ERROR()
     """
-
     self.setApplicationStatus('PandoraCalib_%s: setting up jobs' % self.calibrationID)
 
     if self.cali is None:
@@ -114,7 +115,7 @@ class Calibration(MarlinAnalysis):
     else:
       self.log.warn('Could not find the steering file directory', res['Message'])
 
-    ##Handle PandoraSettings.xml
+    # Handle PandoraSettings.xml
     # TODO directory below is detector dependent... implement it
     pandorasettings = 'PandoraSettings/PandoraSettings.xml'
     if 'FCC' in self.detectorModel:
@@ -124,10 +125,10 @@ class Calibration(MarlinAnalysis):
         try:
           shutil.copy(os.path.join(steeringfiledirname, pandorasettings),
                       os.path.join(os.getcwd(), pandorasettings))
-        except EnvironmentError, x:
+        except EnvironmentError as x:
           self.log.warn('Could not copy PandoraSettings.xml, exception: %s' % x)
 
-    ##Handle PandoraSettingsPhotonTraining.xml which is used for photon training stage
+    # Handle PandoraSettingsPhotonTraining.xml which is used for photon training stage
     pandorasettings = 'CalibrationPandoraSettings/PandoraSettingsPhotonTraining.xml'
     if not os.path.exists(pandorasettings):
       # FIXME is this path wrong?
@@ -137,7 +138,7 @@ class Calibration(MarlinAnalysis):
           fullPathPandoraSettings = os.path.join(os.getcwd(), pandorasettings)
           shutil.copy(os.path.join(photontrainingfiledirname, pandorasettings),
                       fullPathPandoraSettings)
-        except EnvironmentError, x:
+        except EnvironmentError as x:
           self.log.warn('Could not copy and prepare PandoraSettingsPhotonTraining.xml, exception: %s' % x)
     # rename output xml-file from photon training stage
     updateSteeringFile(pandorasettings, pandorasettings,
@@ -195,13 +196,14 @@ class Calibration(MarlinAnalysis):
       parameterDict = calibrationParameters['parameters']
 
       tmpKey = self.getKey(parameterDict, 'MaxClusterEnergyToApplySoftComp')
-      if not tmpKey is None:
+      if tmpKey is not None:
         res = readParametersFromSteeringFile(self.SteeringFile, {tmpKey: None})
         if not res['OK']:
           #  expect key of following format: ".//processor[@name=%s]/parameter[@name='MaxClusterEnergyToApplySoftComp']"
           processorName = tmpKey.split('=')[1].split(']')[0]
           res = addParameterToProcessor(self.SteeringFile, processorName,
-                                        {'name': 'MaxClusterEnergyToApplySoftComp', 'type': 'float', 'value': parameterDict[tmpKey]})
+                                        {'name': 'MaxClusterEnergyToApplySoftComp', 'type': 'float',
+                                         'value': parameterDict[tmpKey]})
 
       self.setApplicationStatus('PandoraCalib_%s: stage: %s; phase: %s; step: %s' %
                                 (self.calibrationID, self.currentStage, self.currentPhase, self.currentStep))
@@ -249,7 +251,7 @@ class Calibration(MarlinAnalysis):
             {"algorithm[@type='PhotonReconstruction']/HistogramFile":
              "newPhotonLikelihood.xml"})
 
-      #TODO clean up Marlin steering file - we don't need a lot of processors for calibration
+      # TODO clean up Marlin steering file - we don't need a lot of processors for calibration
       self.log.notice("new set of calibration parameters: %r" % parameterDict)
 
       self.result = self.runScript(steeringFileToRun, env_script_path, marlin_dll)
@@ -258,8 +260,8 @@ class Calibration(MarlinAnalysis):
         self.setApplicationStatus('Error during running %s' % self.applicationName)
         return S_ERROR('Failed to run %s' % self.applicationName)
 
-      #FIXME make sure that runScript function return tuple of the same format as used below
-      #self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
+      # FIXME make sure that runScript function return tuple of the same format as used below
+      # self.result = {'OK':True,'Value':(0,'Disabled Execution','')}
       resultTuple = self.result['Value']
       if not os.path.exists(self.applicationLog):
         self.log.error("Something went terribly wrong, the log file is not present")
@@ -289,6 +291,7 @@ class Calibration(MarlinAnalysis):
     return S_OK()
 
   def getKey(self, parameterDict, pattern):
+    """Return key from parameterDict which satisfy pattern."""
     for iKey in parameterDict:
       if pattern in iKey:
         return iKey
@@ -301,8 +304,10 @@ class Calibration(MarlinAnalysis):
     return None
 
   def resolveInputSlcioFilesAndAddToParameterDict(self, allSlcioFiles, parameterDict):
-    """ Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the
-    parameterDict
+    """Resolve pathes to input files.
+
+    Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the
+    parameterDict.
 
     :param list basestring allSlcioFiles: List of all slcio-files in the node
     :param dict parameterDict: dict of parameters and their values
@@ -310,7 +315,6 @@ class Calibration(MarlinAnalysis):
     :returns: S_OK or S_ERROR
     :rtype: dict
     """
-
     pandoraSettingsFile = ''
     if self.currentStage in [1, 3]:  # FIXME hardcoded values are bad...
       pandoraSettingsFile = 'PandoraSettings/PandoraSettingsDefault.xml'
@@ -363,8 +367,8 @@ class Calibration(MarlinAnalysis):
     parameterDict[self.getKey(parameterDict, 'LCIOInputFiles')] = ' '.join(filesToRunOn)
     parameterDict[self.getKey(parameterDict, 'PandoraSettingsXmlFile')] = pandoraSettingsFile
 
-    #TODO should one use different steering file for photon training? if no one need to append line below during all
-    #     steps
+    # TODO should one use different steering file for photon training? if no one need to append line below during all
+    # steps
     if self.currentStage in [1, 3]:
       parameterDict[self.getKey(parameterDict, 'RootFile')] = 'pfoAnalysis.root'
     else:
@@ -372,7 +376,7 @@ class Calibration(MarlinAnalysis):
     return S_OK(parameterDict)
 
   def runScript(self, marlinSteeringFile, env_script_path, marlin_dll):
-    """ Actual bit of code running Marlin and PandoraAnalysis.
+    """Actual bit of code running Marlin and PandoraAnalysis.
 
     :param marlinSteeringFile: steering file to use for Marlin reconstruction. E.g.: 'fccReconstruction.xml'
     :param string env_script_path: path to the setup environment scripts
@@ -392,15 +396,14 @@ class Calibration(MarlinAnalysis):
 
     os.chmod(scriptName, 0755)
     comm = 'sh -c "./%s"' % (scriptName)
-    #  self.setApplicationStatus('%s %s step %s' % (self.applicationName, self.applicationVersion, self.currentStep))
-    self.setApplicationStatus('PandoraCalib_%s: stage: %s; phase: %s; step: %s'
-                              % (self.calibrationID, self.currentStage, self.currentPhase, self.currentStep))
+    self.setApplicationStatus('Running: stage: %s; phase: %s; step: %s'
+                              % (self.currentStage, self.currentPhase, self.currentStep))
     self.stdError = ''
     res = shellCall(0, comm, callbackFunction=self.redirectLogOutput, bufferLimit=20971520)
     return res
 
   def _prepareRunScript(self, marlinSteeringFile, env_script_path, marlin_dll):
-    """ Returns the current parameters
+    """Return current parameters.
 
     :param marlinSteeringFile: steering file to use for Marlin reconstruction. E.g.: 'fccReconstruction.xml'
     :param string env_script_path: path to the setup environment scripts
@@ -423,7 +426,7 @@ class Calibration(MarlinAnalysis):
       script.write('declare -x LD_LIBRARY_PATH=./lib/lddlib:$LD_LIBRARY_PATH\n')
     script.write('declare -x PATH=$ROOTSYS/bin:$PATH\n')
     script.write('declare -x MARLIN_DEBUG=1\n')  # Needed for recent version of marlin (from 03 april 2013)
-    #We need to make sure the PandoraSettings is in the current directory
+    # We need to make sure the PandoraSettings is in the current directory
     script.write("""
 if [ -e "${PANDORASETTINGS}" ]
 then
@@ -455,9 +458,9 @@ fi
       script.close()
       self.log.error("Steering file missing: %s" % (marlinSteeringFile))
       return S_ERROR("SteeringFile is missing: %s" % (marlinSteeringFile))
-    #check
+    # check
     script.write('Marlin -c %s %s\n' % (marlinSteeringFile, self.extraCLIarguments))
-    #real run
+    # real run
     script.write('Marlin %s %s\n' % (marlinSteeringFile, self.extraCLIarguments))
     script.write('declare -x appstatus=$?\n')
     script.write('exit $appstatus\n')
