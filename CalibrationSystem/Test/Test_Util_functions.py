@@ -160,7 +160,7 @@ def test_readParameterDict(readEmptyParameterDict):
   assert '' not in parDict.keys()
 
   allValuesAreNone = True
-  for iKey, iVal in parDict.iteritems():
+  for _, iVal in parDict.iteritems():
     if iVal is not None:
       allValuesAreNone = False
   assert allValuesAreNone

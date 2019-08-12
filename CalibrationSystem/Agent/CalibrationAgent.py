@@ -12,6 +12,7 @@ from DIRAC.Core.Base.Client import Client
 from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
 from DIRAC.WorkloadManagementSystem.Client.WMSClient import WMSClient
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
+from ILCDIRAC.CalibrationSystem.Utilities.functions import convert_to_int_list
 
 __RCSID__ = "$Id$"
 
@@ -32,7 +33,6 @@ class CalibrationAgent(AgentModule):
     self.currentJobStatusesPerJobId = {}
     self.calibrationOwnership = {}
     self.ops = Operations()
-    self.resubmissionRetries = self.ops.getValue('Calibration/ResubmissionRetries', 5)  # TODO add this to CS
     # WorkerID (int) -> jobStatus (enum)
     return S_OK()
 
@@ -111,7 +111,7 @@ class CalibrationAgent(AgentModule):
         return S_ERROR('Failed getting job IDs from job DB!')
       jobIDs += res['Value']
     print('jobIDs: %s' % jobIDs)
-    res = jobMonitoringService.getJobsParameters(_convert_to_int_list(
+    res = jobMonitoringService.getJobsParameters(convert_to_int_list(
         jobIDs), ['JobName', 'Status', 'JobID', 'Owner', 'OwnerGroup', 'OwnerDN'])
     if not res['OK']:
       self.log.error(res['Message'])
@@ -133,9 +133,10 @@ class CalibrationAgent(AgentModule):
     return S_OK({'jobStatusVsWorkerId': dict(result1), 'jobStatusVsJobId': dict(result2),
                  'calibrationOwnership': dict(result3)})
 
-  def sendKillSignalToJobManager(self, jobIdsToKill, ownerDN, ownerGroup):
+  def sendKillSignalToJobManager(self, jobIdsToKill, iCalibId):
     """Send kill signals to job manager service."""
-    jobManagerService = WMSClient(useCertificates=True, delegatedDN=ownerDN, delegatedGroup=ownerGroup)
+    jobManagerService = WMSClient(useCertificates=True, delegatedDN=self.calibrationOwnership[iCalibId]['OwnerDN'],
+                                  delegatedGroup=self.calibrationOwnership[iCalibId]['OwnerGroup'])
     res = jobManagerService.killJob(jobIdsToKill)
     return res
 
@@ -154,8 +155,7 @@ class CalibrationAgent(AgentModule):
           self.log.info('No jobs to kill for calibration %s' % iCalibId)
         else:
           jobIdsToKill = self.currentJobStatusesPerJobId[iCalibId].keys()
-          self.sendKillSignalToJobManager(jobIdsToKill, self.calibrationOwnership[iCalibId]['OwnerDN'],
-                                          self.calibrationOwnership[iCalibId]['OwnerGroup'])
+          self.sendKillSignalToJobManager(jobIdsToKill, iCalibId)
           if not res['OK']:
             self.log.error('Failed to kill jobs. errMsg: %s' % res['Message'])
           else:
@@ -171,6 +171,7 @@ class CalibrationAgent(AgentModule):
     jobs_to_resubmit = failedJobs
     number_of_tries = 0
     result = S_ERROR()
+    self.resubmissionRetries = self.ops.getValue('Calibration/ResubmissionRetries', 5)  # TODO add this to CS
     while not result['OK'] and number_of_tries < self.resubmissionRetries:
       result = self.calibrationService.resubmitJobs(jobs_to_resubmit)
       number_of_tries += 1
@@ -221,16 +222,3 @@ class CalibrationAgent(AgentModule):
     :rtype: int
     """
     return int(jobname.split('_')[2])
-
-
-def _convert_to_int_list(non_int_list):
-  """Take a list and converts each entry to an integer, returning this new list.
-
-  :param list non_int_list: List that contains entries that may not be integers but can be cast
-  :returns: List that only contains integers.
-  :rtype: list
-  """
-  result = []
-  for entry in non_int_list:
-    result.append(int(entry))
-  return result

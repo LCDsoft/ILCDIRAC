@@ -25,6 +25,7 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import saveCalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.functions import splitFilesAcrossJobs
 from ILCDIRAC.CalibrationSystem.Service.DetectorSettings import CalibrationSettings
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
+from ILCDIRAC.CalibrationSystem.Utilities.functions import calibration_creation_failed
 
 __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
@@ -247,7 +248,7 @@ class CalibrationHandler(RequestHandler):
       self.log.error('Error while submitting jobs. Res: %s' % res)
       return res
     self.log.info('results from submitJobs: %s' % res)
-    if self._calibration_creation_failed(res):
+    if calibration_creation_failed(res):
       ret_val = S_ERROR('Submitting at least one of the jobs failed')  # FIXME: This should be treated, since the
       # successfully submitted jobs will still run
       ret_val['calibrations'] = res
@@ -344,13 +345,17 @@ class CalibrationHandler(RequestHandler):
     else:
       del CalibrationHandler.activeCalibrations[calibIdToClean]
       shutil.rmtree('calib%s' % calibIdToClean)
+      self.log.info('Calibration #%s was cleaned by user.' % calibIdToClean)
       return S_OK('Calibration with ID %s was cleaned.' % calibIdToClean)
 
   auth_getUserCalibrationStatuses = ['authenticated']
   types_getUserCalibrationStatuses = []
 
   def export_getUserCalibrationStatuses(self):
-    """Get status of all active calibration runs."""
+    """Get status of all active calibration runs.
+
+    Called by user to check status of calibrations.
+    """
     res = self._getUsernameAndGroup()
     if not res['OK']:
       return S_ERROR('Error while retrieving proxy user name or group.')
@@ -598,6 +603,7 @@ class CalibrationHandler(RequestHandler):
     result = {}
     for calibrationID in CalibrationHandler.activeCalibrations:
       result[calibrationID] = CalibrationHandler.activeCalibrations[calibrationID].settings['numberOfJobs']
+    self.log.debug("Number of jobs per calibration: %s" % result)
     return S_OK(result)
 
   auth_getRunningCalibrations = ['authenticated']
@@ -613,6 +619,7 @@ class CalibrationHandler(RequestHandler):
     for calibrationID in CalibrationHandler.activeCalibrations:
       if not CalibrationHandler.activeCalibrations[calibrationID].calibrationFinished:
         result.append(calibrationID)
+    self.log.debug("List of running calibrations: %s" % result)
     return S_OK(result)
 
   auth_getActiveCalibrations = ['authenticated']
@@ -624,6 +631,7 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK containing the the list of calibrationIDs
     :rtype: list
     """
+    self.log.debug("List of active calibrations: %s" % CalibrationHandler.activeCalibrations)
     return S_OK(CalibrationHandler.activeCalibrations)
 
   auth_getCalibrationsToBeKilled = ['authenticated']
@@ -633,23 +641,12 @@ class CalibrationHandler(RequestHandler):
     """Return list of calibrations to be killed."""
     listToReturn = CalibrationHandler.idsOfCalibsToBeKilled
     CalibrationHandler.idsOfCalibsToBeKilled = []
+    self.log.debug("List of calibrations to be killed: %s" % listToReturn)
     return S_OK(listToReturn)
 
 # TODO: Add stopping criterion to calibration loop. This should be checked when new parameter sets are calculated
 # In that case, the calibration should be removed from activeCalibrations and the result stored.
 # Should we then kill all jobs of that calibration?
-
-  def _calibration_creation_failed(self, results):
-    """Return whether or not the creation of all calibration jobs was successful.
-
-    :param results: List of S_OK/S_ERROR dicts that were returned by the submission call
-    :returns: True if everything was successful, False otherwise
-    :rtype: bool
-    """
-    success = True
-    for job_result in results:
-      success = success and job_result['OK']
-    return not success
 
   def __inputVariablesSanityCheck(self, inputSettings):
 
@@ -729,4 +726,5 @@ class CalibrationHandler(RequestHandler):
     if msg:
       return S_ERROR(msg)
 
+    self.log.debug('All input variables are valid.')
     return S_OK()

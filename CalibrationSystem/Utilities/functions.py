@@ -302,3 +302,29 @@ def splitFilesAcrossJobs(inputFiles, nEventsPerFile, nJobs):
     outDict[iJob] = newDict
 
   return outDict
+
+
+def convert_to_int_list(non_int_list):
+  """Take a list and converts each entry to an integer, returning this new list.
+
+  :param list non_int_list: List that contains entries that may not be integers but can be cast
+  :returns: List that only contains integers.
+  :rtype: list
+  """
+  result = []
+  for entry in non_int_list:
+    result.append(int(entry))
+  return result
+
+
+def calibration_creation_failed(self, results):
+  """Return whether or not the creation of all calibration jobs was successful.
+
+  :param results: List of S_OK/S_ERROR dicts that were returned by the submission call
+  :returns: True if everything was successful, False otherwise
+  :rtype: bool
+  """
+  success = True
+  for job_result in results:
+    success = success and job_result['OK']
+  return not success

@@ -1,9 +1,7 @@
-"""
-???
-"""
+"""CalibrationSettings class which defines all required inputs from user."""
 
 import sys
-from DIRAC import S_OK, gLogger
+from DIRAC import gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.objectFactory import ObjectFactory
 
 __RCSID__ = "$Id$"
@@ -11,8 +9,10 @@ LOG = gLogger.getSubLogger(__name__)
 
 
 class CalibrationSettings(object):
-  def __init__(self):
+  """Class which defines all required inputs from user."""
 
+  def __init__(self):
+    """Initialize settingsDict with default settings."""
     self.settingsDict = {}
     self.settingsDict['digitisationAccuracy'] = 0.05
     self.settingsDict['pandoraPFAAccuracy'] = 0.025
@@ -23,7 +23,8 @@ class CalibrationSettings(object):
     self.settingsDict['numberOfJobs'] = 100
     self.settingsDict['platform'] = 'x86_64-slc5-gcc43-opt'  # FIXME does it the default platform in CS?
     self.settingsDict['marlinVersion'] = 'ILCSoft-2019-04-01_gcc62'
-    # FIXME temprorary field, since currently there is only on item in CS which corresponds to ILCSoft-2019-02-20_gcc62 (for any marlin version)
+    # FIXME temprorary field, since currently there is only on item in CS which corresponds to ILCSoft-2019-02-20_gcc62
+    # (for any marlin version)
     self.settingsDict['marlinVersion_CS'] = 'ILCSoft-2019-02-20_gcc62'
     # fraction of all jobs must have finished in order for the next step to begin.
     self.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] = 0.9
@@ -33,7 +34,8 @@ class CalibrationSettings(object):
 
     self.settingsDict['nEcalThinLayers'] = 40
     self.settingsDict['nEcalThickLayers'] = 0
-    # correction factor which is applied to responce of thick layers of ECAL; if all layer have the same thickness, this factor have to be 1.0
+    # correction factor which is applied to responce of thick layers of ECAL;
+    # if all layer have the same thickness, this factor have to be 1.0
     self.settingsDict['ecalResponseCorrectionForThickLayers'] = 1.0
 
     # following settings has to be setup for daughter classes
@@ -54,6 +56,7 @@ class CalibrationSettings(object):
     self.settingsDict['outputPath'] = None
 
   def printSettings(self):
+    """Print settings dict in nice format."""
     print('%-59s %s' % ('Settings', 'Value'))
     print('-' * 120)
     for key, value in self.settingsDict.iteritems():
@@ -61,7 +64,10 @@ class CalibrationSettings(object):
 
 
 class CLDSettings(CalibrationSettings):
+  """Child class of CalibrationSettings for CLD detector model."""
+
   def __init__(self):
+    """Initialize."""
     super(CLDSettings, self).__init__()
     self.settingsDict['detectorModel'] = 'FCCee_o1_v04'
     self.settingsDict['ecalBarrelCosThetaRange'] = [0.0, 0.643]
@@ -76,7 +82,10 @@ class CLDSettings(CalibrationSettings):
 
 
 class CLICSettings(CalibrationSettings):
+  """Child class of CalibrationSettings for CLIC detector model."""
+
   def __init__(self):
+    """Initialize."""
     super(CLICSettings, self).__init__()
     self.settingsDict['detectorModel'] = 'CLIC_o3_v14'
     self.settingsDict['ecalBarrelCosThetaRange'] = [0.0, 0.65]
@@ -88,16 +97,12 @@ class CLICSettings(CalibrationSettings):
     self.settingsDict['steeringFile'] = 'clicReconstruction.xml'
 
 
-class CalibrationSettingsFactory(ObjectFactory):
-  def get(self, service_id):
-    return self.create(service_id)
-
-
-calibSettings = CalibrationSettingsFactory()
-calibSettings.register_builder('CLIC', CLICSettings)
-calibSettings.register_builder('CLD', CLDSettings)
+calibrationSettingsFactory = ObjectFactory()
+calibrationSettingsFactory.registerBuilder('CLIC', CLICSettings)
+calibrationSettingsFactory.registerBuilder('CLD', CLDSettings)
 
 
 def createCalibrationSettings(detectorModel):
-  settings = calibSettings.get(detectorModel)
-  return settings()
+  """Get CalibrationSettings class which corresponds to input detector label and return an instance of the class."""
+  calibrationSettingsClass = calibrationSettingsFactory.getClass(detectorModel)
+  return calibrationSettingsClass()
