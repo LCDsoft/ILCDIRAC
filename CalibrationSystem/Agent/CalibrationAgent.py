@@ -70,9 +70,10 @@ class CalibrationAgent(AgentModule):
         currentJobStatusesPerWorker_runningCalibs[iCalib] = self.currentJobStatusesPerWorker[iCalib]
         targetJobNumbers_runningCalibs[iCalib] = targetJobNumbers[iCalib]
       except KeyError:
-        errMsg = 'Error while retriving information for calibration #%s' % iCalib
-        self.log.error(errMsg)
-        return S_ERROR(errMsg)
+        errMsgConst = 'Error while retriving information for calibration'
+        errMsgVariable = '#%s' % iCalib
+        self.log.error(errMsgConst, errMsgVariable)
+        return S_ERROR(errMsgConst + errMsgVariable)
 
     jobsToResubmitted = CalibrationAgent.__calculateJobsToBeResubmitted(
         currentJobStatusesPerWorker_runningCalibs, targetJobNumbers_runningCalibs)
@@ -114,8 +115,8 @@ class CalibrationAgent(AgentModule):
     res = jobMonitoringService.getJobsParameters(convert_to_int_list(
         jobIDs), ['JobName', 'Status', 'JobID', 'Owner', 'OwnerGroup', 'OwnerDN'])
     if not res['OK']:
-      self.log.error(res['Message'])
-      return S_ERROR(res['Message'])
+      self.log.error("Cannot retrieve jobs parameters from job monitoring service", res['Message'])
+      return res
     jobStatuses = res['Value']
     result1 = defaultdict(dict)  # defaults to {}
     result2 = defaultdict(dict)  # defaults to {}
@@ -144,7 +145,7 @@ class CalibrationAgent(AgentModule):
     """Ask calibation service for jobs to be killed and kill them."""
     res = self.calibrationService.getCalibrationsToBeKilled()
     if not res['OK']:
-      self.log.error('Failed to get list of calibrations to be killed from service. errMsg: %s' % res['Message'])
+      self.log.error('Failed to get list of calibrations to be killed from service. errMsg:', '%s' % res['Message'])
       return S_OK()
     calibIds = res['Value']
     if len(calibIds) == 0:
@@ -152,14 +153,14 @@ class CalibrationAgent(AgentModule):
     else:
       for iCalibId in calibIds:
         if iCalibId not in self.currentJobStatusesPerJobId.keys():
-          self.log.info('No jobs to kill for calibration %s' % iCalibId)
+          self.log.info('No jobs to kill for calibration', '#%s' % iCalibId)
         else:
           jobIdsToKill = self.currentJobStatusesPerJobId[iCalibId].keys()
           self.sendKillSignalToJobManager(jobIdsToKill, iCalibId)
           if not res['OK']:
-            self.log.error('Failed to kill jobs. errMsg: %s' % res['Message'])
+            self.log.error('Failed to kill jobs. errMsg:', '%s' % res['Message'])
           else:
-            self.log.info('Kill jobs which belong to calibrations: %s' % res['Value'])
+            self.log.info('Kill jobs which belong to calibrations:', '%s' % res['Value'])
     return S_OK()
 
   def requestResubmission(self, failedJobs):

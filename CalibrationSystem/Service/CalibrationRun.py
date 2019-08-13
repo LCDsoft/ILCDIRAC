@@ -160,15 +160,16 @@ class CalibrationRun(object):
     res = dataMan.getFile(self.settings['steeringFile'], destinationDir='calib%s/' % self.calibrationID)
 
     if not res['OK'] or not os.path.exists(self.localSteeringFile):
-      errMsg = 'Cannot copy Marlin steering file. res: %s' % res
-      self.log.error(errMsg)
-      return S_ERROR(errMsg)
+      errMsgConst = 'Cannot copy Marlin steering file.'
+      errMsgVariable = 'errMsg: %s' % res
+      self.log.error(errMsgConst, errMsgVariable)
+      return S_ERROR(errMsgConst + errMsgVariable)
 
     try:
       shutil.copyfile(self.localSteeringFile, "%s_INPUT" % self.localSteeringFile)
     except IOError:
-      self.log.error("Cannot make a copy of input steering file: %s_INPUT. This doesn't affect operation." %
-                     self.localSteeringFile)
+      self.log.error("Cannot make a copy of input steering file. This doesn't affect operation.",
+                     "File name: %s_INPUT" % self.localSteeringFile)
 
     # FIXME this path will be different in production version probably... update it
     parListFileName = os.path.join(utilities.__path__[0], 'auxiliaryFiles/parameterListMarlinSteeringFile.txt')
@@ -202,7 +203,7 @@ class CalibrationRun(object):
         print('out of addParameterToProcessor: %s' % res)
         print('self.localSteeringFile: %s' % self.localSteeringFile)
         if not res['OK']:
-          self.log.error('Message from addParameterToProcessor function: %s' % res['Message'])
+          self.log.error('Message from addParameterToProcessor function:', '%s' % res['Message'])
 
     self.calibrationConstantsDict = parDict
 
@@ -224,12 +225,12 @@ class CalibrationRun(object):
         res = addParameterToProcessor(self.localSteeringFile, self.settings['DDCaloDigiName'],
                                       {'name': 'ECALLayers', 'type': 'IntVec', 'value': valToSetup})
         if not res['OK']:
-          self.log.error('Message from addParameterToProcessor function: %s' % res['Message'])
+          self.log.error('Message from addParameterToProcessor function:', '%s' % res['Message'])
       else:
         res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,
                                  {tmpKey: valToSetup})
         if not res['OK']:
-          self.log.error('Error while updating local steering file. Error message: %s' % res['Message'])
+          self.log.error('Error while updating local steering file. Error message:', '%s' % res['Message'])
           return res
 
     return S_OK()
@@ -251,8 +252,7 @@ class CalibrationRun(object):
     res = self.readInitialParameterDict()
     self.log.info('read initial parameter dict')
     if not res['OK']:
-      errMsg = 'Cannot read initial parameter dict. Message: %s' % res['Message']
-      self.log.error(errMsg)
+      self.log.error('Cannot read initial parameter dict. Message:', '%s' % res['Message'])
       return res
 
     dirac = DiracILC(True, 'calib%s/job_repository.rep' % self.calibrationID)
@@ -263,7 +263,7 @@ class CalibrationRun(object):
       listOfNodesToSubmitTo = idsOfWorkerNodesToSubmitTo
 
     key = CalibrationPhase.fileKeyFromPhase(self.currentPhase)
-    self.log.verbose('fileKeyFromPhase: %s' % key)
+    self.log.verbose('fileKeyFromPhase:', '%s' % key)
 
     dirName = "calib%s/stage%s/phase%s/step%s" % (self.calibrationID,
                                                   self.currentStage, self.currentPhase, self.currentStep)
@@ -271,9 +271,10 @@ class CalibrationRun(object):
       try:
         os.makedirs(dirName)
       except OSError as e:
-        errMsg = 'Cannot create directories. Current working directory: %s. Error message: %s' % (os.getcwd(), e)
-        self.log.error(errMsg)
-        return S_ERROR(errMsg)
+        errMsgConst = 'Cannot create directories. Current working directory: %s. Error message:'
+        errMsgVariable = '%s' % (os.getcwd(), e)
+        self.log.error(errMsgConst, errMsgVariable)
+        return S_ERROR(errMsgConst + errMsgVariable)
 
     for curWorkerID in listOfNodesToSubmitTo:
       # get input files
@@ -320,7 +321,7 @@ class CalibrationRun(object):
       calib.setSteeringFile(os.path.basename(self.settings['steeringFile']))
       res = curJob.append(calib)
       if not res['OK']:
-        self.log.error('Append calib module to UserJob: error_msg: %s' % res['Message'])
+        self.log.error('Append calib module to UserJob: error_msg:', '%s' % res['Message'])
         return S_ERROR('Failed to setup Calibration worklow module. CalibrationID = %s; WorkerID = %s'
                        % (self.calibrationID, curWorkerID))
 
@@ -362,7 +363,7 @@ class CalibrationRun(object):
     if self.currentStep > stepIDOnWorker:
       return S_OK(dict(self.currentParameterSet))
     else:
-      self.log.verbose('No new parameter set available yet. Current step in service: %s, step on worker: %s'
+      self.log.verbose('No new parameter set available yet.', 'Current step in service: %s, step on worker: %s'
                        % (self.currentStep, stepIDOnWorker))
       return S_OK()
 
@@ -371,10 +372,10 @@ class CalibrationRun(object):
     if self.newPhotonLikelihood:
       return S_OK(self.newPhotonLikelihood)
     else:
-      errMsg = ('No new parameter set available yet. Current step in service: %s'
-                % (self.currentStep))
-      self.log.verbose(errMsg)
-      return S_ERROR(errMsg)
+      errMsgConst = 'No new parameter set available yet. Current step in service:'
+      errMsgVariable = ('%s' % (self.currentStep))
+      self.log.verbose(errMsgConst, errMsgVariable)
+      return S_ERROR(errMsgConst + errMsgVariable)
 
   #  def __addLists(self, list1, list2):
   #    """Add two lists together by adding the first element, second element, and so on. Throws an exception
@@ -396,15 +397,12 @@ class CalibrationRun(object):
   #    return result
 
   def __mergePandoraLikelihoodXmlFiles(self):
-    self.log.info('SASHA __mergePandoraLikelihoodXmlFiles')
     folder = "calib%s/stage%s/phase%s/" % (self.calibrationID, self.currentStage, self.currentPhase)
     if not os.path.exists(folder):
       return S_ERROR('no directory found: %s' % folder)
 
     filesToMerge = searchFilesWithPattern(folder, '*.xml')
-    self.log.info('SASHA filesToMerge: %s' % filesToMerge)
     outFileName = "calib%s/newPandoraLikelihoodData.xml" % (self.calibrationID)
-    self.log.info('SASHA outFileName: %s' % outFileName)
 
     res = mergeLikelihoods(filesToMerge, outFileName)
     if not res['OK']:
@@ -421,7 +419,7 @@ class CalibrationRun(object):
     for iKey in self.calibrationConstantsDict:
       if pattern in iKey:
         return iKey
-    self.log.error('Cannot find XPath inside the parameter dict which contains pattern: %s' % pattern)
+    self.log.error('Cannot find XPath inside the parameter dict which contains pattern:', '%s' % pattern)
     return None
 
   def endCurrentStep(self):
@@ -429,7 +427,7 @@ class CalibrationRun(object):
 
     :returns: None
     """
-    self.log.info('Start execution of endCurrentStep. Stage %s; Phase: %s; Step: %s' %
+    self.log.info('Start execution of endCurrentStep.', 'Stage %s; Phase: %s; Step: %s' %
                   (self.currentStage, self.currentPhase, self.currentStep))
 
     if self.calibrationFinished:
@@ -443,7 +441,7 @@ class CalibrationRun(object):
     fileDir = "calib%s/" % (self.calibrationID)
     calibrationFile = os.path.join(fileDir, "Calibration.txt")  # as hardcoded in calibration binaries
 
-    self.log.info('calibrationFile: %s' % calibrationFile)
+    self.log.info('calibrationFile:', '%s' % calibrationFile)
 
     scriptPath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s"
                                    % (self.settings['platform'], self.settings['marlinVersion_CS'], "PandoraAnalysis"),
@@ -744,7 +742,7 @@ class CalibrationRun(object):
     res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,
                              self.calibrationConstantsDict, ["PfoAnalysis"])
     if not res['OK']:
-      self.log.error('Error while updating local steering file. Error message: %s' % res['Message'])
+      self.log.error('Error while updating local steering file. Error message:', '%s' % res['Message'])
       return res
 
     filesToCopy = []
@@ -756,19 +754,21 @@ class CalibrationRun(object):
     filesToCopy += glob.glob("calib%s/*.png" % (self.calibrationID))
     filesToCopy += glob.glob("calib%s/*_INPUT" % (self.calibrationID))
 
-    self.log.info('Start copying output of the calibration to user directory : %s' % self.settings['outputPath'])
-    self.log.info('Files to copy: %s' % filesToCopy)
+    self.log.info('Start copying output of the calibration to user directory:', '%s' % self.settings['outputPath'])
+    self.log.info('Files to copy:', '%s' % filesToCopy)
 
     dm = DataManager()
     for iFile in filesToCopy:
       if not os.path.exists(iFile):
-        errMsg = "File %s must exist locally" % iFile
-        self.log.error(errMsg)
-        return(S_ERROR(errMsg))
+        errMsgConst = "File doesn't exist locally."
+        errMsgVariable = "File name: %s" % iFile
+        self.log.error(errMsgConst, errMsgVariable)
+        return(S_ERROR(errMsgConst + errMsgVariable))
       if not os.path.isfile(iFile):
-        errMsg = "%s is not a file" % iFile
-        self.log.error(errMsg)
-        return(S_ERROR(errMsg))
+        errMsgConst = "File is not found."
+        errMsgVariable = "%s is not a file" % iFile
+        self.log.error(errMsgConst, errMsgVariable)
+        return(S_ERROR(errMsgConst + errMsgVariable))
 
       lfn = os.path.join(self.settings['outputPath'], "calib%s" % (self.calibrationID), os.path.basename(iFile))
       localFile = iFile
