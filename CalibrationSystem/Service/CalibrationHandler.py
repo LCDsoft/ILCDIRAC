@@ -56,7 +56,7 @@ class CalibrationHandler(RequestHandler):
     """Initialize the handler, setting required variables. Called once in the beginning of the service."""
     cls.activeCalibrations = {}
     cls.idsOfCalibsToBeKilled = []
-    cls.calibrationCounter = cls.loadStatus()
+    cls.calibrationCounter = CalibrationHandler.loadStatus()
     cls.log = LOG
     cls.ops = Operations()
     # FIXME this parameter should be read from CS
@@ -105,8 +105,8 @@ class CalibrationHandler(RequestHandler):
     with open(fileName, 'w') as f:
       f.write("%s" % self.calibrationCounter)
 
-  @classmethod
-  def loadStatus(cls):
+  @staticmethod
+  def loadStatus():
     """Read id of the last calibration from the file."""
     fileName = "status"
     if os.path.exists(fileName):
@@ -130,7 +130,13 @@ class CalibrationHandler(RequestHandler):
     return S_OK(usernameAndGroupDict)
 
   def _checkClientRequest(self, calibId):
+    """Check if calibration with input ID exists and if it belongs to the user who made the request.
 
+    :returns: S_OK w/o any message if calibration exists and user credentials are correct
+              S_OK with message if calibration with such ID doesn't exist
+              S_ERROR if impossible to retrieve user proxy or if user credentials are not correct
+    :rtype: `python:dict`
+    """
     activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
     if calibId not in activeCalibrations:
       return S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (calibId, activeCalibrations))
@@ -259,7 +265,12 @@ class CalibrationHandler(RequestHandler):
   types_killCalibrations = [list]
 
   def export_killCalibrations(self, inList):
-    """Kill set of calibrations."""
+    """Kill set of calibrations.
+
+    :returns: S_ERROR if wrong input,
+              S_OK with 'Value' parameter being a dict of format: {calibID: <output of killCalibration() call>}
+    :rtype: `python:dict`
+    """
     outDict = {}
     for iEl in inList:
       if not isinstance(iEl, int):
@@ -267,6 +278,9 @@ class CalibrationHandler(RequestHandler):
                   ' You have provided elements of following types: %s' % [type(iEl) for iEl in inList])
         return S_ERROR(errMsg)
     for iEl in inList:
+      #  res = self._checkClientRequest(iEl)
+      #  if not res['OK'] or res['Value']:
+      #    return res
       outDict[iEl] = self.export_killCalibration(iEl, 'killed by user request')
     return S_OK(outDict)
 
@@ -280,13 +294,15 @@ class CalibrationHandler(RequestHandler):
                      % (type(calibId), type(newPath)))
 
     res = self._checkClientRequest(calibId)
-    if res == S_OK():
-      calibration = CalibrationHandler.activeCalibrations[calibId]
-      self.log.info('Calibration #%s: "outputPath" setting is changed from "%s" to "%s"'
-                    % (calibId, calibration.settings['outputPath'], newPath))
-      calibration.settings['outputPath'] = newPath
-      calibration.resultsSuccessfullyCopiedToEos = False
-    return res
+    if not res['OK'] or res['Value']:
+      return res
+
+    calibration = CalibrationHandler.activeCalibrations[calibId]
+    self.log.info('Calibration #%s: "outputPath" setting is changed from "%s" to "%s"'
+                  % (calibId, calibration.settings['outputPath'], newPath))
+    calibration.settings['outputPath'] = newPath
+    calibration.resultsSuccessfullyCopiedToEos = False
+    return S_OK()
 
   auth_killCalibration = ['authenticated']
   types_killCalibration = [int, str]
@@ -298,18 +314,19 @@ class CalibrationHandler(RequestHandler):
     intermediate results on the server in case user want to inspect some of them
     """
     res = self._checkClientRequest(calibIdToKill)
-    if res == S_OK():
-      calibration = CalibrationHandler.activeCalibrations[calibIdToKill]
-      if not calibration.calibrationFinished:
-        calibration.calibrationFinished = True
-        calibration.calibrationEndTime = datetime.now()
-      calibration.resultsSuccessfullyCopiedToEos = True  # we don't want files to be copied to user EOS
-      #  if users want logs they can request it with getResults
-      #  command
-      calibration.calibrationRunStatus = errMsg
-      saveCalibrationRun(calibration)
-      CalibrationHandler.idsOfCalibsToBeKilled += [calibIdToKill]
-    return res
+    if not res['OK'] or res['Value']:
+      return res
+
+    calibration = CalibrationHandler.activeCalibrations[calibIdToKill]
+    if not calibration.calibrationFinished:
+      calibration.calibrationFinished = True
+      calibration.calibrationEndTime = datetime.now()
+    calibration.resultsSuccessfullyCopiedToEos = True  # we don't want files to be copied to user EOS
+    # if users want logs they can request it with getResults command
+    calibration.calibrationRunStatus = errMsg
+    saveCalibrationRun(calibration)
+    CalibrationHandler.idsOfCalibsToBeKilled += [calibIdToKill]
+    return S_OK()
 
   auth_cleanCalibrations = ['authenticated']
   types_cleanCalibrations = [list]
@@ -324,6 +341,9 @@ class CalibrationHandler(RequestHandler):
         self.log.error(errMsg)
         return S_ERROR(errMsg)
     for iEl in inList:
+      res = self._checkClientRequest(iEl)
+      if not res['OK'] or res['Value']:
+        return res
       outDict[iEl] = self.export_cleanCalibration(iEl)
     return S_OK(outDict)
 
@@ -335,6 +355,9 @@ class CalibrationHandler(RequestHandler):
 
     If calibration is still not finished - do nothing (if user want to stop it he has kill it first).
     """
+    res = self._checkClientRequest(calibIdToClean)
+    if not res['OK'] or res['Value']:
+      return res
     activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
     if calibIdToClean not in activeCalibrations:
       return S_OK('No calibration with ID: %s was found. Active calibrations: %s' % (calibIdToClean,
@@ -343,7 +366,7 @@ class CalibrationHandler(RequestHandler):
     if not calibration.calibrationFinished:
       return S_OK('Cannot clean calibration with ID %s. It is still not finished/killed.' % calibIdToClean)
     else:
-      del CalibrationHandler.activeCalibrations[calibIdToClean]
+      CalibrationHandler.activeCalibrations.pop(calibIdToClean, None)
       shutil.rmtree('calib%s' % calibIdToClean)
       self.log.info('Calibration #%s was cleaned by user.' % calibIdToClean)
       return S_OK('Calibration with ID %s was cleaned.' % calibIdToClean)
@@ -401,6 +424,9 @@ class CalibrationHandler(RequestHandler):
               S_ERROR if the requested calibration can not be found.
     :rtype: dict
     """
+    res = self._checkClientRequest(calibrationID)
+    if not res['OK'] or res['Value']:
+      return res
     calibration = CalibrationHandler.activeCalibrations.get(calibrationID, None)
     if not calibration:
       return S_ERROR('Calibration with ID %d not found.' % calibrationID)
@@ -425,7 +451,7 @@ class CalibrationHandler(RequestHandler):
       calibration.addResult(stepID, workerID, newFilename)
     return S_OK()
 
-  auth_checkForStepIncrement = ['authenticated']
+  auth_checkForStepIncrement = ['TrustedHost']
   types_checkForStepIncrement = []
 
   def export_checkForStepIncrement(self):
@@ -453,7 +479,7 @@ class CalibrationHandler(RequestHandler):
           if not calibration.resultsSuccessfullyCopiedToEos:
             self.log.error('Calibration results have not been copied properly...')
           self.log.info('Removing calibration %s from the active calibration list and clean up local directory')
-          del CalibrationHandler.activeCalibrations[calibrationID]
+          CalibrationHandler.activeCalibrations.pop(calibrationID, None)
           shutil.rmtree('calib%s' % calibrationID)
       elif self.finalInterimResultReceived(calibration, calibration.currentStep):
         res = calibration.endCurrentStep()
@@ -501,6 +527,9 @@ class CalibrationHandler(RequestHandler):
           "calibrationID is not in active calibrations: %s\nThis should mean that the calibration has finished"
           % calibrationID)
       return res
+    res = self._checkClientRequest(calibrationID)
+    if not res['OK'] or res['Value']:
+      return res
 
     res = cal.getNewParameters(stepIDOnWorker)
     return res
@@ -517,6 +546,9 @@ class CalibrationHandler(RequestHandler):
               S_OK with the parameter set and the id of the current step
     :rtype: dict
     """
+    res = self._checkClientRequest(calibrationID)
+    if not res['OK'] or res['Value']:
+      return res
     cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
     if not cal:
       self.log.error("CalibrationID is not in active calibrations:",
@@ -541,6 +573,9 @@ class CalibrationHandler(RequestHandler):
               S_OK with the parameter set and the id of the current step
     :rtype: dict
     """
+    res = self._checkClientRequest(calibrationID)
+    if not res['OK'] or res['Value']:
+      return res
     cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
     if not cal:
       self.log.error("CalibrationID is not in active calibrations:",
@@ -560,12 +595,13 @@ class CalibrationHandler(RequestHandler):
 
     return result
 
-  auth_resubmitJobs = ['authenticated']
+  auth_resubmitJobs = ['TrustedHost']
   types_resubmitJobs = [list]
 
   def export_resubmitJobs(self, failedJobs):
     """Resubmit failed jobs.
 
+    Called by the Agent.
     :param failedJobs: List of pairs of the form (calibrationID, workerID)
     :type failedJobs: `python:list`
     :returns: S_OK if successful, else a S_ERROR with a pair (errorstring, list_of_failed_id_pairs)
@@ -590,7 +626,7 @@ class CalibrationHandler(RequestHandler):
           self.export_killCalibration(iCalib, errMsg)
     return S_OK()
 
-  auth_getNumberOfJobsPerCalibration = ['authenticated']
+  auth_getNumberOfJobsPerCalibration = ['TrustedHost']
   types_getNumberOfJobsPerCalibration = []
 
   def export_getNumberOfJobsPerCalibration(self):
@@ -606,7 +642,7 @@ class CalibrationHandler(RequestHandler):
     self.log.debug("Number of jobs per calibration: %s" % result)
     return S_OK(result)
 
-  auth_getRunningCalibrations = ['authenticated']
+  auth_getRunningCalibrations = ['TrustedHost']
   types_getRunningCalibrations = []
 
   def export_getRunningCalibrations(self):
@@ -622,7 +658,7 @@ class CalibrationHandler(RequestHandler):
     self.log.debug("List of running calibrations: %s" % result)
     return S_OK(result)
 
-  auth_getActiveCalibrations = ['authenticated']
+  auth_getActiveCalibrations = ['TrustedHost']
   types_getActiveCalibrations = []
 
   def export_getActiveCalibrations(self):
@@ -634,7 +670,7 @@ class CalibrationHandler(RequestHandler):
     self.log.debug("List of active calibrations: %s" % CalibrationHandler.activeCalibrations)
     return S_OK(CalibrationHandler.activeCalibrations)
 
-  auth_getCalibrationsToBeKilled = ['authenticated']
+  auth_getCalibrationsToBeKilled = ['TrustedHost']
   types_getCalibrationsToBeKilled = []
 
   def export_getCalibrationsToBeKilled(self):

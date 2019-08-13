@@ -66,7 +66,7 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup, exceptions=No
           LOG.info('%s:\t"%s" --> "%s"' % (iPar, iElement.text, iVal))
       # remove value attribute since we write value to the text field
       if 'value' in iElement.attrib:
-        del iElement.attrib['value']
+        iElement.attrib.pop('value', None)
       iElement.text = iVal
 
   tree.write(outFileName)
@@ -317,7 +317,7 @@ def convert_to_int_list(non_int_list):
   return result
 
 
-def calibration_creation_failed(self, results):
+def calibration_creation_failed(results):
   """Return whether or not the creation of all calibration jobs was successful.
 
   :param results: List of S_OK/S_ERROR dicts that were returned by the submission call

@@ -113,9 +113,9 @@ class CalibrationRun(object):
     """
     state = self.__dict__.copy()
     # Remove the unpicklable entries.
-    del state['log']
-    del state['ops']
-    del state['lock']
+    state.pop('log', None)
+    state.pop('ops', None)
+    state.pop('lock', None)
     return state
 
   def __setstate__(self, state):

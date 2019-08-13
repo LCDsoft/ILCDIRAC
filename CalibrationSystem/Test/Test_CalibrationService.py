@@ -129,7 +129,7 @@ def test_createCalibration(calibHandler):
   # wrong input: missing argument in the third input dict
   wrongSettings = createCalibrationSettings('CLD').settingsDict
   wrongSettings['outputPath'] = 'dummy_outputPath'
-  del wrongSettings['detectorModel']
+  wrongSettings.pop('detectorModel', None)
   res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, wrongSettings)
   assert not res['OK']
   assert "doesn't contains all required fields." in res['Message']
@@ -538,6 +538,9 @@ def test_simple_killCalibration(calibHandler, mocker):
   CalibrationHandler.activeCalibrations[31] = 'dummy31'
   CalibrationHandler.activeCalibrations[20] = 'dummy20'
 
+  #  mocker.patch.object(calibHandler, '_checkClientRequest', new=Mock(
+  #      return_value={'OK': True, 'Value': {'username': 'correctUserName', 'group': 'correctUserGroup'}}))
+
   # wrong calibrationID
   res = calibHandler.export_killCalibration(2, 'dummy')
   assert res['OK']
@@ -562,6 +565,8 @@ def test_killCalibration(calibHandler, copiedFccSteeringFile, mocker):
   calibID = int(copiedFccSteeringFile.split('calib')[-1])
   print('calibID: %s' % calibID)
 
+  #  mocker.patch.object(calibHandler, '_checkClientRequest', new=Mock(
+  #      return_value={'OK': True, 'Value': {'username': 'correctUserName', 'group': 'correctUserGroup'}}))
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
                new=Mock(return_value=Mock(), name='Class'))
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
@@ -580,7 +585,7 @@ def test_killCalibration(calibHandler, copiedFccSteeringFile, mocker):
   assert res['Message'] == 'Permission denied. Calibration with ID 1 has been created by other user.'
   # wrong proxyUserName
   res = calibHandler.export_killCalibrations([1])
-  print(res)
+  print('\nSASHA: res: %s' % res)
   assert res['OK']
   assert res['Value'][1]['Message'] == 'Permission denied. Calibration with ID 1 has been created by other user.'
   # wrong proxyUserGroup
@@ -822,9 +827,14 @@ class CalibrationHandlerTest(unittest.TestCase):
     testRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     testRun.currentStep = 36
     testRun.currentParameterSet = {'dummy': 2435}
+    testRun.proxyUserName = 'correctUserName'
+    testRun.proxyUserGroup = 'correctUserGroup'
     CalibrationHandler.activeCalibrations[2489] = testRun
-    assertDiracSucceedsWith_equals(self.calh.export_getNewParameters(2489, 35),
-                                   testRun.currentParameterSet, self)
+    with patch.object(CalibrationHandler, '_checkClientRequest', new=Mock(
+        return_value=S_OK())):
+      res = self.calh.export_getNewParameters(2489, 35)
+      print(res)
+      assertDiracSucceedsWith_equals(res, testRun.currentParameterSet, self)
 
   def test_getnewparams_inactive_calibration(self):
     """Test get new params."""
@@ -843,8 +853,9 @@ class CalibrationHandlerTest(unittest.TestCase):
             if not res['OK']:
               print(res['Message'])
               assert False
-          assertDiracFailsWith(self.calh.export_getNewParameters(135, 913),
-                               'CalibrationID is not in active calibrations: 135', self)
+          res = self.calh.export_getNewParameters(135, 913)
+          print('res: %s' % res)
+          assertDiracFailsWith(res, 'CalibrationID is not in active calibrations: 135', self)
 
   #  @patch('DIRAC.ConfigurationSystem.Client.Helpers.Operations.getValue', return_value='dummyReturnString')
   #  def test_endcurrentstep( self, mock_operations ):

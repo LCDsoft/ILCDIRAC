@@ -89,7 +89,7 @@ def readEmptyParameterDict():
   parDict = readParameterDict(inFileName)
   for iKey in parDict.keys():
     if 'RootFile' in iKey:
-      del parDict[iKey]
+      parDict.pop(iKey, None)
   return parDict
 
 
