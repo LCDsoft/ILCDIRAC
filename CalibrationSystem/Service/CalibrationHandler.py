@@ -320,7 +320,7 @@ class CalibrationHandler(RequestHandler):
     calibration = CalibrationHandler.activeCalibrations[calibIdToKill]
     if not calibration.calibrationFinished:
       calibration.calibrationFinished = True
-      calibration.calibrationEndTime = datetime.now()
+      calibration.calibrationEndTime = datetime.now().strftime(calibration.timeStampPattern)
     calibration.resultsSuccessfullyCopiedToEos = True  # we don't want files to be copied to user EOS
     # if users want logs they can request it with getResults command
     calibration.calibrationRunStatus = errMsg
@@ -396,8 +396,8 @@ class CalibrationHandler(RequestHandler):
       calibStatus = calibration.getCurrentStatus()
       if 'calibrationEndTime' in calibStatus.keys():
         calibStatus['timeLeftBeforeOutputWillBeDeleted'] = (
-            '%s' % calibration.calibrationEndTime + timedelta(minutes=self.timeToKeepCalibrationResultsInMinutes)
-            - datetime.now())
+            '%s' % datetime.strptime(calibration.calibrationEndTime, calibration.timeStampPattern)
+            + timedelta(minutes=self.timeToKeepCalibrationResultsInMinutes) - datetime.now())
       calibStatus['totalNumberOfJobs'] = int(calibration.settings['numberOfJobs'])
       calibStatus['percentageOfFinishedJobs'] = int(
           100.0 * calibration.stepResults[calibration.currentStep].getNumberOfResults()
@@ -474,7 +474,7 @@ class CalibrationHandler(RequestHandler):
             return res
           else:
             calibration.resultsSuccessfullyCopiedToEos = True
-        if ((datetime.now() - calibration.calibrationEndTime).seconds
+        if ((datetime.now() - datetime.strptime(calibration.calibrationEndTime, calibration.timeStampPattern)).seconds
               / 60.0 >= self.timeToKeepCalibrationResultsInMinutes):
           if not calibration.resultsSuccessfullyCopiedToEos:
             self.log.error('Calibration results have not been copied properly...')

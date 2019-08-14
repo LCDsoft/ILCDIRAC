@@ -317,7 +317,8 @@ def test_export_checkForStepIncrement(calibHandler, mocker):
   calibSetting = createCalibrationSettings('CLIC')
   calibRun = CalibrationRun(27, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   calibRun.calibrationFinished = True
-  calibRun.calibrationEndTime = datetime.now() - timedelta(minutes=9, seconds=59, milliseconds=10)
+  calibRun.calibrationEndTime = (datetime.now() - timedelta(minutes=9, seconds=59,
+                                                            milliseconds=10)).strftime(calibRun.timeStampPattern)
   CalibrationHandler.activeCalibrations[27] = calibRun
   CalibrationHandler.timeToKeepCalibrationResultsInMinutes = 10
 

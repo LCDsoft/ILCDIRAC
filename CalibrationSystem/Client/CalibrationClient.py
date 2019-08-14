@@ -4,7 +4,7 @@ The worker nodes use this interface to ask for new parameters, their event slice
 about the results of their reconstruction.
 """
 
-from DIRAC.Core.Base.Client import Client, createClient
+from DIRAC.Core.Base.Client import Client
 from DIRAC import S_OK, S_ERROR, gLogger
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
@@ -123,14 +123,14 @@ class CalibrationPhase(object):
       raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)
 
 
-@createClient('Calibration/Calibration')
+#  @createClient('Calibration/Calibration')
 class CalibrationClient(Client):
   """Handles the workflow of the worker nodes.
 
   Fetches the necessary data from the service, calls the calibration software to be run and reports the results back.
   """
 
-  def __init__(self, calibrationID, workerID, **kwargs):
+  def __init__(self, calibrationID=None, workerID=None, **kwargs):
     """Initialize the client.
 
     :param workerID: ID of this worker
