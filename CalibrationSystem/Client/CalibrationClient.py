@@ -1,11 +1,12 @@
-"""
-The calibration client offers the interface for calibration worker nodes to talk to the calibration service.
+"""The calibration client offers the interface for calibration worker nodes to talk to the calibration service.
+
 The worker nodes use this interface to ask for new parameters, their event slices and inform the service
-about the results of their reconstruction
+about the results of their reconstruction.
 """
 
-from DIRAC.Core.Base.Client import Client
+from DIRAC.Core.Base.Client import Client, createClient
 from DIRAC import S_OK, S_ERROR, gLogger
+from DIRAC.ConfigurationSystem.Client.Helpers.Operations import Operations
 from ILCDIRAC.CalibrationSystem.Utilities.fileutils import binaryFileToString
 
 __RCSID__ = "$Id$"
@@ -13,18 +14,22 @@ LOG = gLogger.getSubLogger(__name__)
 
 
 class CalibrationPhase(object):
-  """ Represents the different phases a calibration can be in.
+  """Represents the different phases a calibration can be in.
+
   Since Python 2 does not have enums, this is hardcoded for the moment.
   Should this solution not be sufficient any more, one can make a better enum implementation by hand or install
-  a backport of the python3 implementation from PyPi."""
+  a backport of the python3 implementation from PyPi.
+  """
+
   ECalDigi, HCalDigi, MuonAndHCalOtherDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining = range(6)
 
   @staticmethod
   def phaseIDFromString(phase_name):
-    """ Returns the ID of the given CalibrationPhase, passed as a string.
+    """Return the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
-    ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are:
+                                  ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
+                                  ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: ID of this phase
     :rtype: int
     """
@@ -45,10 +50,11 @@ class CalibrationPhase(object):
 
   @staticmethod
   def fileKeyFromPhase(phaseID):
-    """ Returns the ID of the given CalibrationPhase, passed as a string.
+    """Return the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi,
-    MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are:
+                                  ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
+                                  ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: file key for this phase
     :rtype: str
     """
@@ -70,10 +76,11 @@ class CalibrationPhase(object):
   # TODO read these energies from CS or from users input
   @staticmethod
   def sampleEnergyFromPhase(phaseID):
-    """ Returns energy of provided sample of the given CalibrationPhase, passed as a float.
+    """Return energy of provided sample of the given CalibrationPhase, passed as a float.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are: ECalDigi, HCalDigi, HCalOtherDigi,
-    MuonDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are:
+                                  ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
+                                  ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: file key for this phase
     :rtype: str
     """
@@ -94,7 +101,7 @@ class CalibrationPhase(object):
 
   @staticmethod
   def phaseNameFromID(phaseID):
-    """ Returns the name of the CalibrationPhase with the given ID, as a string
+    """Return the name of the CalibrationPhase with the given ID, as a string.
 
     :param int phaseID: ID of the enquired CalibrationPhase
     :returns: The name of the CalibrationPhase
@@ -116,39 +123,44 @@ class CalibrationPhase(object):
       raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)
 
 
-class CalibrationClient(object):
-  """ Handles the workflow of the worker nodes. Fetches the necessary data from the service,
-  calls the calibration software to be run and reports the results back.
+@createClient('Calibration/Calibration')
+class CalibrationClient(Client):
+  """Handles the workflow of the worker nodes.
+
+  Fetches the necessary data from the service, calls the calibration software to be run and reports the results back.
   """
-  def __init__(self, calibrationID, workerID):
-    """ Initializes the client
+
+  def __init__(self, calibrationID, workerID, **kwargs):
+    """Initialize the client.
 
     :param workerID: ID of this worker
     :param calibrationID: ID of the calibration run this worker belongs to
     :returns: None
     """
+    super(CalibrationClient, self).__init__(**kwargs)
+    self.setServer('Calibration/Calibration')
     self.calibrationID = calibrationID
     self.workerID = workerID
     self.currentStep = -1  # initial parameter request
     self.currentPhase = CalibrationPhase.ECalDigi
     self.currentStage = 1
-    self.calibrationService = Client()
-    self.calibrationService.setServer('Calibration/Calibration')
     self.parameterSet = None
     self.log = LOG
+    self.ops = Operations()
+    self.maximumReportTries = self.ops.getValue('Calibration/MaximumReportTries', 10)  # TODO add this to CS
 
-  def getInputDataDict(self):
-    return self.calibrationService.getInputDataDict(self.calibrationID, self.workerID)
+  #  def getInputDataDict(self):
+  #    return self.calibrationService.getInputDataDict(self.calibrationID, self.workerID)
 
   def requestNewParameters(self):
-    """ Fetches the new parameter set from the service and updates the step counter in this object with the new value.
-    Throws a ValueError if the calibration ended already.
+    """Fetch new parameter set from the service and updates the step counter in this object with the new value.
 
+    Throws a ValueError if the calibration ended already.
     :returns: dict with 4 keys: calibrationIsFinished (bool), parameters (dict), currentPhase (int), currentStage (int)
     or None if no new parameters are available yet
     :rtype: list
     """
-    res = self.calibrationService.getNewParameters(self.calibrationID, self.currentStep)
+    res = self.getNewParameters(self.calibrationID, self.currentStep)
     if res['OK']:
       returnValue = res['Value']
       # FIXME calibrationRun state will be updated number of worker times while only one time is enough
@@ -159,15 +171,16 @@ class CalibrationClient(object):
     return res
 
   def requestNewPhotonLikelihood(self):
-   res = self.calibrationService.getNewPhotonLikelihood(self.calibrationID)
-   if res['OK']:
-     return res['Value']
-   else:
-     return None
+    """Get new photon likelihood file."""
+    res = self.getNewPhotonLikelihood(self.calibrationID)
+    if res['OK']:
+      return res['Value']
+    else:
+      return None
 
-  #TODO do we need this functionality?
+  # TODO do we need this functionality?
   def jumpToStep(self, stageID, phaseID, stepID):
-    """ Jumps to the passed step and phase.
+    """Jump to the passed step and phase.
 
     :param int stageID: ID of the stage to jump to
     :param int phaseID: ID of the phase to jump to, see CalibrationPhase
@@ -179,79 +192,76 @@ class CalibrationClient(object):
     self.currentPhase = phaseID
     self.currentStep = stepID
 
-  # TODO read this constant from CS
-  MAXIMUM_REPORT_TRIES = 10
   def reportResult(self, outFileName):
-    """ Sends the root file from PfoAnalysis or PandoraLikelihoodDataPhotonTraining.xml from photon training
+    """Send result of calibration step at the node (.root or .xml file) to the service.
+
+    Send the root file from PfoAnalysis or PandoraLikelihoodDataPhotonTraining.xml from photon training
     back to the service procedure
 
     :param outFileName: Output file from one calibration iteration
     :returns: None
     """
     attempt = 0
-
     resultString = binaryFileToString(outFileName)
 
-    while attempt < CalibrationClient.MAXIMUM_REPORT_TRIES:
-      res = self.calibrationService.submitResult(self.calibrationID, self.currentStage, self.currentPhase,
+    while attempt < self.maximumReportTries:
+      res = self.submitResult(self.calibrationID, self.currentStage, self.currentPhase,
                                                  self.currentStep, self.workerID, resultString)
       if res['OK']:
         return S_OK()
-      self.log.warn("Failed to submit result, try %s: %s " % (attempt, res['Message']))
+      self.log.warn("Failed to submit result, try", "%s: %s " % (attempt, res['Message']))
       attempt += 1
 
     return S_ERROR('Could not report result back to CalibrationService.')
 
 
-def setFractionOfFinishedJobsNeededToStartNextStep(calibIds, fraction):
-  calibrationService = Client()
-  calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.setFractionOfFinishedJobsNeededToStartNextStep(calibIds, fraction)
+#  def setFractionOfFinishedJobsNeededToStartNextStep(calibIds, fraction):
+#    calibrationService = Client()
+#    calibrationService.setServer('Calibration/Calibration')
+#    return calibrationService.setFractionOfFinishedJobsNeededToStartNextStep(calibIds, fraction)
 
 
-def createCalibration(inputFiles, numberOfEventsPerFile, calibSettings):
-  """ Starts a calibration.
+#  def createCalibration(inputFiles, numberOfEventsPerFile, calibSettings):
+#    """ Starts a calibration.
+#
+#    :param inputFiles: Input files for the calibration: dictionary of keys GAMMA, KAON, and MUON to list of lfns
+#                       for each particle type
+#    :param calibSettings: ???
+#    :returns: S_OK containing ID of the calibration, or S_ERROR if something went wrong
+#    :rtype: dict
+#    """
+#
+#    calibrationService = Client()
+#    calibrationService.setServer('Calibration/Calibration')
+#    return calibrationService.createCalibration(inputFiles, numberOfEventsPerFile, dict(calibSettings.settingsDict))
 
-  :param inputFiles: Input files for the calibration: dictionary of keys GAMMA, KAON, and MUON to list of lfns
-                     for each particle type
-  :param calibSettings: ???
-  :returns: S_OK containing ID of the calibration, or S_ERROR if something went wrong
-  :rtype: dict
-  """
-
-  calibrationService = Client()
-  calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.createCalibration(inputFiles, numberOfEventsPerFile, dict(calibSettings.settingsDict))
-
-def killCalibration(calibId):
-  calibrationService = Client()
-  calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.killCalibration(calibId, 'killed by user request')
-
-
-def changeEosDirectoryToCopyTo(calibId, newPath):
-  calibrationService = Client()
-  calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.changeEosDirectoryToCopyTo(calibId, newPath)
-
-def killCalibrations(calibIds):
-  calibrationService = Client()
-  calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.killCalibrations(calibIds)
-
-
-def cleanCalibration(calibId):
-  calibrationService = Client()
-  calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.cleanCalibration(calibId)
-
-
-def cleanCalibrations(calibIds):
-  calibrationService = Client()
-  calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.cleanCalibrations(calibIds)
-
-def getCalibrationStatuses():
-  calibrationService = Client()
-  calibrationService.setServer('Calibration/Calibration')
-  return calibrationService.getUserCalibrationStatuses()
+#  def killCalibration(calibId):
+#    calibrationService = Client()
+#    calibrationService.setServer('Calibration/Calibration')
+#    return calibrationService.killCalibration(calibId, 'killed by user request')
+#
+#
+#  def changeEosDirectoryToCopyTo(calibId, newPath):
+#    calibrationService = Client()
+#    calibrationService.setServer('Calibration/Calibration')
+#    return calibrationService.changeEosDirectoryToCopyTo(calibId, newPath)
+#
+#  def killCalibrations(calibIds):
+#    calibrationService = Client()
+#    calibrationService.setServer('Calibration/Calibration')
+#    return calibrationService.killCalibrations(calibIds)
+#
+#  def cleanCalibration(calibId):
+#    calibrationService = Client()
+#    calibrationService.setServer('Calibration/Calibration')
+#    return calibrationService.cleanCalibration(calibId)
+#
+#  def cleanCalibrations(calibIds):
+#    calibrationService = Client()
+#    calibrationService.setServer('Calibration/Calibration')
+#    return calibrationService.cleanCalibrations(calibIds)
+#
+#  def getCalibrationStatuses():
+#    calibrationService = Client()
+#    calibrationService.setServer('Calibration/Calibration')
+#    return calibrationService.getUserCalibrationStatuses()
