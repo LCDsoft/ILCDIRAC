@@ -1,5 +1,9 @@
 [v29r1p1]
 
+*Core
+
+NEW: Based on Dirac v6r21p15
+
 *ILCTransformationSystem
 
 CHANGE: (!284) The :mod:`~ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent` now obtains the proxy of the transformation owner to check files. It no longer uses a ``shifterProxy``
