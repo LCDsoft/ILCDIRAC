@@ -241,6 +241,8 @@ pylint:PY3K:
 
 .prodTests_template: &prodTests
   stage: integration
+  except:
+    - tags
   variables:
     GIT_STRATEGY: none
   script:
