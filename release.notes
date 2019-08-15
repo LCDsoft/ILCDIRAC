@@ -10,7 +10,7 @@ CHANGE: (!284) The :mod:`~ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTrans
 
 *Interfaces
 
-FIX: (!282) :mod:`~ILCDIRAC.Interfaces.NewInterface.ProductionJob`: return success in checkFindDirectories when running ``dryRun`` mode, fixes problem with `dirac-clic-make-productions` in dryRun mode
+FIX: (!282) :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob`: return success in checkFindDirectories when running ``dryRun`` mode, fixes problem with `dirac-clic-make-productions` in dryRun mode
 NEW: (!285) New function ``printAvailableOptions`` in :class:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.OverlayInput.OverlayInput`
 CHANGE: (!285) If the ``OverlayInput`` consistency check fails, a list of available options partially compatible with the requested settings is printed
 
