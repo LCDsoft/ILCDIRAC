@@ -272,8 +272,8 @@ class CalibrationRun(object):
       try:
         os.makedirs(dirName)
       except OSError as e:
-        errMsgConst = 'Cannot create directories. Current working directory: %s. Error message:'
-        errMsgVariable = '%s' % (os.getcwd(), e)
+        errMsgConst = 'Cannot create directories. Current working directory'
+        errMsgVariable = ': %s. Error message:%s' % (os.getcwd(), e)
         self.log.error(errMsgConst, errMsgVariable)
         return S_ERROR(errMsgConst + errMsgVariable)
 

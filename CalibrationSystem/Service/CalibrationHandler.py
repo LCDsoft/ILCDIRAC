@@ -173,9 +173,7 @@ class CalibrationHandler(RequestHandler):
 
     :param basestring marlinVersion: Version of the Marlin application to be used for reconstruction
     :param dict inputFiles: Input files for the calibration. Dictionary.
-    :type inputFiles: `python:dict`
     :param dict numberOfEventsPerFile: Number of events per type of input file. Dictionary.
-    :type  numberOfEventsPerFile: `python:dict`
     :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
     :param basestring steeringFile: Steering file used in the calibration, LFN
     :returns: S_OK containing ID of the calibration, used to retrieve results etc
@@ -396,8 +394,8 @@ class CalibrationHandler(RequestHandler):
       calibStatus = calibration.getCurrentStatus()
       if 'calibrationEndTime' in calibStatus.keys():
         calibStatus['timeLeftBeforeOutputWillBeDeleted'] = (
-            '%s' % datetime.strptime(calibration.calibrationEndTime, calibration.timeStampPattern)
-            + timedelta(minutes=self.timeToKeepCalibrationResultsInMinutes) - datetime.now())
+            '%s' % (datetime.strptime(calibration.calibrationEndTime, calibration.timeStampPattern)
+                    + timedelta(minutes=self.timeToKeepCalibrationResultsInMinutes) - datetime.now()))
       calibStatus['totalNumberOfJobs'] = int(calibration.settings['numberOfJobs'])
       calibStatus['percentageOfFinishedJobs'] = int(
           100.0 * calibration.stepResults[calibration.currentStep].getNumberOfResults()
@@ -668,7 +666,8 @@ class CalibrationHandler(RequestHandler):
     :rtype: list
     """
     self.log.debug("List of active calibrations: %s" % CalibrationHandler.activeCalibrations)
-    return S_OK(CalibrationHandler.activeCalibrations)
+    activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
+    return S_OK(activeCalibrations)
 
   auth_getCalibrationsToBeKilled = ['TrustedHost']
   types_getCalibrationsToBeKilled = []

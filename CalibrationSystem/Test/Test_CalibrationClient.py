@@ -1,17 +1,20 @@
-"""
-Unit tests for the CalibrationClient
-"""
+"""Unit tests for the CalibrationClient."""
 
-from DIRAC import S_OK, S_ERROR
-from mock import call, patch
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertInImproved, \
-    assertEqualsImproved, assertDiracFailsWith, assertDiracSucceeds, \
-    assertDiracSucceedsWith, assertDiracSucceedsWith_equals, assertMockCalls
+import pytest
+from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationClient
 
 __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Client.CalibrationClient'
 
 
+@pytest.yield_fixture
+def calibClient():
+  """Create calibration handler."""
+  calibClient = CalibrationClient(1, 1)
+  return calibClient
+
+
 def test_pass():
+  """Skeleton for test funciton."""
   pass

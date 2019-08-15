@@ -5,6 +5,7 @@ import pytest
 import os
 import shutil
 import time
+#  from pprint import pprint
 from datetime import datetime
 from datetime import timedelta
 from xml.etree import ElementTree as et
@@ -90,6 +91,71 @@ def copiedFccSteeringFile():
   except EnvironmentError as e:
     print("Failed to delete directory: %s; ErrMsg: %s" % (workdirName, str(e)))
     assert False
+
+
+def test_returnTypesOfExportFunctionsOfHandler(mocker, calibHandler):
+  """Test returns of export_<> functions.
+
+  Test that returns of all export_<> functions of the handler, which doesn't have input arguments, are standard python
+  structures.
+  """
+  mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
+      return_value={'OK': True, 'Value': {'username': 'correctUserName', 'group': 'correctUserGroup'}}))
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.convert_and_execute',
+               side_effect=mimic_convert_and_execute)
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.saveCalibrationRun', new=Mock(return_value=S_OK()))
+  mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.saveCalibrationRun',
+               new=Mock(return_value=S_OK()))
+
+  calibSetting = createCalibrationSettings('CLD')
+  calibSetting.settingsDict['numberOfJobs'] = 200
+
+  for i in range(1, 4):
+    calibRun = CalibrationRun(i, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
+    mocker.patch.object(calibRun, 'ops', new=Mock(return_value=Mock(), name='Class'))
+    mocker.patch.object(calibRun, 'endCurrentStep', new=Mock(return_value=S_OK()))
+    calibRun.proxyUserName = 'correctUserName'
+    calibRun.proxyUserGroup = 'correctUserGroup'
+    calibRun.calibrationFinished = False
+    CalibrationHandler.activeCalibrations[i] = calibRun
+
+  allInstanceMembers = dir(calibHandler)
+  import re
+  myPattern = re.compile('export_*')
+  exportFunctionMembers = list(filter(myPattern.match, allInstanceMembers))
+  calibHandler.export_killCalibration(1, 'killed by user')
+
+  try:
+    # Python 3
+    from inspect import signature as sig
+  except ImportError:
+    # Python 2
+    # example of return: ArgSpec(args=['self'], varargs=None, keywords=None, defaults=None)
+    from inspect import getargspec as sig
+
+  #  print(sig)
+  for iFunc in exportFunctionMembers:
+    methodToCall = getattr(calibHandler, iFunc)
+    res = sig(methodToCall)
+    TestThisFunction = False
+    if len(res.args) == 1:
+      if res.args[0] == "self" and 'ping' not in iFunc:
+        TestThisFunction = True
+    elif res.defaults is not None:
+      if len(res.args) == len(res.defaults) + 1:
+        TestThisFunction = True
+    if not TestThisFunction:
+      continue
+    #  print("Test function: %s" % iFunc)
+    res = methodToCall()
+    assert isinstance(res, dict)
+    assert 'OK' in res
+    if res['OK']:
+      assert 'Value' in res
+      assert isinstance(res['Value'], (int, float, str, dict, list, tuple)) or res['Value'] is None
+    else:
+      assert 'Message' in res
+      assert not res['Message']
 
 
 def test_createCalibration(calibHandler):
