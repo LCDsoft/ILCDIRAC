@@ -87,7 +87,7 @@ class CalibrationRun(object):
     # TODO temporary field in the settings. for testing only
     self.calibrationFinished = self.settings['startCalibrationFinished']
     #  self.calibrationFinished = False
-    self.resultsSuccessfullyCopiedToEos = False
+    self.resultsSuccessfullyCopied = False
     self.timeStampPattern = "%Y-%m-%d %H:%M:%S"
     self.calibrationStartTime = datetime.now().strftime(self.timeStampPattern)
     self.calibrationEndTime = None
@@ -140,7 +140,7 @@ class CalibrationRun(object):
     outDict['currentStep'] = self.currentStep
     outDict['calibrationStartTime'] = self.calibrationStartTime
     outDict['calibrationFinished'] = self.calibrationFinished
-    outDict['resultsSuccessfullyCopiedToEos'] = self.resultsSuccessfullyCopiedToEos
+    outDict['resultsSuccessfullyCopied'] = self.resultsSuccessfullyCopied
     if self.calibrationEndTime is not None:
       outDict['calibrationEndTime'] = self.calibrationEndTime
     return outDict
@@ -726,8 +726,8 @@ class CalibrationRun(object):
       self.currentParameterSet['calibrationIsFinished'] = True
       self.calibrationFinished = True
       self.calibrationEndTime = datetime.now().strftime(self.timeStampPattern)
-      self.calibrationRunStatus = ("Calibration is succesfully finished. It reached requested stopStage: % and"
-                                   " stopPhase: %s" % (self.stopStage, self.stopPhase))
+      self.calibrationRunStatus = ("Calibration is succesfully finished. It reached requested stopStage:"
+                                   " %s and stopPhase: %s" % (self.stopStage, self.stopPhase))
 
     # update local steering file after every step. This file will be used if calibration service will be restarted and
     # some calibrations are still are not finished
@@ -738,8 +738,8 @@ class CalibrationRun(object):
     return S_OK()
 
   @executeWithUserProxy
-  def copyResultsToEos(self):
-    """Copy output files from the calibration to EOS."""
+  def copyResults(self):
+    """Copy output files from the calibration."""
     res = updateSteeringFile(self.localSteeringFile, self.localSteeringFile,
                              self.calibrationConstantsDict, ["PfoAnalysis"])
     if not res['OK']:
@@ -755,7 +755,8 @@ class CalibrationRun(object):
     filesToCopy += glob.glob("calib%s/*.png" % (self.calibrationID))
     filesToCopy += glob.glob("calib%s/*_INPUT" % (self.calibrationID))
 
-    self.log.info('Start copying output of the calibration to user directory:', '%s' % self.settings['outputPath'])
+    self.log.info('Start copying output of the calibration to user directory:',
+                  '%s on storage element: %s' % (self.settings['outputPath'], self.settings['outputStorageElement']))
     self.log.info('Files to copy:', '%s' % filesToCopy)
 
     dm = DataManager()
@@ -773,9 +774,9 @@ class CalibrationRun(object):
 
       lfn = os.path.join(self.settings['outputPath'], "calib%s" % (self.calibrationID), os.path.basename(iFile))
       localFile = iFile
-      res = dm.putAndRegister(lfn, localFile, 'CERN-DST-EOS', None, overwrite=True)
+      res = dm.putAndRegister(lfn, localFile, self.settings['outputStorageElement'], None, overwrite=True)
       if not res['OK']:
-        errMsg = 'Error while uploading results to EOS. Error message: %s' % res['Message']
+        errMsg = 'Error while uploading results. Error message: %s' % res['Message']
         self.log.error(errMsg)
         return res
 

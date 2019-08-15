@@ -282,10 +282,10 @@ class CalibrationHandler(RequestHandler):
       outDict[iEl] = self.export_killCalibration(iEl, 'killed by user request')
     return S_OK(outDict)
 
-  auth_changeEosDirectoryToCopyTo = ['authenticated']
-  types_changeEosDirectoryToCopyTo = [int, str]
+  auth_changeDirectoryToCopyTo = ['authenticated']
+  types_changeDirectoryToCopyTo = [int, str, str]
 
-  def export_changeEosDirectoryToCopyTo(self, calibId, newPath):
+  def export_changeDirectoryToCopyTo(self, calibId, newPath, newSE):
     """Update "outputPath" settings of the target calibration."""
     if not (isinstance(newPath, str) and isinstance(calibId, int)):
       return S_ERROR('Wrong types of input argumetns. Required types: [int, str]. Provided types: [%s, %s]'
@@ -298,8 +298,11 @@ class CalibrationHandler(RequestHandler):
     calibration = CalibrationHandler.activeCalibrations[calibId]
     self.log.info('Calibration #%s: "outputPath" setting is changed from "%s" to "%s"'
                   % (calibId, calibration.settings['outputPath'], newPath))
+    self.log.info('Calibration #%s: "outputSE" setting is changed from "%s" to "%s"'
+                  % (calibId, calibration.settings['outputSE'], newSE))
     calibration.settings['outputPath'] = newPath
-    calibration.resultsSuccessfullyCopiedToEos = False
+    calibration.settings['outputSE'] = newSE
+    calibration.resultsSuccessfullyCopied = False
     return S_OK()
 
   auth_killCalibration = ['authenticated']
@@ -319,7 +322,7 @@ class CalibrationHandler(RequestHandler):
     if not calibration.calibrationFinished:
       calibration.calibrationFinished = True
       calibration.calibrationEndTime = datetime.now().strftime(calibration.timeStampPattern)
-    calibration.resultsSuccessfullyCopiedToEos = True  # we don't want files to be copied to user EOS
+    calibration.resultsSuccessfullyCopied = True  # we don't want files to be copied to user directory
     # if users want logs they can request it with getResults command
     calibration.calibrationRunStatus = errMsg
     saveCalibrationRun(calibration)
@@ -465,16 +468,19 @@ class CalibrationHandler(RequestHandler):
       # FIXME this still can lead to that some jobs will finish with error status because they didn't finish in time
       calibration = CalibrationHandler.activeCalibrations[calibrationID]
       if calibration.calibrationFinished:
-        if not calibration.resultsSuccessfullyCopiedToEos:
-          res = calibration.copyResultsToEos(proxyUserName=calibration.proxyUserName,
-                                             proxyUserGroup=calibration.proxyUserGroup)
+        if not calibration.resultsSuccessfullyCopied:
+          res = calibration.copyResults(proxyUserName=calibration.proxyUserName,
+                                        proxyUserGroup=calibration.proxyUserGroup)
           if not res['OK']:
+            self.log.error('Cannot copy files of finished calibration', '#%s to user specified destination: %s.'
+                           ' Error message: %s' % (calibrationID, calibration.settings['outputPath'], res['Message']))
             return res
           else:
-            calibration.resultsSuccessfullyCopiedToEos = True
+            calibration.resultsSuccessfullyCopied = True
+            saveCalibrationRun(calibration)
         if ((datetime.now() - datetime.strptime(calibration.calibrationEndTime, calibration.timeStampPattern)).seconds
               / 60.0 >= self.timeToKeepCalibrationResultsInMinutes):
-          if not calibration.resultsSuccessfullyCopiedToEos:
+          if not calibration.resultsSuccessfullyCopied:
             self.log.error('Calibration results have not been copied properly...')
           self.log.info('Removing calibration %s from the active calibration list and clean up local directory')
           CalibrationHandler.activeCalibrations.pop(calibrationID, None)

@@ -16,7 +16,6 @@
 - calibration service, endCurrentStep(): we use hardcoded strings to acess calib. constants from the parameter dict (e.g. we use specific names for processors, but they can be changed by the user). Allow for user specify parameter dict himself
 - fccee steering files. There are two copies of DDCaloDigi and DDPandoraPFANewProcessor processors (we use which one to use according to integration time window). How should we deal with this situation? Should we ask user to provide name of processor to be used?
 - there are a few calorimeter constants used to calculate one calibration constant: Absorber_Thickness_EndCap, Scintillator_Thickness_Ring and so on. They are similar for CLICdet/CLD but maybe not for ILD. To fix this.
-- always after recovering calibration run copy to EOS starts... looks like something wrong is there
 - files are not deleted after time is up. timeLeftBeforeOutputWillBeDeleted becomes negative but files are not deleted and calibration is not deleted either.
 - what happen is current stage == 0? it wil run...
 
@@ -41,7 +40,6 @@
 - CalibrationHandler source code: refactor: executing python calib scripts into separate functions (where one execute binaries and python scripts to calculate and read calibration constants after each phase)
 - CalibrationClient: setup client - can have function submit jobs (instead of calling function in handler???)
 - implement: If too many jobs fails - stop calibration (because probably something is wrong  with configurations)
-- ask user to provide relative path to copy all files to user eos directory. Use Core/Utilities: constructUsersLFNs to construct full path
 - Workflow: make number of cycles to waste (wasteCPUCycles) configurable from CS
 - Workflow: if no response from CS for too long - stop requesting new parameters and kill the job (???)
 

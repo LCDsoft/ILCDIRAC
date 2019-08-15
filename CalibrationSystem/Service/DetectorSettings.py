@@ -54,6 +54,7 @@ class CalibrationSettings(object):
 
     # these settings have no default values... they have to be set up by user
     self.settingsDict['outputPath'] = None
+    self.settingsDict['outputSE'] = None
 
   def printSettings(self):
     """Print settings dict in nice format."""

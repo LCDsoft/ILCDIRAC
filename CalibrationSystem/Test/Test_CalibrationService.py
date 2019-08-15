@@ -168,9 +168,14 @@ def test_createCalibration(calibHandler):
   # wrong input: missing argument in the first input dict
   res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, clicSettings.settingsDict)
   assert not res['OK']
+  assert "Following settings have None values: ['outputSE']. All settings have to be set up." in res['Message']
+  clicSettings.settingsDict['outputSE'] = 'dummy_outputSE'
+  res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, clicSettings.settingsDict)
+  assert not res['OK']
   assert "Following settings have None values: ['outputPath']. All settings have to be set up." in res['Message']
   cldSettings.settingsDict['outputPath'] = 'dummy_outputPath'
   clicSettings.settingsDict['outputPath'] = 'dummy_outputPath'
+  cldSettings.settingsDict['outputSE'] = 'dummy_outputSE'
 
   # wrong input: missing argument in the first input dict
   res = calibHandler.export_createCalibration(
@@ -187,6 +192,7 @@ def test_createCalibration(calibHandler):
   # wrong input: unused extra argument in the third input dict
   wrongSettings = createCalibrationSettings('CLD').settingsDict
   wrongSettings['outputPath'] = 'dummy_outputPath'
+  wrongSettings['outputSE'] = 'dummy_outputSE'
   wrongSettings['dummy'] = 'dummy'
   res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, wrongSettings)
   assert not res['OK']
@@ -195,6 +201,7 @@ def test_createCalibration(calibHandler):
   # wrong input: missing argument in the third input dict
   wrongSettings = createCalibrationSettings('CLD').settingsDict
   wrongSettings['outputPath'] = 'dummy_outputPath'
+  wrongSettings['outputSE'] = 'dummy_outputSE'
   wrongSettings.pop('detectorModel', None)
   res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, wrongSettings)
   assert not res['OK']
@@ -388,7 +395,8 @@ def test_export_checkForStepIncrement(calibHandler, mocker):
   CalibrationHandler.activeCalibrations[27] = calibRun
   CalibrationHandler.timeToKeepCalibrationResultsInMinutes = 10
 
-  mocker.patch.object(calibRun, 'copyResultsToEos', new=Mock(return_value=S_OK()))
+  mocker.patch.object(calibRun, 'copyResults', new=Mock(return_value=S_OK()))
+  mocker.patch('%s.saveCalibrationRun' % MODULE_NAME, new=Mock(return_value=S_OK()))
   mocker.patch('%s.shutil' % MODULE_NAME, new=Mock())
 
   assert len(CalibrationHandler.activeCalibrations) == 1
@@ -452,6 +460,7 @@ def test_export_submitResult(calibHandler, mocker):
 
   calibSettings = createCalibrationSettings('CLIC')
   calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
+  calibSettings.settingsDict['outputSE'] = 'dummy_outputSE'
   res = calibHandler.export_createCalibration(inputData, numberOfEventsPerFile, calibSettings.settingsDict)
   if not res['OK']:
     print('Error message:\t%s' % res['Message'])
@@ -504,6 +513,7 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
 
   calibSettings = createCalibrationSettings('CLIC')
   calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
+  calibSettings.settingsDict['outputSE'] = 'dummy_outputSE'
   print('calibSettings.settingsDict: %s' % calibSettings.settingsDict)
 
   inputData = {'zuds': ["dummy.slcio"], 'gamma': ["dummy.slcio"], 'muon': ["dummy.slcio"], 'kaon': ["dummy.slcio"]}
@@ -640,6 +650,7 @@ def test_killCalibration(calibHandler, copiedFccSteeringFile, mocker):
       return_value={'OK': True, 'Value': {'username': 'correctUserName', 'group': 'correctUserGroup'}}))
   calibSetting = createCalibrationSettings('CLIC')
   calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
+  calibSetting.settingsDict['outputSE'] = 'dummy_outputSE'
   calibRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   calibRun.proxyUserName = 'wrongUserName'
   calibRun.proxyUserGroup = 'correctUserGroup'
@@ -668,37 +679,40 @@ def test_killCalibration(calibHandler, copiedFccSteeringFile, mocker):
   assert res['OK']
   assert CalibrationHandler.idsOfCalibsToBeKilled == [1]
   assert calibRun.calibrationFinished
-  assert calibRun.resultsSuccessfullyCopiedToEos
+  assert calibRun.resultsSuccessfullyCopied
   assert calibRun.calibrationEndTime is not None
 
   # clean up
   CalibrationHandler.activeCalibrations = {}
 
 
-def test_changeEosDirectoryToCopyTo(calibHandler, mocker):
-  """Test changeEosDirectoryToCopyTo."""
+def test_changeDirectoryToCopyTo(calibHandler, mocker):
+  """Test changeDirectoryToCopyTo."""
   mocker.patch('ILCDIRAC.CalibrationSystem.Service.CalibrationRun.Operations',
                new=Mock(return_value=Mock(), name='Class'))
   mocker.patch.object(calibHandler, '_getUsernameAndGroup', new=Mock(
       return_value={'OK': True, 'Value': {'username': 'correctUserName', 'group': 'correctUserGroup'}}))
   calibSetting = createCalibrationSettings('CLIC')
   calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
+  calibSetting.settingsDict['outputSE'] = 'dummy_outputSE'
   calibRun = CalibrationRun(33, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   calibRun.proxyUserName = 'correctUserName'
   calibRun.proxyUserGroup = 'correctUserGroup'
   CalibrationHandler.activeCalibrations[33] = calibRun
 
   # wrong proxyUserName
-  res = calibHandler.export_changeEosDirectoryToCopyTo(33, 'newEosPath')
+  res = calibHandler.export_changeDirectoryToCopyTo(33, 'newPath', 'newSE')
   assert res['OK']
-  assert CalibrationHandler.activeCalibrations[33].settings['outputPath'] == 'newEosPath'
-  assert not CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos
+  assert CalibrationHandler.activeCalibrations[33].settings['outputPath'] == 'newPath'
+  assert CalibrationHandler.activeCalibrations[33].settings['outputSE'] == 'newSE'
+  assert not CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopied
 
-  CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos = True
-  res = calibHandler.export_changeEosDirectoryToCopyTo(33, 'newEosPath2')
+  CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopied = True
+  res = calibHandler.export_changeDirectoryToCopyTo(33, 'newPath2', 'newSE2')
   assert res['OK']
-  assert CalibrationHandler.activeCalibrations[33].settings['outputPath'] == 'newEosPath2'
-  assert not CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopiedToEos
+  assert CalibrationHandler.activeCalibrations[33].settings['outputPath'] == 'newPath2'
+  assert CalibrationHandler.activeCalibrations[33].settings['outputSE'] == 'newSE2'
+  assert not CalibrationHandler.activeCalibrations[33].resultsSuccessfullyCopied
 
   # clean up
   CalibrationHandler.activeCalibrations = {}
@@ -862,6 +876,7 @@ class CalibrationHandlerTest(unittest.TestCase):
           for iCalID in tmpDict.keys():  # creates Calibrations with IDs 1-50
             calibSettings = createCalibrationSettings('CLIC')
             calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
+            calibSettings.settingsDict['outputSE'] = 'dummy_outputSE'
             calibSettings.settingsDict['numberOfJobs'] = tmpDict[iCalID]
             iCalibRun = CalibrationRun(iCalID, {'muon': [], 'kaon': [], 'gamma': [],
                                                 'zuds': []}, calibSettings.settingsDict)
@@ -891,6 +906,7 @@ class CalibrationHandlerTest(unittest.TestCase):
     """Test get new params."""
     calibSetting = createCalibrationSettings('CLIC')
     calibSetting.settingsDict['outputPath'] = 'dummy_outputPath'
+    calibSetting.settingsDict['outputSE'] = 'dummy_outputSE'
     testRun = CalibrationRun(1, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
     testRun.currentStep = 36
     testRun.currentParameterSet = {'dummy': 2435}
@@ -916,6 +932,7 @@ class CalibrationHandlerTest(unittest.TestCase):
           for _ in xrange(0, 50):  # creates Calibrations with IDs 1-50
             calibSettings = createCalibrationSettings('CLIC')
             calibSettings.settingsDict['outputPath'] = 'dummy_outputPath'
+            calibSettings.settingsDict['outputSE'] = 'dummy_outputSE'
             res = self.calh.export_createCalibration(inputData, numberOfEventsPerFile, calibSettings.settingsDict)
             if not res['OK']:
               print(res['Message'])
