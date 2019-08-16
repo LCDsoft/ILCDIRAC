@@ -195,17 +195,22 @@ class Calibration(MarlinAnalysis):
       self.currentStep = calibrationParameters['currentStep']
       parameterDict = calibrationParameters['parameters']
 
-      # MaxClusterEnergyToApplySoftComp can be not present in the steering file
-      # but it has to be because it allows to disable Software Compesation. Add it if needed.
-      tmpKey = self.getKey(parameterDict, 'MaxClusterEnergyToApplySoftComp')
-      if tmpKey is not None:
-        res = readParametersFromSteeringFile(self.SteeringFile, {tmpKey: None})
-        if not res['OK']:
-          #  expect key of following format: ".//processor[@name=%s]/parameter[@name='MaxClusterEnergyToApplySoftComp']"
-          processorName = tmpKey.split('=')[1].split(']')[0]
-          res = addParameterToProcessor(self.SteeringFile, processorName,
-                                        {'name': 'MaxClusterEnergyToApplySoftComp', 'type': 'float',
-                                         'value': parameterDict[tmpKey]})
+      # list of parameters which can be not present in the steering file be default
+      # if they are not found - add them
+      parametersToCheck = [('MaxClusterEnergyToApplySoftComp', 'float'), ('ECALLayers', 'IntVec')]
+      for iParName, iParType in parametersToCheck:
+        tmpKey = self.getKey(parameterDict, iParName)
+        if tmpKey is not None:
+          res = readParametersFromSteeringFile(self.SteeringFile, {tmpKey: None})
+          if not res['OK']:
+            #  expect key of following format:
+            #    ".//processor[@name=%s]/parameter[@name='MaxClusterEnergyToApplySoftComp']"
+            processorName = tmpKey.split('=')[1].split(']')[0]
+            processorName = processorName.replace('\'', '')
+            processorName = processorName.replace('\"', '')
+            res = addParameterToProcessor(self.SteeringFile, processorName,
+                                          {'name': iParName, 'type': iParType,
+                                           'value': parameterDict[tmpKey]})
 
       self.setApplicationStatus('PandoraCalib_%s: stage: %s; phase: %s; step: %s' %
                                 (self.calibrationID, self.currentStage, self.currentPhase, self.currentStep))
@@ -330,9 +335,10 @@ class Calibration(MarlinAnalysis):
     res = self.cali.getInputDataDict()
     print('res: %s' % res)
     if not res['OK']:
-      errorMessage = 'Somemethignwent wrong during retrieveing inputDataDict! Msg: %s' % (res['Message'])
-      self.log.error(errorMessage)
-      return S_ERROR(errorMessage)
+      errorMessageConst = 'Somemething went wrong during retrieveing inputDataDict!'
+      errorMessageVariable = 'Msg: %s' % (res['Message'])
+      self.log.error(errorMessageConst, errorMessageVariable)
+      return S_ERROR(errorMessageConst + errorMessageVariable)
 
     self.log.info('SASHA self.cali.getInputDataDict() %s' % res)
 

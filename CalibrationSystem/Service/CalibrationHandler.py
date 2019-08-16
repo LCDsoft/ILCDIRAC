@@ -631,7 +631,9 @@ class CalibrationHandler(RequestHandler):
                     ' run. Kill it!')
           # TODO FIXME test it! initial test failed...
           self.log.error(errMsg)
-          self.export_killCalibration(iCalib, errMsg)
+          res = self.export_killCalibration(iCalib, errMsg)
+          if not res['OK']:
+            return res
     return S_OK()
 
   auth_getNumberOfJobsPerCalibration = ['TrustedHost']

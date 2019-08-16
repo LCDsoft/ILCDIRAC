@@ -52,7 +52,7 @@ def copyFccSteeringFile():
   """Copy FCC steering file."""
   calibID = 1
   yield copySteeringFile('FCCee', calibID)
-  cleanDir(calibID)
+  #  cleanDir(calibID)
 
 
 @pytest.yield_fixture
@@ -121,6 +121,10 @@ def test_addParameterToProcessor(produceRandomTextFile, copyFccSteeringFile, moc
   res = addParameterToProcessor(steeringFile, 'MyAIDAProcessor', {'name': 'dummyValue'})
   assert not res['OK']
   assert ("parameter with name %s already exists" % 'dummyValue') in res['Message']
+  # good input file, good processor name
+  res = addParameterToProcessor(steeringFile, 'MyDDCaloDigi_10ns', {'name': 'ECALLayers', 'type': 'IntVec',
+                                                                    'value': '10 31'})
+  assert res['OK']
 
 
 def test_updateSteeringFile(copyClicSteeringFile, readEmptyParameterDict):

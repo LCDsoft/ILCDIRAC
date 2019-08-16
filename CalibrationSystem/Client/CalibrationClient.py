@@ -159,7 +159,7 @@ class CalibrationClient(Client):
     calibIDToUse = calibrationID if calibrationID is not None else self.calibrationID
     workerIDToUse = workerID if workerID is not None else self.workerID
 
-    return self.calibrationService.getInputDataDict(calibIDToUse, workerIDToUse)
+    return self._getRPC().getInputDataDict(calibIDToUse, workerIDToUse)
 
   def requestNewParameters(self):
     """Fetch new parameter set from the service and updates the step counter in this object with the new value.
