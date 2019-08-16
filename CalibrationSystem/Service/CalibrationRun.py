@@ -193,32 +193,30 @@ class CalibrationRun(object):
     if self.settings['disableSoftwareCompensation']:
       tmpKey = (".//processor[@name='%s']/parameter[@name='MaxClusterEnergyToApplySoftComp']"
                 % self.settings['DDPandoraPFANewProcessorName'])
+      # add 'MaxClusterEnergyToApplySoftComp' parameter to calibrationConstantsDict (to be used on each worker node)
       parDict[tmpKey] = 0.0
+      # setup 'MaxClusterEnergyToApplySoftComp' for local file
       tmpDict = {tmpKey: None}
       res = readParametersFromSteeringFile(self.localSteeringFile, tmpDict)
       # if no such parameter in the steering file --> add it
       if not res['OK']:
         res = addParameterToProcessor(self.localSteeringFile, self.settings['DDPandoraPFANewProcessorName'], {
                                       'name': 'MaxClusterEnergyToApplySoftComp', 'type': 'float', 'value': '0'})
-        print("self.settings['DDPandoraPFANewProcessorName']: %s" % self.settings['DDPandoraPFANewProcessorName'])
-        print('out of addParameterToProcessor: %s' % res)
-        print('self.localSteeringFile: %s' % self.localSteeringFile)
+        self.log.info("self.settings['DDPandoraPFANewProcessorName']:",
+                      "%s" % self.settings['DDPandoraPFANewProcessorName'])
+        self.log.info('out of addParameterToProcessor:', '%s' % res)
+        self.log.info('self.localSteeringFile:', '%s' % self.localSteeringFile)
         if not res['OK']:
           self.log.error('Message from addParameterToProcessor function:', '%s' % res['Message'])
-
-    self.calibrationConstantsDict = parDict
-
-    self.currentParameterSet['currentStage'] = self.currentStage
-    self.currentParameterSet['currentPhase'] = self.currentPhase
-    self.currentParameterSet['currentStep'] = self.currentStep
-    self.currentParameterSet['parameters'] = self.calibrationConstantsDict
-    self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
 
     if self.settings['nEcalThickLayers'] > 0:
       tmpKey = ".//processor[@name='%s']/parameter[@name='ECALLayers']" % self.settings['DDCaloDigiName']
       # +1 is just for safety
       valToSetup = '%s %s' % (self.settings['nEcalThinLayers'],
                               self.settings['nEcalThinLayers'] + self.settings['nEcalThickLayers'] + 1)
+      # add 'ECALLayers' parameter to calibrationConstantsDict (to be used on each worker node)
+      parDict[tmpKey] = valToSetup
+      # setup 'ECALLayers' for local file
       tmpDict = {tmpKey: None}
       res = readParametersFromSteeringFile(self.localSteeringFile, tmpDict)
       # if no such parameter in the steering file --> add it
@@ -233,6 +231,13 @@ class CalibrationRun(object):
         if not res['OK']:
           self.log.error('Error while updating local steering file. Error message:', '%s' % res['Message'])
           return res
+
+    self.calibrationConstantsDict = parDict
+    self.currentParameterSet['currentStage'] = self.currentStage
+    self.currentParameterSet['currentPhase'] = self.currentPhase
+    self.currentParameterSet['currentStep'] = self.currentStep
+    self.currentParameterSet['parameters'] = self.calibrationConstantsDict
+    self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
 
     return S_OK()
 

@@ -153,6 +153,9 @@ def test_returnTypesOfExportFunctionsOfHandler(mocker, calibHandler):
     if res['OK']:
       assert 'Value' in res
       assert isinstance(res['Value'], (int, float, str, dict, list, tuple)) or res['Value'] is None
+      if isinstance(res['Value'], (list, tuple)):
+        print(res['Value'])
+        assert isinstance(res['Value'][0], (int, float, str, dict))
     else:
       assert 'Message' in res
       assert not res['Message']

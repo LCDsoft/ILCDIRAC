@@ -195,6 +195,8 @@ class Calibration(MarlinAnalysis):
       self.currentStep = calibrationParameters['currentStep']
       parameterDict = calibrationParameters['parameters']
 
+      # MaxClusterEnergyToApplySoftComp can be not present in the steering file
+      # but it has to be because it allows to disable Software Compesation. Add it if needed.
       tmpKey = self.getKey(parameterDict, 'MaxClusterEnergyToApplySoftComp')
       if tmpKey is not None:
         res = readParametersFromSteeringFile(self.SteeringFile, {tmpKey: None})
