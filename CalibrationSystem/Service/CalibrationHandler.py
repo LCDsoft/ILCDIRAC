@@ -603,7 +603,7 @@ class CalibrationHandler(RequestHandler):
   types_resubmitJobs = [list]
 
   def export_resubmitJobs(self, failedJobs):
-    """Resubmit failed jobs.
+    """Resubmit failed jobs of running calibrations.
 
     Called by the Agent.
     :param failedJobs: List of pairs of the form (calibrationID, workerID)
@@ -611,7 +611,11 @@ class CalibrationHandler(RequestHandler):
     :returns: S_OK if successful, else a S_ERROR with a pair (errorstring, list_of_failed_id_pairs)
     :rtype: dict
     """
-    for iCalib in CalibrationHandler.activeCalibrations:
+    res = self.export_getRunningCalibrations()
+    if not res['OK']:
+      return res
+    runnigCalibs = res['Value']
+    for iCalib in runnigCalibs:
       jobsToResubmit = []
       for calibrationID, workerID in failedJobs:
         if calibrationID == iCalib:
