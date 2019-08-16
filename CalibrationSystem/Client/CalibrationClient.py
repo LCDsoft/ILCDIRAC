@@ -149,8 +149,17 @@ class CalibrationClient(Client):
     self.ops = Operations()
     self.maximumReportTries = self.ops.getValue('Calibration/MaximumReportTries', 10)  # TODO add this to CS
 
-  #  def getInputDataDict(self):
-  #    return self.calibrationService.getInputDataDict(self.calibrationID, self.workerID)
+  def getInputDataDict(self, calibrationID=None, workerID=None):
+    """Get input data dict."""
+    if calibrationID is None and self.calibrationID is None:
+      return S_ERROR("Specify calibrationID")
+    if workerID is None and self.workerID is None:
+      return S_ERROR("Specify workerID")
+
+    calibIDToUse = calibrationID if calibrationID is not None else self.calibrationID
+    workerIDToUse = workerID if workerID is not None else self.workerID
+
+    return self.calibrationService.getInputDataDict(calibIDToUse, workerIDToUse)
 
   def requestNewParameters(self):
     """Fetch new parameter set from the service and updates the step counter in this object with the new value.
