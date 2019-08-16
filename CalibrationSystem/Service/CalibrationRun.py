@@ -756,7 +756,7 @@ class CalibrationRun(object):
     filesToCopy += glob.glob("calib%s/*_INPUT" % (self.calibrationID))
 
     self.log.info('Start copying output of the calibration to user directory:',
-                  '%s on storage element: %s' % (self.settings['outputPath'], self.settings['outputStorageElement']))
+                  '%s on storage element: %s' % (self.settings['outputPath'], self.settings['outputSE']))
     self.log.info('Files to copy:', '%s' % filesToCopy)
 
     dm = DataManager()
@@ -774,7 +774,7 @@ class CalibrationRun(object):
 
       lfn = os.path.join(self.settings['outputPath'], "calib%s" % (self.calibrationID), os.path.basename(iFile))
       localFile = iFile
-      res = dm.putAndRegister(lfn, localFile, self.settings['outputStorageElement'], None, overwrite=True)
+      res = dm.putAndRegister(lfn, localFile, self.settings['outputSE'], None, overwrite=True)
       if not res['OK']:
         errMsg = 'Error while uploading results. Error message: %s' % res['Message']
         self.log.error(errMsg)
