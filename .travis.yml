@@ -7,9 +7,9 @@ install: "pip install -r .gitlab-ci.d/requirements.txt"
 # command to run tests
 script:
   - cd ..
-  - wget https://github.com/DIRACGrid/DIRAC/archive/rel-v6r21.zip
-  - unzip -q rel-v6r21.zip
-  - mv DIRAC-rel-v6r21 DIRAC
+  - wget https://github.com/DIRACGrid/DIRAC/archive/integration.zip
+  - unzip -q integration.zip
+  - mv DIRAC-integration DIRAC
   - export DIRAC=${PWD}
   - cd ILCDIRAC
   - export PYTHONPATH=${PWD%/*}
