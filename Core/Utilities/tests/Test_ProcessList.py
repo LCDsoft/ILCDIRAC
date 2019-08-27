@@ -2,7 +2,7 @@
 """Test the ProcessList module"""
 
 import unittest
-from mock import patch, MagicMock as Mock
+from mock import patch, MagicMock as Mock, mock_open
 
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Core.Utilities.ProcessList import ProcessList
@@ -96,21 +96,17 @@ class ProcessListComplexTestCase( unittest.TestCase ):
                                                'testmodel3001', 'Restrictions' : '', 'InFile' : 'my/file.in'
                                              } )
     exists_dict = { '/temp/dir' : False, '/temp/dir/mytempfile.txt' : True, '/my/folder/testpath.xml' : True }
-    fhandle_mock = Mock()
-
-    file_mock = Mock(return_value=fhandle_mock)
     with patch('tempfile.mkstemp', new=Mock(return_value=('handle', '/temp/dir/mytempfile.txt'))), \
-         patch('__builtin__.file', new=file_mock), \
-         patch('__builtin__.open', new=file_mock), \
+         patch('DIRAC.Core.Utilities.CFG.open', mock_open()) as file_mock, \
          patch('os.makedirs') as mkdir_mock, \
          patch('os.path.exists', new=Mock(side_effect=lambda path: exists_dict[path])), \
          patch('shutil.move') as move_mock, \
          patch('os.close') as close_mock:
-      assertDiracSucceedsWith_equals( self.prol.writeProcessList( '/my/folder/testpath.xml' ),
-                                      '/my/folder/testpath.xml', self )
+      assertDiracSucceedsWith_equals(self.prol.writeProcessList('/my/folder/testpath.xml'),
+                                     '/my/folder/testpath.xml', self)
       mkdir_mock.assert_called_once_with( '/temp/dir' )
-      file_mock.assert_called_once_with( '/temp/dir/mytempfile.txt', 'w' )
-      fhandle_mock.write.assert_called_once_with( expected_write )
+      file_mock.assert_called_once_with('/temp/dir/mytempfile.txt', 'w')
+      file_mock().write.assert_called_once_with(expected_write)
       close_mock.assert_called_once_with( 'handle' )
       move_mock.assert_called_once_with( '/temp/dir/mytempfile.txt', '/my/folder/testpath.xml' )
 
