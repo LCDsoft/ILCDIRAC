@@ -43,7 +43,7 @@ class ProcessList(object):
     try:
       shutil.move(tmpName, path)
       return True
-    except OSError, err:
+    except OSError as err:
       LOG.error("Failed to overwrite process list.", err)
       LOG.info("If your process list is corrupted a backup can be found %s" % tmpName)
       return False
@@ -169,17 +169,17 @@ class ProcessList(object):
       try:
         localSvnRepo = "/afs/cern.ch/eng/clic/software/whizard/whizard_195/"
         shutil.copy(self.location, localSvnRepo) ## because it does not make a difference if we hardcode it here or in ${DIRAC}/etc/dirac.cfg, yours truly APS, JFS
-      except OSError, err:
+      except OSError as err:
         LOG.error("Copy of process list to %s failed with error %s!" % (localSvnRepo, str(err)))
 
       try:
         subprocess.call( ["svn","ci", os.path.join( localSvnRepo, os.path.basename(localprocesslistpath['Value'] )), "-m'Process list for whizard version %s'" % appVersion ], shell=False )
-      except OSError, err:
+      except OSError as err:
         LOG.error("Commit failed! Error: %s" % str(err))
 
       try:
         shutil.copy(self.location, localprocesslistpath['Value'])
-      except OSError, err:
+      except OSError as err:
         LOG.error("Copy of process list to %s failed!" % localprocesslistpath['Value'])
 
     LOG.notice("Done")
