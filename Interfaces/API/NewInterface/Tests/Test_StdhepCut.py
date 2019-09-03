@@ -7,6 +7,8 @@ Test StdhepCut module
 import unittest
 from mock import patch, MagicMock as Mock
 
+from parameterized import parameterized
+
 from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import StdhepCut
 from ILCDIRAC.Tests.Utilities.GeneralUtils import assertEqualsImproved, assertDiracFailsWith, \
@@ -24,16 +26,23 @@ class StdhepCutTestCase( unittest.TestCase ):
     """set up the objects"""
     self.shc = StdhepCut( {} )
 
-  def test_setnbevts( self ):
-    self.assertFalse( self.shc._errorDict )
-    self.shc.setNbEvtsPerFile( 92814 )
-    self.assertFalse( self.shc._errorDict )
-    assertEqualsImproved( self.shc.numberOfEventsPerFile, 92814, self )
-
-  def test_setnbevts_fails( self ):
-    self.assertFalse( self.shc._errorDict )
-    self.shc.setNbEvtsPerFile( [ 'auegf' ] )
-    self.assertIn( '_checkArgs', self.shc._errorDict )
+  @parameterized.expand([('MaxNbEvts', 'maxNumberOfEvents', 1234, 'str'),
+                         ('NbEvtsPerFile', 'numberOfEventsPerFile', 333, 'args'),
+                         ('FileMask', 'fileMask', '*.stdhep', ['args']),
+                         ('SelectionEfficiency', 'selectionEfficiency', 0.5, 'asd'),
+                         ('InlineCuts', 'inlineCuts', 'someVal_LT 100', None),
+                         ('StoreFile', 'storeFile', False, 'False'),
+                        ])
+  def testSetter(self, funcName, attribute, value, failValue):
+    """Parameterized test for setter functions."""
+    self.assertFalse(self.shc._errorDict)
+    getattr(self.shc, 'set%s' % funcName)(value)
+    assertEqualsImproved(getattr(self.shc, attribute), value, self)
+    if failValue is None:
+      return
+    self.assertFalse(self.shc._errorDict)
+    getattr(self.shc, 'set%s' % funcName)(failValue)
+    self.assertIn('_checkArgs', self.shc._errorDict)
 
   def test_userjobmodules( self ):
     module_mock = Mock()
