@@ -30,6 +30,8 @@ class StdhepCut(LCApplication):
     self.numberOfEventsPerFile = 0
     self.selectionEfficiency = 0
     self.inlineCuts = ""
+    self.storeFile = True
+    self.fileMask = '../*.stdhep'
     super(StdhepCut, self).__init__( paramdict )
 
     self.appname = 'stdhepcut'
@@ -70,11 +72,28 @@ class StdhepCut(LCApplication):
 
     self.inlineCuts = ";".join([cut.strip() for cut in cutsstring.strip().split("\n")])
 
+  def setFileMask(self, mask):
+    """Define string to use to look for stdhep files.
+
+    :param str mask: mask to find input files for stdhepcut, default ``../*.stdhep'``
+    """
+    self._checkArgs({'mask': types.StringTypes})
+    self.fileMask = mask
+
+  def setStoreFile(self, storeFile):
+    """Enable or disable setting of output data.
+
+    :param bool storeFile: Set to False if StdhepCut is not the last step in production job.
+    """
+    self._checkArgs({'storeFile': bool})
+    self.storeFile = storeFile
+
   def _applicationModule(self):
     m1 = self._createModuleDefinition()
     m1.addParameter(Parameter("MaxNbEvts", 0, "int", "", "", False, False, "Number of events to read"))
     m1.addParameter(Parameter("debug", False, "bool", "", "", False, False, "debug mode"))
     m1.addParameter(Parameter("inlineCuts", "", "string", "", "", False, False, "Inline cuts"))
+    m1.addParameter(Parameter('fileMask', '', 'string', '', '', False, False, 'File Mask'))
 
     return m1
 
@@ -82,6 +101,7 @@ class StdhepCut(LCApplication):
     moduleinstance.setValue("MaxNbEvts", self.maxNumberOfEvents)
     moduleinstance.setValue("debug",     self.debug)
     moduleinstance.setValue("inlineCuts", self.inlineCuts )
+    moduleinstance.setValue('fileMask', self.fileMask)
 
   def _userjobmodules(self, stepdefinition):
     res1 = self._setApplicationModuleAndParameters(stepdefinition)
@@ -113,7 +133,7 @@ class StdhepCut(LCApplication):
     if not self.selectionEfficiency:
       return S_ERROR('You need to know the selection efficiency of your cuts')
 
-    if self._jobtype != 'User':
+    if self._jobtype != 'User' and self.storeFile:
       self._listofoutput.append({"outputFile":"@{OutputFile}", "outputPath":"@{OutputPath}",
                                  "outputDataSE":'@{OutputSE}'})
       self.prodparameters['nbevts_kept'] = self.maxNumberOfEvents

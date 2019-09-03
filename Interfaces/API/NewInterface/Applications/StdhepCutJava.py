@@ -26,3 +26,4 @@ class StdhepCutJava(StdhepCut):
     self._modulename = 'StdHepCutJava'
     self._moduledescription = 'Module to cut on Generator (Whizard of PYTHIA) written in java'
     self.datatype = 'gen'
+    self.fileMask = '*.stdhep'

@@ -23,7 +23,8 @@ class StdHepCutJava(StdHepCut):
   def __init__(self):
     super(StdHepCutJava, self).__init__()
     self.applicationName = 'stdhepcutjava'
-        
+    self.fileMask = '*.stdhep'
+
   def prepareScript(self, mySoftDir):
     """ Overloaded from stdhepcuts
     """
@@ -45,8 +46,9 @@ class StdHepCutJava(StdHepCut):
     extraopts = ""
     if self.MaxNbEvts:
       extraopts = '-m %s' % self.MaxNbEvts
-    comm = "java -Xmx1536m -Xms256m -jar %s %s -o %s -c %s  *.stdhep\n" % (mySoftDir, extraopts, 
-                                                                           self.OutputFile, self.SteeringFile)
+    comm = 'java -Xmx1536m -Xms256m -jar %s %s -o %s -c %s  %s\n' % (mySoftDir, extraopts,
+                                                                     self.OutputFile, self.SteeringFile,
+                                                                     self.fileMask)
     LOG.info("Running %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    
