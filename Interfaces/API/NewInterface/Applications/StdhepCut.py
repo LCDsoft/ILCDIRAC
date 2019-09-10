@@ -31,7 +31,7 @@ class StdhepCut(LCApplication):
     self.selectionEfficiency = 0
     self.inlineCuts = ""
     self.storeFile = True
-    self.fileMask = '../*.stdhep'
+    self.fileMask = '*.stdhep'
     super(StdhepCut, self).__init__( paramdict )
 
     self.appname = 'stdhepcut'

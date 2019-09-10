@@ -23,7 +23,6 @@ class StdHepCutJava(StdHepCut):
   def __init__(self):
     super(StdHepCutJava, self).__init__()
     self.applicationName = 'stdhepcutjava'
-    self.fileMask = '*.stdhep'
 
   def prepareScript(self, mySoftDir):
     """ Overloaded from stdhepcuts
