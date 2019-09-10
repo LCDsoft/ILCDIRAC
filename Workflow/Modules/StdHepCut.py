@@ -33,7 +33,7 @@ class StdHepCut(ModuleBase):
     self.inlineCuts = ""
     self.MaxNbEvts = 0
     self.scriptName = ""
-    self.fileMask = '../*.stdhep'
+    self.fileMask = '*.stdhep'
 
   def applicationSpecificInputs(self):
 

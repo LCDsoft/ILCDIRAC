@@ -31,7 +31,7 @@ class StdhepCut(LCApplication):
     self.selectionEfficiency = 0
     self.inlineCuts = ""
     self.storeFile = True
-    self.fileMask = '../*.stdhep'
+    self.fileMask = '*.stdhep'
     super(StdhepCut, self).__init__( paramdict )
 
     self.appname = 'stdhepcut'
@@ -75,7 +75,7 @@ class StdhepCut(LCApplication):
   def setFileMask(self, mask):
     """Define string to use to look for stdhep files.
 
-    :param str mask: mask to find input files for stdhepcut, default ``../*.stdhep'``
+    :param str mask: mask to find input files for stdhepcut, default ``*.stdhep'``
     """
     self._checkArgs({'mask': types.StringTypes})
     self.fileMask = mask

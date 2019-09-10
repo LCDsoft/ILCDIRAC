@@ -101,7 +101,7 @@ class StdHepCutTestCase( unittest.TestCase ):
         'declare -x PATH=test_software/dir:$PATH\n',
         'declare -x LD_LIBRARY_PATH=./lib:test_software/dir/lib:/my/testsoft/dir1/\n',
         'env | sort >> localEnv.log\n', 'echo =============================\n',
-        "stdhepCut -m 13 -o test_OF.ile -c steer_test.file ../*.stdhep\n",
+        'stdhepCut -m 13 -o test_OF.ile -c steer_test.file *.stdhep\n',
         'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       assert handles[0].close.called
 
