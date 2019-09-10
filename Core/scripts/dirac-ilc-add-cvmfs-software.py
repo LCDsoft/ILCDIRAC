@@ -14,7 +14,6 @@ Options:
   -S, --Script <value>              Full path to initScript
   -B, --Base <value>                Path to Installation Base
   -O, --Config <value>              Path To [Clic|ILD]Config (if it is in ApplicationPath)
-  --ILDConfig <value>               Path To ILDConfig (if one is in ApplicationPath) [DEPRECATED]
   -Q, --DBSlice <value>             Path to Mokka DB Slice
   --MarlinPandoraVersion <value>    Version of MarlinPandora, needed for pandora_calibration_scripts
   --PandoraAnalysisVersion <value>  Version of PandoraAnalysis, needed for pandora_calibration_scripts
@@ -137,7 +136,6 @@ class Params(object):
     Script.registerSwitch("B:", "Base=", "Path to Installation Base", self.setBasePath)
 
     Script.registerSwitch("O:", "Config=", "Path To [Clic|ILD]Config (if it is in ApplicationPath)", self.setConfig)
-    Script.registerSwitch("", "ILDConfig=", "Path To ILDConfig (if one is in ApplicationPath) [DEPRECATED]", self.setConfig)
 
     Script.registerSwitch("Q:", "DBSlice=", "Path to Mokka DB Slice", self.setDBSlice)
     Script.registerSwitch('', 'MarlinPandoraVersion=', 'Version of MarlinPandora, needed for '
