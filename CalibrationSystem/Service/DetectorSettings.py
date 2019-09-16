@@ -1,6 +1,5 @@
 """CalibrationSettings class which defines all required inputs from user."""
 
-import sys
 from DIRAC import gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.objectFactory import ObjectFactory
 
@@ -46,8 +45,8 @@ class CalibrationSettings(object):
 
     # TODO temporary field in the settings. for testing only
     self.settingsDict['startCalibrationFinished'] = False
-    self.settingsDict['stopStage'] = sys.maxsize
-    self.settingsDict['stopPhase'] = sys.maxsize
+    self.settingsDict['stopStage'] = 3
+    self.settingsDict['stopPhase'] = 4
 
     # these settings have no default values... they have to be set up by user
     self.settingsDict['outputPath'] = None
