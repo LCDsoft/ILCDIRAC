@@ -23,9 +23,6 @@ class CalibrationSettings(object):
     self.settingsDict['numberOfJobs'] = 100
     self.settingsDict['platform'] = 'x86_64-slc5-gcc43-opt'  # FIXME does it the default platform in CS?
     self.settingsDict['marlinVersion'] = 'ILCSoft-2019-04-01_gcc62'
-    # FIXME temprorary field, since currently there is only on item in CS which corresponds to ILCSoft-2019-02-20_gcc62
-    # (for any marlin version)
-    self.settingsDict['marlinVersion_CS'] = 'ILCSoft-2019-02-20_gcc62'
     # fraction of all jobs must have finished in order for the next step to begin.
     self.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] = 0.9
     self.settingsDict['disableSoftwareCompensation'] = True

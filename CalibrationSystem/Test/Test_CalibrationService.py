@@ -728,6 +728,7 @@ def test_resubmitjobs(calibHandler, mocker):
   tmpMock1.submitJobs = Mock(return_value=S_OK())
   tmpMock1.settings.__getitem__ = Mock(return_value=5)
   tmpMock1.nFailedJobs = 1
+  tmpMock1.calibrationFinished = False
 
   mocker.spy(tmpMock1, 'submitJobs')
   mocker.spy(calibHandler, 'export_killCalibration')

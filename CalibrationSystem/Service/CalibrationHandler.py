@@ -171,11 +171,11 @@ class CalibrationHandler(RequestHandler):
   def export_createCalibration(self, inputFiles, numberOfEventsPerFile, calibSettingsDict):
     """Create calibration run (series of calibration iterations).
 
-    :param basestring marlinVersion: Version of the Marlin application to be used for reconstruction
     :param dict inputFiles: Input files for the calibration. Dictionary.
+                            Mandatory keys: 'zuds', 'kaon', 'muon', 'gamma'.
     :param dict numberOfEventsPerFile: Number of events per type of input file. Dictionary.
-    :param int numberOfJobs: Number of jobs this service will run (actual number will be slightly lower)
-    :param basestring steeringFile: Steering file used in the calibration, LFN
+                                       Mandatory keys: 'zuds', 'kaon', 'muon', 'gamma'.
+    :param dict calibSettingsDict: Calibration configuration settings reqired to start calibration. Dictionary.
     :returns: S_OK containing ID of the calibration, used to retrieve results etc
     :rtype: dict
     """
@@ -727,7 +727,7 @@ class CalibrationHandler(RequestHandler):
     if msg:
       return S_ERROR(msg)
 
-    keys = ['platform', 'marlinVersion', 'marlinVersion_CS', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName',
+    keys = ['platform', 'marlinVersion', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName',
             'detectorModel', 'steeringFile', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName']
     msg = checkType(str)
     if msg:

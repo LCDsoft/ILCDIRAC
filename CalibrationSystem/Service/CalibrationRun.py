@@ -450,10 +450,10 @@ class CalibrationRun(object):
     self.log.info('calibrationFile:', '%s' % calibrationFile)
 
     scriptPath = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s"
-                                   % (self.settings['platform'], self.settings['marlinVersion_CS'], "PandoraAnalysis"),
+                                   % (self.settings['platform'], self.settings['marlinVersion'], "PandoraAnalysis"),
                                    None)
     ilcSoftInitScript = self.ops.getValue("/AvailableTarBalls/%s/pandora_calibration_scripts/%s/%s"
-                                          % (self.settings['platform'], self.settings['marlinVersion_CS'],
+                                          % (self.settings['platform'], self.settings['marlinVersion'],
                                              "CVMFSEnvScript"), None)
 
     pythonReadScriptPath = os.path.join(utilities.__path__[0], 'Python_Read_Scripts')
