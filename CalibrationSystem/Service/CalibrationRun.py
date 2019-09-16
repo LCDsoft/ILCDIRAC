@@ -147,8 +147,10 @@ class CalibrationRun(object):
 
   def checkForDebugFlagsToStopCalibration(self):
     """Check if calibration reached stopPhase and stopStage values."""
-    if (self.stopStage <= self.currentParameterSet['currentStage']
-            and self.stopPhase <= self.currentParameterSet['currentPhase']):
+    if (self.stopStage < self.currentParameterSet['currentStage']):
+      return True
+    elif (self.stopStage == self.currentParameterSet['currentStage']
+            and self.stopPhase < self.currentParameterSet['currentPhase']):
       return True
     else:
       return False
@@ -727,7 +729,7 @@ class CalibrationRun(object):
     self.currentParameterSet['parameters'] = self.calibrationConstantsDict
     self.currentParameterSet['calibrationIsFinished'] = self.calibrationFinished
 
-    if self.checkForDebugFlagsToStopCalibration():
+    if not self.calibrationFinished and self.checkForDebugFlagsToStopCalibration():
       self.currentParameterSet['calibrationIsFinished'] = True
       self.calibrationFinished = True
       self.calibrationEndTime = datetime.now().strftime(self.timeStampPattern)
