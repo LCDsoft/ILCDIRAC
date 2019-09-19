@@ -20,7 +20,6 @@ class CalibrationSettings(object):
     self.settingsDict['startPhase'] = 0
 
     self.settingsDict['numberOfJobs'] = 100
-    self.settingsDict['platform'] = 'x86_64-slc5-gcc43-opt'  # FIXME does it the default platform in CS?
     self.settingsDict['marlinVersion'] = 'ILCSoft-2019-04-01_gcc62'
     # fraction of all jobs must have finished in order for the next step to begin.
     self.settingsDict['fractionOfFinishedJobsNeededToStartNextStep'] = 0.9

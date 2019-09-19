@@ -1,17 +1,15 @@
-"""
-Integration tests for the CalibrationService
-"""
+"""Integration tests for the CalibrationService."""
 
-from collections import defaultdict
-import unittest
-import pytest
-from DIRAC import S_OK, S_ERROR
-from DIRAC.Core.Base.Script import parseCommandLine
-from DIRAC.Core.DISET.RPCClient import RPCClient
-from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceedsWith_equals, assertEqualsImproved, \
-    assertDiracSucceeds, assertDiracFailsWith, assertDiracSucceedsWith, assertDictEquals_dynamic
-from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationResult
-from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import createCalibration
+#  from collections import defaultdict
+#  import unittest
+#  import pytest
+#  from DIRAC import S_OK, S_ERROR
+#  from DIRAC.Core.Base.Script import parseCommandLine
+#  from DIRAC.Core.DISET.RPCClient import RPCClient
+#  from ILCDIRAC.Tests.Utilities.GeneralUtils import assertDiracSucceedsWith_equals, assertEqualsImproved, \
+#      assertDiracSucceeds, assertDiracFailsWith, assertDiracSucceedsWith, assertDictEquals_dynamic
+#  from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationResult
+#  from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import createCalibration
 
 
 __RCSID__ = "$Id$"
@@ -31,7 +29,8 @@ __RCSID__ = "$Id$"
 #    """ Returns a pair ( calibrationsDict, calibrationCounter ) (type: dict, int) from the passed
 #    return value of the getInternals method of the CalibrationService.
 #
-#    :param dict internals: return value of the getInternals method. Should be a S_OK dict with a pair including the serialized calibrations dict.
+#    :param dict internals: return value of the getInternals method. Should be a S_OK dict with a pair including
+#                           the serialized calibrations dict.
 #    :returns: The pair ( calibrationsDict, calibrationCounter )
 #    :rtype: Pair
 #    """

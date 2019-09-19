@@ -230,9 +230,19 @@ class CalibrationHandler(RequestHandler):
     if not res['OK']:
       return res
 
+    if 'platform' in calibSettingsDict:
+      errMsg = 'User has provided "platform" settings. It is read from the service configuration now. '
+      'Terminate execution'
+      self.log.error(errMsg)
+      return S_ERROR(errMsg)
+
+    # TODO document that Calibration Service require "Platform" configuration to be set
+    calibSettingsDict['platform'] = self.srv_getCSOption('Platform', "x86_64-slc5-gcc43-opt")
+
     CalibrationHandler.calibrationCounter += 1
     self.saveStatus()
     calibrationID = CalibrationHandler.calibrationCounter
+
     newRun = CalibrationRun(calibrationID, groupedInputFiles, calibSettingsDict)
     CalibrationHandler.activeCalibrations[calibrationID] = newRun
 
@@ -727,7 +737,7 @@ class CalibrationHandler(RequestHandler):
     if msg:
       return S_ERROR(msg)
 
-    keys = ['platform', 'marlinVersion', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName',
+    keys = ['marlinVersion', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName',
             'detectorModel', 'steeringFile', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName']
     msg = checkType(str)
     if msg:

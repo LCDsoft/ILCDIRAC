@@ -32,7 +32,7 @@ More information about the calibration procedure can be found in this `talk at t
 
 User input required for the calibration procedure
 -------------------------------------------------
-To start calibration user have to call :func:`createCalibration` function of the Calibration client :class:`ILCDIRAC.CalibrationSystem.Client.CalibrationClient` with three input arguments:
+To start calibration user have to call :func:`createCalibration() <ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.CalibrationHandler.export_createCalibration>` function of the Calibration client :class:`ILCDIRAC.CalibrationSystem.Client.CalibrationClient` with three input arguments:
 
 - **inputFiles** - dictionary which contains list of input file LFNs. Should contains keys ``zuds``, ``kaon``, ``muon``, ``gamma``, which correspond to the list of files of according type.
 - **numberOfEventsPerFile** - number of events per file of each type. Should contains the same keys as inputFiles dictionary.
@@ -60,7 +60,6 @@ A short description of calibration settings needed to be provided by user:
 - **numberOfJobs** - number of worker nodes to be used for callibration. Default value is 100.
 - **outputSE** - storage element where calibration service will copy all output files to. Default value is None.
 - **outputPath** - LFN where copy all output files to. Default value is None.
-- **platform** - ???
 - **marlinVersion** - version of the iLCSoft release to use. Default value is ILCSoft-2019-04-01_gcc62.
 - **ecalBarrelCosThetaRange** - cos(theta) range within which all energy contributions of a single photon will end up in the barrel part of ECAL. Expected value is a list consisting two floats. Default value is None.
 - **ecalEndcapCosThetaRange** - cos(theta) range within which all energy contributions of a single photon will end up in the endcap part of ECAL. Expected value is a list consisting two floats. Default value is None.
@@ -92,7 +91,7 @@ An example of the running calibration of the CLD detector model::
    calibSettings = createCalibrationSettings('CLD')  # get default settings for CLD detector model
    calibSettingsDict = calibSettings.settingsDict
 
-   calibSettingsDict['steeringFile'] = 'LFN:/ilc/user/o/oviazlo/fccee_caloCalib/fcceeReconstruction_noSWC.xml'
+   calibSettingsDict['steeringFile'] = 'LFN:/ilc/user/o/oviazlo/fccee_caloCalib/fcceeReconstruction.xml'
    calibSettingsDict['outputPath'] = '/ilc/user/o/oviazlo/fccee_caloCalib/output/'
    calibSettingsDict['outputSE'] = 'CERN-DST-EOS' 
 
@@ -158,11 +157,9 @@ An example of settings for CLD detector calibration **calibSettingsDict**:
    +---------------------------------------------------------+--------------------------------------------------------------------------------+
    |   pandoraPFAAccuracy                                    |      0.005                                                                     |
    +---------------------------------------------------------+--------------------------------------------------------------------------------+
-   |   platform                                              |      x86_64-slc5-gcc43-opt                                                     |
-   +---------------------------------------------------------+--------------------------------------------------------------------------------+
    |   startCalibrationFinished                              |      False                                                                     |
    +---------------------------------------------------------+--------------------------------------------------------------------------------+
-   |   steeringFile                                          |      LFN:/ilc/user/o/oviazlo/fccee_caloCalib/fcceeReconstruction_noSWC.xml     |
+   |   steeringFile                                          |      LFN:/ilc/user/o/oviazlo/fccee_caloCalib/fcceeReconstruction.xml           |
    +---------------------------------------------------------+--------------------------------------------------------------------------------+
    |   startStage                                            |      1                                                                         |
    +---------------------------------------------------------+--------------------------------------------------------------------------------+
@@ -172,6 +169,29 @@ An example of settings for CLD detector calibration **calibSettingsDict**:
    +---------------------------------------------------------+--------------------------------------------------------------------------------+
    |   stopPhase                                             |      4                                                                         |
    +---------------------------------------------------------+--------------------------------------------------------------------------------+
+
+
+Calibration results
+-------------------
+Results from the calibration are copied to the directory provided by the user as "outputPath" settings. List of copied files:
+
+- Marlin steering file with new set of the calibration constants. It has the same name as input steering file provided by user.
+- Original copy of the steering file which ends with "_INPUT" postfix.
+- **newPandoraLikelihoodData.xml** - file with new photon likelihood. This file has to be used together with the new calibration constants.
+- **Calibration.txt** - files which contains intermediate results and fit values from the calibration. Can be used for debugging.
+- set of .png and .C pictures which shows fits done during the calibration procedure. These plots can be used to verify correctness of the procedure.
+
+
+Monitoring and controlling tools
+--------------------------------
+Calibration service have a list of functions which allows to monitor and control ongoing calibrations:
+
+- :func:`getUserCalibrationStatuses() <ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.CalibrationHandler.export_getUserCalibrationStatuses>` - get statuses of all active calibrations.
+- :func:`killCalibrations(calibIdsToKill) <ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.CalibrationHandler.export_killCalibrations>` - kill calibrations.
+- :func:`cleanCalibrations(calibIdsToClean) <ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.CalibrationHandler.export_cleanCalibrations>` - remove calibration results from the server (calibration results are stored on the server by some time after calibration has been finished or killed).
+- :func:`changeDirectoryToCopyTo(calibId, newPath, newSE) <ILCDIRAC.CalibrationSystem.Service.CalibrationHandler.CalibrationHandler.export_changeDirectoryToCopyTo>` - set new output path and storage element for the calibration 
+
+Also, status of the calibration jobs can be monitored with Job Monitor with iLCDirac web-interface. Status of the running jobs which belongs to the calibration contain information about the current stage, phase and step of the calibration.
 
 
 References

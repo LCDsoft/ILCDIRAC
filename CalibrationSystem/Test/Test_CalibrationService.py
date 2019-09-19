@@ -361,6 +361,7 @@ def test_endCurrentStepBasicWorkflow(copiedFccSteeringFile, readParameterDict, m
   steeringFileName = copiedFccSteeringFile
   calibID = int(steeringFileName.split('calib')[-1])
   addPfoAnalysisProcessor('%s/%s' % (steeringFileName, calibSetting.settingsDict['steeringFile']))
+  calibSetting.settingsDict['platform'] = "x86_64-slc5-gcc43-opt"
   newRun = CalibrationRun(calibID, {'dummy': ['dummy_inputFiles1', 'dummy_inputFiles2']}, calibSetting.settingsDict)
   res = newRun.readInitialParameterDict()
   assert res['OK']
