@@ -324,7 +324,7 @@ def test_initializeHandler(mocker):
 
 def mimic_convert_and_execute(inList, _=''):
   """Mimic expected output."""
-  from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
+  from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationPhase
   if True in ['ECal_Digi_Extract.py' in str(iEl) for iEl in inList] and True in ['Mean' in str(iEl) for iEl in inList]:
     return S_OK((0, '%s\n' % CalibrationPhase.sampleEnergyFromPhase(CalibrationPhase.ECalDigi)))
   elif (True in ['HCal_Digi_Extract.py' in str(iEl) for iEl in inList]

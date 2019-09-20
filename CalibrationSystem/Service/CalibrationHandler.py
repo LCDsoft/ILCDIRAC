@@ -231,8 +231,8 @@ class CalibrationHandler(RequestHandler):
       return res
 
     if 'platform' in calibSettingsDict:
-      errMsg = 'User has provided "platform" settings. It is read from the service configuration now. '
-      'Terminate execution'
+      errMsg = ('User has provided "platform" settings. It is read from the service configuration now. '
+                'Terminate execution')
       self.log.error(errMsg)
       return S_ERROR(errMsg)
 
@@ -529,7 +529,7 @@ class CalibrationHandler(RequestHandler):
     :param int calibrationID: ID of the calibration being run on the worker
     :param int stepIDOnWorker: current step ID on the worker node
     :returns: S_ERROR in case of error (e.g. inactive calibration asking for params),
-              S_OK with the parameter set and the id of the current step
+    S_OK with the parameter set and the id of the current step
     :rtype: dict
     """
     cal = CalibrationHandler.activeCalibrations.get(calibrationID, None)
@@ -557,7 +557,7 @@ class CalibrationHandler(RequestHandler):
     Called by the worker node.
     :param int calibrationID: ID of the calibration being run on the worker
     :returns: S_ERROR in case of error (e.g. inactive calibration asking for params),
-              S_OK with the parameter set and the id of the current step
+    S_OK with the parameter set and the id of the current step
     :rtype: dict
     """
     res = self._checkClientRequest(calibrationID)
@@ -584,7 +584,7 @@ class CalibrationHandler(RequestHandler):
     Called by the worker node.
     :param int calibrationID: ID of the calibration being run on the worker
     :returns: S_ERROR in case of error (e.g. inactive calibration asking for params),
-              S_OK with the parameter set and the id of the current step
+    S_OK with the parameter set and the id of the current step
     :rtype: dict
     """
     res = self._checkClientRequest(calibrationID)

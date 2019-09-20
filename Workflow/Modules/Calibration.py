@@ -1,7 +1,7 @@
 """Run Pandora Calorimeter calibration.
 
 Runs on each worker node.
-ILCDIRAC.Workflow.Modules.Calibration Called by Job Agent.
+ILCDIRAC.Workflow.Modules.Calibration called by Job Agent.
 
 :since: March, 2019
 
@@ -20,7 +20,8 @@ from ILCDIRAC.Core.Utilities.CombinedSoftwareInstallation import getEnvironmentS
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames import resolveIFpaths
 from ILCDIRAC.Core.Utilities.FindSteeringFileDir import getSteeringFileDirName
 from ILCDIRAC.Workflow.Modules.MarlinAnalysis import MarlinAnalysis
-from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationClient, CalibrationPhase
+from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationClient
+from ILCDIRAC.CalibrationSystem.Service.CalibrationRun import CalibrationPhase
 from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import readValueFromSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import addPfoAnalysisProcessor
@@ -52,10 +53,12 @@ class Calibration(MarlinAnalysis):
     Called by Job Agent
 
     Execute the following:
-      - resolve where the soft was installed
-      - prepare the list of file to feed Marlin with
-      - create the XML file on which Marlin has to run, done by :any:`prepareXMLFile`
-      - run Marlin and catch the exit code
+      1) resolve input data and environment
+      2) request parameters from the service
+      3) prepare Marlin steering file
+      4) run Marlin and catch the exit code
+      5) report results back to service
+      6) repeat steps 2-5 until calibration is finished
 
     :return: S_OK(), S_ERROR()
     """

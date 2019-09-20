@@ -21,7 +21,6 @@ from ILCDIRAC.CalibrationSystem.Utilities.functions import updateSteeringFile
 from ILCDIRAC.CalibrationSystem.Utilities.functions import saveCalibrationRun
 from ILCDIRAC.CalibrationSystem.Utilities.functions import addParameterToProcessor
 from ILCDIRAC.CalibrationSystem.Utilities.mergePandoraLikelihoodData import mergeLikelihoods
-from ILCDIRAC.CalibrationSystem.Client.CalibrationClient import CalibrationPhase
 from ILCDIRAC.Interfaces.API.NewInterface.UserJob import UserJob
 from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 from ILCDIRAC.Interfaces.API.NewInterface.Applications.Calibration import Calibration
@@ -29,6 +28,116 @@ from ILCDIRAC.Interfaces.API.NewInterface.Applications.Calibration import Calibr
 # TODO do we need it here (since there is one in calibrationHandler file). What is this for?
 __RCSID__ = "$Id$"
 LOG = gLogger.getSubLogger(__name__)
+
+
+class CalibrationPhase(object):
+  """Represents the different phases a calibration can be in.
+
+  Since Python 2 does not have enums, this is hardcoded for the moment.
+  Should this solution not be sufficient any more, one can make a better enum implementation by hand or install
+  a backport of the python3 implementation from PyPi.
+  """
+
+  ECalDigi, HCalDigi, MuonAndHCalOtherDigi, ElectroMagEnergy, HadronicEnergy, PhotonTraining = range(6)
+
+  @staticmethod
+  def phaseIDFromString(phase_name):
+    """Return the ID of the given CalibrationPhase, passed as a string.
+
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are:
+                                  ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
+                                  ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :returns: ID of this phase
+    :rtype: int
+    """
+    if phase_name == 'ECalDigi':
+      return 0
+    elif phase_name == 'HCalDigi':
+      return 1
+    elif phase_name == 'MuonAndHCalOtherDigi':
+      return 2
+    elif phase_name == 'ElectroMagEnergy':
+      return 3
+    elif phase_name == 'HadronicEnergy':
+      return 4
+    elif phase_name == 'PhotonTraining':
+      return 5
+    else:
+      raise ValueError('There is no CalibrationPhase with the name %s' % phase_name)
+
+  @staticmethod
+  def fileKeyFromPhase(phaseID):
+    """Return the ID of the given CalibrationPhase, passed as a string.
+
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are:
+                                  ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
+                                  ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :returns: file key for this phase
+    :rtype: str
+    """
+    if phaseID == CalibrationPhase.ECalDigi:
+      return "GAMMA"
+    elif phaseID == CalibrationPhase.HCalDigi:
+      return "KAON"
+    elif phaseID == CalibrationPhase.MuonAndHCalOtherDigi:
+      return "MUON"
+    elif phaseID == CalibrationPhase.ElectroMagEnergy:
+      return "GAMMA"
+    elif phaseID == CalibrationPhase.HadronicEnergy:
+      return "KAON"
+    elif phaseID == CalibrationPhase.PhotonTraining:
+      return "ZUDS"
+    else:
+      raise ValueError('There is no CalibrationPhase with the ID %s' % phaseID)
+
+  # TODO read these energies from CS or from users input
+  @staticmethod
+  def sampleEnergyFromPhase(phaseID):
+    """Return energy of provided sample of the given CalibrationPhase, passed as a float.
+
+    :param basestring phase_name: Name of the CalibrationPhase. Allowed are:
+                                  ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
+                                  ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :returns: file key for this phase
+    :rtype: str
+    """
+    if phaseID == CalibrationPhase.ECalDigi:
+      return 10.0
+    elif phaseID == CalibrationPhase.HCalDigi:
+      return 50.0
+    elif phaseID == CalibrationPhase.MuonAndHCalOtherDigi:
+      return 10.0
+    elif phaseID == CalibrationPhase.ElectroMagEnergy:
+      return 10.0
+    elif phaseID == CalibrationPhase.HadronicEnergy:
+      return 50.0
+    elif phaseID == CalibrationPhase.PhotonTraining:
+      return 200.0
+    else:
+      raise ValueError('There is no CalibrationPhase with the ID %s' % phaseID)
+
+  @staticmethod
+  def phaseNameFromID(phaseID):
+    """Return the name of the CalibrationPhase with the given ID, as a string.
+
+    :param int phaseID: ID of the enquired CalibrationPhase
+    :returns: The name of the CalibrationPhase
+    :rtype: basestring
+    """
+    if phaseID == CalibrationPhase.ECalDigi:
+      return 'ECalDigi'
+    elif phaseID == CalibrationPhase.HCalDigi:
+      return 'HCalDigi'
+    elif phaseID == CalibrationPhase.MuonAndHCalOtherDigi:
+      return 'MuonAndHCalOtherDigi'
+    elif phaseID == CalibrationPhase.ElectroMagEnergy:
+      return 'ElectroMagEnergy'
+    elif phaseID == CalibrationPhase.HadronicEnergy:
+      return 'HadronicEnergy'
+    elif phaseID == CalibrationPhase.PhotonTraining:
+      return 'PhotonTraining'
+    else:
+      raise ValueError('There is no CalibrationPhase with the name %d' % phaseID)
 
 
 # pylint: disable=no-self-use
