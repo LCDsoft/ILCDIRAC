@@ -102,16 +102,16 @@ class CalibrationAgent(AgentModule):
     if not res['OK']:
       return res
     activeCalibrations = res['Value']
-    print("jobMonitoringService: %s" % jobMonitoringService)
-    print("self.calibrationService: %s" % self.calibrationService)
-    print("activeCalibrations: %s" % activeCalibrations)
+    self.log.debug("jobMonitoringService:", " %s" % jobMonitoringService)
+    self.log.debug("self.calibrationService:", " %s" % self.calibrationService)
+    self.log.debug("activeCalibrations:", " %s" % activeCalibrations)
     for iCalib in activeCalibrations:
       res = jobMonitoringService.getJobs({'JobGroup': 'PandoraCaloCalibration_calid_%s' % iCalib})
       if not res['OK']:
         self.log.error("Failed getting job IDs from job DB! Error:", res['Message'])
         return S_ERROR('Failed getting job IDs from job DB!')
       jobIDs += res['Value']
-    print('jobIDs: %s' % jobIDs)
+    self.log.debug('jobIDs:', ' %s' % jobIDs)
     res = jobMonitoringService.getJobsParameters(convert_to_int_list(
         jobIDs), ['JobName', 'Status', 'JobID', 'Owner', 'OwnerGroup', 'OwnerDN'])
     if not res['OK']:
@@ -208,7 +208,7 @@ class CalibrationAgent(AgentModule):
   def __getWorkerIDFromJobName(jobname):
     """Extract the worker ID from the raw job name.
 
-    :param basestring jobname: name of the job in the DIRAC DB
+    :param str jobname: name of the job in the DIRAC DB
     :returns: the worker ID contained in the name string
     :rtype: int
     """
@@ -218,7 +218,7 @@ class CalibrationAgent(AgentModule):
   def __getCalibrationIDFromJobName(jobname):
     """Extract the calibration ID from the raw job name.
 
-    :param basestring jobname: name of the job in the DIRAC DB
+    :param str jobname: name of the job in the DIRAC DB
     :returns: the calibration ID contained in the name string
     :rtype: int
     """

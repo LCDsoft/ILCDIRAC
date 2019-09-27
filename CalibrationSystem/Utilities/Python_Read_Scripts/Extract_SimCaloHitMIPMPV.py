@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
+"""Retrieve MIP Peak calibration constants from Calibration.txt file."""
+
+from __future__ import print_function
 import sys
-
-
-def find_between(s, first, last):
-    try:
-        start = s.index(first) + len(first)
-        end = s.index(last, start)
-        return s[start:end]
-    except ValueError:
-        return ''
+from Helper_Functions import find_between
 
 
 Calibration_File_And_Path = sys.argv[1]
@@ -28,9 +22,9 @@ with open(Calibration_File_And_Path, 'r') as f:
         if 'ECal MIP Peak' in line:
             ECalMIPMPV = find_between(line, ' : ', ' :')
 
-#HCalMIPMPV = str( float(HCalMIPMPVBarrel) + float (HCalMIPMPVEndCap) / 2)
+# HCalMIPMPV = str( float(HCalMIPMPVBarrel) + float (HCalMIPMPVEndCap) / 2)
 
 if 'ECal' in ECal_Or_HCal:
-    print str(ECalMIPMPV)
+    print (str(ECalMIPMPV))
 elif 'HCal' in ECal_Or_HCal:
-    print str(HCalMIPMPVBarrel)
+    print (str(HCalMIPMPVBarrel))

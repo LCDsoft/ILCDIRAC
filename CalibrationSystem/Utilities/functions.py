@@ -26,8 +26,8 @@ def printSet(inSet):
 def updateSteeringFile(inFileName, outFileName, parametersToSetup, exceptions=None):
   """Read input xml-file, update values given be dictionary and write result to a new file.
 
-  :param basestring inFileName: name of input xml-file
-  :param basestring outFileName: name of output xml-file
+  :param str inFileName: name of input xml-file
+  :param str outFileName: name of output xml-file
   :param dict parametersToSetup: dict which contains values which have to be updated.
                                  Keys of dictionary are XPath-string.
                                  E.g.: {"processor/[@name='OuterPlanarDigiProcessor']/parameter[@name='IsStrip']": True}
@@ -76,12 +76,12 @@ def updateSteeringFile(inFileName, outFileName, parametersToSetup, exceptions=No
 def readValueFromSteeringFile(fileName, xPath):
   """Read value of the node from xml-file.
 
-  :param basestring fileName: name of xml-file to read
-  :param basestring xPath: xParh of the node to read.
+  :param str fileName: name of xml-file to read
+  :param str xPath: xParh of the node to read.
                            E.g.: "processor/[@name='OuterPlanarDigiProcessor']/parameter[@name='IsStrip']"
 
-  :returns: basestring or None
-  :rtype: basestring
+  :returns: str or None
+  :rtype: str
   """
   tree = et.parse(fileName)
   iElement = tree.find(xPath)
@@ -135,9 +135,9 @@ def convert_and_execute(command_list, fileToSource=''):
   """Take a list, cast every entry of said list to string and executes it in a subprocess.
 
   :param list command_list: List for a subprocess to execute, that may contain castable non-strings
-  :param basestring fileToSource: file which will be sourced before running command
+  :param str fileToSource: file which will be sourced before running command
   :returns: S_OK or S_ERROR
-  :rtype: S_OK or S_ERROR
+  :rtype: dict
   """
   callString = ''
   for iWord in command_list:
@@ -151,7 +151,7 @@ def convert_and_execute(command_list, fileToSource=''):
   tmpFile.write(callString)
   tmpFile.close()
 
-  os.chmod(tmpFile.name, 0755)
+  os.chmod(tmpFile.name, 0o755)
   comm = 'sh -c "%s"' % (tmpFile.name)
   res = shellCall(0, comm)
   os.unlink(tmpFile.name)

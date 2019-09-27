@@ -1,5 +1,6 @@
 """Unit tests for the CalibrationSystem/Utilities/functions.py."""
 
+from __future__ import print_function
 import pytest
 import os
 import string
@@ -195,17 +196,17 @@ def test_splitFilesAcrossJobs(mocker):
   nEventsPerFile = {'muon': 20, 'kaon': 24, 'gamma': 25, 'zuds': 30}
 
   def printOut(nJobs):
-    print "\nnEventsPerFile: %s" % nEventsPerFile
-    print "nTotalEvents:"
+    print("\nnEventsPerFile: %s" % nEventsPerFile)
+    print("nTotalEvents:")
     for iKey in inputFiles.keys():
-      print "%s: %s" % (iKey, len(inputFiles[iKey]) * nEventsPerFile[iKey])
-    print ""
+      print("%s: %s" % (iKey, len(inputFiles[iKey]) * nEventsPerFile[iKey]))
+    print("")
 
     outDict = splitFilesAcrossJobs(inputFiles, nEventsPerFile, nJobs)
     for i in range(0, nJobs):
-      print "Job #%s:" % i
+      print("Job #%s:" % i)
       for iKey, iVal in outDict[i].iteritems():
-        print "%s\t --> %s" % (iKey, iVal)
+        print("%s\t --> %s" % (iKey, iVal))
 
   nJobs = 5
   printOut(nJobs)

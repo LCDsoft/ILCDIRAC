@@ -1,6 +1,4 @@
-"""
-Unit tests for the CalibrationAgent
-"""
+"""Unit tests for the CalibrationAgent."""
 
 import filecmp
 import os
@@ -15,18 +13,19 @@ MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Agent.CalibrationAgent'
 
 
 class TestsFileUtils(unittest.TestCase):
-  """ Tests the utilities for the CalibrationSystem """
+  """Test the utilities for the CalibrationSystem."""
 
   def setUp(self):
-    """set up the objects"""
+    """Set up the objects."""
     self.targetFile = "targetFile.root"
 
   def tearDown(self):
-    """ tear down the objects """
-    #os.unlink( self.targetFile )
+    """Tear down the objects."""
+    # os.unlink( self.targetFile )
     pass
 
   def test_binaryToString(self):
+    """Test stringToBinaryFile function."""
     filename = os.path.join(os.environ['DIRAC'], "ILCDIRAC", "Testfiles", "input.root")
     content = binaryFileToString(filename)
     stringToBinaryFile(content, self.targetFile)

@@ -1,6 +1,4 @@
-"""
-Application used by the Calibration system, not for user jobs
-"""
+"""Application used by the Calibration system, not for user jobs."""
 import types
 from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
 
@@ -11,19 +9,18 @@ __RCSID__ = "$Id$"
 
 
 class Calibration(Marlin):
-  """ Application used in the Calibration System
+  """Application used in the Calibration System.
 
   .. warn: Not For user jobs
-  
   """
 
   def __init__(self, paramdict=None):
-
+    """Initialize."""
     self.calibrationID = 0
     self.workerID = 0
     self.baseSteeringFile = None
     super(Calibration, self).__init__(paramdict)
-    ##Those 5 need to come after default constructor
+    # Those 5 need to come after default constructor
     self._modulename = 'Calibration'
     self._moduledescription = 'Module to run calibration'
     self.appname = 'marlin'
@@ -54,15 +51,15 @@ class Calibration(Marlin):
     moduleinstance.setValue("baseSteeringFile", self.baseSteeringFile)
 
   def setCalibrationID(self, calibrationID):
-    """ Set calibrationID 
+    """Set calibrationID.
 
-    :param int calibrationID: ID of calibration 
+    :param int calibrationID: ID of calibration
     """
     self._checkArgs({'calibrationID': types.IntType})
     self.calibrationID = calibrationID
 
   def setWorkerID(self, workerID):
-    """ Set workerID 
+    """Set workerID.
 
     :param int workerID: ID of worker node
     """

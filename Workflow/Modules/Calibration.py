@@ -121,7 +121,7 @@ class Calibration(MarlinAnalysis):
     # Handle PandoraSettings.xml
     # TODO directory below is detector dependent... implement it
     pandorasettings = 'PandoraSettings/PandoraSettings.xml'
-    if 'FCC' in self.detectorModel:
+    if 'FCC' in self.detectorModel:  # pylint: disable=unsupported-membership-test
       pandorasettings = 'PandoraSettingsFCCee/PandoraSettings.xml'
     if not os.path.exists(pandorasettings):
       if steeringfiledirname and os.path.exists(os.path.join(steeringfiledirname, pandorasettings)):
@@ -319,7 +319,7 @@ class Calibration(MarlinAnalysis):
     Add PandoraSettings-file and input slcio files which corresponds to current currentStage and currentPhase to the
     parameterDict.
 
-    :param list basestring allSlcioFiles: List of all slcio-files in the node
+    :param list str allSlcioFiles: List of all slcio-files in the node
     :param dict parameterDict: dict of parameters and their values
 
     :returns: S_OK or S_ERROR
@@ -328,7 +328,7 @@ class Calibration(MarlinAnalysis):
     pandoraSettingsFile = ''
     if self.currentStage in [1, 3]:  # FIXME hardcoded values are bad...
       pandoraSettingsFile = 'PandoraSettings/PandoraSettingsDefault.xml'
-      if 'FCC' in self.detectorModel:
+      if 'FCC' in self.detectorModel:  # pylint: disable=unsupported-membership-test
         pandoraSettingsFile = 'PandoraSettingsFCCee/PandoraSettingsDefault.xml'
     else:
       pandoraSettingsFile = 'CalibrationPandoraSettings/PandoraSettingsPhotonTraining.xml'
@@ -336,7 +336,7 @@ class Calibration(MarlinAnalysis):
     iType = CalibrationPhase.fileKeyFromPhase(self.currentPhase).lower()
     self.log.info('SASHA iType: %s' % iType)
     res = self.cali.getInputDataDict()
-    print('res: %s' % res)
+    self.log.info('getInputDataDict:', ' %s' % res)
     if not res['OK']:
       errorMessageConst = 'Somemething went wrong during retrieveing inputDataDict!'
       errorMessageVariable = 'Msg: %s' % (res['Message'])
@@ -346,8 +346,8 @@ class Calibration(MarlinAnalysis):
     self.log.info('SASHA self.cali.getInputDataDict() %s' % res)
 
     inputDataDict = res['Value']
-    print('iType: %s' % iType)
-    print('inputDataDict.keys(): %s' % inputDataDict.keys())
+    self.log.debug('iType:', ' %s' % iType)
+    self.log.debug('inputDataDict.keys():', ' %s' % inputDataDict.keys())
     if iType not in inputDataDict.keys():
       errorMessage = 'Corrupted inputDataDict! No files for process: %s' % (iType)
       self.log.error(errorMessage)
@@ -390,8 +390,8 @@ class Calibration(MarlinAnalysis):
     """Actual bit of code running Marlin and PandoraAnalysis.
 
     :param marlinSteeringFile: steering file to use for Marlin reconstruction. E.g.: 'fccReconstruction.xml'
-    :param string env_script_path: path to the setup environment scripts
-    :param string marlin_dll: string containing path to marlin libraries
+    :param str env_script_path: path to the setup environment scripts
+    :param str marlin_dll: string containing path to marlin libraries
 
     :returns: FIXME S_OK or S_ERROR
     :rtype: dict
@@ -405,7 +405,7 @@ class Calibration(MarlinAnalysis):
     if os.path.exists(self.applicationLog):
       os.remove(self.applicationLog)
 
-    os.chmod(scriptName, 0755)
+    os.chmod(scriptName, 0o755)
     comm = 'sh -c "./%s"' % (scriptName)
     self.setApplicationStatus('Running: stage: %s; phase: %s; step: %s'
                               % (self.currentStage, self.currentPhase, self.currentStep))
@@ -417,8 +417,8 @@ class Calibration(MarlinAnalysis):
     """Return current parameters.
 
     :param marlinSteeringFile: steering file to use for Marlin reconstruction. E.g.: 'fccReconstruction.xml'
-    :param string env_script_path: path to the setup environment scripts
-    :param string marlin_dll: string containing path to marlin libraries
+    :param str env_script_path: path to the setup environment scripts
+    :param str marlin_dll: string containing path to marlin libraries
 
     :returns: S_OK or S_ERROR
     :rtype: dict

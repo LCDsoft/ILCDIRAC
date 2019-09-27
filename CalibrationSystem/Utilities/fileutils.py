@@ -1,8 +1,8 @@
-""" CalibrationSystem Utilities to deal with binary files """
+"""CalibrationSystem Utilities to deal with binary files."""
 
 
 def binaryFileToString(filename):
-  """ return binary string from filename
+  """Return binary string from filename.
 
   :param str filename: filename
   :returns: string of file content
@@ -13,7 +13,6 @@ def binaryFileToString(filename):
 
 
 def stringToBinaryFile(contentString, filename):
-  """ write contentString to binaryFile """
-
+  """Write contentString to binaryFile."""
   with open(filename, 'wb') as target:
     target.write(contentString)

@@ -1,11 +1,11 @@
 """Unit tests for the CalibrationService."""
 
+from __future__ import print_function
 import unittest
 import pytest
 import os
 import shutil
 import time
-#  from pprint import pprint
 from datetime import datetime
 from datetime import timedelta
 from xml.etree import ElementTree as et
@@ -486,7 +486,7 @@ def test_export_submitResult(calibHandler, mocker):
 
   res = calibHandler.export_submitResult(calibID, stageID, phaseID, stepID, workerID, tmpFile)
   if not res['OK']:
-    print res
+    print(res)
     assert False
   assert res['OK']
 
@@ -556,7 +556,7 @@ def test_mergePandoraLikelihoodXmlFiles(calibHandler, mocker):
 
   res = calibHandler.export_submitResult(calibID, stageID, phaseID, stepID, workerID, tmpFile)
   if not res['OK']:
-    print res
+    print(res)
     assert False
 
   nFilesToMerge = 3
@@ -724,24 +724,28 @@ def test_changeDirectoryToCopyTo(calibHandler, mocker):
 
 def test_resubmitjobs(calibHandler, mocker):
   """Test rusibmit jobs."""
-  mocker.patch.object(calibHandler, 'export_killCalibration', new=Mock(return_value={'OK': True, 'Value': []}))
+  tmpMock0 = Mock(return_value={'OK': True, 'Value': []})
+  mocker.patch.object(calibHandler, 'export_killCalibration', new=tmpMock0)
   tmpMock1 = Mock(name='calibRunMock')
-  tmpMock1.submitJobs = Mock(return_value=S_OK())
+  tmpMock2 = Mock(return_value=S_OK())
+  tmpMock1.submitJobs = tmpMock2
   tmpMock1.settings.__getitem__ = Mock(return_value=5)
   tmpMock1.nFailedJobs = 1
   tmpMock1.calibrationFinished = False
 
-  mocker.spy(tmpMock1, 'submitJobs')
-  mocker.spy(calibHandler, 'export_killCalibration')
+  #  mocker.spy(tmpMock1, 'submitJobs')
+  #  mocker.spy(calibHandler, 'export_killCalibration')
 
   CalibrationHandler.activeCalibrations[27] = tmpMock1
   failedJobs = ((27, 123), (27, 443), (27, 554))
 
   calibHandler.export_resubmitJobs(failedJobs)  # nJobs == 5; nFailedJobs == 3+1
-  assert tmpMock1.submitJobs.call_count == 1
+  #  assert tmpMock1.submitJobs.call_count == 1
+  assert tmpMock2.call_count == 1
   assert calibHandler.export_killCalibration.call_count == 0
   calibHandler.export_resubmitJobs(failedJobs)  # nJobs == 5; nFailedJobs == 3+3+1
-  assert tmpMock1.submitJobs.call_count == 1
+  #  assert tmpMock1.submitJobs.call_count == 1
+  assert tmpMock2.call_count == 1
   assert calibHandler.export_killCalibration.call_count == 1
 
 

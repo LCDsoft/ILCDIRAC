@@ -44,9 +44,9 @@ class CalibrationPhase(object):
   def phaseIDFromString(phase_name):
     """Return the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are:
-                                  ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
-                                  ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :param str phase_name: Name of the CalibrationPhase. Allowed are:
+                           ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
+                           ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: ID of this phase
     :rtype: int
     """
@@ -69,9 +69,9 @@ class CalibrationPhase(object):
   def fileKeyFromPhase(phaseID):
     """Return the ID of the given CalibrationPhase, passed as a string.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are:
-                                  ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
-                                  ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :param str phase_name: Name of the CalibrationPhase. Allowed are:
+                           ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
+                           ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: file key for this phase
     :rtype: str
     """
@@ -95,9 +95,9 @@ class CalibrationPhase(object):
   def sampleEnergyFromPhase(phaseID):
     """Return energy of provided sample of the given CalibrationPhase, passed as a float.
 
-    :param basestring phase_name: Name of the CalibrationPhase. Allowed are:
-                                  ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
-                                  ElectroMagEnergy, HadronicEnergy, PhotonTraining
+    :param str phase_name: Name of the CalibrationPhase. Allowed are:
+                           ECalDigi, HCalDigi, MuonAndHCalOtherDigi,
+                           ElectroMagEnergy, HadronicEnergy, PhotonTraining
     :returns: file key for this phase
     :rtype: str
     """
@@ -122,7 +122,7 @@ class CalibrationPhase(object):
 
     :param int phaseID: ID of the enquired CalibrationPhase
     :returns: The name of the CalibrationPhase
-    :rtype: basestring
+    :rtype: str
     """
     if phaseID == CalibrationPhase.ECalDigi:
       return 'ECalDigi'
@@ -405,14 +405,7 @@ class CalibrationRun(object):
       curJob.check = False  # Necessary to turn off user confirmation
       curJob.setName('PandoraCaloCalibration_calid_%s_workerid_%s' % (self.calibrationID, curWorkerID))
       curJob.setJobGroup('PandoraCaloCalibration_calid_%s' % self.calibrationID)
-      if 'CLIC' in self.settings['detectorModel']:
-        # needed to copy files form ClicPerformance package
-        curJob.setCLICConfig(self.settings['marlinVersion'].rsplit("_", 1)[0])
-      elif 'FCC' in self.settings['detectorModel']:
-        appName = 'FcceeConfig'
-        version = self.settings['marlinVersion'].rsplit("_", 1)[0]
-        curJob._addSoftware(appName.lower(), version)
-        curJob._addParameter(curJob.workflow, appName + 'Package', 'JDL', appName + version, 'FCCee Config package')
+      curJob.setConfigPackage(self.settings['nameOfTheConfigPackage'], self.settings['marlinVersion'].rsplit("_", 1)[0])
 
       # TODO implement using line below - choose of tracking, time window, etc.
       #  calib.setExtraCLIArguments(" --Config.Overlay="+overlayParameterValue+"  --Config.Tracking="+trackingType+"

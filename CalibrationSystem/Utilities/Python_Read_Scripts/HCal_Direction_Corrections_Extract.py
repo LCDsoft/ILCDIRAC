@@ -1,21 +1,12 @@
-# -*- coding: utf-8 -*-
+"""Extract mean direction corrections ratio."""
+
+from __future__ import print_function
 import sys
-
-
-def find_between(s, first, last):
-    try:
-        start = s.index(first) + len(first)
-        end = s.index(last, start)
-        return s[start:end]
-    except ValueError:
-        return ''
+from Helper_Functions import find_between
 
 
 Calibration_File_And_Path = sys.argv[1]
 Energy_To_Calibrate = sys.argv[2]
-
-#    std::cout << "Mean Direction Correction HCalEndCap:              : " << HCalEndCapDirCorrDist->GetMean() << " : " <<std::endl<<std::endl;
-#    data_file << "Mean Direction Correction HCalOther:               : " << HCalOtherDirCorrDist->GetMean() << " : " <<std::endl<<std::endl;
 
 Ring_Mean_Dir_Corr = ''
 EndCap_Mean_Dir_Corr = ''
@@ -42,4 +33,4 @@ Calibration_Text += 'EndCap Mean Direction Correction                   :' + str
 with open(Calibration_File_And_Path, 'a') as myfile:
     myfile.write(Calibration_Text)
 
-print str(EndCap_Mean_Dir_Corr / Ring_Mean_Dir_Corr)
+print(str(EndCap_Mean_Dir_Corr / Ring_Mean_Dir_Corr))

@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
+"""Retrieve GeVToMIP calibration constants from Calibration.txt file."""
+
+from __future__ import print_function
 import sys
-
-
-def find_between(s, first, last):
-    try:
-        start = s.index(first) + len(first)
-        end = s.index(last, start)
-        return s[start:end]
-    except ValueError:
-        return ''
+from Helper_Functions import find_between
 
 
 Calibration_File_And_Path = sys.argv[1]
@@ -30,7 +24,7 @@ with open(Calibration_File_And_Path, 'r') as f:
             if 'MuonGeVToMIP' in line:
                 GeVToMIP = find_between(line, ' : ', ' :')
         else:
-            print 'Please select HCal, ECal or Muon'
+            print('Please select HCal, ECal or Muon')
 
 Calibration_Text = '_____________________________________________________________________________________' + '\n'
 
@@ -43,4 +37,4 @@ Calibration_Text += HCal_Or_ECal_Or_Muon + 'GeVToMIP is:                        
 with open(Calibration_File_And_Path, 'a') as myfile:
     myfile.write(Calibration_Text)
 
-print str(GeVToMIP)
+print(str(GeVToMIP))

@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
+"""Retrieve CalibrECal from Calibration.txt file."""
+
+from __future__ import print_function
 import sys
-
-
-def find_between(s, first, last):
-    try:
-        start = s.index(first) + len(first)
-        end = s.index(last, start)
-        return s[start:end]
-    except ValueError:
-        return ''
+from Helper_Functions import find_between
 
 
 Calibration_File_And_Path = sys.argv[1]
@@ -45,10 +39,10 @@ with open(Calibration_File_And_Path, 'r') as f:
 
 
 if Mean_Or_Calibration_Constant == 'Mean':
-    print Mean
+    print (Mean)
 
 elif Mean_Or_Calibration_Constant == 'Calibration_Constant':
-    print str(float(Energy_To_Calibrate) * float(Initial_Calibration_Constant) / float(Mean))
+    print (str(float(Energy_To_Calibrate) * float(Initial_Calibration_Constant) / float(Mean)))
 
     Calibration_Text = '_____________________________________________________________________________________' + '\n'
     Calibration_Text += 'ECal_Digi_Extract.py retrieving CalibrECal from digitisation program. ' + '\n'
@@ -77,4 +71,4 @@ elif Mean_Or_Calibration_Constant == 'Calibration_Constant':
         myfile.write(Calibration_Text)
 
 else:
-    print 'Please select Mean or Calibration_Constant to extract.'
+    print ('Please select Mean or Calibration_Constant to extract.')

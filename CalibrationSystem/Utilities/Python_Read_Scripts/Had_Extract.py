@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
+"""Retrieve ECalToHad and HCalToHad from Calibration.txt file."""
+
+from __future__ import print_function
 import sys
-
-
-def find_between(s, first, last):
-    try:
-        start = s.index(first) + len(first)
-        end = s.index(last, start)
-        return s[start:end]
-    except ValueError:
-        return ''
+from Helper_Functions import find_between
 
 
 Calibration_File_And_Path = sys.argv[1]
@@ -43,15 +37,15 @@ if CSM_or_TEM == 'CSM':
                     CSM_Intercept = float(find_between(line, ' : ', ' : '))
 
     else:
-        print 'Please select ECTH or HCTH CSM_Intercept to extract.'
+        print('Please select ECTH or HCTH CSM_Intercept to extract.')
 
     if FOM_Or_Calibration_Constant == 'FOM':
-        print CSM_Intercept
+        print(CSM_Intercept)
 
     elif FOM_Or_Calibration_Constant == 'Calibration_Constant':
-        print str(float(Kinetic_Energy_To_Calibrate) * float(Initial_Calibration_Constant) / float(CSM_Intercept))
+        print(str(float(Kinetic_Energy_To_Calibrate) * float(Initial_Calibration_Constant) / float(CSM_Intercept)))
 
-        Calibration_Text = '_____________________________________________________________________________________' + '\n'
+        Calibration_Text = '___________________________________________________________________________________' + '\n'
         Calibration_Text += 'Had_Extract.py extracting '
         if ECTH_or_HCTH == 'HCTH':
             Calibration_Text += 'HCalToHad'
@@ -64,13 +58,14 @@ if CSM_or_TEM == 'CSM':
             str(Initial_Calibration_Constant) + '\n'
         Calibration_Text += 'CSM_Intercept                                      : ' + str(CSM_Intercept) + '\n\n'
         Calibration_Text += 'New Calibration Constant                           : ' + \
-            str(float(Kinetic_Energy_To_Calibrate) * float(Initial_Calibration_Constant) / float(CSM_Intercept)) + '\n\n'
+            str(float(Kinetic_Energy_To_Calibrate) * float(Initial_Calibration_Constant) / float(CSM_Intercept)) \
+            + '\n\n'
 
         with open(Calibration_File_And_Path, 'a') as myfile:
             myfile.write(Calibration_Text)
 
     else:
-        print 'Please select Intercept or Calibration_Constant to extract.'
+        print('Please select Intercept or Calibration_Constant to extract.')
 
 elif CSM_or_TEM == 'TEM':
 
@@ -89,15 +84,15 @@ elif CSM_or_TEM == 'TEM':
                     TEM_Multiplier = float(find_between(line, ' : ', ' :'))
 
     else:
-        print 'Please select ECTH or HCTH TEM_Multiplier to extract.'
+        print('Please select ECTH or HCTH TEM_Multiplier to extract.')
 
     if FOM_Or_Calibration_Constant == 'FOM':
-        print TEM_Multiplier
+        print(TEM_Multiplier)
 
     elif FOM_Or_Calibration_Constant == 'Calibration_Constant':
-        print str(float(TEM_Multiplier) * float(Initial_Calibration_Constant))
+        print(str(float(TEM_Multiplier) * float(Initial_Calibration_Constant)))
 
-        Calibration_Text = '_____________________________________________________________________________________' + '\n'
+        Calibration_Text = '___________________________________________________________________________________' + '\n'
         Calibration_Text += 'Had_Extract.py extracting '
         if ECTH_or_HCTH == 'HCTH':
             Calibration_Text += 'HCalToHad'
@@ -116,7 +111,7 @@ elif CSM_or_TEM == 'TEM':
             myfile.write(Calibration_Text)
 
     else:
-        print 'Please select FOM or Calibration_Constant to extract.'
+        print('Please select FOM or Calibration_Constant to extract.')
 
 else:
-    print 'Please select CSM or TEM.'
+    print('Please select CSM or TEM.')

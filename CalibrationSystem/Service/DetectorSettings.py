@@ -1,5 +1,6 @@
 """CalibrationSettings class which defines all required inputs from user."""
 
+from __future__ import print_function
 from DIRAC import gLogger
 from ILCDIRAC.CalibrationSystem.Utilities.objectFactory import ObjectFactory
 
@@ -41,6 +42,7 @@ class CalibrationSettings(object):
     self.settingsDict['hcalEndcapCosThetaRange'] = None
     self.settingsDict['nHcalLayers'] = None
     self.settingsDict['steeringFile'] = None
+    self.settingsDict['nameOfTheConfigPackage'] = None
 
     # TODO temporary field in the settings. for testing only
     self.settingsDict['startCalibrationFinished'] = False
@@ -50,6 +52,7 @@ class CalibrationSettings(object):
     # these settings have no default values... they have to be set up by user
     self.settingsDict['outputPath'] = None
     self.settingsDict['outputSE'] = None
+    #  self.settingsDict['pandoraSettingsFile'] = None
 
   def printSettings(self):
     """Print settings dict in nice format."""
@@ -75,6 +78,8 @@ class CLDSettings(CalibrationSettings):
     self.settingsDict['steeringFile'] = 'fccReconstruction.xml'
     self.settingsDict['DDPandoraPFANewProcessorName'] = 'MyDDMarlinPandora_10ns'
     self.settingsDict['DDCaloDigiName'] = 'MyDDCaloDigi_10ns'
+    self.settingsDict['nameOfTheConfigPackage'] = 'fcceeConfig'
+    #  self.settingsDict['pandoraSettingsFile'] = 'PandoraSettingsFCCee/PandoraSettings.xml'
 
 
 class CLICSettings(CalibrationSettings):
@@ -91,6 +96,8 @@ class CLICSettings(CalibrationSettings):
     self.settingsDict['nHcalLayers'] = 60
     # TODO this default will not work... one need to specify full LFN path
     self.settingsDict['steeringFile'] = 'clicReconstruction.xml'
+    self.settingsDict['nameOfTheConfigPackage'] = 'clicConfig'
+    #  self.settingsDict['pandoraSettingsFile'] = 'PandoraSettings/PandoraSettings.xml'
 
 
 calibrationSettingsFactory = ObjectFactory()

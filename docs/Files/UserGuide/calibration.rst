@@ -75,6 +75,7 @@ A short description of calibration settings needed to be provided by the user:
 - **stopStage** - stop stage. The default value is 3.
 - **stopPhase** - stop phase. The default value is 4.
 - **startCalibrationFinished** - set calibrationFinished to True for the current instance of CalibrationRun. This is a debug parameter. It will be removed in future releases.
+- **nameOfTheConfigPackage** - name of the ConfigPackage, e.g. 'clicConfig' or 'fcceeConfig'. Needed to get steering file templates and Marlin reconstruction configurations from the iLCSoft repository.
 
 
 An example of running calibration
@@ -168,6 +169,8 @@ An example of settings for CLD detector calibration **calibSettingsDict**:
    |   stopStage                                             |      3                                                                         |
    +---------------------------------------------------------+--------------------------------------------------------------------------------+
    |   stopPhase                                             |      4                                                                         |
+   +---------------------------------------------------------+--------------------------------------------------------------------------------+
+   |   nameOfTheConfigPackage                                |      fceeConfig                                                                |
    +---------------------------------------------------------+--------------------------------------------------------------------------------+
 
 

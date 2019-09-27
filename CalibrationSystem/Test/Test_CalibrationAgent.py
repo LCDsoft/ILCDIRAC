@@ -1,6 +1,4 @@
-"""
-Unit tests for the CalibrationAgent
-"""
+"""Unit tests for the CalibrationAgent."""
 
 from collections import defaultdict
 import itertools
@@ -16,14 +14,14 @@ __RCSID__ = "$Id$"
 
 MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Agent.CalibrationAgent'
 
-#pylint: disable=protected-access,no-member
+# pylint: disable=protected-access,no-member
 
 
 class CalibrationAgentTest(unittest.TestCase):
-  """ Tests the implementation of the methods of the CalibrationAgent """
+  """Test the implementation of the methods of the CalibrationAgent."""
 
   def setUp(self):
-    """set up the objects"""
+    """Set up the objects."""
     import DIRAC
     with patch.object(DIRAC.ConfigurationSystem.Client.PathFinder, 'getAgentSection', new=Mock(return_value='')):
       self.calag = CalibrationAgent('Calibration/testCalAgent', 'testLoadname')
@@ -33,40 +31,49 @@ class CalibrationAgentTest(unittest.TestCase):
       assert res['OK']
 
   def test_getworkerid(self):
+    """Get worker id."""
     assertEqualsImproved(self.calag._CalibrationAgent__getWorkerIDFromJobName(
         'PandoraCaloCalibration_calid_149814_workerid_813102'), 813102, self)
 
   def test_getcalibrationid(self):
+    """Get calibration id."""
     assertEqualsImproved(self.calag._CalibrationAgent__getCalibrationIDFromJobName(
         'PandoraCaloCalibration_calid_149814_workerid_813102'), 149814, self)
 
   def test_getworkerid_splitfails(self):
+    """Get worker id."""
     with self.assertRaises(IndexError):
       self.calag._CalibrationAgent__getWorkerIDFromJobName('PandoraCaloCalibrationcalid149814workerid813102')
 
   def test_getcalibrationid_splitfails(self):
+    """Get calibration id."""
     with self.assertRaises(IndexError):
       self.calag._CalibrationAgent__getCalibrationIDFromJobName('PandoraCaloCalibrationcalid149814workerid813102')
 
   def test_getworkerid_noidgiven(self):
+    """Get worker id."""
     with self.assertRaises(ValueError):
       self.calag._CalibrationAgent__getWorkerIDFromJobName('PandoraCaloCalibration_calid_149814_workerid_')
 
   def test_getcalibrationid_noidgiven(self):
+    """Get calibration id."""
     with self.assertRaises(ValueError):
       self.calag._CalibrationAgent__getCalibrationIDFromJobName('PandoraCaloCalibration_calid_')
 
   def test_getworkerid_conversion_fails(self):
+    """Get worker id."""
     with self.assertRaises(ValueError):
       assertEqualsImproved(self.calag._CalibrationAgent__getWorkerIDFromJobName(
           'PandoraCaloCalibration_calid_sixteen_workerid_twenty'), 813102, self)
 
   def test_getcalibrationid_conversion_fails(self):
+    """Get calibration id."""
     with self.assertRaises(ValueError):
       assertEqualsImproved(self.calag._CalibrationAgent__getCalibrationIDFromJobName(
           'PandoraCaloCalibration_calid_sixteen_workerid_twenty'), 149814, self)
 
   def test_calcjobresubmittal(self):  # pylint: disable=too-many-branches
+    """Test calculateJobsToBeResubmitted function."""
     workermappings = [{}, {}, {}, {}]
     for i in xrange(0, 4):
       if i == 0:  # 100 jobs in total, 87 are ok - expectation: No jobs to be resubmitted
@@ -117,14 +124,14 @@ class CalibrationAgentTest(unittest.TestCase):
         assertInImproved((i, expected_workerid), result, self)
 
   def test_requestResubmission(self):
-    # assert nothing is thrown
+    """Assert nothing is thrown."""
     self.calag.requestResubmission([(13875, 137), (1735, 1938), (90452, 4981)])
     self.rpc_mock().resubmitJobs.assert_called_once_with([(13875, 137), (1735, 1938), (90452, 4981)])
 
   def test_requestResubmission_permanent_fail(self):
-    # Calibration 1 works, Calibration 5 always fails
+    """Calibration 1 works, Calibration 5 always fails."""
     def mock_resubmit(failedJobs):
-      """ Mocks the resubmission method of the service """
+      """Mock the resubmission method of the service."""
       if ((1, 419857) in failedJobs and len(failedJobs) == 4) or \
          (len(failedJobs) == 1 and (5, 713) in failedJobs):
         result = S_ERROR('Could not resubmit all jobs. Failed calibration/worker pairs are: [(5,713)]')
@@ -159,6 +166,7 @@ class CalibrationAgentTest(unittest.TestCase):
   #    self.calag.requestResubmission( [ ( 2, 1843 ), ( 3, 19485 ), ( 3, 13135 ), ( 3, 1835 ), ( 6, 39105 ) ] )
 
   def test_fetchJobStatuses(self):
+    """Test getJobsParameters function."""
     jobmon_mock = Mock(name='jobmon_mock')
 
     def mock_getJobs(inDict):

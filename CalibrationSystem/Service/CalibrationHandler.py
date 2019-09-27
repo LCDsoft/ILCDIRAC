@@ -165,7 +165,6 @@ class CalibrationHandler(RequestHandler):
 
   # TODO split this function to two: first one just create CalibrationRun instance and returns it (to allow user to
   # setup different settings); second one - submits jobs
-  auth_createCalibration = ['authenticated']
   types_createCalibration = [dict, dict, dict]
 
   def export_createCalibration(self, inputFiles, numberOfEventsPerFile, calibSettingsDict):
@@ -257,7 +256,8 @@ class CalibrationHandler(RequestHandler):
     newRun.proxyUserName = usernameAndGroup['username']
     newRun.proxyUserGroup = usernameAndGroup['group']
 
-    res = newRun.submitJobs(proxyUserName=newRun.proxyUserName, proxyUserGroup=newRun.proxyUserGroup)
+    res = newRun.submitJobs(proxyUserName=newRun.proxyUserName,  # pylint: disable=unexpected-keyword-arg
+                            proxyUserGroup=newRun.proxyUserGroup)
     if isinstance(res, dict):
       self.log.error('Error while submitting jobs. Res: %s' % res)
       return res
@@ -269,7 +269,6 @@ class CalibrationHandler(RequestHandler):
       return ret_val
     return S_OK((calibrationID, res))
 
-  auth_killCalibrations = ['authenticated']
   types_killCalibrations = [list]
 
   def export_killCalibrations(self, inList):
@@ -292,7 +291,6 @@ class CalibrationHandler(RequestHandler):
       outDict[iEl] = self.export_killCalibration(iEl, 'killed by user request')
     return S_OK(outDict)
 
-  auth_changeDirectoryToCopyTo = ['authenticated']
   types_changeDirectoryToCopyTo = [int, str, str]
 
   def export_changeDirectoryToCopyTo(self, calibId, newPath, newSE):
@@ -315,7 +313,6 @@ class CalibrationHandler(RequestHandler):
     calibration.resultsSuccessfullyCopied = False
     return S_OK()
 
-  auth_killCalibration = ['authenticated']
   types_killCalibration = [int, str]
 
   def export_killCalibration(self, calibIdToKill, errMsg):
@@ -339,7 +336,6 @@ class CalibrationHandler(RequestHandler):
     CalibrationHandler.idsOfCalibsToBeKilled += [calibIdToKill]
     return S_OK()
 
-  auth_cleanCalibrations = ['authenticated']
   types_cleanCalibrations = [list]
 
   def export_cleanCalibrations(self, inList):
@@ -358,7 +354,6 @@ class CalibrationHandler(RequestHandler):
       outDict[iEl] = self.export_cleanCalibration(iEl)
     return S_OK(outDict)
 
-  auth_cleanCalibration = ['authenticated']
   types_cleanCalibration = [int]
 
   def export_cleanCalibration(self, calibIdToClean):
@@ -382,7 +377,6 @@ class CalibrationHandler(RequestHandler):
       self.log.info('Calibration #%s was cleaned by user.' % calibIdToClean)
       return S_OK('Calibration with ID %s was cleaned.' % calibIdToClean)
 
-  auth_getUserCalibrationStatuses = ['authenticated']
   types_getUserCalibrationStatuses = []
 
   def export_getUserCalibrationStatuses(self):
@@ -418,7 +412,6 @@ class CalibrationHandler(RequestHandler):
       statuses.append(calibStatus)
     return(S_OK(statuses))
 
-  auth_submitResult = ['authenticated']
   types_submitResult = [int, int, int, int, int, basestring]
 
   def export_submitResult(self, calibrationID, stageID, phaseID, stepID, workerID, rootFileContent):
@@ -462,7 +455,6 @@ class CalibrationHandler(RequestHandler):
       calibration.addResult(stepID, workerID, newFilename)
     return S_OK()
 
-  auth_checkForStepIncrement = ['TrustedHost']
   types_checkForStepIncrement = []
 
   def export_checkForStepIncrement(self):
@@ -480,7 +472,8 @@ class CalibrationHandler(RequestHandler):
       if calibration.calibrationFinished:
         if not calibration.resultsSuccessfullyCopied:
           res = calibration.copyResults(proxyUserName=calibration.proxyUserName,
-                                        proxyUserGroup=calibration.proxyUserGroup)
+                                        proxyUserGroup=calibration.proxyUserGroup) \
+              # pylint: disable=unexpected-keyword-arg
           if not res['OK']:
             self.log.error('Cannot copy files of finished calibration', '#%s to user specified destination: %s.'
                            ' Error message: %s' % (calibrationID, calibration.settings['outputPath'], res['Message']))
@@ -519,7 +512,6 @@ class CalibrationHandler(RequestHandler):
                   % (calibration.calibrationID, numberOfResults, maxNumberOfJobs, startNextStep))
     return startNextStep
 
-  auth_getNewParameters = ['authenticated']
   types_getNewParameters = [int, int]
 
   def export_getNewParameters(self, calibrationID, stepIDOnWorker):
@@ -548,7 +540,6 @@ class CalibrationHandler(RequestHandler):
     res = cal.getNewParameters(stepIDOnWorker)
     return res
 
-  auth_getNewPhotonLikelihood = ['authenticated']
   types_getNewPhotonLikelihood = [int]
 
   def export_getNewPhotonLikelihood(self, calibrationID):
@@ -575,7 +566,6 @@ class CalibrationHandler(RequestHandler):
       result = cal.getNewPhotonLikelihood()
     return result
 
-  auth_getInputDataDict = ['authenticated']
   types_getInputDataDict = [int, int]
 
   def export_getInputDataDict(self, calibrationID, workerID):
@@ -609,7 +599,6 @@ class CalibrationHandler(RequestHandler):
 
     return result
 
-  auth_resubmitJobs = ['TrustedHost']
   types_resubmitJobs = [list]
 
   def export_resubmitJobs(self, failedJobs):
@@ -646,7 +635,6 @@ class CalibrationHandler(RequestHandler):
             return res
     return S_OK()
 
-  auth_getNumberOfJobsPerCalibration = ['TrustedHost']
   types_getNumberOfJobsPerCalibration = []
 
   def export_getNumberOfJobsPerCalibration(self):
@@ -662,7 +650,6 @@ class CalibrationHandler(RequestHandler):
     self.log.debug("Number of jobs per calibration: %s" % result)
     return S_OK(result)
 
-  auth_getRunningCalibrations = ['TrustedHost']
   types_getRunningCalibrations = []
 
   def export_getRunningCalibrations(self):
@@ -678,7 +665,6 @@ class CalibrationHandler(RequestHandler):
     self.log.debug("List of running calibrations: %s" % result)
     return S_OK(result)
 
-  auth_getActiveCalibrations = ['TrustedHost']
   types_getActiveCalibrations = []
 
   def export_getActiveCalibrations(self):
@@ -691,7 +677,6 @@ class CalibrationHandler(RequestHandler):
     activeCalibrations = list(CalibrationHandler.activeCalibrations.keys())
     return S_OK(activeCalibrations)
 
-  auth_getCalibrationsToBeKilled = ['TrustedHost']
   types_getCalibrationsToBeKilled = []
 
   def export_getCalibrationsToBeKilled(self):
@@ -737,7 +722,7 @@ class CalibrationHandler(RequestHandler):
     if msg:
       return S_ERROR(msg)
 
-    keys = ['marlinVersion', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName',
+    keys = ['marlinVersion', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName', 'nameOfTheConfigPackage',
             'detectorModel', 'steeringFile', 'DDPandoraPFANewProcessorName', 'DDCaloDigiName']
     msg = checkType(str)
     if msg:

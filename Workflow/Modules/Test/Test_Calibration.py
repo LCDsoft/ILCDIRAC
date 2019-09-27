@@ -1,5 +1,6 @@
 """Unit tests for the Calibration.py file."""
 
+from __future__ import print_function
 import pytest
 import os
 import shutil
@@ -103,8 +104,7 @@ def helper_copyFiles():
   dirsToCopy = ['/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig'
                 '/CalibrationPandoraSettings',
                 '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig'
-                '/PandoraSettingsFCCee'
-                ]
+                '/PandoraSettingsFCCee']
   for iDir in dirsToCopy:
     try:
       shutil.copytree(iDir, iDir.split('/')[-1])

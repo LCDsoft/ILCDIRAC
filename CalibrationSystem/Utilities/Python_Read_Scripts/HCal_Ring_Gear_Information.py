@@ -1,13 +1,8 @@
+"""Retrieve Gear information for HCal Ring Digitisation."""
+
+from __future__ import print_function
 import sys
-
-
-def find_between(s, first, last):
-    try:
-        start = s.index(first) + len(first)
-        end = s.index(last, start)
-        return s[start:end]
-    except ValueError:
-        return ''
+from Helper_Functions import find_between
 
 
 Calibration_File_And_Path = sys.argv[1]
@@ -38,7 +33,7 @@ with open(Gear_File_And_Path, 'r') as f:
         if Check_Ring_One == 'On':
             if 'absorberThickness' in line:
                 Number = float(find_between(line, 'absorberThickness="', 'e'))
-		trimmedLine = find_between(line, 'absorberThickness="', 'Size')
+                trimmedLine = find_between(line, 'absorberThickness="', 'Size')
                 Power_Of_Ten = float(find_between(trimmedLine, 'e+', '" cell'))
                 Absorber_Thickness_Ring = Number * pow(10, Power_Of_Ten)
                 Check_Ring_One = 'Off'
@@ -81,7 +76,7 @@ Calibration_Text += 'Absorber_Thickness_EndCap                          : ' + st
 Calibration_Text += 'Scintillator_Thickness_EndCap                      : ' + \
     str(Scintillator_Thickness_EndCap) + ' /mm \n\n'
 
-print Calibration_Text
+print(Calibration_Text)
 ratio = (Absorber_Thickness_EndCap * Scintillator_Thickness_Ring) / \
     (Absorber_Thickness_Ring * Scintillator_Thickness_EndCap)
 
@@ -93,4 +88,4 @@ Calibration_Text += 'Scintillator_Thickness_EndCap x Absorber_Thickness_Ring' + 
 with open(Calibration_File_And_Path, 'a') as myfile:
     myfile.write(Calibration_Text)
 
-print ratio
+print(ratio)

@@ -1,15 +1,5 @@
-# -*- coding: utf-8 -*-
+"""Create text file with final calibration constants."""
 import sys
-
-
-def find_between(s, first, last):
-    try:
-        start = s.index(first) + len(first)
-        end = s.index(last, start)
-        return s[start:end]
-    except ValueError:
-        return ''
-
 
 ECALTOEM = sys.argv[1]
 HCALTOEM = sys.argv[2]
