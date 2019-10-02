@@ -101,10 +101,8 @@ paramDictList = [
 @pytest.fixture
 def helper_copyFiles():
   """Copy steering file to local test directory."""
-  dirsToCopy = ['/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig'
-                '/CalibrationPandoraSettings',
-                '/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig'
-                '/PandoraSettingsFCCee']
+  dirsToCopy = [os.path.join(os.environ['DIRAC'], "ILCDIRAC", "Testfiles", "fcceeConfig", "CalibrationPandoraSettings"),
+                os.path.join(os.environ['DIRAC'], "ILCDIRAC", "Testfiles", "fcceeConfig", "PandoraSettingsFCCee")]
   for iDir in dirsToCopy:
     try:
       shutil.copytree(iDir, iDir.split('/')[-1])

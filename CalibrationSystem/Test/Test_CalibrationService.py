@@ -80,8 +80,7 @@ def copiedFccSteeringFile():
   workdirName = 'calib%s' % calibID
   if not os.path.exists(workdirName):
     os.makedirs(workdirName)
-  src = ('/cvmfs/clicdp.cern.ch/iLCSoft/builds/2019-04-17/x86_64-slc6-gcc62-opt/ClicPerformance/HEAD/fcceeConfig/'
-         'fccReconstruction.xml')
+  src = os.path.join(os.environ['DIRAC'], "ILCDIRAC", "Testfiles", "fccReconstruction.xml")
   copyfile(src, '%s/fccReconstruction.xml' % workdirName)
   yield workdirName
   try:
