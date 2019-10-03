@@ -6,7 +6,7 @@ import os
 import shutil
 from mock import MagicMock as Mock
 from ILCDIRAC.Workflow.Modules.Calibration import Calibration
-from DIRAC import S_OK
+from DIRAC import S_OK, S_ERROR
 from ILCDIRAC.CalibrationSystem.Utilities.functions import searchFilesWithPattern
 
 __RCSID__ = "$Id$"
@@ -49,6 +49,30 @@ def calib():
 
   del calib
   #  assert False
+
+
+def test_missingConfigurations(calib, mocker):
+  """Test cases when some configuration is missing."""
+  calib.platform = None
+  res = calib.runIt()
+  assert not res['OK']
+  assert res['Message'] == 'No ILC platform selected'
+  calib.platform = 'dummy'
+
+  calib.applicationLog = None
+  res = calib.runIt()
+  assert not res['OK']
+  assert res['Message'] == 'No Log file provided'
+  calib.applicationLog = 'dummy'
+
+  calib.detectorModel = None
+  res = calib.runIt()
+  assert not res['OK']
+  calib.detectorModel = 'dummy'
+
+  mocker.patch.object(calib, 'prepareMARLIN_DLL', new=Mock(return_value=S_ERROR('')))
+  res = calib.runIt()
+  assert not res['OK']
 
 
 def test_runScript_properInputArguments(calib, mocker):
