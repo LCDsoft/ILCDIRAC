@@ -6,6 +6,8 @@ import os
 import tempfile
 import shutil
 
+from parameterized import parameterized, param
+
 from ILCDIRAC.Core.Utilities.resolvePathsAndNames import getProdFilename, resolveIFpaths, getProdFilenameFromInput
 
 class ResolvePathsAndNamesTests(unittest.TestCase):
@@ -15,33 +17,50 @@ class ResolvePathsAndNamesTests(unittest.TestCase):
     Make fake files for the test
     """
     self.inputfiles = ["toto_gen_12345_123.txt"]
-    self.dir = tempfile.mkdtemp(dir=".")
-    self.realloc = os.path.join(self.dir, "toto_gen_12345_123.txt")
+    self.orgDir = os.getcwd()
+    self.tempDir = tempfile.mkdtemp(dir=os.getcwd())
+    os.chdir(self.tempDir)
+    tempDir2 = tempfile.mkdtemp(dir=os.getcwd())
+    self.realloc = os.path.join(tempDir2, 'toto_gen_12345_123.txt')
     with open(self.realloc, "w") as inputf:
       inputf.write("fake file")
 
   def tearDown(self):
     """ Remove the fake files
     """
+    os.chdir(self.orgDir)
     try:
-      bd = os.path.dirname(self.realloc)
-      os.remove(self.realloc)
-      shutil.rmtree(bd)
-    except:
-      print("failed to remove file")
+      shutil.rmtree(self.tempDir)
+    except OSError:
+      print('Failed to remove tempDir')
     
   def test_getnames(self):
     """test ResolvePathsAndNames getNames..........................................................."""
     res = getProdFilename("toto_gen.stdhep", 12345, 123)
     self.assertEqual(res, 'toto_gen_12345_123.stdhep')
- 
-  def test_resolvepaths(self):
+
+  @parameterized.expand([
+      param([]),
+      param(['']),
+      param(['noSuchFile'], ok=False),
+      param(['suchFile'], createFile=True),
+      ])
+  def test_resolvepaths(self, extraInputs, ok=True, createFile=False):
     """test ResolvePathsAndNames resolvePaths......................................................."""
-    res = resolveIFpaths(self.inputfiles)
-    self.assertTrue('OK' in res)
-    self.assertEqual(res['OK'], True, res)
-    self.assertTrue('Value' in res, res.keys())
-    self.assertEqual(res['Value'], [os.path.abspath(self.realloc)])
+    extraPaths = []
+    if createFile:
+      tempfile.mkdtemp(dir=os.getcwd())  # create another empty folder for one path in the function
+      for fileName in extraInputs:
+        fullPath = os.path.join(self.tempDir, fileName)
+        extraPaths.append(fullPath)
+        with open(fullPath, 'w') as aFile:
+          aFile.write(fullPath)
+    res = resolveIFpaths(self.inputfiles + extraInputs)
+    assert 'OK' in res
+    assert res['OK'] == ok, res
+    if ok:
+      self.assertTrue('Value' in res, res.keys())
+      self.assertEqual(res['Value'], [os.path.abspath(self.realloc)] + extraPaths)
 
   def test_ildprod_sim(self):
     """test getOridFilenameFromInput Sim ..........................................................."""

@@ -33,7 +33,8 @@ class StdHepCut(ModuleBase):
     self.inlineCuts = ""
     self.MaxNbEvts = 0
     self.scriptName = ""
-    
+    self.fileMask = '*.stdhep'
+
   def applicationSpecificInputs(self):
 
     if not self.OutputFile:
@@ -97,7 +98,7 @@ class StdHepCut(ModuleBase):
       if os.path.exists(os.path.join(steeringfiledirname, self.SteeringFile)):
         try:
           shutil.copy(os.path.join(steeringfiledirname, self.SteeringFile), "./" + self.SteeringFile )
-        except EnvironmentError, x:
+        except EnvironmentError as x:
           LOG.error("Failed to get the cuts file")
           return S_ERROR('Failed to access file %s: %s' % (self.SteeringFile, str(x)))  
     cuts  = open(self.SteeringFile, "r")
@@ -188,7 +189,7 @@ class StdHepCut(ModuleBase):
     extraopts = ""
     if self.MaxNbEvts:
       extraopts = '-m %s' % self.MaxNbEvts
-    comm = "stdhepCut %s -o %s -c %s  ../*.stdhep\n" % (extraopts, self.OutputFile, self.SteeringFile)
+    comm = 'stdhepCut %s -o %s -c %s %s\n' % (extraopts, self.OutputFile, self.SteeringFile, self.fileMask)
     LOG.info("Running %s" % comm)
     script.write(comm)
     script.write('declare -x appstatus=$?\n')    

@@ -969,6 +969,8 @@ class JobCreater(object):
     if not resJob['OK']:
       return resJob
     os.chdir(curdir)
+
+
     if not self.clip.nocleanup:
       cleanup(tmpdir)
     return S_OK()

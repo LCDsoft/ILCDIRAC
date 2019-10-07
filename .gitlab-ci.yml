@@ -306,8 +306,14 @@ jobTests:CC7Prod:
   <<: *prod
   <<: *cc7integration
 
-prodTests:CC7:
+prodTests:CC7prod:
   <<: *prodTests
+  <<: *prod
+  <<: *cc7integration
+
+prodTests:CC7dev:
+  <<: *prodTests
+  <<: *devs
   <<: *cc7integration
 
 .seTests_template: &seTests

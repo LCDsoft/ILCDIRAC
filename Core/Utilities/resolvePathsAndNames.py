@@ -139,7 +139,8 @@ def resolveIFpaths(inputfiles):
           break
     if not filefound:
       filesnotfound.append(infile)
-  if len(filesnotfound):
-    return S_ERROR("resolveIFPath: Input file(s) '%s' not found locally" % (", ".join(filesnotfound)))
+  if filesnotfound:
+    log.error('The following files were not found locally:', ', '.join(filesnotfound))
+    return S_ERROR('resolveIFPath: Input file(s) not found locally')
   log.verbose("Found all input files")
   return S_OK(listofpaths)

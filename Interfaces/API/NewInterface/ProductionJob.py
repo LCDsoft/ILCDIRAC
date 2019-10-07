@@ -226,6 +226,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     retMetaKey = self._checkMetaKeys( metadata.keys() )
     if not retMetaKey['OK']:
       return retMetaKey
+    LOG.notice('InputMetaQuery: %s' % metadata)
 
     if "ProdID" not in metadata:
       return self._reportError("Input metadata dictionary must contain at least a key 'ProdID' as reference")
@@ -649,7 +650,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
         LOG.verbose('No new metadata to set')
         continue
 
-      LOG.verbose('Setting metadata information: ', '%s: %s' % (path, metaCopy))
+      LOG.notice('Setting metadata information: ', '%s: %s' % (path, metaCopy))
       result = self.fc.setMetadata(path.rstrip('/'), metaCopy)
       if not result['OK']:
         LOG.error('Could not preset metadata', str(metaCopy))
@@ -660,7 +661,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       res = self._createDirectory(path, failed)
       if not res['OK']:
         continue
-      LOG.verbose('Setting non searchable metadata information: ', '%s: %s' % (path, meta))
+      LOG.notice('Setting non searchable metadata information: ', '%s: %s' % (path, meta))
       result = self.fc.setMetadata(path.rstrip('/'), meta)
       if not result['OK']:
         LOG.error('Could not preset non searchable metadata', str(meta))
@@ -694,7 +695,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
       if not result['OK']:
         LOG.error('Problem setting parameter %s for production %s and value:\n%s' % (prodID, pname, pvalue))
     else:
-      LOG.info("Adding %s=%s to transformation" % (str(pname), str(pvalue)))
+      LOG.notice('Adding %s=%s to transformation' % (str(pname), str(pvalue)))
       result = S_OK()
     return result
   
@@ -796,16 +797,17 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
         self.finalMetaDict[path] = {'Datatype': 'REC'}
         fname = self.basename + '_rec.slcio'
         application.setOutputRecFile(fname, path)
-        LOG.info('Will store the files under', path)
+        LOG.notice('Will store the files under', path)
         self.finalpaths.append(path)
       path = self.basepath + energypath + evttypepath + application.detectortype + '/DST'
       self.finalMetaDict[path] = {'Datatype': 'DST'}
       fname = self.basename + '_dst.slcio'
       application.setOutputDstFile(fname, path)  
-      LOG.info('Will store the files under', path)
+      LOG.notice('Will store the files under', path)
       self.finalpaths.append(path)
 
     elif hasattr(application, "outputFile") and hasattr(application, 'datatype') and not application.outputFile and not application.willBeCut:
+      LOG.notice('Adding output meta data for %s' % type(application))
       path = self.basepath + energypath + evttypepath
       self.finalMetaDict[path] = {"EvtType" : self.evttype}
       if hasattr(application, "detectortype"):
@@ -821,7 +823,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
         application.datatype = self.datatype
       path += application.datatype
       self.finalMetaDict[path] = {'Datatype' : application.datatype}
-      LOG.info("Will store the files under", "%s" % path)
+      LOG.notice('Will store the files under', '%s' % path)
       self.finalpaths.append(path)
       extension = 'stdhep'
       if application.datatype in ['SIM', 'REC']:
@@ -864,7 +866,7 @@ class ProductionJob(Job): #pylint: disable=too-many-public-methods, too-many-ins
     energyPath = ("%1.2f" % energy).rstrip('0').rstrip('.')
     energyPath = energyPath+unit+'/'
 
-    LOG.info("Energy path is: ", energyPath)
+    LOG.notice('Energy path is: ', energyPath)
     return energyPath
 
 

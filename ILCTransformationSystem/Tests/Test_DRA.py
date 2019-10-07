@@ -2,8 +2,9 @@
 
 import unittest
 from collections import defaultdict
-
 from mock import MagicMock as Mock, patch, ANY
+
+from parameterized import parameterized, param
 
 import DIRAC
 from DIRAC import S_OK, S_ERROR, gLogger
@@ -32,6 +33,8 @@ class TestDRA( unittest.TestCase ):
     self.dra.jobMon=Mock( name="jobMonMock", spec=DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient.JobMonitoringClient)
     self.dra.printEveryNJobs = 10
     self.dra.log = Mock( name="LogMock" )
+    self.dra.addressTo = 'myself'
+    self.dra.addressFrom = 'me'
 
   def tearDown ( self ):
     pass
@@ -39,16 +42,17 @@ class TestDRA( unittest.TestCase ):
   def getTestMock(self, nameID=0, jobID=1234567):
     """create a JobInfo object with mocks"""
     from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import JobInfo
-    testJob = Mock ( name = "jobInfoMock_%s" % nameID, spec=JobInfo )
+    testJob = Mock(name="jobInfoMock_%s" % nameID, spec=JobInfo)
     testJob.jobID = jobID
     testJob.tType = "testType"
-    testJob.otherTasks = None
-    testJob.inputFileExists = True
+    testJob.otherTasks = []
+    testJob.errorCounts = []
     testJob.status = "Done"
-    testJob.fileStatus = "Assigned"
+    testJob.transFileStatus = ['Assigned', 'Assigned']
+    testJob.inputFileStatus = ['Exists', 'Exists']
     testJob.outputFiles = ["/my/stupid/file.lfn", "/my/stupid/file2.lfn"]
     testJob.outputFileStatus = ["Exists", "Exists"]
-    testJob.inputFile = "inputfile.lfn"
+    testJob.inputFiles = ['inputfile.lfn', 'inputfile2.lfn']
     testJob.pendingRequest = False
     testJob.getTaskInfo = Mock()
     return testJob
@@ -135,7 +139,7 @@ class TestDRA( unittest.TestCase ):
 
 
   def test_checkJob( self ):
-    """test for DataRecoveryAgent checkJob MCGeneration............................................."""
+    """test for DataRecoveryAgent checkJob No inputFiles............................................."""
 
     from ILCDIRAC.ILCTransformationSystem.Utilities.TransformationInfo import TransformationInfo
     tInfoMock = Mock( name = "tInfoMock", spec=TransformationInfo )
@@ -150,9 +154,8 @@ class TestDRA( unittest.TestCase ):
 
     self.dra.checkJob( testJob, tInfoMock )
     self.assertIn( "setJobDone", tInfoMock.method_calls[0] )
-    self.assertEqual( self.dra.todo["MCGeneration"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["MCGeneration"][1]["Counter"] , 0 )
-
+    self.assertEqual(self.dra.todo['NoInputFiles'][0]['Counter'], 1)
+    self.assertEqual(self.dra.todo['NoInputFiles'][1]['Counter'], 0)
 
     ### Test Second option for MCGeneration
     tInfoMock.reset_mock()
@@ -160,8 +163,8 @@ class TestDRA( unittest.TestCase ):
     testJob.outputFileStatus = ["Missing"]
     self.dra.checkJob( testJob, tInfoMock )
     self.assertIn( "setJobFailed", tInfoMock.method_calls[0] )
-    self.assertEqual( self.dra.todo["MCGeneration"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["MCGeneration"][1]["Counter"] , 1 )
+    self.assertEqual(self.dra.todo['NoInputFiles'][0]['Counter'], 1)
+    self.assertEqual(self.dra.todo['NoInputFiles'][1]['Counter'], 1)
 
     ### Test Second option for MCGeneration
     tInfoMock.reset_mock()
@@ -169,552 +172,109 @@ class TestDRA( unittest.TestCase ):
     testJob.outputFileStatus = ["Exists"]
     self.dra.checkJob( testJob, tInfoMock )
     self.assertEqual( tInfoMock.method_calls, [] )
-    self.assertEqual( self.dra.todo["MCGeneration"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["MCGeneration"][1]["Counter"] , 1 )
+    self.assertEqual(self.dra.todo['NoInputFiles'][0]['Counter'], 1)
+    self.assertEqual(self.dra.todo['NoInputFiles'][1]['Counter'], 1)
 
-
-  def test_checkJob_others( self ):
-    """test for DataRecoveryAgent checkJob other ProductionTypes ..................................."""
-
+  @parameterized.expand([
+      param(0, ['setJobDone', 'setInputProcessed'], jStat='Failed', ifStat=[
+            'Exists'], ofStat=['Exists'], tFiStat=['Assigned'], others=True),
+      param(1, ['setJobFailed'], ifStat=['Exists'], ofStat=['Missing'], others=True, ifProcessed=['/my/inputfile.lfn']),
+      param(2, ['setJobFailed', 'cleanOutputs'], ifStat=['Exists'], others=True, ifProcessed=['/my/inputfile.lfn']),
+      param(3, ['cleanOutputs', 'setJobFailed', 'setInputDeleted'], ifStat=['Missing']),
+      param(4, ['cleanOutputs', 'setJobFailed'], tFiStat=['Deleted'], ifStat=['Missing']),
+      param(5, ['setJobDone', 'setInputProcessed'], jStat='Failed', ifStat=['Exists'], tFiStat=['Assigned']),
+      param(6, ['setJobDone'], jStat='Failed', ifStat=['Exists'], tFiStat=['Processed']),
+      param(7, ['setInputProcessed'], jStat='Done', ifStat=['Exists'], tFiStat=['Assigned']),
+      param(8, ['setInputMaxReset'], jStat='Failed', ifStat=['Exists'],
+            ofStat=['Missing'], tFiStat=['Assigned'], errorCount=[14]),
+      param(9, ['setInputUnused'], jStat='Failed', ifStat=['Exists'],
+            ofStat=['Missing'], tFiStat=['Assigned'], errorCount=[2]),
+      param(10, ['setInputUnused', 'setJobFailed'], jStat='Done',
+            ifStat=['Exists'], ofStat=['Missing'], tFiStat=['Assigned']),
+      param(11, ['cleanOutputs', 'setInputUnused'], jStat='Failed', ifStat=[
+          'Exists'], ofStat=['Missing', 'Exists'], tFiStat=['Assigned']),
+      param(12, ['cleanOutputs', 'setInputUnused', 'setJobFailed'], jStat='Done',
+            ifStat=['Exists'], ofStat=['Missing', 'Exists'], tFiStat=['Assigned']),
+      param(13, ['setJobFailed'], jStat='Done', ifStat=['Exists'], ofStat=['Missing', 'Missing'], tFiStat=['Unused']),
+      param(14, [], jStat='Strange', ifStat=['Exists'], ofStat=['Exists'], tFiStat=['Processed']),
+      param(-1, [], jStat='Failed', ifStat=['Exists'], ofStat=['Missing', 'Missing'],
+            outFiles=['/my/stupid/file.lfn', "/my/stupid/file2.lfn"], tFiStat=['Processed'], others=True),
+      ])
+  def test_checkJob_others_(self, counter, infoCalls, jID=1234567, jStat='Done', others=False,
+                            inFiles=['/my/inputfile.lfn'], outFiles=['/my/stupid/file.lfn'],
+                            ifStat=[], ofStat=['Exists'], ifProcessed=[],
+                            tFiStat=['Processed'], errorCount=[]):
     from ILCDIRAC.ILCTransformationSystem.Utilities.TransformationInfo import TransformationInfo
-    tInfoMock = Mock( name = "tInfoMock", spec=TransformationInfo )
-    
     from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import JobInfo
+    tInfoMock = Mock(name="tInfoMock", spec=TransformationInfo)
+    testJob = JobInfo(jobID=jID, status=jStat, tID=123, tType="MCSimulation")
+    testJob.outputFiles = outFiles
+    testJob.outputFileStatus = ofStat
+    testJob.otherTasks = others
+    testJob.inputFiles = inFiles
+    testJob.inputFileStatus = ifStat
+    testJob.transFileStatus = tFiStat
+    testJob.errorCounts = errorCount
+    self.dra.inputFilesProcessed = set(ifProcessed)
+    self.dra.checkJob(testJob, tInfoMock)
+    gLogger.notice('Testing counter', counter)
+    gLogger.notice('Expecting calls', infoCalls)
+    gLogger.notice('Called', tInfoMock.method_calls)
+    assert len(infoCalls) == len(tInfoMock.method_calls)
+    for index, infoCall in enumerate(infoCalls):
+      self.assertIn(infoCall, tInfoMock.method_calls[index])
+    for count in range(15):
+      gLogger.notice('Checking Counter:', count)
+      if count == counter:
+        self.assertEqual(self.dra.todo['InputFiles'][count]['Counter'], 1)
+      else:
+        self.assertEqual(self.dra.todo['InputFiles'][count]['Counter'], 0)
+    if 0 <= counter <= 2:
+      assert set(testJob.inputFiles).issubset(self.dra.inputFilesProcessed)
 
-    ### Test First option for OtherProductions
+  @parameterized.expand([
+      param(['cleanOutputs', 'setJobFailed']),
+      param([], jID=667, jStat='Failed', ofStat=['Missing']),
+      param([], jID=668, jStat='Failed', ofStat=['Missing'], inFiles=['some']),
+      ])
+  def test_failHard(self, infoCalls, jID=666, jStat='Done', inFiles=None, ofStat=['Exists']):
+    """Test the job.failHard function."""
+    from ILCDIRAC.ILCTransformationSystem.Utilities.TransformationInfo import TransformationInfo
+    from ILCDIRAC.ILCTransformationSystem.Utilities.JobInfo import JobInfo
+    tInfoMock = Mock(name="tInfoMock", spec=TransformationInfo)
     tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Failed", tID=123, tType="MCSimulation" )
+    testJob = JobInfo(jobID=666, status=jStat, tID=123, tType='MCSimulation')
     testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.inputFile = "/my/input/file.lfn"
-    testJob.outputFileStatus = ["Exists"]
+    testJob.outputFileStatus = ofStat
     testJob.otherTasks = True
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( testJob.inputFile , self.dra.inputFilesProcessed )
-    self.assertIn( "setJobDone", tInfoMock.method_calls[0] )
-    self.assertIn( "setInputProcessed", tInfoMock.method_calls[1] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test Second option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Done", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Missing"]
-    testJob.otherTasks = True
-    testJob.inputFile = "/my/inputfile.lfn"
-    self.dra.inputFilesProcessed = set( [testJob.inputFile] )
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( testJob.inputFile , self.dra.inputFilesProcessed )
-    self.assertIn( "setJobFailed", tInfoMock.method_calls[0] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test Third option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Done", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Exists"]
-    testJob.otherTasks = True
-    testJob.inputFile = "/my/inputfile.lfn"
-    self.dra.inputFilesProcessed = set( [testJob.inputFile] )
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( testJob.inputFile , self.dra.inputFilesProcessed )
-    self.assertIn( "setJobFailed", tInfoMock.method_calls[0] )
-    self.assertIn( "cleanOutputs", tInfoMock.method_calls[1] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test Fourth option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Done", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Exists"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = False
-    testJob.fileStatus = "Exists"
-    self.dra.inputFilesProcessed = set( )
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "cleanOutputs",    tInfoMock.method_calls[0] )
-    self.assertIn( "setJobFailed",    tInfoMock.method_calls[1] )
-    self.assertIn( "setInputDeleted", tInfoMock.method_calls[2] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test Fifth option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Done", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Exists"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = False
-    testJob.fileStatus = "Deleted"
-    self.dra.inputFilesProcessed = set( )
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "cleanOutputs",    tInfoMock.method_calls[0] )
-    self.assertIn( "setJobFailed",    tInfoMock.method_calls[1] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test sixth option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Failed", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Exists"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
+    testJob.inputFiles = inFiles
     testJob.inputFileExists = True
-    testJob.fileStatus = "Assigned"
+    testJob.fileStatus = 'Processed'
     self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "setJobDone",        tInfoMock.method_calls[0] )
-    self.assertIn( "setInputProcessed", tInfoMock.method_calls[1] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test seventh option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Failed", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Exists"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Processed"
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "setJobDone",        tInfoMock.method_calls[0] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test eighth option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Done", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Exists"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Assigned"
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "setInputProcessed", tInfoMock.method_calls[0] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test ninth option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Failed", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Missing"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Assigned"
-    testJob.errorCount = 14
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "setInputMaxReset", tInfoMock.method_calls[0] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test MaxReset option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Failed", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Missing"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Assigned"
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "setInputUnused", tInfoMock.method_calls[0] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test tenth option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Done", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Missing"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Assigned"
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "setInputUnused", tInfoMock.method_calls[0] )
-    self.assertIn( "setJobFailed",   tInfoMock.method_calls[1] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 0 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test eleventh option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Failed", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn", "/my/stupid/file2.lfn"]
-    testJob.outputFileStatus = ["Missing", "Exists"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Assigned"
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "cleanOutputs",   tInfoMock.method_calls[0] )
-    self.assertIn( "setInputUnused", tInfoMock.method_calls[1] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 0 )
-
-    ### Test twelfth option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Done", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn", "/my/stupid/file2.lfn"]
-    testJob.outputFileStatus = ["Missing", "Exists"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Assigned"
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "cleanOutputs",   tInfoMock.method_calls[0] )
-    self.assertIn( "setInputUnused", tInfoMock.method_calls[1] )
-    self.assertIn( "setJobFailed", tInfoMock.method_calls[2] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 1 )
-
-    ### Test thirteenth option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Done", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn", "/my/stupid/file2.lfn"]
-    testJob.outputFileStatus = ["Missing", "Exists"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Unused"
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertIn( "setJobFailed", tInfoMock.method_calls[0] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][13]["Counter"] , 1 )
-
-    ### Test fourteenth option for OtherProductions
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Strange", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn", "/my/stupid/file2.lfn"]
-    testJob.outputFileStatus = ["Missing", "Exists"]
-    testJob.otherTasks = False
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Processed"
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertEqual( [], tInfoMock.method_calls )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][13]["Counter"] , 1 )
-
-    ### Test nothing triggers
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=1234567, status = "Failed", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn", "/my/stupid/file2.lfn"]
-    testJob.outputFileStatus = ["Missing", "Missing"]
-    testJob.otherTasks = True
-    testJob.inputFile = "/my/inputfile.lfn"
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Processed"
-    self.dra.inputFilesProcessed = set()
-    self.dra.checkJob( testJob, tInfoMock )
-    self.assertEqual( [], tInfoMock.method_calls )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][13]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][14]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][-1]["Counter"] , 0 )
-
-    ### Test failHard
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=666, status = "Done", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Exists"]
-    testJob.otherTasks = True
-    testJob.inputFile = None
-    testJob.inputFileExists = True
-    testJob.fileStatus = "Processed"
-    self.dra.inputFilesProcessed = set()
-    self.dra._DataRecoveryAgent__failJobHard( testJob, tInfoMock ) #pylint: disable=protected-access, no-member
-    self.assertIn( "cleanOutputs", tInfoMock.method_calls[0] )
-    self.assertIn( "setJobFailed", tInfoMock.method_calls[1] )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][13]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][14]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][-1]["Counter"] , 1 )
-
-    ### Test failHard, do nothing because already cleaned
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=667, status = "Failed", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Missing"]
-    testJob.otherTasks = True
-    testJob.inputFile = None
-    testJob.inputFileExists = False
-    testJob.fileStatus = "Processed"
-    self.dra.inputFilesProcessed = set()
-    self.dra._DataRecoveryAgent__failJobHard( testJob, tInfoMock ) #pylint: disable=protected-access, no-member
-    self.assertEqual( [], tInfoMock.method_calls )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][13]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][14]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][-1]["Counter"] , 1 )
-
-    self.assertNotIn( "Failing job 667", self.dra.notesToSend )
-
-    ### Test failHard3, do nothing because inputFile not None
-    tInfoMock.reset_mock()
-    testJob = JobInfo( jobID=668, status = "Failed", tID=123, tType="MCSimulation" )
-    testJob.outputFiles = ["/my/stupid/file.lfn"]
-    testJob.outputFileStatus = ["Missing"]
-    testJob.otherTasks = True
-    testJob.inputFile = "NotNone"
-    testJob.inputFileExists = False
-    testJob.fileStatus = "Processed"
-    self.dra.inputFilesProcessed = set()
-    self.dra._DataRecoveryAgent__failJobHard( testJob, tInfoMock ) # pylint: disable=protected-access, no-member
-    self.assertEqual( [], tInfoMock.method_calls )
-    self.assertEqual( self.dra.todo["OtherProductions"][0]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][1]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][2]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][3]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][4]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][5]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][6]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][7]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][8]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][9]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][10]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][11]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][12]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][13]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][14]["Counter"] , 1 )
-    self.assertEqual( self.dra.todo["OtherProductions"][-1]["Counter"] , 1 )
-
-    self.assertNotIn( "Failing job 668", self.dra.notesToSend )
+    self.dra._DataRecoveryAgent__failJobHard(testJob, tInfoMock)  # pylint: disable=protected-access, no-member
+    gLogger.notice('Expecting calls', infoCalls)
+    gLogger.notice('Called', tInfoMock.method_calls)
+    assert len(infoCalls) == len(tInfoMock.method_calls)
+    for index, infoCall in enumerate(infoCalls):
+      self.assertIn(infoCall, tInfoMock.method_calls[index])
+    if jStat == 'Done':
+      self.assertIn('Failing job %s' % jID, self.dra.notesToSend)
+    else:
+      self.assertNotIn('Failing job %s' % jID, self.dra.notesToSend)
 
 
   def test_notOnlyKeepers( self ):
     """ test for __notOnlyKeepers function """
 
     funcToTest = self.dra._DataRecoveryAgent__notOnlyKeepers #pylint: disable=protected-access, no-member
-    self.assertTrue( funcToTest( "MCGeneration_ILD" ) )
+    self.assertTrue(funcToTest('MCGeneration'))
 
-    self.dra.todo['OtherProductions'][0]["Counter"]=3 ## keepers
-    self.dra.todo['OtherProductions'][3]["Counter"]=0
+    self.dra.todo['InputFiles'][0]['Counter'] = 3  # keepers
+    self.dra.todo['InputFiles'][3]['Counter'] = 0
     self.assertFalse( funcToTest( "MCSimulation" ) )
 
-    self.dra.todo['OtherProductions'][0]["Counter"]=3 ## keepers
-    self.dra.todo['OtherProductions'][3]["Counter"]=3
+    self.dra.todo['InputFiles'][0]['Counter'] = 3  # keepers
+    self.dra.todo['InputFiles'][3]['Counter'] = 3
     self.assertTrue( funcToTest( "MCSimulation" ) )
 
   def test_checkAllJob( self ):
@@ -737,7 +297,7 @@ class TestDRA( unittest.TestCase ):
 
     ### test inputFile None
     mockJobs = dict([ (i, self.getTestMock(nameID=i) ) for i in xrange(5) ] )
-    mockJobs[1].inputFile = None
+    mockJobs[1].inputFiles = []
     mockJobs[1].getTaskInfo = Mock( side_effect = ( TaskInfoException("NoInputFile"), None ) )
     mockJobs[1].tType = "MCSimulation"
     tInfoMock.reset_mock()
@@ -751,7 +311,8 @@ class TestDRA( unittest.TestCase ):
     mockJobs = dict([(i, self.getTestMock()) for i in xrange(5)])
     mockJobs[2].pendingRequest = True
     mockJobs[3].getTaskInfo = Mock(side_effect=(TaskInfoException('ARGJob3'), None))
-    mockJobs[3].inputFile = None
+    mockJobs[3].inputFiles = []
+    mockJobs[3].tType = 'MCReconstruction'
     self.dra._DataRecoveryAgent__failJobHard = Mock(side_effect=(RuntimeError('ARGJob4'), None), name='FJH')
     self.dra.checkAllJobs(mockJobs, tInfoMock, tasksDict=True, lfnTaskDict=True)
     mockJobs[3].getTaskInfo.assert_called()
@@ -777,11 +338,11 @@ class TestDRA( unittest.TestCase ):
     self.dra.log.error.assert_any_call( ANY, MatchStringWith("outcast") )
     self.assertEqual( "Failure to get transformations", res['Message'] )
 
-    d123 = dict(TransformationID=123, TransformationName="TestProd123", Type="MCGeneration",
+    d123 = dict(TransformationID=123, TransformationName='TestProd123', Type='MCGeneration',
                 AuthorDN='/some/cert/owner', AuthorGroup='Test_Prod')
-    d124 = dict(TransformationID=125, TransformationName="TestProd124", Type="MCGeneration",
+    d124 = dict(TransformationID=124, TransformationName='TestProd124', Type='MCGeneration',
                 AuthorDN='/some/cert/owner', AuthorGroup='Test_Prod')
-    d125 = dict(TransformationID=124, TransformationName="TestProd125", Type="MCGeneration",
+    d125 = dict(TransformationID=125, TransformationName='TestProd125', Type='MCGeneration',
                 AuthorDN='/some/cert/owner', AuthorGroup='Test_Prod')
 
     ## Eligible succeeds

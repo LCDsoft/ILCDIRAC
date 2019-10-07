@@ -122,7 +122,8 @@ def assertMockCalls( mock_object_method, argslist, assertobject, only_these_call
   """ Asserts that the passed mocked method has been called with the arguments provided in argslist, in any order.
 
   :param Mock mock_object_method: Method of a mock object that is under test
-  :param list argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  :param argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  :type argslist: `python:list`
   :param TestCase assertobject: The TestCase instance running the tests, in order to gain access to the assertion methods
   :param bool only_these_calls: Indicates what happens if the calls in argslist is a strict subset of the actual call list. True means the assertion fails, False means the assertion holds.
   """
@@ -148,7 +149,8 @@ def assertMockCalls_ordered( mock_object_method, argslist, assertobject ):
   """ Asserts that the passed mocked method has been called with the arguments provided in argslist (and only those arguments), in exactly the given order.
 
   :param Mock mock_object_method: Method of a mock object that is under test
-  :param list argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  :param argslist: list of the expected arguments for all calls to the mocked method. Tuples are unpacked and represent multiple arguments
+  :type argslist: `python:list`
   """
   from mock import call
   call_list = []
@@ -158,6 +160,36 @@ def assertMockCalls_ordered( mock_object_method, argslist, assertobject ):
     else:
       call_list.append( call( args ) )
   assertEqualsImproved( mock_object_method.mock_calls, call_list, assertobject )
+
+
+def assertDictEquals(actual_dict, expected_dict, assertobject):
+  """ Asserts that the two passed dictionaries contain the same key-value-pairs.
+
+  :param dict actual_dict: Dictionary returned by the method under test
+  :param dict expected_dict: Dictionary with the expected key-value-pairs
+  :param TestCase assertobject: The current test, used to gain the assertion methods.
+  :returns: None, AssertionError if they are not equivalent
+  :rtype: None
+  """
+  assertEqualsImproved(len(actual_dict), len(expected_dict), assertobject)
+  for key in actual_dict:
+    assertEqualsImproved(actual_dict[key], expected_dict[key], assertobject)
+
+
+def assertDictEquals_dynamic(actual_dict, expected_dict, assertobject, equalsfunc):
+  """ Asserts that the two passed dictionaries contain the same key-value-pairs, using the passed
+  equalsfunc to check that.
+
+  :param dict actual_dict: Dictionary produced by the actual call on the code under test in the test case.
+  :param dict expected_dict: Dictionary with the expected values.
+  :param TestCase assertobject: The testcase object, used to gain the assert methods
+  :param function equalsfunc: Function used to determine if two values in the dictionary are the same or not.
+  :returns: None, AssertionError if they are not equivalent
+  :rtype: None
+  """
+  assertEqualsImproved(len(actual_dict), len(expected_dict), assertobject)
+  for key in actual_dict:
+    equalsfunc(actual_dict[key], expected_dict[key], assertobject)
 
 def running_on_docker():
   """ Returns whether the code is currently being executed in a docker VM or on a local (dev) machine.

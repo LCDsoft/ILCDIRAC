@@ -36,17 +36,22 @@ DataManagement
 --------------
 
 
+What is an LFN?
+```````````````
+
+LFN stands for *Logical File Name*. It is the identifier used in the Dirac File Catalog. An LFN can be connected to
+multiple *Replicas* at different *Storage Elements*.
+
 
 How do upload/download/remove files to the Grid?
 ````````````````````````````````````````````````
-
 Have a look at the :doc:`DataManagement Tutorial
-<UserGuide/Tutorials/DataManagementBasic/index>` and the
+<UserGuide/HowTo/DataManagement/index>` and the
 :doc:`UserGuide/CommandReference/DataManagement/index`
 
 * :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-add-file`
-* :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-remove-files`
 * :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-get-file`
+* :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-remove-files`
 
 How to check for replicas of a file
 ```````````````````````````````````
@@ -57,6 +62,7 @@ How to replicate a file
 ```````````````````````
 
 * :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-replicate-lfn`
+* :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-replicate-and-register-request`
 
 Or use the replicate command in the :doc:`UserGuide/CommandReference/DataManagement/dirac-dms-filecatalog-cli`.
 
@@ -158,7 +164,7 @@ See also here: `userlibraries`
 
 It's fully taken in account in dirac. For that, you'll need to compile them
 against a version that dirac knows. And we defined a directory containing those
-version on ``cvms`` under ``/cvmfs/clicdp.cern.ch/ilcsoft/builds`` or ``/cvmfs/ilc.desy.de/sw/``
+version on ``cvmfs`` under ``/cvmfs/clicdp.cern.ch/ilcsoft/builds`` or ``/cvmfs/ilc.desy.de/sw/``
 
 So simply setup the env, use ``cmake`` including the ``ILCSoft.cmake`` in the
 directory of your choice from the available ones, and put your

@@ -15,7 +15,8 @@ class FileUtil(object):
   def getMultipleReadHandles( file_contents ):
     """ Utility function to mock multiple read and write calls in a method
 
-    :param list file_contents: List of list of strings
+    :param file_contents: List of list of strings
+    :type file_contents: `python:list`
 
     Usage of this method, both for read() calls and for iteration. WARNING: You cannot mix read() and iteration calls!! (Iteration and read() have separate counters for the files):
     
@@ -57,8 +58,10 @@ class FileUtil(object):
 
     :param TestCase testobject: Unit Testcase, used to call assert methods
     :param mock_open mockobject: Mock object that mocks the open() method, used to get call information
-    :param list expected_tuples: List of tuples of strings ('filename', 'mode') of ALL expected open() calls
-    :param list expected_output: List of list of strings containing everything that is written to any file. expected_output[i] is the expected output of the i-th opened file, expected_output[i][j] is one string that is supposed to be written to the i-th file.
+    :param expected_tuples: List of tuples of strings ('filename', 'mode') of ALL expected open() calls
+    :type expected_tuples: `python:list`
+    :param expected_output: List of list of strings containing everything that is written to any file. expected_output[i] is the expected output of the i-th opened file, expected_output[i][j] is one string that is supposed to be written to the i-th file.
+    :type expected_output: `python:list`
     :param Iterable(Mock) handles: return value of the getMultipleReadHandles method, used to get call information
     """
     # Check if expected open() calls match the actual ones (each element of expected_tuples is in the calls of the mockobject --- #TODO: Check for same amount of calls & maybe does not work for duplicate calls?)

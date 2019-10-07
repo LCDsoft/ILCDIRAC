@@ -10,7 +10,7 @@ User Guide
    submittingjobs
    faq
    support
-
+   calibration
 
 Submitting User Jobs
 --------------------

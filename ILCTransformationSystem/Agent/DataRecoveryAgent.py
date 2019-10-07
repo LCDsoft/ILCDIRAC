@@ -1,26 +1,41 @@
-"""An agent so ensure consistency for transformation jobs, tasks and files.
+"""An agent to ensure consistency for transformation jobs, tasks and files.
 
-Depending on what is the status of a job and its input and outputfiles different actions are performed
+Depending on what is the status of a job and its input and output files different actions are performed.
+
+The agent takes the following steps
 
 - obtain list of transformation
-- get a list of all 'Failed' and 'Done' jobs, make sure no job has pending requests
-- get input files for all jobs, get the transformation file status associacted for the file (Unused, Assigned,
-  MaxReset, Processed), check if the input file exists
+- get a list of all 'Failed' and 'Done' jobs, jobs with pending requests are ignored.
+- get input files for all jobs, get the transformation file status
+  associated for the file (Unused, Assigned, MaxReset, Processed),
+  check if the input file exists
 - get the output files for each job, check if the output files exist
-- perform changes for Jobs, files and tasks, cleanup incomplete output files to obtain consistent state for jobs,
-  tasks, input and output files
+- perform changes for Jobs, Files and Tasks: cleanup incomplete output
+  files to obtain consistent state for jobs, tasks, input and output
+  files
 
-  - MCGeneration: output file missing --> Job 'Failed'
-  - MCGeneration: output file exists --> Job 'Done'
-  - Output Missing --> File Cleanup, Job 'Failed', Input 'Unused'
-  - Max ErrorCount --> Input 'MaxReset'
-  - Output Exists --> Job Done, Input 'Processed'
-  - Input Deleted --> Job 'Failed, File Cleanup
-  - Input Missing --> Job 'Failed, Input 'Deleted', Cleanup
-  - Other Task processed the File --> File Cleanup, Job Failed
-  - Other Task, but this is the latest --> Keep File
+  - TODO: fill list of Checks and Actions
 
 - Send email about performed actions
+
+Requirements/Assumptions:
+
+- JobParameters:
+
+  - ProductionOutputData: with the list semi-colon separated list of expected output files, stored as a Job Parameter
+      This parameter needs to be set by the production UploadOutputData tool _before_ uploading files
+  - JobName of the form: TransformationID_TaskID obtained as a  JobAttribute
+  - InputData from the JobMonitor.getInputData
+
+  - Or Extract that information from the JDL for the job
+
+- JobGroup equal to "%08d" % transformationID
+
+.. note::
+
+  Transformations are only treated, if during the last pass changes
+  were performed, or the number of Failed and Done jobs has changed.
+
 
 .. literalinclude:: ../ConfigTemplate.cfg
   :start-after: ##BEGIN DataRecoveryAgent
@@ -49,8 +64,8 @@ from ILCDIRAC.Interfaces.API.DiracILC import DiracILC
 
 __RCSID__ = "$Id$"
 
-AGENT_NAME = 'ILCTransformation/DataRecoveryAgent'
-MAXRESET = 10
+AGENT_NAME = 'Transformation/DataRecoveryAgent'
+MAXRESET = 10  # FIXME get this number from somewhere else
 
 ASSIGNEDSTATES = ['Assigned', 'Processed']
 
@@ -62,12 +77,14 @@ class DataRecoveryAgent( AgentModule ):
     self.enabled = False
 
     self.productionsToIgnore = self.am_getOption("TransformationsToIgnore", [])
-    self.transformationTypes = self.am_getOption( "TransformationTypes",
-                                                  ['MCReconstruction',
-                                                   'MCSimulation',
-                                                   'MCReconstruction_Overlay',
-                                                   'MCGeneration'] )
     self.transformationStatus = self.am_getOption( "TransformationStatus", ['Active', 'Completing'] )
+
+    self.transformationTypes = []
+    self.transNoInput = self.am_getOption('TransformationsNoInput', ['MCGeneration'])
+    self.transWithInput = self.am_getOption('TransformationsWithInput', ['MCReconstruction',
+                                                                         'MCSimulation',
+                                                                         'MCReconstruction_Overlay',
+                                                                         ])
 
     self.jobStatus = ['Failed','Done'] ##This needs to be both otherwise we cannot account for all cases
 
@@ -77,68 +94,70 @@ class DataRecoveryAgent( AgentModule ):
     self.reqClient = ReqClient()
     self.diracILC = DiracILC()
     self.inputFilesProcessed = set()
-    self.todo = {'MCGeneration':
-                 [ dict( Message="MCGeneration: OutputExists: Job 'Done'",
-                         ShortMessage="MCGeneration: job 'Done' ",
-                         Counter=0,
-                         Check=lambda job: job.allFilesExist() and job.status=='Failed',
-                         Actions=lambda job,tInfo: [ job.setJobDone(tInfo) ]
+    self.todo = {'NoInputFiles':
+                 [dict(Message="NoInputFiles: OutputExists: Job 'Done'",
+                       ShortMessage="NoInputFiles: job 'Done' ",
+                       Counter=0,
+                       Check=lambda job: job.allFilesExist() and job.status == 'Failed',
+                       Actions=lambda job, tInfo: [job.setJobDone(tInfo)],
                        ),
-                   dict( Message="MCGeneration: OutputMissing: Job 'Failed'",
-                         ShortMessage="MCGeneration: job 'Failed' ",
-                         Counter=0,
-                         Check=lambda job: job.allFilesMissing() and job.status=='Done',
-                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo) ]
+                  dict(Message="NoInputFiles: OutputMissing: Job 'Failed'",
+                       ShortMessage="NoInputFiles: job 'Failed' ",
+                       Counter=0,
+                       Check=lambda job: job.allFilesMissing() and job.status == 'Done',
+                       Actions=lambda job, tInfo: [job.setJobFailed(tInfo)],
                        ),
-                   # dict( Message="MCGeneration, job 'Done': OutputExists: Task 'Done'",
-                   #       ShortMessage="MCGeneration: job already 'Done' ",
-                   #       Counter=0,
-                   #       Check=lambda job: job.allFilesExist() and job.status=='Done',
-                   #       Actions=lambda job,tInfo: [ tInfo._TransformationInfo__setTaskStatus(job, 'Done') ]
-                   #     ),
                  ],
-                 'OtherProductions':
+                 'InputFiles':
                  [ \
-                   ## should always be first!
-                   dict( Message="One of many Successful: clean others",
-                         ShortMessage="Other Tasks --> Keep",
-                         Counter=0,
-                         Check=lambda job: job.allFilesExist() and job.otherTasks and job.inputFile not in self.inputFilesProcessed,
-                         Actions=lambda job,tInfo: [ self.inputFilesProcessed.add(job.inputFile), job.setJobDone(tInfo), job.setInputProcessed(tInfo) ]
+                     # must always be first!
+                     dict(Message="One of many Successful: clean others",
+                          ShortMessage="Other Tasks --> Keep",
+                          Counter=0,
+                          Check=lambda job: job.allFilesExist() and job.otherTasks and \
+                          not set(job.inputFiles).issubset(self.inputFilesProcessed),
+                          Actions=lambda job, tInfo: [self.inputFilesProcessed.update(job.inputFiles),
+                                                      job.setJobDone(tInfo),
+                                                      job.setInputProcessed(tInfo)]
                        ),
-                   dict( Message="Other Task processed Input, no Output: Fail",
-                         ShortMessage="Other Tasks --> Fail",
-                         Counter=0,
-                         Check=lambda job: job.inputFile in self.inputFilesProcessed and job.allFilesMissing() and job.status!='Failed',
-                         Actions=lambda job,tInfo: [ job.setJobFailed(tInfo) ]
+                     dict(Message="Other Task processed Input, no Output: Fail",
+                          ShortMessage="Other Tasks --> Fail",
+                          Counter=0,
+                          Check=lambda job: set(job.inputFiles).issubset(self.inputFilesProcessed) and \
+                          job.allFilesMissing() and job.status != 'Failed',
+                          Actions=lambda job, tInfo: [job.setJobFailed(tInfo)]
                        ),
                    dict( Message="Other Task processed Input: Fail and clean",
                          ShortMessage="Other Tasks --> Cleanup",
                          Counter=0,
-                         Check=lambda job: job.inputFile in self.inputFilesProcessed and not job.allFilesMissing(),
+                         Check=lambda job: set(job.inputFiles).issubset(
+                             self.inputFilesProcessed) and not job.allFilesMissing(),
                          Actions=lambda job,tInfo: [ job.setJobFailed(tInfo), job.cleanOutputs(tInfo) ]
                        ),
-                   dict( Message="InputFile missing: mark job 'Failed', mark input 'Deleted', clean",
-                         ShortMessage="Input Missing --> Job 'Failed, Input 'Deleted', Cleanup",
-                         Counter=0,
-                         Check=lambda job: job.inputFile and not job.inputFileExists and job.fileStatus != "Deleted",
-                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), job.setJobFailed(tInfo), job.setInputDeleted(tInfo) ]
+                     dict(Message="InputFile(s) missing: mark job 'Failed', mark input 'Deleted', clean",
+                          ShortMessage="Input Missing --> Job 'Failed, Input 'Deleted', Cleanup",
+                          Counter=0,
+                          Check=lambda job: job.inputFiles and job.allInputFilesMissing() and \
+                          not job.allTransFilesDeleted(),
+                          Actions=lambda job, tInfo: [job.cleanOutputs(tInfo), job.setJobFailed(tInfo),
+                                                      job.setInputDeleted(tInfo)],
                        ),
-                   dict( Message="InputFile Deleted, output Exists: mark job 'Failed', clean",
-                         ShortMessage="Input Deleted --> Job 'Failed, Cleanup",
-                         Counter=0,
-                         Check=lambda job: job.inputFile and not job.inputFileExists and job.fileStatus == "Deleted" and not job.allFilesMissing(),
-                         Actions=lambda job,tInfo: [ job.cleanOutputs(tInfo), job.setJobFailed(tInfo) ]
+                     dict(Message="InputFile(s) Deleted, output Exists: mark job 'Failed', clean",
+                          ShortMessage="Input Deleted --> Job 'Failed, Cleanup",
+                          Counter=0,
+                          Check=lambda job: job.inputFiles and job.allInputFilesMissing() and \
+                          job.allTransFilesDeleted() and not job.allFilesMissing(),
+                          Actions=lambda job, tInfo: [job.cleanOutputs(tInfo), job.setJobFailed(tInfo)],
                        ),
-                   ## All Output Exists
+                     # All Output Exists
                    dict( Message="Output Exists, job Failed, input not Processed --> Job Done, Input Processed",
                          ShortMessage="Output Exists --> Job Done, Input Processed",
                          Counter=0,
                          Check=lambda job: job.allFilesExist() and \
                                            not job.otherTasks and \
-                                           job.status=='Failed' and \
-                                           job.fileStatus!="Processed" and \
-                                           job.inputFileExists,
+                         job.status == 'Failed' and \
+                         not job.allFilesProcessed() and \
+                         job.allInputFilesExist(),
                          Actions=lambda job,tInfo: [ job.setJobDone(tInfo), job.setInputProcessed(tInfo) ]
                        ),
                    dict( Message="Output Exists, job Failed, input Processed --> Job Done",
@@ -146,9 +165,9 @@ class DataRecoveryAgent( AgentModule ):
                          Counter=0,
                          Check=lambda job: job.allFilesExist() and \
                                            not job.otherTasks and \
-                                           job.status=='Failed' and \
-                                           job.fileStatus=="Processed" and \
-                                           job.inputFileExists,
+                         job.status == 'Failed' and \
+                         job.allFilesProcessed() and \
+                         job.allInputFilesExist(),
                          Actions=lambda job,tInfo: [ job.setJobDone(tInfo) ]
                        ),
                    dict( Message="Output Exists, job Done, input not Processed --> Input Processed",
@@ -157,21 +176,21 @@ class DataRecoveryAgent( AgentModule ):
                          Check=lambda job: job.allFilesExist() and \
                                            not job.otherTasks and \
                                            job.status=='Done' and \
-                                           job.fileStatus!="Processed" and \
-                                           job.inputFileExists,
-                         Actions=lambda job,tInfo: [ job.setInputProcessed(tInfo) ]
+                         not job.allFilesProcessed() and \
+                         job.allInputFilesExist(),
+                         Actions=lambda job, tInfo: [job.setInputProcessed(tInfo)]
                        ),
-                   ## outputmissing
+                     # outputmissing
                    dict( Message="Output Missing, job Failed, input Assigned, MaxError --> Input MaxReset",
                          ShortMessage="Max ErrorCount --> Input MaxReset",
                          Counter=0,
                          Check=lambda job: job.allFilesMissing() and \
                                            not job.otherTasks and \
-                                           job.status=='Failed' and \
-                                           job.fileStatus in ASSIGNEDSTATES and \
-                                           job.inputFile not in self.inputFilesProcessed and \
-                                           job.inputFileExists and \
-                                           job.errorCount > MAXRESET,
+                         job.status == 'Failed' and \
+                         job.allFilesAssigned() and \
+                         not set(job.inputFiles).issubset(self.inputFilesProcessed) and \
+                         job.allInputFilesExist() and \
+                         job.checkErrorCount(),
                          Actions=lambda job,tInfo: [ job.setInputMaxReset(tInfo) ]
                        ),
                    dict( Message="Output Missing, job Failed, input Assigned --> Input Unused",
@@ -179,21 +198,21 @@ class DataRecoveryAgent( AgentModule ):
                          Counter=0,
                          Check=lambda job: job.allFilesMissing() and \
                                            not job.otherTasks and \
-                                           job.status=='Failed' and \
-                                           job.fileStatus in ASSIGNEDSTATES and \
-                                           job.inputFile not in self.inputFilesProcessed and \
-                                           job.inputFileExists,
-                         Actions=lambda job,tInfo: [ job.setInputUnused(tInfo) ]
+                         job.status == 'Failed' and \
+                         job.allFilesAssigned() and \
+                         not set(job.inputFiles).issubset(self.inputFilesProcessed) and \
+                         job.allInputFilesExist(),
+                         Actions=lambda job, tInfo: [job.setInputUnused(tInfo)]
                        ),
                    dict( Message="Output Missing, job Done, input Assigned --> Job Failed, Input Unused",
                          ShortMessage="Output Missing --> Job Failed, Input Unused",
                          Counter=0,
                          Check=lambda job: job.allFilesMissing() and \
                                            not job.otherTasks and \
-                                           job.status=='Done' and \
-                                           job.fileStatus in ASSIGNEDSTATES and \
-                                           job.inputFile not in self.inputFilesProcessed and \
-                                           job.inputFileExists,
+                         job.status == 'Done' and \
+                         job.allFilesAssigned() and \
+                         not set(job.inputFiles).issubset(self.inputFilesProcessed) and \
+                         job.allInputFilesExist(),
                          Actions=lambda job,tInfo: [ job.setInputUnused(tInfo), job.setJobFailed(tInfo) ]
                        ),
                    ## some files missing, needing cleanup. Only checking for
@@ -207,8 +226,8 @@ class DataRecoveryAgent( AgentModule ):
                          Check=lambda job: job.someFilesMissing() and \
                                            not job.otherTasks and \
                                            job.status=='Failed' and \
-                                           job.fileStatus in ASSIGNEDSTATES and \
-                                           job.inputFileExists,
+                         job.allFilesAssigned() and \
+                         job.allInputFilesExist(),
                          Actions=lambda job,tInfo: [job.cleanOutputs(tInfo),job.setInputUnused(tInfo)]
                          #Actions=lambda job,tInfo: []
                        ),
@@ -218,8 +237,8 @@ class DataRecoveryAgent( AgentModule ):
                          Check=lambda job: job.someFilesMissing() and \
                                            not job.otherTasks and \
                                            job.status=='Done' and \
-                                           job.fileStatus in ASSIGNEDSTATES and \
-                                           job.inputFileExists,
+                         job.allFilesAssigned() and \
+                         job.allInputFilesExist(),
                          Actions=lambda job,tInfo: [job.cleanOutputs(tInfo),job.setInputUnused(tInfo),job.setJobFailed(tInfo)]
                          #Actions=lambda job,tInfo: []
                        ),
@@ -244,12 +263,12 @@ class DataRecoveryAgent( AgentModule ):
                         ),
                  ]
                 }
-    self.jobCache = defaultdict( lambda: (0, 0) )
-    self.printEveryNJobs = self.am_getOption( 'PrintEvery', 200 )
-    ##Notification
+    self.jobCache = defaultdict(lambda: (0, 0))
+    self.printEveryNJobs = self.am_getOption('PrintEvery', 200)
+    # Notification options
     self.notesToSend = ""
-    self.addressTo = self.am_getOption('MailTo', ["ilcdirac-admin@cern.ch"])
-    self.addressFrom = self.am_getOption( 'MailFrom', "ilcdirac-admin@cern.ch" )
+    self.addressTo = self.am_getOption('MailTo', [])
+    self.addressFrom = self.am_getOption('MailFrom', "")
     self.subject = "DataRecoveryAgent"
     self.startTime = time.time()
     
@@ -259,15 +278,16 @@ class DataRecoveryAgent( AgentModule ):
     """
     self.enabled = self.am_getOption('EnableFlag', False)
     self.productionsToIgnore = self.am_getOption("TransformationsToIgnore", [])
-    self.transformationTypes = self.am_getOption( "TransformationTypes",
-                                                  ['MCReconstruction',
-                                                   'MCSimulation',
-                                                   'MCReconstruction_Overlay',
-                                                   'MCGeneration'] )
-    self.transformationStatus = self.am_getOption( "TransformationStatus", ['Active', 'Completing'] )
+    self.transNoInput = self.am_getOption('TransformationsNoInput', ['MCGeneration'])
+    self.transWithInput = self.am_getOption('TransformationsWithInput', ['MCReconstruction',
+                                                                         'MCSimulation',
+                                                                         'MCReconstruction_Overlay',
+                                                                         ])
+    self.transformationTypes = self.transWithInput + self.transNoInput
+    self.transformationStatus = self.am_getOption("TransformationStatus", ['Active', 'Completing'])
     self.addressTo = self.am_getOption('MailTo', self.addressTo)
-    self.addressFrom = self.am_getOption( 'MailFrom', "ilcdirac-admin@cern.ch" )
-    self.printEveryNJobs = self.am_getOption( 'PrintEvery', 200 )
+    self.addressFrom = self.am_getOption('MailFrom', self.addressFrom)
+    self.printEveryNJobs = self.am_getOption('PrintEvery', self.printEveryNJobs)
 
     return S_OK()
   #############################################################################
@@ -288,16 +308,7 @@ class DataRecoveryAgent( AgentModule ):
       self.inputFilesProcessed = set()
       self.log.notice("Running over Production: %s " % prodID)
       self.treatProduction(int(prodID), transInfoDict)
-
-      if self.notesToSend and self.__notOnlyKeepers(transInfoDict['Type']):
-        # remove from the jobCache because something happened
-        self.jobCache.pop(int(prodID), None)
-        notification = NotificationClient()
-        for address in self.addressTo:
-          result = notification.sendMail( address, "%s: %s" %( self.subject, prodID ), self.notesToSend, self.addressFrom, localAttempt = False )
-          if not result['OK']:
-            self.log.error( 'Cannot send notification mail', result['Message'] )
-      self.notesToSend = ""
+      self.sendNotification(prodID, transInfoDict)
 
     return S_OK()
 
@@ -329,24 +340,28 @@ class DataRecoveryAgent( AgentModule ):
     lfnTaskDict=None
 
     self.startTime = time.time()
-    if not transInfoDict['Type'].startswith("MCGeneration"):
+    if transInfoDict['Type'] in self.transWithInput:
       self.log.notice('Getting tasks...')
       tasksDict = tInfo.checkTasksStatus()
-      lfnTaskDict = dict([(tasksDict[taskID]['LFN'], taskID) for taskID in tasksDict])
+      lfnTaskDict = dict([(taskDict['LFN'], taskID)
+                          for taskID, taskDicts in tasksDict.items()
+                          for taskDict in taskDicts
+                          ])
 
     self.checkAllJobs(jobs, tInfo, tasksDict, lfnTaskDict)
     self.printSummary()
 
   def checkJob( self, job, tInfo ):
-    """ deal with the job """
-    checks = self.todo['MCGeneration'] if job.tType.startswith('MCGeneration') else self.todo['OtherProductions']
+    """Deal with the job."""
+    checks = self.todo['NoInputFiles'] if job.tType in self.transNoInput else self.todo['InputFiles']
     for do in checks:
+      self.log.verbose('Testing: ', do['Message'])
       if do['Check'](job):
         do['Counter'] += 1
-        self.log.notice( do['Message'] )
-        self.log.notice( job )
-        self.notesToSend += do['Message']+'\n'
-        self.notesToSend += str(job)+'\n'
+        self.log.notice(do['Message'])
+        self.log.notice(job)
+        self.notesToSend += do['Message'] + '\n'
+        self.notesToSend += str(job) + '\n'
         do['Actions'](job, tInfo)
         return
 
@@ -355,26 +370,32 @@ class DataRecoveryAgent( AgentModule ):
     self.log.notice('Collecting LFNs...')
     lfnExistence = {}
     lfnCache = []
+    counter = 0
+    jobInfoStart = time.time()
     for counter, job in enumerate(jobs.values()):
       if counter % self.printEveryNJobs == 0:
-        self.log.notice('Getting JobInfo: %d/%d: %3.1fs' % (counter, len(jobs), float(time.time() - self.startTime)))
+        self.log.notice('Getting JobInfo: %d/%d: %3.1fs' %
+                        (counter, len(jobs), float(time.time() - jobInfoStart)))
       while True:
         try:
-          job.getJobInformation(self.diracILC)
-          if job.inputFile:
-            lfnCache.append(job.inputFile)
-          if job.outputFiles:
-            lfnCache.extend(job.outputFiles)
+          job.getJobInformation(self.diracILC, self.jobMon)
+          lfnCache.extend(job.inputFiles)
+          lfnCache.extend(job.outputFiles)
           break
         except RuntimeError as e:  # try again
           self.log.error('+++++ Failure for job:', job.jobID)
           self.log.error('+++++ Exception: ', str(e))
 
+    timeSpent = float(time.time() - jobInfoStart)
+    self.log.notice('Getting JobInfo Done: %3.1fs (%3.3fs per job)' % (timeSpent, timeSpent / counter))
+
     counter = 0
+    fileInfoStart = time.time()
     for lfnChunk in breakListIntoChunks(list(lfnCache), 200):
       counter += 200
       if counter % 1000 == 0:
-        self.log.notice('Getting FileInfo: %d/%d: %3.1fs' % (counter, len(jobs), float(time.time() - self.startTime)))
+        self.log.notice('Getting FileInfo: %d/%d: %3.1fs' %
+                        (counter, len(lfnCache), float(time.time() - fileInfoStart)))
       while True:
         try:
           reps = self.fcClient.exists(lfnChunk)
@@ -386,6 +407,7 @@ class DataRecoveryAgent( AgentModule ):
           break
         except RuntimeError:  # try again
           pass
+    self.log.notice('Getting FileInfo Done: %3.1fs' % (float(time.time() - fileInfoStart)))
 
     return lfnExistence
 
@@ -417,9 +439,10 @@ class DataRecoveryAgent( AgentModule ):
     self.setPendingRequests(jobs)
     lfnExistence = self.getLFNStatus(jobs)
     self.log.notice('Running over all the jobs')
+    jobCheckStart = time.time()
     for counter, job in enumerate(jobs.values()):
       if counter % self.printEveryNJobs == 0:
-        self.log.notice('%d/%d: %3.1fs' % (counter, nJobs, float(time.time() - self.startTime)))
+        self.log.notice('Checking Jobs %d/%d: %3.1fs' % (counter, nJobs, float(time.time() - jobCheckStart)))
       while True:
         try:
           if job.pendingRequest:
@@ -428,19 +451,21 @@ class DataRecoveryAgent( AgentModule ):
           job.checkFileExistence(lfnExistence)
           if tasksDict and lfnTaskDict:
             try:
-              job.getTaskInfo(tasksDict, lfnTaskDict)
+              job.getTaskInfo(tasksDict, lfnTaskDict, self.transWithInput)
             except TaskInfoException as e:
               self.log.error(" Skip Task, due to TaskInfoException: %s" % e )
-              if job.inputFile is None and not job.tType.startswith( "MCGeneration" ):
+              if not job.inputFiles and job.tType in self.transWithInput:
                 self.__failJobHard(job, tInfo)
               break
-            fileJobDict[job.inputFile].append( job.jobID )
+            for inputFile in job.inputFiles:
+              fileJobDict[inputFile].append(job.jobID)
           self.checkJob( job, tInfo )
           break # get out of the while loop
         except RuntimeError as e:
           self.log.error( "+++++ Failure for job: %d " % job.jobID )
           self.log.error( "+++++ Exception: ", str(e) )
           ## runs these again because of RuntimeError
+    self.log.notice('Checking Jobs Done: %d/%d: %3.1fs' % (counter, nJobs, float(time.time() - jobCheckStart)))
 
   def printSummary( self ):
     """print summary of changes"""
@@ -453,14 +478,14 @@ class DataRecoveryAgent( AgentModule ):
 
   def __resetCounters( self ):
     """ reset counters for modified jobs """
-    for _name,checks in self.todo.iteritems():
+    for _name, checks in self.todo.iteritems():
       for do in checks:
         do['Counter'] = 0
 
 
   def __failJobHard( self, job, tInfo ):
     """ set job to failed and remove output files if there are any """
-    if job.inputFile is not None:
+    if job.inputFiles:
       return
     if job.status in ("Failed",) \
        and job.allFilesMissing():
@@ -468,7 +493,7 @@ class DataRecoveryAgent( AgentModule ):
     self.log.notice( "Failing job hard %s" % job )
     self.notesToSend += "Failing job %s: no input file?\n" % job.jobID
     self.notesToSend += str(job)+'\n'
-    self.todo['OtherProductions'][-1]['Counter'] += 1
+    self.todo['InputFiles'][-1]['Counter'] += 1
     job.cleanOutputs(tInfo)
     job.setJobFailed(tInfo)
     # if job.inputFile is not None:
@@ -480,12 +505,37 @@ class DataRecoveryAgent( AgentModule ):
     in this case we do not have to send report email or run again next time
 
     """
-    if transType.startswith('MCGeneration'):
+    if transType in self.transNoInput:
       return True
 
-    checks = self.todo['OtherProductions']
+    checks = self.todo['InputFiles']
     totalCount = 0
     for check in checks[1:]:
       totalCount += check['Counter']
 
     return totalCount > 0
+
+  def sendNotification(self, prodID, transInfoDict):
+    """Send notification email if something was modified for a transformation.
+    
+    :param int prodID: ID of given transformation
+    :param transInfoDict: 
+    """
+    if not self.addressTo or not self.addressFrom:
+      return
+    if not (self.notesToSend and self.__notOnlyKeepers(transInfoDict['Type'])):
+      return
+
+    # remove from the jobCache because something happened
+    self.jobCache.pop(int(prodID), None)
+    # send the email to recipients
+    for address in self.addressTo:
+      result = NotificationClient().sendMail(address, "%s: %s" %
+                                             (self.subject, prodID),
+                                             self.notesToSend,
+                                             self.addressFrom,
+                                             localAttempt=False)
+      if not result['OK']:
+        self.log.error('Cannot send notification mail', result['Message'])
+    # purge notes
+    self.notesToSend = ""

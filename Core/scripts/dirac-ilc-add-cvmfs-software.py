@@ -7,16 +7,17 @@ Give list of applications, init_script path, MokkaDBSlice, [Clic|ILD]ConfigPath 
 
 Options:
 
-  -P, --Platform <value>        Platform ex. x86_64-slc5-gcc43-opt
-  -A, --Applications <value>    Comma separated list of applications
-  -V, --Version <value>         Version name
-  -C, --Comment <value>         Comment
-  -S, --Script <value>          Full path to initScript
-  -B, --Base <value>            Path to Installation Base
-  -O, --Config <value>          Path To [Clic|ILD]Config (if it is in ApplicationPath)
-  --ILDConfig <value>           Path To ILDConfig (if one is in ApplicationPath) [DEPRECATED]
-  -Q, --DBSlice <value>         Path to Mokka DB Slice
-  -N, --dry-run                 DryRun: do not commit to CS
+  -P, --Platform <value>            Platform ex. x86_64-slc5-gcc43-opt
+  -A, --Applications <value>        Comma separated list of applications
+  -V, --Version <value>             Version name
+  -C, --Comment <value>             Comment
+  -S, --Script <value>              Full path to initScript
+  -B, --Base <value>                Path to Installation Base
+  -O, --Config <value>              Path To [Clic|ILD]Config (if it is in ApplicationPath)
+  -Q, --DBSlice <value>             Path to Mokka DB Slice
+  --MarlinPandoraVersion <value>    Version of MarlinPandora, needed for pandora_calibration_scripts
+  --PandoraAnalysisVersion <value>  Version of PandoraAnalysis, needed for pandora_calibration_scripts
+  -N, --dry-run                     DryRun: do not commit to CS
 
 
 :since: Feb 18, 2015
@@ -41,6 +42,8 @@ class Params(object):
     self.basePath = ''
     self.configPath = ''
     self.dryRun = False
+    self.pandoraAnalysisVersion = 'HEAD'
+    self.marlinPandoraVersion = 'HEAD'
 
   def setVersion(self, optionValue):
     self.version = optionValue
@@ -79,6 +82,13 @@ class Params(object):
     self.dryRun = True
     return S_OK()
 
+  def _setPAV(self, val):
+    self.pandoraAnalysisVersion = val
+    return S_OK()
+
+  def _setMPV(self, val):
+    self.marlinPandoraVersion = val
+    return S_OK()
 
   def checkConsistency(self):
     """Check if all necessary parameter were defined"""
@@ -126,9 +136,12 @@ class Params(object):
     Script.registerSwitch("B:", "Base=", "Path to Installation Base", self.setBasePath)
 
     Script.registerSwitch("O:", "Config=", "Path To [Clic|ILD]Config (if it is in ApplicationPath)", self.setConfig)
-    Script.registerSwitch("", "ILDConfig=", "Path To ILDConfig (if one is in ApplicationPath) [DEPRECATED]", self.setConfig)
 
     Script.registerSwitch("Q:", "DBSlice=", "Path to Mokka DB Slice", self.setDBSlice)
+    Script.registerSwitch('', 'MarlinPandoraVersion=', 'Version of MarlinPandora, needed for '
+                          'pandora_calibration_scripts', self._setMPV)
+    Script.registerSwitch('', 'PandoraAnalysisVersion=', 'Version of PandoraAnalysis, needed for '
+                          'pandora_calibration_scripts', self._setPAV)
 
     Script.registerSwitch("N", "dry-run", "DryRun: do not commit to CS", self.dryRun)
 
@@ -149,7 +162,9 @@ class CVMFSAdder(object):
                            platform = cliParams.platform,
                            version = cliParams.version,
                            basepath = cliParams.basePath,
-                           initsctipt = cliParams.initScriptLocation
+                           initsctipt=cliParams.initScriptLocation,
+                           marlinPandoraVersion=cliParams.marlinPandoraVersion,
+                           pandoraAnalysisVersion=cliParams.pandoraAnalysisVersion,
                          )
     self.applications = cliParams.applicationSet
     self.detmodels = {}
@@ -217,6 +232,17 @@ class CVMFSAdder(object):
 
       if application == 'mokka':
         csParameter['CVMFSDBSlice'] = self.cliParams.dbSliceLocation
+
+      if application == 'pandora_calibration_scripts':
+        csParameter['MarlinPandora'] = os.path.join(self.parameter['basepath'], 'MarlinPandora',
+                                                    self.parameter['marlinPandoraVersion'], 'scripts')
+        csParameter['PandoraAnalysis'] = os.path.join(self.parameter['basepath'], 'PandoraAnalysis',
+                                                      self.parameter['pandoraAnalysisVersion'], 'bin')
+        if not os.path.exists(csParameter['PandoraAnalysis']):
+          return S_ERROR('PandoraAnalysis folder %r not found' % csParameter['PandoraAnalysis'])
+        if not os.path.exists(csParameter['MarlinPandora']):
+          return S_ERROR('MarlinPandora folder %r not found' % csParameter['MarlinPandora'])
+        del csParameter['CVMFSPath']
 
       if application == 'ddsim':
         self.findDDSimDetectorModels()

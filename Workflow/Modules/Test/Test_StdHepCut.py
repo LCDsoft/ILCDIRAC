@@ -101,13 +101,14 @@ class StdHepCutTestCase( unittest.TestCase ):
         'declare -x PATH=test_software/dir:$PATH\n',
         'declare -x LD_LIBRARY_PATH=./lib:test_software/dir/lib:/my/testsoft/dir1/\n',
         'env | sort >> localEnv.log\n', 'echo =============================\n',
-        "stdhepCut -m 13 -o test_OF.ile -c steer_test.file  ../*.stdhep\n",
+        'stdhepCut -m 13 -o test_OF.ile -c steer_test.file *.stdhep\n',
         'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       assert handles[0].close.called
 
   def test_preparescript_othercase( self ):
     exists_dict = { 'TestApp_vT_Run_148.sh' : False, './lib' : False }
     ( self.shc.platform, self.shc.applicationName, self.shc.applicationVersion, self.shc.STEP_NUMBER, self.shc.MaxNbEvts, self.shc.OutputFile, self.shc.SteeringFile ) = ( 'testPlatformV1', 'TestApp', 'vT', 148, 0, 'test_OF.ile', 'steer_test.file' )
+    self.shc.fileMask = 'My*.stdhep'
     file_contents = [[]]
     handles = FileUtil.getMultipleReadHandles(file_contents)
     with patch('%s.getNewLDLibs' % MODULE_NAME, new=Mock(return_value='/my/testsoft/dir1/')) as getldlibs_mock, \
@@ -128,7 +129,7 @@ class StdHepCutTestCase( unittest.TestCase ):
         'declare -x PATH=test_software/dir:$PATH\n',
         'declare -x LD_LIBRARY_PATH=test_software/dir/lib:/my/testsoft/dir1/\n',
         'env | sort >> localEnv.log\n', 'echo =============================\n',
-        "stdhepCut  -o test_OF.ile -c steer_test.file  ../*.stdhep\n",
+        "stdhepCut  -o test_OF.ile -c steer_test.file My*.stdhep\n",
         'declare -x appstatus=$?\n', 'exit $appstatus\n' ], self )
       assert handles[0].close.called
 
