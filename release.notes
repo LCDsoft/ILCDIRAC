@@ -1,3 +1,33 @@
+[v29r1p2]
+
+*Core
+NEW: Based on Dirac v6r21p16
+NEW: (!288) `dirac-ilc-add-cvmfs-software`: Added treatment for ``pandora_calibration_scripts`` application, fixes ILCDIRAC-896, needed by the CalibrationSystem
+CHANGE: (!288) `dirac-ilc-add-cvmfs-software`: Dropped deprecated ILDConfig option
+
+
+*CalibrationSystem
+
+NEW: (!262) New system to run PandoraPFA calorimeter calibration inside iLCDirac. See the documentation in the UserGuide about `calibration`.
+
+*ILCTransformationSystem
+
+CHANGE: (!290) The ``DataRecoveryAgent`` can now also treat transformations with multiple input files. For example when merging stdhep.
+CHANGE: (!290) Some option names for ``TransformationTypes`` to be treated for the ``DataRecoveryAgent`` have changed.
+NEW: (!290) New command `dirac-transformation-recover-data` to run the functionality in a single production
+
+*Interfaces
+
+FIX: (!292) Correct the output of number of jobs for jobsplitting
+NEW: (!287) :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCut`, :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCutJava` new function ``setFileMask`` to set the selection of input files.
+NEW: (!287) :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCut`, :mod:`~ILCDIRAC.Interfaces.API.NewInterface.Applications.StdhepCutJava` new function ``setStoreFile`` to enable or disable the storing of the output file. Use this when ``StdhepCut`` is not the last module in a production workflow
+CHANGE: (!287) :mod:`~ILCDIRAC.Interfaces.API.NewInterface.ProductionJob` change logging from ``info`` to ``notice``, so there is a printout when used in scripts without debug flags
+
+*Workflow
+
+CHANGE: (!292) Better logging output when input files cannot be resolved
+CHANGE: (!287) The default ``fileMask`` for :mod:`~ILCDIRAC.Workflow.Modules.StdHepCut` is changed to ``*.stdhep`` instead of ``../*.stdhep``
+
 [v29r1p1]
 
 *Core
