@@ -111,7 +111,7 @@ def curl2Json( *commands, **kwargs ):
 
 def getGitlabPRs( state="opened" ):
   """ get PRs in the gitlab repository """
-  glURL = gitlab( "merge_requests?state=%s" % state )
+  glURL = gitlab('merge_requests?state=%s&order_by=updated_at' % state)
   return req2Json(glURL)
 
 
@@ -255,7 +255,7 @@ class GitlabInterface( object ):
     if self.openPRs:
       prs = getGitlabPRs(state='all')
     else:
-      prs = getGitlabPRs( state='merged')
+      prs = getGitlabPRs(state='merged')
     LOGGER.debug(pformat(prs))
     prs = self.getNotesFromPRs( prs )
     releaseNotes = collateReleaseNotes( prs )
