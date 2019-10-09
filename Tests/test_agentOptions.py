@@ -10,6 +10,7 @@ AGENTS = [('ILCDIRAC.OverlaySystem.Agent.ResetCounters', {}),
           ('ILCDIRAC.WorkloadManagementSystem.Agent.JobResetAgent', {}),
           ('ILCDIRAC.ILCTransformationSystem.Agent.FileStatusTransformationAgent', {}),
           ('ILCDIRAC.ILCTransformationSystem.Agent.DataRecoveryAgent', {}),
+          ('ILCDIRAC.CalibrationSystem.Agent.CalibrationAgent', {}),
           ]
 
 
