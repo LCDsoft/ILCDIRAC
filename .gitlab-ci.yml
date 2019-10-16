@@ -13,11 +13,11 @@ stages:
   - deployToCVMFS
 
 variables:
-  LCG_BUNDLE_VERSION: "v14r2"
+  LCG_BUNDLE_VERSION: "v14r3"
 
-  ILCDIRAC_VERSION: "v29r0p3"
+  ILCDIRAC_VERSION: "v29r1p2"
   DIRAC_BRANCH: "integration"
-  DIRAC_TAG: "v6r22p5"
+  DIRAC_TAG: "v7r0p3"
   SETUP: "ILC-Production"
   ILCDIRAC_BRANCH: "master"
   DIRAC_DEPRECATED_FAIL: "1"
