@@ -348,6 +348,6 @@ autodoc_member_order = 'bysource'
 autodoc_mock_imports = ['GSI', 'MySQLdb', 'sqlalchemy', 'lcg_util', 'suds'
                         ]
 
-intersphinx_mapping = {'DIRAC': ('https://dirac.readthedocs.io/en/rel-v6r21', None),
+intersphinx_mapping = {'DIRAC': ('https://dirac.readthedocs.io/en/rel-v6r22', None),
                        'python': ('https://docs.python.org/2.7', None),
                        }
