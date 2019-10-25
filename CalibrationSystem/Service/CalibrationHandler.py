@@ -259,12 +259,14 @@ class CalibrationHandler(RequestHandler):
     res = newRun.submitJobs(proxyUserName=newRun.proxyUserName,  # pylint: disable=unexpected-keyword-arg
                             proxyUserGroup=newRun.proxyUserGroup)
     if isinstance(res, dict):
-      self.log.error('Error while submitting jobs. Res: %s' % res)
+      # if return is a dict - than no jobs have been submitted yet!!!
+      self.export_killCalibration(calibrationID, 'Error during job submission. Error message: %s' % res['Message'])
       return res
+
     self.log.info('results from submitJobs: %s' % res)
     if calibration_creation_failed(res):
-      ret_val = S_ERROR('Submitting at least one of the jobs failed')  # FIXME: This should be treated, since the
-      # successfully submitted jobs will still run
+      ret_val = S_ERROR('Submitting at least one of the jobs failed')
+      self.export_killCalibration(calibrationID, 'Submitting at least one of the jobs failed. Calibration is killed.')
       ret_val['calibrations'] = res
       return ret_val
     return S_OK((calibrationID, res))

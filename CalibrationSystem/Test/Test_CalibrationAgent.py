@@ -17,6 +17,55 @@ MODULE_NAME = 'ILCDIRAC.CalibrationSystem.Agent.CalibrationAgent'
 # pylint: disable=protected-access,no-member
 
 
+@pytest.yield_fixture
+def calibAgent(mocker):
+  """Create calibration handler."""
+  mocker.patch('DIRAC.Core.Base.Client.Client', new=Mock(return_value=S_OK()))
+  mocker.patch('DIRAC.Core.Base.AgentModule.AgentModule.__init__', new=Mock(return_value=None))
+  calibAgent = CalibrationAgent("dummyAgentName", "dummyLoadName")
+  return calibAgent
+
+
+def test_execute_calibrationWithNoDiracJobsIsPresentInRunningCalibrationList(mocker, calibAgent):
+  """Test behaviour of the execute() function when there is a running calibration with no dirac jobs assigned to it.
+
+  Calibration #63 is present in the list of calibrations but doesn't have any grid jobs associated to is.
+  When considering calibration #63 the agent should send an error to the logger and continue with execution.
+  """
+  dict1 = {64: {1: 'Running', 2: 'Failed'},
+           65: {5: 'Running', 6: 'Finished'},
+           66: {14: 'Killed'}}
+  dict2 = {64: {417251: 'Running', 12741: 'Failed'},
+           65: {4178: 'Running', 444: 'Finished'},
+           66: {555: 'Killed'}}
+  dict3 = {64: {'Owner': 'ow1', 'OwnerGroup': 'owGr1', 'OwnerDN': 'dummy'},
+           65: {'Owner': 'ow2', 'OwnerGroup': 'owGr2', 'OwnerDN': 'dummy'},
+           66: {'Owner': 'ow3', 'OwnerGroup': 'owGr3', 'OwnerDN': 'dummy'}}
+  mockReturn_fetchJobStatuses = S_OK({'jobStatusVsWorkerId': dict1,
+                                      'jobStatusVsJobId': dict2, 'calibrationOwnership': dict3})
+
+  mockReturn_getNumberOfJobsPerCalibration = S_OK({63: 666, 64: 2, 65: 2, 66: 1})
+  mockReturn_getRunningCalibrations = S_OK([63, 64, 65, 66])
+
+  mockReturn_calibrationService = Mock()
+  mockReturn_calibrationService.getNumberOfJobsPerCalibration = (
+      Mock(return_value=mockReturn_getNumberOfJobsPerCalibration))
+  mockReturn_calibrationService.getRunningCalibrations = Mock(return_value=mockReturn_getRunningCalibrations)
+  mockReturn_calibrationService.checkForStepIncrement = Mock(return_value=S_OK())
+  calibAgent.calibrationService = mockReturn_calibrationService
+
+  calibAgent.log = Mock()
+
+  mocker.patch.object(calibAgent, "fetchJobStatuses", new=Mock(return_value=mockReturn_fetchJobStatuses))
+  mocker.patch.object(calibAgent, "checkForCalibrationsToBeKilled", new=Mock(return_value=S_OK()))
+  mock_requestResubmission = Mock(return_value=S_OK())
+  mocker.patch.object(calibAgent, "requestResubmission", side_effect=mock_requestResubmission)
+  res = calibAgent.execute()
+
+  mock_requestResubmission.assert_called_once_with([(64, 2), (66, 14)])
+  assert res['OK']
+
+
 class CalibrationAgentTest(unittest.TestCase):
   """Test the implementation of the methods of the CalibrationAgent."""
 

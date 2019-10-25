@@ -280,10 +280,10 @@ class CalibrationRun(object):
     try:
       shutil.copyfile(self.localSteeringFile, "%s_INPUT" % self.localSteeringFile)
     except IOError:
-      self.log.error("Cannot make a copy of input steering file. This doesn't affect operation.",
+      self.log.warn("Cannot make a copy of input steering file. This doesn't affect operation.",
                      "File name: %s_INPUT" % self.localSteeringFile)
 
-    # FIXME this path will be different in production version probably... update it
+    # TODO this path will be different in production version probably... update it
     parListFileName = os.path.join(utilities.__path__[0], 'auxiliaryFiles/parameterListMarlinSteeringFile.txt')
 
     parDict = readParameterDict(parListFileName)
@@ -369,8 +369,10 @@ class CalibrationRun(object):
     res = self.readInitialParameterDict()
     self.log.info('read initial parameter dict')
     if not res['OK']:
-      self.log.error('Cannot read initial parameter dict. Message:', '%s' % res['Message'])
-      return res
+      #  self.log.error('Cannot read initial parameter dict. Message:', '%s' % res['Message'])
+      errMsg = 'Cannot read initial parameter dict. Message:', '%s' % res['Message']
+      self.log.info('Cannot read initial parameter dict. Probably wrong user input.')
+      return S_ERROR(errMsg)
 
     dirac = DiracILC(True, 'calib%s/job_repository.rep' % self.calibrationID)
     results = []
@@ -388,10 +390,10 @@ class CalibrationRun(object):
       try:
         os.makedirs(dirName)
       except OSError as e:
-        errMsgConst = 'Cannot create directories. Current working directory'
+        errMsgConst = 'Cannot create directory on service machine. Current working directory:'
         errMsgVariable = ': %s. Error message:%s' % (os.getcwd(), e)
         self.log.error(errMsgConst, errMsgVariable)
-        return S_ERROR(errMsgConst + errMsgVariable)
+        return S_ERROR('System error. Contact administrator. Cannot create directory on the service machine.')
 
     for curWorkerID in listOfNodesToSubmitTo:
       # get input files
@@ -431,13 +433,10 @@ class CalibrationRun(object):
       calib.setSteeringFile(os.path.basename(self.settings['steeringFile']))
       res = curJob.append(calib)
       if not res['OK']:
-        self.log.error('Append calib module to UserJob: error_msg:', '%s' % res['Message'])
-        return S_ERROR('Failed to setup Calibration worklow module. CalibrationID = %s; WorkerID = %s'
-                       % (self.calibrationID, curWorkerID))
+        return S_ERROR('Failed to setup Calibration worklow module. WorkerID = %s; Error_msg: %s'
+                       % (curWorkerID, res['Message']))
 
       # submit jobs
-      # FIXME we use local mode only for testing...
-      # res = curJob.submit(dirac, mode='local')
       res = curJob.submit(dirac, mode='wms')
       results.append(res)
 
