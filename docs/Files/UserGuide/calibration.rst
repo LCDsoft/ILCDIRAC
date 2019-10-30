@@ -95,6 +95,9 @@ An example of the running calibration of the CLD detector model::
    calibSettingsDict['steeringFile'] = 'LFN:/ilc/user/o/oviazlo/fccee_caloCalib/fcceeReconstruction.xml'
    calibSettingsDict['outputPath'] = '/ilc/user/o/oviazlo/fccee_caloCalib/output/'
    calibSettingsDict['outputSE'] = 'CERN-DST-EOS' 
+   calibSettingsDict['numberOfJobs'] = 10
+   calibSettingsDict['digitisationAccuracy'] = 0.2
+   calibSettingsDict['pandoraPFAAccuracy'] = 0.1
 
    inputFiles = {'zuds': ["LFN:/ilc/user/o/oviazlo/zudsFile1.slcio", "LFN:/ilc/user/o/oviazlo/zudsFile2.slcio"],
                  'gamma': ["LFN:/ilc/user/o/oviazlo/gammaFile1.slcio", "LFN:/ilc/user/o/oviazlo/gammaFile2.slcio"],
@@ -105,6 +108,20 @@ An example of the running calibration of the CLD detector model::
 
    res = client.createCalibration(inputFiles, numberOfEventsPerFile, calibSettingsDict)
 
+   if not res['OK']:
+     print("ERROR: %s" % res['Message'])
+   else:
+     submitLog = ''
+     submitLog += '\n' + 'Calibration is successfully submitted with following parameters:'
+     submitLog += '\n' + '-'*120
+     parName = "CalibID:"
+     submitLog += '\n' + (parName + (60 - len(parName))*' ' + '%s' % res['Value'][0])
+     keys = sorted(calibSettings.settingsDict.keys())
+     for iKey in keys:
+       submitLog += '\n' + (("%s" % iKey) + (60 - len(iKey))*' ' + '%s' % calibSettings.settingsDict[iKey])
+     print(submitLog)
+     with open('submitCalibrations.log', 'a+') as f:
+       f.write(submitLog)
 
 .. Input arguments:
 ..

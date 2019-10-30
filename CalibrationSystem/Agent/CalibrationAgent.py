@@ -71,7 +71,7 @@ class CalibrationAgent(AgentModule):
         currentJobStatusesPerWorker_runningCalibs[iCalib] = self.currentJobStatusesPerWorker[iCalib]
         targetJobNumbers_runningCalibs[iCalib] = targetJobNumbers[iCalib]
       except KeyError:
-        errMsgConst = 'Error while retriving information for calibration '
+        errMsgConst = 'Error while retrieving information for calibration'
         errMsgVariable = '#%s' % iCalib
         self.log.error(errMsgConst, errMsgVariable)
 

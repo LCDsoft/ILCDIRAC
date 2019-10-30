@@ -259,7 +259,7 @@ class CalibrationHandler(RequestHandler):
     res = newRun.submitJobs(proxyUserName=newRun.proxyUserName,  # pylint: disable=unexpected-keyword-arg
                             proxyUserGroup=newRun.proxyUserGroup)
     if isinstance(res, dict):
-      # if return is a dict - than no jobs have been submitted yet!!!
+      # if return is a dict then no jobs have been submitted yet
       self.export_killCalibration(calibrationID, 'Error during job submission. Error message: %s' % res['Message'])
       return res
 

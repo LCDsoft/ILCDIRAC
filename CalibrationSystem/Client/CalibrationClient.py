@@ -104,3 +104,19 @@ class CalibrationClient(Client):
       attempt += 1
 
     return S_ERROR('Could not report result back to CalibrationService.')
+
+  def createCalibration(self, inputFiles, numberOfEventsPerFile, calibSettingsDict):
+    """Create calibration run (series of calibration iterations).
+
+    :param dict inputFiles: Input files for the calibration. Dictionary.
+                            Mandatory keys: 'zuds', 'kaon', 'muon', 'gamma'.
+    :param dict numberOfEventsPerFile: Number of events per type of input file. Dictionary.
+                                       Mandatory keys: 'zuds', 'kaon', 'muon', 'gamma'.
+    :param dict calibSettingsDict: Calibration configuration settings reqired to start calibration. Dictionary.
+    :returns: S_OK containing ID of the calibration, used to retrieve results etc
+    :rtype: dict
+    """
+    res = self._getRPC().createCalibration(inputFiles, numberOfEventsPerFile, calibSettingsDict)
+    if not res['OK']:
+      LOG.error('Error while executing createCalibration! Error message: ', res['Message'])
+    return res

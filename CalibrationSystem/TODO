@@ -1,29 +1,21 @@
 [current status]
-- many parameters are still hardcoded
+- some parameters are still hardcoded
 
 [to be tested]
-- different user cases which can potentially fail calibration
-- implement function calibrationClient.killCalibration() (also kill all jobs)
 
 [open issues]
-- calibration files are not deletes after expiration time... 
 - if one want to have possibility to run calibration from some specific stage/phase one need to modify Calibration Workflow (line which starts with "if self.currentStage == 3")
 - in CalibratinHandler.py-->export_checkForStepIncrement() - if on previous function execution calibration was finished than on this execution we will delete this calibration run from active calibrations. Since we perform constant calculation when 90% of jobs are finished it can lead that 10% of jobs which were slower can finish with error status... What should one do? Wait for all jobs to be finished? of don't mark them with error but just mark them with OK status?
-- muonToMipCalibration is still not working properly (histogram doesn't have proper x-axius range and all events are slammed in the first bin)
 - during photon training step output from pfoAnalysis processor is "pfoAnalysis_XXXX.root"
 - Temporary fix in Utilities/mergeLikelihoods: "if nBins==0 --> nBins = 1" which prevent function from crashing when there are no counts in bin (division by zero)
-- how to get platform and appvesrion to read 'pandora_calibration_scripts' value from CS?
 - calibration service, endCurrentStep(): we use hardcoded strings to acess calib. constants from the parameter dict (e.g. we use specific names for processors, but they can be changed by the user). Allow for user specify parameter dict himself
-- fccee steering files. There are two copies of DDCaloDigi and DDPandoraPFANewProcessor processors (we use which one to use according to integration time window). How should we deal with this situation? Should we ask user to provide name of processor to be used?
 - there are a few calorimeter constants used to calculate one calibration constant: Absorber_Thickness_EndCap, Scintillator_Thickness_Ring and so on. They are similar for CLICdet/CLD but maybe not for ILD. To fix this.
-- files are not deleted after time is up. timeLeftBeforeOutputWillBeDeleted becomes negative but files are not deleted and calibration is not deleted either.
-- what happen is current stage == 0? it wil run...
+- what happen is current stage == 0? it will still run...
 
 [to implement]
+- add nMaxIterationsPerPhase to the DetectorSettings. Put ~30 as default.
 - allow user to specify steering and PandoraSetings files to use
 - possibility to use calib.setExtraCLIArguments (e.g. to set CalorimeterIntegrationTimeWindow)
-- complete documentation
-- run python style check
 - when make cali.requestNewParameters() take into account that service can be down for some time... just wait a few minutes if it happens
 - when read steering files - names of processors are used (and are hardcoded!). Allow user to specify name of processors to be used for updating calibration constants
 - first parse steering file with Marlin and then read/modify parameters... command: Marlin -u old.xml new.xml
@@ -36,7 +28,6 @@
 - if jobs crashes than agent should resubmit the job, not to kill it
 - job_succes (???)
 - all constants should go to configuration service
-- implement skip events and use one file for many jobs
 - CalibrationHandler source code: refactor: executing python calib scripts into separate functions (where one execute binaries and python scripts to calculate and read calibration constants after each phase)
 - CalibrationClient: setup client - can have function submit jobs (instead of calling function in handler???)
 - implement: If too many jobs fails - stop calibration (because probably something is wrong  with configurations)
@@ -44,6 +35,7 @@
 - Workflow: if no response from CS for too long - stop requesting new parameters and kill the job (???)
 
 [finished implementations]
+[DONE] implement skip events and use one file for many jobs
 [DONE] implement function calibrationClient.getCalibrationStatus() (add timestamp when calibration was created)
 [DONE] implement function calibrationClient.killCalibration() (aldo kill all jobs)
 [DONE] implement function calibrationClient.changeEosDirectotoryToCopyTo()
