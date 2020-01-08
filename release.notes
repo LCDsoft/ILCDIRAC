@@ -1,3 +1,21 @@
+[Rel-v29r2p1]
+Release date: 2020-01-08
+
+*Core
+NEW: Based on Dirac v6r22p18
+
+*Workflow
+
+FIX: (!296) OverlayInput: clear StorageElementCache at the end of the ``OverlayInput`` module. Needed to ensure sessions are closed until DIRAC is patched
+
+*CalibrationSystem
+
+FIX: (!295) fix bug of improper CalibrationAgent behaviour when one the active calibrations does not have associated grid jobs.
+NEW: (!295) add unit test for CalibrationAgent
+CHANGE: (!295) print error message when there is an error during execution of createCalibration.
+CHANGE: (!295) improve Pandora calibration user guide
+
+
 [v29r2]
 
 Release date: 2019-10-16
