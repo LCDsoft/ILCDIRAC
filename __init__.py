@@ -11,7 +11,7 @@ __RCSID__ = "$Id$"
 # Define Version
 
 majorVersion = 29
-minorVersion = 1
+minorVersion = 2
 patchLevel = 0
 preVersion = 0
 

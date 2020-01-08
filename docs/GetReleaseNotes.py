@@ -200,7 +200,7 @@ class GitlabInterface( object ):
     self._options = dict( owner=self.owner, repo=self.repo  )
     self.printLevel = logging.INFO
 
-    self.branches = ['master', 'Rel-v29r0', 'Rel-v30r0']
+    self.branches = ['master', 'Rel-v29r2', 'Rel-v30r0']
     self.openPRs = False
     self.startDate = str(datetime.now() - timedelta(days=14))[:10]
 

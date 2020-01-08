@@ -17,6 +17,7 @@ from math import ceil
 import DIRAC
 from DIRAC.DataManagementSystem.Client.DataManager           import DataManager
 from DIRAC.Resources.Catalog.FileCatalogClient               import FileCatalogClient
+from DIRAC.Resources.Storage.StorageElement import StorageElement
 from DIRAC.Core.Utilities.Subprocess                         import shellCall
 from DIRAC.ConfigurationSystem.Client.Helpers.Operations     import Operations
 from DIRAC                                                   import S_OK, S_ERROR, gLogger
@@ -699,6 +700,11 @@ fi\n""" % (basename, lfile))
     self.workflow_commons["OI_%i_eventType" % stepNumber] = self.metaEventType
     self.workflow_commons["OI_%i_eventsPerBackgroundFile" % stepNumber] = self.nbofeventsperfile
     self.workflow_commons["OI_%i_processorName" % stepNumber] = self.processorName
+
+    # clear the StorageElementCache to clear sessions
+    LOG.info('SEs cached now: %d' % len(StorageElement.seCache.getKeys()))
+    StorageElement.seCache.purgeAll()
+    LOG.info('SEs cached cleared: %d' % len(StorageElement.seCache.getKeys()))
 
     return S_OK('OverlayInput finished successfully')
 

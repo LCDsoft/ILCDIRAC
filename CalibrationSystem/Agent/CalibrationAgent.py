@@ -57,6 +57,7 @@ class CalibrationAgent(AgentModule):
     if not res['OK']:
       return res
     targetJobNumbers = res['Value']
+    # FIXME self.currentCalibrations is not used anywhere...
     self.currentCalibrations = list(targetJobNumbers.keys())
 
     res = self.calibrationService.getRunningCalibrations()
@@ -70,10 +71,9 @@ class CalibrationAgent(AgentModule):
         currentJobStatusesPerWorker_runningCalibs[iCalib] = self.currentJobStatusesPerWorker[iCalib]
         targetJobNumbers_runningCalibs[iCalib] = targetJobNumbers[iCalib]
       except KeyError:
-        errMsgConst = 'Error while retriving information for calibration'
+        errMsgConst = 'Error while retrieving information for calibration'
         errMsgVariable = '#%s' % iCalib
         self.log.error(errMsgConst, errMsgVariable)
-        return S_ERROR(errMsgConst + errMsgVariable)
 
     jobsToResubmitted = CalibrationAgent.__calculateJobsToBeResubmitted(
         currentJobStatusesPerWorker_runningCalibs, targetJobNumbers_runningCalibs)
