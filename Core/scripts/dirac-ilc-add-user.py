@@ -1,6 +1,7 @@
 """Register a user in ILCDIRAC.
 
-.. warning :: This script is disfavoured in view of the :class:`~DIRAC.ConfigurationSystem.Agent.VOMS2CSAgent.VOMS2CSAgent`
+.. warning :: This script is disfavoured in view of the
+      :class:`~DIRAC.ConfigurationSystem.Agent.VOMS2CSAgent.VOMS2CSAgent`
 
 Register the user in the CS, the FileCatalog, and in the e-group.
 
