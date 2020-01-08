@@ -17,7 +17,7 @@ variables:
 
   ILCDIRAC_VERSION: "v29r2"
   DIRAC_BRANCH: "rel-v6r22"
-  DIRAC_TAG: "v6r22p13"
+  DIRAC_TAG: "v6r22p18"
   SETUP: "ILC-Production"
   ILCDIRAC_BRANCH: "Rel-v29r2"
   DIRAC_DEPRECATED_FAIL: "1"
