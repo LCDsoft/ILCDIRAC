@@ -124,19 +124,33 @@ class Whizard2( LCApplication ):
   def setIntegratedProcess(self, integrationTarball):
     """Make whizard2 use an already integrated process.
 
-    .. warning :: It is the responsibility of the user to ensure that the sindarin file is compatible with
-                  the integrated process
-
-    The integrationTarball has to be a tarball (zip, tar.gz, tgz), either an LFN, or a process defined in the
+    The ``integrationTarball`` has to be a tarball (zip, tar.gz, tgz), either an LFN, or a process defined in the
     configuration system.
 
     Use `getKnownProcesses` to see the list of defined processes
 
-    >>> whizard2.setIntegratedProcess('bbcbbc_3tev_negPol') # processes defined in the configuration
+    >>> # processes defined in the configuratin
+    >>> whizard2.setIntegratedProcess('bbcbbc_3tev_negPol')
 
-    >>> whizard2.setIntegratedProcess('LFN:/ilc/user/u/username/bbcbbc_3tev_negPol.tar.gz') # tarball on the grid
+    >>>  # tarball on the grid
+    >>> whizard2.setIntegratedProcess('LFN:/ilc/user/u/username/bbcbbc_3tev_negPol.tar.gz')
 
     :param str integrationTarball: integrated process to be used for event generation
+
+    .. warning :: It is the responsibility of the user to ensure that the sindarin file is compatible with
+                  the integrated process
+
+    .. note ::
+
+      Whizard2 will be executed in the path where the tarball is extracted. Therefore, the tarball must contain all the
+      files resulting from running Whizard2 directly and not in a subdirectory. The hidden ``.libs/`` folder must be
+      included.
+
+      To produce the tarball, change into the directory in which Whizard2 has been run and do::
+
+        tar cvzf <name>.tar.gz * .libs
+
+    .. note :: Tarballs stored on CVMFS need to be registered in the ConfigurationSystem.
 
     """
     self._checkArgs({'integrationTarball': types.StringTypes})
