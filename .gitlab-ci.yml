@@ -126,6 +126,8 @@ code_quality:
      paths:
        - installation/ILCDIRAC/.coverage
        - installation/ILCDIRAC/htmlcov
+     reports:
+       junit: installation/ILCDIRAC/junit_unit.xml
      expire_in: 2 hours
   <<: *retry_policy
   except:
@@ -228,6 +230,8 @@ pylint:PY3K:
       - installation/ILCDIRAC/tmp*/Local_*/*Step*.log
     when: on_failure
     expire_in: 2 days
+    reports:
+       junit: installation/ILCDIRAC/junit_job.xml
 
 .prodTests_template: &prodTests
   stage: integration
@@ -317,6 +321,9 @@ prodTests:CC7dev:
     - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - dirac-proxy-init --rfc <<< $CERT_PASSPHRASE
     - .gitlab-ci.d/run-setests.sh
+  artifacts:
+    reports:
+      junit: installation/ILCDIRAC/junit_se.xml
   coverage: '/\d+\%\s*$/'
   <<: *retry_policy
   only:
