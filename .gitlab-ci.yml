@@ -17,7 +17,7 @@ variables:
 
   ILCDIRAC_VERSION: "v29r2"
   DIRAC_BRANCH: "integration"
-  DIRAC_TAG: "v7r0p3"
+  DIRAC_TAG: "v7r0p11"
   SETUP: "ILC-Production"
   ILCDIRAC_BRANCH: "master"
   DIRAC_DEPRECATED_FAIL: "1"
