@@ -40,7 +40,7 @@ variables:
     - mv ILCDIRAC ILCDIRAC_commit
     - mkdir ILCDIRAC; cd ILCDIRAC
     - mkdir installation; cd installation
-    - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
+    - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/integration/Core/scripts/dirac-install.py  --no-check-certificate
     - chmod +x dirac-install
     - ./dirac-install -V ILCDIRAC -r $ILCDIRAC_VERSION -g $LCG_BUNDLE_VERSION
     - rm -rf DIRAC
