@@ -2,7 +2,7 @@
 
 import pytest
 
-from ILCDIRAC.Core.Utilities.Utilities import toInt, listify
+from ILCDIRAC.Core.Utilities.Utilities import toInt, listify, lowerFirst
 
 
 @pytest.mark.parametrize("number, expected, cond",
@@ -31,3 +31,15 @@ def test_toint(number, expected, cond):
 def test_listify(string, cast, expected):
   """Testing the to int function."""
   assert listify(string, cast) == expected
+
+
+@pytest.mark.parametrize('string, expected',
+                         [('1', '1'),
+                          ('SOMETHING', 'sOMETHING'),
+                          ('something', 'something'),
+                          ('CamelCase', 'camelCase'),
+                          ])
+def test_lowerFirst(string, expected):
+  """Testing the lowerFirst function."""
+  assert lowerFirst(string) == expected
+

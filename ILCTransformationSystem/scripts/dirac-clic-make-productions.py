@@ -129,7 +129,7 @@ from DIRAC.Core.Base import Script
 from DIRAC import S_OK, S_ERROR, gLogger
 
 from ILCDIRAC.Core.Utilities.OverlayFiles import energyWithUnit, energyToInt
-from ILCDIRAC.Core.Utilities.Utilities import listify
+from ILCDIRAC.Core.Utilities.Utilities import listify, lowerFirst
 from ILCDIRAC.ILCTransformationSystem.Utilities.Utilities import Task
 
 PRODUCTION_PARAMETERS = 'Production Parameters'
@@ -409,7 +409,7 @@ MoveTypes = %(moveTypes)s
         setattr(self, attribute, listify(config.get(PP, attribute)))
 
       for attribute in STRING_ATTRIBUTES:
-        setattr(self, attribute, config.get(PP, attribute))
+        setattr(self, lowerFirst(attribute), config.get(PP, attribute))
 
       # this parameter is deprecated and not part of the instance attributes so we need to check for existence
       if config.has_option(PP, 'clicConfig'):

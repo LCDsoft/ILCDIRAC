@@ -47,8 +47,8 @@ def configDict():
           'eventsInSplitFiles': '5000, 6000',
           'ProdTypes': 'Gen, RecOver',
           'MoveTypes': '',
-          'MoveStatus': 'Stopped',
-          'MoveGroupSize': '10',
+          'MoveStatus': 'Active',
+          'MoveGroupSize': '11',
           'overlayEvents': '',
           'overlayEventType': '',
           'cliReco': '--Config.Tracking=Tracked',
@@ -191,6 +191,9 @@ def test_loadParameters(theChain, cpMock):
   assert c.whizard2Version == "myWhizardVersion"
   assert c.whizard2SinFile == ['myWhizardSinFile1', 'myWhizardSinFile2']
 
+  assert c.moveStatus == 'Active'
+  assert c.moveGroupSize == '11'
+
   cpMock.thisConfigDict['prodIDs'] = "123, 456, 789"
   with patch(SCP, new=Mock(return_value=cpMock)), \
        pytest.raises(AttributeError, match="Lengths of Processes"):
@@ -214,6 +217,13 @@ def test_loadParameters(theChain, cpMock):
   parameter.dumpConfigFile = True
   with patch(SCP, new=Mock(return_value=cpMock)), \
     pytest.raises(RuntimeError, match="^$"):
+    c.loadParameters(parameter)
+
+  parameter.prodConfigFilename = 'filename'
+  parameter.dumpConfigFile = False
+  cpMock.thisConfigDict['MoveStatus'] = 'Foo'
+  with patch(SCP, new=Mock(return_value=cpMock)), \
+       pytest.raises(AttributeError, match='MoveStatus can only be'):
     c.loadParameters(parameter)
 
 

@@ -64,3 +64,8 @@ def canConvert(value, funType):
     return True
   except ValueError:
     return False
+
+
+def lowerFirst(inputString):
+  """Return string with first charecter converted to lower case."""
+  return inputString[0].lower() + inputString[1:]
