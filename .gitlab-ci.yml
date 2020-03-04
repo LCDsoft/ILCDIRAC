@@ -13,7 +13,7 @@ stages:
   - deployToCVMFS
 
 variables:
-  LCG_BUNDLE_VERSION: "v14r3 --dirac-os --dirac-os-version=v1r5"
+  LCG_BUNDLE_VERSION: "v14r3 --dirac-os --dirac-os-version=v1r9"
 
   ILCDIRAC_VERSION: "v29r2"
   DIRAC_BRANCH: "rel-v7r0"
