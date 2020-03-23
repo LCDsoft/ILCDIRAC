@@ -1,11 +1,18 @@
 """module collecting functions needed to run tests on local machine"""
+
 from __future__ import print_function
-__RCSID__ ="$Id$"
+
+from DIRAC import S_OK, S_ERROR, gLogger
+
+__RCSID__ = "$Id$"
 
 
 #from DIRAC.Core.Base import Script
-import os, shutil, tempfile, sys
-from DIRAC import S_OK, S_ERROR, gLogger
+import os
+import shutil
+import tempfile
+import sys
+
 
 def cleanup(tempdir):
   """
@@ -13,9 +20,11 @@ def cleanup(tempdir):
   """
   shutil.rmtree(tempdir)
 
-class CLIParams( object ):
+
+class CLIParams(object):
   """ CLI parameters
   """
+
   def __init__(self):
     """ c'tor
     """
@@ -32,7 +41,7 @@ class CLIParams( object ):
     self.testSlicPandora = False
     self.testChain = False
     self.testRoot = False
-    self.testall  = False
+    self.testall = False
     self.nocleanup = False
     self.testFccSw = False
     self.testFccAnalysis = False
@@ -40,7 +49,7 @@ class CLIParams( object ):
   def setSubmitMode(self, opt):
     """ Define the submit mode
     """
-    if not opt in ["local",'WMS']:
+    if not opt in ["local", 'WMS']:
       return S_ERROR("SubmitMode must be either 'local' or 'WMS'.")
     self.submitMode = opt
     return S_OK()
@@ -186,70 +195,69 @@ class JobCreater(object):
 
   # pylint: disable=too-many-instance-attributes
   # Test parameters, necessary due to amount of tests in this class.
-  def __init__( self,
-                clip,
-                params
-              ):
+  def __init__(self,
+               clip,
+               params
+               ):
     self.clip = clip
-    self.ildConfig = params.get( "ildConfig", None )
-    self.alwaysOverlay = params.get( "alwaysOverlay", False )
+    self.ildConfig = params.get("ildConfig", None)
+    self.alwaysOverlay = params.get("alwaysOverlay", False)
     self.runOverlay = self.clip.testOverlay or self.alwaysOverlay
     self.mokkaVersion = params["mokkaVersion"]
-    self.mokkaSteeringFile = params.get( "mokkaSteeringFile" )
-    self.detectorModel = params.get( "detectorModel" )
-    self.marlinVersion = params.get( "marlinVersion" )
-    self.marlinSteeringFile = params.get( "marlinSteeringFile" )
-    self.ddsimVersion = params.get( "ddsimVersion" )
-    self.ddsimDetectorModel = params.get( "ddsimDetectorModel")
-    self.ddsimInputFile = params.get( "ddsimInputFile" )
-    self.marlinInputdata = params.get ( "marlinInputdata" )
-    self.gearFile = params.get( "gearFile" )
-    self.lcsimVersion = params.get( "lcsimVersion" )
-    self.steeringFileVersion = params.get( "steeringFileVersion", None )
+    self.mokkaSteeringFile = params.get("mokkaSteeringFile")
+    self.detectorModel = params.get("detectorModel")
+    self.marlinVersion = params.get("marlinVersion")
+    self.marlinSteeringFile = params.get("marlinSteeringFile")
+    self.ddsimVersion = params.get("ddsimVersion")
+    self.ddsimDetectorModel = params.get("ddsimDetectorModel")
+    self.ddsimInputFile = params.get("ddsimInputFile")
+    self.marlinInputdata = params.get("marlinInputdata")
+    self.gearFile = params.get("gearFile")
+    self.lcsimVersion = params.get("lcsimVersion")
+    self.steeringFileVersion = params.get("steeringFileVersion", None)
     self.rootVersion = params["rootVersion"]
 
-    self.whizard2Version = params.get( "whizard2Version" )
-    self.whizard2SinFile = params.get( "whizard2SinFile" )
+    self.whizard2Version = params.get("whizard2Version")
+    self.whizard2SinFile = params.get("whizard2SinFile")
 
     self.energy = params.get("energy")
     self.backgroundType = params.get("backgroundType")
     self.machine = params.get("machine")
 
-    self.gearFile           = params.get( "gearFile" )
-    self.marlinSteeringFile = params.get( "marlinSteeringFile" )
-    self.marlinVersion      = params.get( "marlinVersion" )
+    self.gearFile = params.get("gearFile")
+    self.marlinSteeringFile = params.get("marlinSteeringFile")
+    self.marlinVersion = params.get("marlinVersion")
 
-    self.lcsimPreSteeringFile  = params.get( "lcsimPreSteeringFile" )
-    self.lcsimPostSteeringFile = params.get( "lcsimPostSteeringFile" )
+    self.lcsimPreSteeringFile = params.get("lcsimPreSteeringFile")
+    self.lcsimPostSteeringFile = params.get("lcsimPostSteeringFile")
 
-    self.fccSwPath = params.get( "fccSwPath" )
-    self.fccSwSteeringFile = params.get( "fccSwSteeringFile" )
+    self.fccSwPath = params.get("fccSwPath")
+    self.fccSwSteeringFile = params.get("fccSwSteeringFile")
 
-    self.fccAnalysisSteeringFile = params.get( "fccAnalysisSteeringFile" )
+    self.fccAnalysisSteeringFile = params.get("fccAnalysisSteeringFile")
 
     ### other things needed to run tests
     self.log = gLogger.getSubLogger("JobCreater")
 
-    from ILCDIRAC.Interfaces.API.DiracILC                  import DiracILC, __RCSID__ as drcsid
-    from ILCDIRAC.Interfaces.API.NewInterface.UserJob      import __RCSID__ as jrcsid
+    from ILCDIRAC.Interfaces.API.DiracILC import DiracILC, __RCSID__ as drcsid
+    from ILCDIRAC.Interfaces.API.NewInterface.UserJob import __RCSID__ as jrcsid
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import __RCSID__ as apprcsid
 
     if self.clip.submitMode == "local":
       self.log.notice("")
-      self.log.notice("       DIRAC RCSID:", drcsid )
-      self.log.notice("         Job RCSID:", jrcsid )
-      self.log.notice("Applications RCSID:", apprcsid )
+      self.log.notice("       DIRAC RCSID:", drcsid)
+      self.log.notice("         Job RCSID:", jrcsid)
+      self.log.notice("Applications RCSID:", apprcsid)
       self.log.notice("")
 
     self.diracInstance = DiracILC(False, 'tests.rep')
     self.jobList = {}
 
-    
-  def createDDSimTest( self, inputfile = None, detectorModel = None):
+  def createDDSimTest(self, inputfile=None, detectorModel=None):
     """Create a job running ddsim"""
     if inputfile is None:
       inputfile = self.ddsimInputFile
-    sandbox = [ inputfile ]
+    sandbox = [inputfile]
     if detectorModel is None:
       detectorModel = self.ddsimDetectorModel
     else:
@@ -266,10 +274,10 @@ class JobCreater(object):
     if not res['OK']:
       self.log.error("Failed adding DDSim:", res['Message'])
       return S_ERROR("Failed adding DDSim to Job")
-    
+
     return S_OK(jobdd)
 
-  def createWhizard2Test( self ):
+  def createWhizard2Test(self):
     """Create a job running Whizard2"""
     jobdd = self.getJob()
     from ILCDIRAC.Interfaces.API.NewInterface.Applications.Whizard2 import Whizard2
@@ -319,7 +327,7 @@ class JobCreater(object):
     """create a job running root"""
     self.log.notice("Creating jobs for Root")
     jobRoot = self.getJob()
-    jobRoot.setInputSandbox(["root.sh", "input.root","input2.root"])
+    jobRoot.setInputSandbox(["root.sh", "input.root", "input2.root"])
     root = self.getRoot()
     res = jobRoot.append(root)
     if not res['OK']:
@@ -332,7 +340,7 @@ class JobCreater(object):
     """create a job running root"""
     self.log.notice("Creating jobs for Root")
     jobRoot = self.getJob()
-    jobRoot.setInputSandbox(["input.root","input2.root"])
+    jobRoot.setInputSandbox(["input.root", "input2.root"])
     root = self.getRoot()
     root.setScript("hadd")
     res = jobRoot.append(root)
@@ -346,7 +354,7 @@ class JobCreater(object):
     """create a job running root"""
     self.log.notice("Creating jobs for Root")
     jobRoot = self.getJob()
-    jobRoot.setInputSandbox(["func.C", "input.root","input2.root"])
+    jobRoot.setInputSandbox(["func.C", "input.root", "input2.root"])
     root = self.getRootMacro()
     root.setScript("func.C")
     res = jobRoot.append(root)
@@ -362,14 +370,14 @@ class JobCreater(object):
     pathToFiles = None
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import OverlayInput
     overlay = OverlayInput()
-    if self.energy==350:
-      if self.detectorModel=="ILD_o1_v05":
-        pathToFiles="/ilc/user/s/sailer/testFiles/overlay/ild_350/"
+    if self.energy == 350:
+      if self.detectorModel == "ILD_o1_v05":
+        pathToFiles = "/ilc/user/s/sailer/testFiles/overlay/ild_350/"
     if pathToFiles:
       overlay.setPathToFiles(pathToFiles)
     else:
       self.log.warn("better define pathToFiles for this overlay: %s, %s, %s" %
-                    (self.energy, self.machine, self.backgroundType) )
+                    (self.energy, self.machine, self.backgroundType))
       overlay.setMachine(self.machine)
       overlay.setEnergy(self.energy)
       overlay.setDetectorModel(self.detectorModel)
@@ -439,8 +447,7 @@ class JobCreater(object):
     slicp.setOutputFile('testpandora.slcio')
     return slicp
 
-
-  def getMarlin( self ):
+  def getMarlin(self):
     """ Define a marlin step
     """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
@@ -454,20 +461,18 @@ class JobCreater(object):
     marlin.setNumberOfEvents(1)
     return marlin
 
-  def getDD( self ):
+  def getDD(self):
     """ Create a DDSim object
     """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications.DDSim import DDSim
     ddsim = DDSim()
     ddsim.setVersion(self.ddsimVersion)
     ddsim.setDetectorModel(self.ddsimDetectorModel)
-    ddsim.setInputFile(self.ddsimInputFile) 
+    ddsim.setInputFile(self.ddsimInputFile)
     ddsim.setNumberOfEvents(2)
     return ddsim
-  
 
-
-  def getLCSIM(self, prepandora = True):
+  def getLCSIM(self, prepandora=True):
     """ Get some LCSIM
     """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import LCSIM
@@ -485,7 +490,7 @@ class JobCreater(object):
     lcsim.setTrackingStrategy("defaultStrategies_clic_sid_cdr.xml")
     return lcsim
 
-  def getFccSw( self ):
+  def getFccSw(self):
     """ Define a fccsw step
     """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import FccSw
@@ -494,7 +499,7 @@ class JobCreater(object):
     fccsw.setSteeringFile(self.fccSwSteeringFile)
     return fccsw
 
-  def getFccAnalysis( self ):
+  def getFccAnalysis(self):
     """ Define a fccanalysis step
     """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import FccAnalysis
@@ -559,14 +564,12 @@ class JobCreater(object):
     myjob.dontPromptMe()
     myjob.setLogLevel("VERBOSE")
     myjob.setPlatform("x86_64-slc5-gcc43-opt")
-    myjob.setOutputSandbox(["*.log","*.xml", "*.sh"])
-    myjob._addParameter( myjob.workflow, 'TestFailover', 'String', True, 'Test failoverRequest')
-    myjob._addParameter( myjob.workflow, 'Platform', 'JDL', "x86_64-slc5-gcc43-opt", 'OS Platform')
+    myjob.setOutputSandbox(["*.log", "*.xml", "*.sh"])
+    myjob._addParameter(myjob.workflow, 'TestFailover', 'String', True, 'Test failoverRequest')
+    myjob._addParameter(myjob.workflow, 'Platform', 'JDL', "x86_64-slc5-gcc43-opt", 'OS Platform')
     if self.ildConfig:
       myjob.setILDConfig(self.ildConfig)
     return myjob
-
-
 
   def getWhizardModel(self, nbevts, energy, model):
     """ Create a default whizard
@@ -575,7 +578,7 @@ class JobCreater(object):
     proddict = "e2e2_o"
     if model != "sm":
       proddict = "se2se2_r"
-    whiz = Whizard(processlist = self.diracInstance.getProcessList())
+    whiz = Whizard(processlist=self.diracInstance.getProcessList())
     whiz.setModel(model)
     pdict = {}
     pdict['process_input'] = {}
@@ -620,11 +623,9 @@ class JobCreater(object):
     pdict['beam_input_2']['USER_spectrum_mode'] = 19 if energy == 1400 else 11
     pdict['beam_input_2']['EPA_on'] = 'F'
 
-
     whiz.setFullParameterDict(pdict)
     whiz.setOutputFile("testgen.stdhep")
     return whiz
-
 
   def getWhizard(self, nbevts):
     """ Get some defualt SM whizard
@@ -635,8 +636,6 @@ class JobCreater(object):
     """ Get a susy whizard
     """
     return self.getWhizardModel(nbevts, 3000, "slsqhh")
-
-
 
   def createWhizardTest(self):
     """create a test for whizard"""
@@ -688,11 +687,10 @@ class JobCreater(object):
     self.jobList['Slic1'] = jobslic
     return S_OK(jobslic)
 
-
-  def createMarlinTest(self , setInputData = False):
+  def createMarlinTest(self, setInputData=False):
     """create tests for marlin"""
-    self.log.notice( "Creating test for Marlin" )
-        #((Whizard + Mokka +)Overlay+) Marlin
+    self.log.notice("Creating test for Marlin")
+    #((Whizard + Mokka +)Overlay+) Marlin
     jobma = self.getJob()
     if self.clip.testChain:
       moma = self.getMokka()
@@ -731,12 +729,12 @@ class JobCreater(object):
     if not res['OK']:
       self.log.error("Failed adding Marlin:", res['Message'])
       return S_ERROR()
-    self.jobList['Marlin1'] =jobma
+    self.jobList['Marlin1'] = jobma
     return S_OK(jobma)
 
   def createLCSimTest(self):
     """create tests for LCSIM"""
-    self.log.notice( "Creating test for LCSIM" )
+    self.log.notice("Creating test for LCSIM")
     #run ((whiz+SLIC+)+Overlay+)LCSIM
     joblcsim = self.getJob()
     if self.clip.testChain:
@@ -860,7 +858,7 @@ class JobCreater(object):
     if not res['OK']:
       self.log.error("Failed adding Whizard:", res['Message'])
       return S_ERROR()
-    mystdcut = self.getStdhepcut( 100 )
+    mystdcut = self.getStdhepcut(100)
     mystdcut.getInputFromApp(whcut)
     res = jobwcut.append(mystdcut)
     if not res['OK']:
@@ -893,7 +891,7 @@ class JobCreater(object):
       self.log.error("Failed adding SLCIOConcatenate:", res['Message'])
       return S_ERROR()
     self.jobList['concat'] = jobconcat
-    return S_OK((jobconcat, joblciosplit,jobwcut,jobwsplit))
+    return S_OK((jobconcat, joblciosplit, jobwcut, jobwsplit))
 
   def createFccSwTest(self):
     """create tests for fccsw"""
@@ -935,41 +933,40 @@ class JobCreater(object):
       return S_ERROR()
     self.log.notice("To run locally, I will create a temp directory here.")
     curdir = os.getcwd()
-    tmpdir = tempfile.mkdtemp("", dir = "./")
+    tmpdir = tempfile.mkdtemp("", dir="./")
     os.chdir(tmpdir)
 
     # Jobs that need separate input files
     specialJobs = ['root', 'ddsim']
     filesForJob = {
-      'root' :  [ 'input2.root', 'input.root' ],
-      'ddsim' : [ 'FCalTB.tar.gz', 'Muon_50GeV_Fixed_cosTheta0.7.stdhep' ]
-    }
+        'root': ['input2.root', 'input.root'],
+        'ddsim': ['FCalTB.tar.gz', 'Muon_50GeV_Fixed_cosTheta0.7.stdhep']
+        }
     for specialName in specialJobs:
       if "root" in jobName.lower() and specialName == "root":
         with open("root.sh", "w") as rScript:
-          rScript.write( "echo $ROOTSYS" )
+          rScript.write("echo $ROOTSYS")
         with open("func.C", "w") as rMacro:
-          rMacro.write( '''
+          rMacro.write('''
                         void func( TString string ) {
                           std::cout << string << std::endl;
                           TFile* file = TFile::Open(string);
                         file->ls();
                         }
-                        ''' )
+                        ''')
       testfiledir = 'Testfiles'
       for fileName in ['input.root', 'input2.root']:
-        shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )
+        shutil.copy(os.path.join(curdir, testfiledir, fileName), os.getcwd())
         print(os.path.join(curdir, "input2.root"), os.getcwd())
       if specialName in jobName.lower():
         for fileName in filesForJob[specialName]:
-          shutil.copy( os.path.join( curdir, testfiledir, fileName ), os.getcwd() )
-  
+          shutil.copy(os.path.join(curdir, testfiledir, fileName), os.getcwd())
+
     resJob = self.runJob(job, jobName)
     os.chdir(curdir)
     if not resJob['OK']:
       return resJob
     os.chdir(curdir)
-
 
     if not self.clip.nocleanup:
       cleanup(tmpdir)
@@ -990,12 +987,11 @@ class JobCreater(object):
     self.log.notice("############################################################")
     self.log.notice(" Running or submitting job: %s " % name)
     self.log.notice("\n\n")
-    res = finjob.submit(self.diracInstance, mode = self.clip.submitMode)
+    res = finjob.submit(self.diracInstance, mode=self.clip.submitMode)
     if not res["OK"]:
       self.log.error("Failed job:", res['Message'])
       return S_ERROR()
     return S_OK()
-
 
   def checkForTests(self):
     """check which tests to run"""

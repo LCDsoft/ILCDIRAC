@@ -14,6 +14,7 @@ from DIRAC import exit as dexit
 
 from ILCDIRAC.Interfaces.API.NewInterface.Tests.LocalTestObjects import JobCreater, CLIParams
 
+
 def runTests():
   """runs the tests"""
   clip = CLIParams()
@@ -25,21 +26,21 @@ def runTests():
 
   myLCSimPreSteeringFile = "clic_cdr_prePandoraOverlay_1400.0.lcsim" if overlayrun else "clic_cdr_prePandora.lcsim"
   myLCSimPostSteeringFile = "clic_cdr_postPandoraOverlay.lcsim"
-  parameterDict = dict( mokkaVersion="0706P08",
-                        mokkaSteeringFile="clic_ild_cdr.steer",
-                        detectorModel="CLIC_ILD_CDR",
-                        steeringFileVersion="V22",
-                        machine="clic_cdr",
-                        backgroundType="gghad",
-                        energy=1400,
-                        marlinVersion="v0111Prod",
-                        rootVersion="5.34",
-                        marlinSteeringFile=myMarlinSteeringFile,
-                        marlinInputdata = "/ilc/user/s/sailer/testFiles/prod_clic_ild_e2e2_o_sim_2214_26.slcio",
-                        gearFile='clic_ild_cdr.gear',
-                        lcsimPreSteeringFile=myLCSimPreSteeringFile,
-                        lcsimPostSteeringFile=myLCSimPostSteeringFile
-                      )
+  parameterDict = dict(mokkaVersion="0706P08",
+                       mokkaSteeringFile="clic_ild_cdr.steer",
+                       detectorModel="CLIC_ILD_CDR",
+                       steeringFileVersion="V22",
+                       machine="clic_cdr",
+                       backgroundType="gghad",
+                       energy=1400,
+                       marlinVersion="v0111Prod",
+                       rootVersion="5.34",
+                       marlinSteeringFile=myMarlinSteeringFile,
+                       marlinInputdata="/ilc/user/s/sailer/testFiles/prod_clic_ild_e2e2_o_sim_2214_26.slcio",
+                       gearFile='clic_ild_cdr.gear',
+                       lcsimPreSteeringFile=myLCSimPreSteeringFile,
+                       lcsimPostSteeringFile=myLCSimPostSteeringFile
+                       )
 
   myTests = JobCreater(clip, parameterDict)
   res = myTests.checkForTests()
@@ -48,6 +49,7 @@ def runTests():
   myTests.run()
 
   return
+
 
 if __name__ == '__main__':
   runTests()
