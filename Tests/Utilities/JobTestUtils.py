@@ -2,16 +2,13 @@
 
 from __future__ import print_function
 
-from DIRAC import S_OK, S_ERROR, gLogger
-
-__RCSID__ = "$Id$"
-
-
-#from DIRAC.Core.Base import Script
 import os
 import shutil
 import tempfile
-import sys
+
+from DIRAC import S_OK, S_ERROR, gLogger
+
+__RCSID__ = "$Id$"
 
 
 def cleanup(tempdir):
@@ -49,7 +46,7 @@ class CLIParams(object):
   def setSubmitMode(self, opt):
     """ Define the submit mode
     """
-    if not opt in ["local", 'WMS']:
+    if opt not in ["local", 'WMS']:
       return S_ERROR("SubmitMode must be either 'local' or 'WMS'.")
     self.submitMode = opt
     return S_OK()
@@ -195,10 +192,8 @@ class JobCreater(object):
 
   # pylint: disable=too-many-instance-attributes
   # Test parameters, necessary due to amount of tests in this class.
-  def __init__(self,
-               clip,
-               params
-               ):
+  def __init__(self, clip, params):
+    """Initialize versions and parameters used in multiple jobs."""
     self.clip = clip
     self.ildConfig = params.get("ildConfig", None)
     self.alwaysOverlay = params.get("alwaysOverlay", False)
@@ -940,7 +935,7 @@ class JobCreater(object):
     specialJobs = ['root', 'ddsim']
     filesForJob = {
         'root': ['input2.root', 'input.root'],
-        'ddsim': ['FCalTB.tar.gz', 'Muon_50GeV_Fixed_cosTheta0.7.stdhep']
+        'ddsim': ['FCalTB.tar.gz', 'Muon_50GeV_Fixed_cosTheta0.7.stdhep'],
         }
     for specialName in specialJobs:
       if "root" in jobName.lower() and specialName == "root":
