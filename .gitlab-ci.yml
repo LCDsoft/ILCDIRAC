@@ -6,7 +6,6 @@ before_script:
 stages:
   - install
   - unittest
-  - manualdeploy
   - integration
   - create
   - deploy
@@ -429,7 +428,7 @@ deploydoc:
 
 
 docDev:
-  stage: manualdeploy
+  stage: deploy
   tags:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
@@ -447,7 +446,7 @@ docDev:
 
 
 docProd:
-  stage: manualdeploy
+  stage: deploy
   tags:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
