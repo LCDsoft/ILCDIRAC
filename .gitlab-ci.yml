@@ -136,23 +136,19 @@ code_quality:
 unittest:SL6:
   <<: *unittest
   <<: *sl6docker
-  dependencies:
-    - install:SL6
+  needs: ["install:SL6"]
 
 unittest:CC7:
   <<: *unittest
   <<: *cc7docker
-  dependencies:
-    - install:CC7
-
+  needs: ["install:CC7"]
 
 checkFormat:
   <<: *sl6docker
   allow_failure: true
   <<: *retry_policy
   stage: unittest
-  dependencies:
-    - install:SL6
+  needs: ["install:SL6"]
   except:
     - tags
   script:
@@ -182,15 +178,12 @@ checkFormat:
 pylint:SL6:
   <<: *sl6docker
   <<: *pylint
-  dependencies:
-   - install:SL6
+  needs: ["install:SL6"]
 
 pylint:CC7:
   <<: *cc7docker
   <<: *pylint
-  dependencies:
-    - install:CC7
-
+  needs: ["install:CC7"]
 
 pylint:PY3K:
   <<: *sl6docker
@@ -206,8 +199,7 @@ pylint:PY3K:
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-pylint-py3k.sh
   <<: *retry_policy
-  dependencies:
-   - install:SL6
+  needs: ["install:SL6"]
 
 
 .jobTests_template: &jobTests
@@ -269,15 +261,11 @@ pylint:PY3K:
 
 .sl6int: &sl6integration
   <<: *sl6docker
-  dependencies:
-    - install:SL6
-    - unittest:SL6
+  needs: ["install:SL6", "unittest:SL6"]
 
 .cc7: &cc7integration
   <<: *cc7docker
-  dependencies:
-    - install:CC7
-    - unittest:CC7
+  needs: ["install:CC7", "unittest:CC7"]
 
 jobTests:SL6:
   <<: *jobTests
@@ -356,8 +344,7 @@ compiledoc:
   stage: unittest
   variables:
     GIT_STRATEGY: none
-  dependencies:
-    - install:SL6
+  needs: ["install:SL6"]
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -385,8 +372,7 @@ maketarballs:
   stage: create
   only:
     - tags@CLICdp/iLCDirac/ILCDIRAC
-  dependencies:
-    - install:SL6
+  needs: ["install:SL6"]
   script:
     - export HOME=/root/
     - cd installation/ILCDIRAC
@@ -412,8 +398,7 @@ makeILCConfig:
     - tags@CLICdp/iLCDirac/ILCDIRAC
   except:
     - /.*-pre[0-9]*/
-  dependencies:
-    - install:SL6
+  needs: ["install:SL6"]
   script:
     - mkdir -p ILCDIRACTars/defaults;  echo -e "Releases = https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC/raw/master/releases.cfg\nUploadCommand = ( cd %OUTLOCATION% ; tar -cf - *.tar.gz *.md5 *.cfg *.pdf *.html ) | ssh \`whoami\`@lxplus.cern.ch \'cd  /eos/project/l/lcd-web/www/ILCDIRACTars &&  tar -xvf - && ls *.tar.gz > tars.list\'\nBaseURL = http://lcd-data.web.cern.ch/lcd-data/ILCDIRACTars\nLocalInstallation\n{\n  Project = ILCDIRAC\n  ExternalsType = client\n  PythonVersion = 27\n  Release = $CI_COMMIT_TAG\n  LcgVer = $LCG_BUNDLE_VERSION\n  Setup = ILC-Production\n  ConfigurationServer = dips://voilcdirac01.cern.ch:9135/Configuration/Server, dips://voilcdirac012.cern.ch:9135/Configuration/Server\n}\n" > ILCDIRACTars/defaults/ilc.cfg
   artifacts:
@@ -432,8 +417,7 @@ deploydoc:
     - tags@CLICdp/iLCDirac/ILCDIRAC
   except:
     - /.*-pre[0-9]*/
-  dependencies:
-    - compiledoc
+  needs: ["compiledoc"]
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdoc/"
     CI_OUTPUT_DIR: "ilcdiracdoc"
@@ -450,9 +434,7 @@ docDev:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   when: manual
-  dependencies:
-    - compiledoc
-    - unittest:SL6
+  needs: ["compiledoc", "unittest:SL6"]
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdocDev/"
     CI_OUTPUT_DIR: "ilcdiracdoc"
@@ -472,9 +454,7 @@ docProd:
   only:
     - branches@CLICdp/iLCDirac/ILCDIRAC
   when: manual
-  dependencies:
-    - compiledoc
-    - unittest:SL6
+  needs: ["compiledoc", "unittest:SL6"]
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdoc/"
     CI_OUTPUT_DIR: "ilcdiracdoc"
@@ -494,9 +474,7 @@ deploytag:
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   only:
     - tags@CLICdp/iLCDirac/ILCDIRAC
-  dependencies:
-    - maketarballs
-    - makeILCConfig
+  needs: ["maketarballs", "makeILCConfig"]
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/ILCDIRACTars/"
     CI_OUTPUT_DIR: "ILCDIRACTars"
@@ -514,7 +492,7 @@ deployToCVMFS:
     - tags@CLICdp/iLCDirac/ILCDIRAC
   except:
     - /.*-pre[0-9]*/
-  dependencies: []
+  needs: ["deploytag"]
   script:
     - sudo -u cvclicdp -i scripts/installILCDIRAC.sh $CI_COMMIT_TAG $CERT_PASSPHRASE
   before_script: []
