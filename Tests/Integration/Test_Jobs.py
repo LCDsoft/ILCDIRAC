@@ -65,17 +65,17 @@ class JobTestCase(unittest.TestCase):
     myFccAnalysisSteeringFile = '/cvmfs/fcc.cern.ch/sw/0.8.1/fcc-physics/0.2.1/x86_64-slc6-gcc62-opt/share/ee_ZH_Zmumu_Hbb.txt'
     myFccSwPath = "/cvmfs/fcc.cern.ch/sw/0.8.1/fccsw/0.8.1/x86_64-slc6-gcc62-opt"
 
-    parameterDict = dict(mokkaVersion='ILCSoft-02-01_gcc82',
+    parameterDict = dict(mokkaVersion='0804',
                          mokkaSteeringFile="bbudsc_3evt.steer",
                          detectorModel="ILD_o1_v05",
                          machine="ilc_dbd",
                          backgroundType="aa_lowpt",
                          energy=350.0,
-                         marlinVersion='ILCSoft-02-01_gcc82',
+                         marlinVersion='011706_sl6',
                          marlinSteeringFile=myMarlinSteeringFile,
                          alwaysOverlay=True,
                          marlinInputData="/ilc/user/s/sailer/testILDsim.slcio",
-                         ildConfig='v02-01',
+                         ildConfig='v01-17-11-p02',
                          gearFile='GearOutput.xml',
                          lcsimPreSteeringFile=myLCSimPreSteeringFile,
                          lcsimPostSteeringFile=myLCSimPostSteeringFile,
@@ -83,7 +83,7 @@ class JobTestCase(unittest.TestCase):
                          ddsimDetectorModel='CLIC_o2_v04',
                          ddsimInputFile="Muon_50GeV_Fixed_cosTheta0.7.stdhep",
                          inputFilesPath='LFN:/ilc/user/s/simoniel/stdhep_files/ttbar_3TeV/',
-                         rootVersion='ILCSoft-02-01_gcc82',
+                         rootVersion='ILCSoft-2020-02-07_gcc62',
 
                          fccSwSteeringFile=myFccSwSteeringFile,
                          fccAnalysisSteeringFile=myFccAnalysisSteeringFile,
