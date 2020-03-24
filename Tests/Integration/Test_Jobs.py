@@ -38,6 +38,7 @@ class JobTestCase(unittest.TestCase):
     Script.parseCommandLine()  # Perform only once, multiple invocations can cause small issues
 
   def tearDown(self):
+    """Go back to the original directrory."""
     os.chdir(self.basedir)
 
   def setUp(self):
@@ -141,12 +142,8 @@ class JobTestCase(unittest.TestCase):
     res = self.myTests.runJobLocally(jobma, 'Marlin')
     assertDiracSucceeds(res, self)
 
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_ddsim1(self):
-    """create tests for ddsim"""
+    """Create tests for ddsim."""
     print("ddsimtest")
     # First run, all files available
     jobs = self.myTests.createDDSimTest()
@@ -155,13 +152,8 @@ class JobTestCase(unittest.TestCase):
     res = self.myTests.runJobLocally(thisJob, "DDSim")
     assertDiracSucceeds(res, self)
 
-    ddsimInputFile = "Muon_50GeV_Fixed_cosTheta0.7.stdhep"
-    ddsimTarball = "FCalTB.tar.gz"
-
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_ddsim2(self):
+    """Test ddsim with an input tarball."""
     ddsimInputFile = "Muon_50GeV_Fixed_cosTheta0.7.stdhep"
     ddsimTarball = "FCalTB.tar.gz"
     jobs = self.myTests.createDDSimTest(ddsimInputFile, ddsimTarball)
@@ -171,7 +163,7 @@ class JobTestCase(unittest.TestCase):
     assertDiracSucceeds(res, self)
 
   def test_marlin_overlay(self):
-    """create test for marlin with overlay"""
+    """Create test for marlin with overlay."""
     print("marlin test")
     jobma = self.myTests.getJob()
     jobma.setCLICConfig('ILCSoft-2020-02-07')
@@ -184,13 +176,8 @@ class JobTestCase(unittest.TestCase):
     res = self.myTests.runJobLocally(jobma, "Marlin")
     assertDiracSucceeds(res, self)
 
-
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_whizard(self):
-    """create test for whizard"""
+    """Create test for whizard."""
     print("whizard test")
     jobs = self.myTests.createWhizardTest()
     assertDiracSucceeds(jobs, self)
@@ -199,12 +186,8 @@ class JobTestCase(unittest.TestCase):
       res = self.myTests.runJobLocally(thisJob, "Whizard")
       assertDiracSucceeds(res, self)
 
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_utilities(self):
-    """create test for utilities"""
+    """Create test for utilities."""
     print("Utilities test")
     jobs = self.myTests.createUtilityTests()
     assertDiracSucceeds(jobs, self)
@@ -213,12 +196,8 @@ class JobTestCase(unittest.TestCase):
       res = self.myTests.runJobLocally(thisJob, "Utility")
       assertDiracSucceeds(res, self)
 
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_root(self):
-    """create test for root 1"""
+    """Create test for root scripts."""
     print("test root")
     jobs = self.myTests.createRootScriptTest()
     assertDiracSucceeds(jobs, self)
@@ -226,12 +205,8 @@ class JobTestCase(unittest.TestCase):
     res = self.myTests.runJobLocally(thisJob, "Root")
     assertDiracSucceeds(res, self)
 
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_root2(self):
-    """create test for root 2"""
+    """Create test for root utility hadd."""
     print("test root2")
     jobs = self.myTests.createRootHaddTest()
     assertDiracSucceeds(jobs, self)
@@ -239,10 +214,6 @@ class JobTestCase(unittest.TestCase):
     res = self.myTests.runJobLocally(thisJob, "Root")
     assertDiracSucceeds(res, self)
 
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_root3(self):
     """create test for root 3"""
     print("test root3")
@@ -252,10 +223,6 @@ class JobTestCase(unittest.TestCase):
     res = self.myTests.runJobLocally(thisJob, "Root")
     assertDiracSucceeds(res, self)
 
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_fccsw(self):
     """create test for fccsw"""
     print("fccsw test")
@@ -265,10 +232,6 @@ class JobTestCase(unittest.TestCase):
     res = self.myTests.runJobLocally(thisJob, "FccSw")
     assertDiracSucceeds(res, self)
 
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_fccanalysis(self):
     """create test for fccanalysis"""
     print("fccanalysis test")
@@ -277,10 +240,6 @@ class JobTestCase(unittest.TestCase):
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "FccAnalysis")
 
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
   def test_whizard2(self):
     """create tests for whizard2"""
     print("whizard2test")
