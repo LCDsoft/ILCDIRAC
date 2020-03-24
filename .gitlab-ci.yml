@@ -212,6 +212,7 @@ pylint:PY3K:
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
     - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
+    - echo "import coverage; coverage.process_startup()" >> sitecustomize.py
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-cvmfstests.sh
   coverage: '/\d+\%\s*$/'
