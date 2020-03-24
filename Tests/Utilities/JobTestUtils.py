@@ -200,13 +200,14 @@ class JobCreater(object):
     self.runOverlay = self.clip.testOverlay or self.alwaysOverlay
     self.mokkaVersion = params["mokkaVersion"]
     self.mokkaSteeringFile = params.get("mokkaSteeringFile")
+    self.mokkaDetectorModel = params.get("mokkaDetectorModel")
     self.detectorModel = params.get("detectorModel")
     self.marlinVersion = params.get("marlinVersion")
     self.marlinSteeringFile = params.get("marlinSteeringFile")
     self.ddsimVersion = params.get("ddsimVersion")
     self.ddsimDetectorModel = params.get("ddsimDetectorModel")
     self.ddsimInputFile = params.get("ddsimInputFile")
-    self.marlinInputdata = params.get("marlinInputdata")
+    self.marlinInputdata = params.get("marlinInputData")
     self.gearFile = params.get("gearFile")
     self.lcsimVersion = params.get("lcsimVersion")
     self.steeringFileVersion = params.get("steeringFileVersion", None)
@@ -368,6 +369,8 @@ class JobCreater(object):
     if self.energy == 350:
       if self.detectorModel == "ILD_o1_v05":
         pathToFiles = "/ilc/user/s/sailer/testFiles/overlay/ild_350/"
+      if self.detectorModel == "CLIC_o3_v14":
+        pathToFiles = "/ilc/user/s/sailer/testFiles/overlay/clic_350/"
     if pathToFiles:
       overlay.setPathToFiles(pathToFiles)
     else:
@@ -392,7 +395,7 @@ class JobCreater(object):
     mokka.setVersion(self.mokkaVersion)
     mokka.setSteeringFile(self.mokkaSteeringFile)
     mokka.setOutputFile("testsim.slcio")
-    mokka.setDetectorModel(self.detectorModel)
+    mokka.setDetectorModel(self.mokkaDetectorModel)
     if self.steeringFileVersion:
       mokka.setSteeringFileVersion(self.steeringFileVersion)
     return mokka
@@ -442,14 +445,13 @@ class JobCreater(object):
     slicp.setOutputFile('testpandora.slcio')
     return slicp
 
-  def getMarlin(self):
+  def getMarlin(self, version=None, steeringFile=None):
     """ Define a marlin step
     """
     from ILCDIRAC.Interfaces.API.NewInterface.Applications import Marlin
     marlin = Marlin()
-  #  marlin.setVersion("v0111Prod")
-    marlin.setVersion(self.marlinVersion)
-    marlin.setSteeringFile(self.marlinSteeringFile)
+    marlin.setVersion(version if version else self.marlinVersion)
+    marlin.setSteeringFile(steeringFile if steeringFile else self.marlinSteeringFile)
     marlin.setGearFile(self.gearFile)
     marlin.setOutputDstFile("testmarlinDST.slcio")
     marlin.setOutputRecFile("testmarlinREC.slcio")

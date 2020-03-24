@@ -58,39 +58,37 @@ class JobTestCase(unittest.TestCase):
     clip.testRoot = True
     clip.testFccSw = True
     clip.testFccAnalysis = True
-    myMarlinSteeringFile = "bbudsc_3evt_stdreco.xml"
+    myMarlinSteeringFile = 'clicReconstruction.xml'
     myLCSimPreSteeringFile = "clic_cdr_prePandoraOverlay_1400.0.lcsim" if overlayrun else "clic_cdr_prePandora.lcsim"
     myLCSimPostSteeringFile = "clic_cdr_postPandoraOverlay.lcsim"
     myFccSwSteeringFile = os.path.join(os.environ['DIRAC'], 'ILCDIRAC', 'Testfiles', 'geant_fastsim.py')
     myFccAnalysisSteeringFile = '/cvmfs/fcc.cern.ch/sw/0.8.1/fcc-physics/0.2.1/x86_64-slc6-gcc62-opt/share/ee_ZH_Zmumu_Hbb.txt'
     myFccSwPath = "/cvmfs/fcc.cern.ch/sw/0.8.1/fccsw/0.8.1/x86_64-slc6-gcc62-opt"
 
-    parameterDict = dict(mokkaVersion='0804',
-                         mokkaSteeringFile="bbudsc_3evt.steer",
-                         detectorModel="ILD_o1_v05",
-                         machine="ilc_dbd",
-                         backgroundType="aa_lowpt",
+    parameterDict = dict(mokkaVersion='0706P08a',
+                         mokkaSteeringFile='clic_ild_cdr.steer',
+                         mokkaDetectorModel='CLIC_ILD_CDR',
+                         detectorModel='CLIC_o3_v14',
+                         machine='clic',
+                         backgroundType='gghad',
                          energy=350.0,
-                         marlinVersion='011706_sl6',
+                         marlinVersion='ILCSoft-2020-02-07_gcc62',
                          marlinSteeringFile=myMarlinSteeringFile,
                          alwaysOverlay=True,
-                         marlinInputData="/ilc/user/s/sailer/testILDsim.slcio",
-                         ildConfig='v01-17-11-p02',
-                         gearFile='GearOutput.xml',
+                         # marlinInputData='/ilc/user/s/sailer/testILDsim.slcio',
+                         # ildConfig='v02-01',
+                         gearFile='clic_ild_cdr.gear',
                          lcsimPreSteeringFile=myLCSimPreSteeringFile,
                          lcsimPostSteeringFile=myLCSimPostSteeringFile,
                          ddsimVersion='ILCSoft-2020-02-07_gcc62',
-                         ddsimDetectorModel='CLIC_o2_v04',
-                         ddsimInputFile="Muon_50GeV_Fixed_cosTheta0.7.stdhep",
-                         inputFilesPath='LFN:/ilc/user/s/simoniel/stdhep_files/ttbar_3TeV/',
+                         ddsimDetectorModel='CLIC_o3_v14',
+                         ddsimInputFile='Muon_50GeV_Fixed_cosTheta0.7.stdhep',
                          rootVersion='ILCSoft-2020-02-07_gcc62',
-
                          fccSwSteeringFile=myFccSwSteeringFile,
                          fccAnalysisSteeringFile=myFccAnalysisSteeringFile,
                          fccSwPath=myFccSwPath,
-
-                         whizard2Version="2.3.1",
-                         whizard2SinFile="Testfiles/whizard2_sample.sin",
+                         whizard2Version='2.3.1',
+                         whizard2SinFile='Testfiles/whizard2_sample.sin',
 
                          )
     from ILCDIRAC.Tests.Utilities.JobTestUtils import JobCreater
@@ -106,32 +104,48 @@ class JobTestCase(unittest.TestCase):
     else:
       localsitelocalarea = os.path.join(homedir, cvmfstestsdir)
     from DIRAC import gConfig
-    gConfig.setOptionValue('/LocalSite/LocalArea', localsitelocalarea)
-    gConfig.setOptionValue('/LocalSite/LocalSE', "CERN-DIP-4")
-    #gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V16/Overwrite', 'False' )
-    #gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/steeringfiles/V18/Overwrite', 'False' )
-    #gConfig.setOptionValue( '/Operations/Defaults/AvailableTarBalls/x86_64-slc5-gcc43-opt/stdhepcutjava/1.0/Overwrite', 'False' )
-    gConfig.setOptionValue('/Resources/Countries/local/AssignedTo', 'ch')
+    gConfig.setOptionValue( '/LocalSite/LocalArea', localsitelocalarea )
+    gConfig.setOptionValue( '/LocalSite/LocalSE', "CERN-DIP-4" )
+    gConfig.setOptionValue( '/Resources/Countries/local/AssignedTo' , 'ch' )
 
-  #@unittest.skip("Temporarily disabled due to length")
-
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
-  def test_mokka(self):
+  def test_whizard_mokka(self):
     """create test for mokka"""
-    print("mokka test")
-    jobs = self.myTests.createMokkaTest()
-    assertDiracSucceeds(jobs, self)
-    thisJob = jobs['Value']
-    res = self.myTests.runJobLocally(thisJob, "Mokka")
+    jobmo = self.myTests.getJob()
+    whmo = self.myTests.getWhizard(2)
+    assert jobmo.append(whmo)['OK'], 'Failed adding whizard'
+    mo = self.myTests.getMokka()
+    mo.getInputFromApp(whmo)
+    assert jobmo.append(mo)['OK'], 'Failed to append Mokka'
+    assertDiracSucceeds(self.myTests.runJobLocally(jobmo, 'Mokka'), self)
+
+  def test_mokka_input(self):
+    """Create test for mokka with inputfile."""
+    jobmo = self.myTests.getJob()
+    jobmo.setInputData('/ilc/prod/clic/SingleParticles/Muon/50GeV/Muon_50GeV_Fixed_cosTheta0.7.stdhep')
+    mo = self.myTests.getMokka()
+    mo.setNumberOfEvents(1)
+    assert jobmo.append(mo)['OK'], 'Failed to append Mokka'
+    assertDiracSucceeds(self.myTests.runJobLocally(jobmo, 'Mokka'), self)
+
+  def test_mokka_marlin(self):
+    """Create test for mokka and then marlin."""
+    print('mokka/marlin test')
+    jobma = self.myTests.getJob()
+    moma = self.myTests.getMokka()
+    jobma.setInputData('/ilc/prod/clic/SingleParticles/Muon/50GeV/Muon_50GeV_Fixed_cosTheta0.7.stdhep')
+    moma.setNumberOfEvents(1)
+    assert jobma.append(moma)['OK'], 'Failed to append Mokka'
+    ma = self.myTests.getMarlin(version='v0111Prod', steeringFile='clic_ild_cdr_steering.xml')
+    ma.getInputFromApp(moma)
+    assert jobma.append(ma)['OK'], 'Failed to append Marlin'
+    res = self.myTests.runJobLocally(jobma, 'Marlin')
     assertDiracSucceeds(res, self)
 
   #@unittest.skip("Temporarily disabled due to length")
   @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
   @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
   @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
-  def test_ddsim(self):
+  def test_ddsim1(self):
     """create tests for ddsim"""
     print("ddsimtest")
     # First run, all files available
@@ -144,38 +158,32 @@ class JobTestCase(unittest.TestCase):
     ddsimInputFile = "Muon_50GeV_Fixed_cosTheta0.7.stdhep"
     ddsimTarball = "FCalTB.tar.gz"
 
-    # Replace inputfile with 00.stdhep
+  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
+  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
+  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
+  def test_ddsim2(self):
+    ddsimInputFile = "Muon_50GeV_Fixed_cosTheta0.7.stdhep"
+    ddsimTarball = "FCalTB.tar.gz"
     jobs = self.myTests.createDDSimTest(ddsimInputFile, ddsimTarball)
     assertDiracSucceeds(jobs, self)
     thisJob = jobs['Value']
     res = self.myTests.runJobLocally(thisJob, "DDSim")
     assertDiracSucceeds(res, self)
 
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
-  def test_marlin(self):
-    """create test for marlin"""
+  def test_marlin_overlay(self):
+    """create test for marlin with overlay"""
     print("marlin test")
-    jobs = self.myTests.createMarlinTest()
-    assertDiracSucceeds(jobs, self)
-    thisJob = jobs['Value']
-    res = self.myTests.runJobLocally(thisJob, "Marlin")
+    jobma = self.myTests.getJob()
+    jobma.setCLICConfig('ILCSoft-2020-02-07')
+    jobma.setInputData('/ilc/user/s/sailer/testFiles/clic_o3_v14_sim_qq.slcio')
+    ov = self.myTests.getOverlay(2)
+    assert jobma.append(ov)['OK'], 'Failed to append overlay'
+    ma = self.myTests.getMarlin()
+    ma.setNumberOfEvents(2)
+    assert jobma.append(ma)['OK'], 'Failed to append marlin'
+    res = self.myTests.runJobLocally(jobma, "Marlin")
     assertDiracSucceeds(res, self)
 
-  #@unittest.skip("Temporarily disabled due to length")
-  @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
-  @patch("%s.getProxyInfo" % USERJOB_NAME, new=Mock(return_value=S_OK({"group": "ilc_user"})))
-  @patch("%s.UserJob.setPlatform" % USERJOB_NAME, new=Mock(return_value=S_OK()))
-  def test_marlin2(self):
-    """create test for marlin"""
-    print("marlin test2")
-    jobs = self.myTests.createMarlinTest(True)
-    assertDiracSucceeds(jobs, self)
-    thisJob = jobs['Value']
-    res = self.myTests.runJobLocally(thisJob, "Marlin")
-    assertDiracSucceeds(res, self)
 
   #@unittest.skip("Temporarily disabled due to length")
   @patch("%s.getProxyInfoAsString" % MODULEBASE_NAME, new=Mock(return_value=S_OK()))
