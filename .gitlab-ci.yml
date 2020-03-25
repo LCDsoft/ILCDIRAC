@@ -18,7 +18,7 @@ variables:
   DIRAC_BRANCH: "rel-v7r0"
   DIRAC_TAG: "v7r0p11"
   SETUP: "ILC-Production"
-  ILCDIRAC_BRANCH: "master"
+  ILCDIRAC_BRANCH: "Rel-v30r0"
   DIRAC_DEPRECATED_FAIL: "1"
   DIRAC_USE_M2CRYPTO: "no"
   DIRAC_USE_DIRACOS: "yes"
