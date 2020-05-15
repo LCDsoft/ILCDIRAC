@@ -12,6 +12,7 @@ Options:
    -O, --OutputDir localDir           Output directory (default ./)
    -P, --ProdID prodID                Download the log folder 000 for this production ID
    -A, --All                          Get logs from all sub-directories
+   --Query                            Set the metadata query to use for finding production files: Key1:Val1[,K2:V2,...]
    -N, --NoPrompt                     Do not query before download.
 
 :since: Mar 21, 2013
@@ -33,8 +34,10 @@ class _Params(object):
     self.logF = ''
     self.outputdir = './'
     self.prodid = ''
+    self.query = {}
     self.getAllSubdirs = False
     self.noPromptBeforeDL = False
+
   def setLogFileD(self,opt):
     self.logD = opt
     return S_OK()
@@ -54,15 +57,20 @@ class _Params(object):
     self.noPromptBeforeDL = True
     return S_OK()
 
+  def setQuery(self, query):
+    self.query = dict(q.split(':') for q in query.split(','))
+    return S_OK()
+
   def registerSwitch(self):
     """registers switches"""
     Script.registerSwitch('D:', 'LogFileDir=', 'Production log dir to download', self.setLogFileD)
     Script.registerSwitch('F:', 'LogFile=', 'Production log to download', self.setLogFileF)
     Script.registerSwitch('O:', 'OutputDir=', 'Output directory (default %s)' % self.outputdir, 
                           self.setOutputDir)
-    Script.registerSwitch('P:', 'ProdID=', 'Production ID', self.setProdID)
+    Script.registerSwitch('P:', 'ProdID=', 'Production ID. The folder will be found my metadata query for ProdID', self.setProdID)
     Script.registerSwitch('A', 'All', 'Get logs from all sub-directories', self.setAllGet)
     Script.registerSwitch('N', 'NoPrompt', 'No prompt before download', self.setNoPrompt)
+    Script.registerSwitch('', 'Query=', 'Overwrite Meta query: Key1:Val1[,Key2:Val2...]', self.setQuery)
     Script.setUsageMessage('%s -F /ilc/prod/.../LOG/.../somefile' % Script.scriptName)
 
 
@@ -132,7 +140,10 @@ def _getLogFolderFromID( clip ):
   transType = result['Value']['Type']
   query = { 'ProdID' : clip.prodid }
   if 'Reconstruction' in transType:
-    query['Datatype'] = 'REC'
+    query['Datatype'] = 'DST'
+  if clip.query:
+    query.update(clip.query)
+    gLogger.notice('Using query: %r' % query)
 
   result = FileCatalogClient().findFilesByMetadata( query, '/' )
   if not result['OK']:
