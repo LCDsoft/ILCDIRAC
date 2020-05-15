@@ -145,21 +145,24 @@ def _getLogFolderFromID( clip ):
     query.update(clip.query)
     gLogger.notice('Using query: %r' % query)
 
-  result = FileCatalogClient().findFilesByMetadata( query, '/' )
+  result = FileCatalogClient().findDirectoriesByMetadata(query, '/')
   if not result['OK']:
     return result
-
   elif result['Value']:
-    lfns = result['Value']
-    baseLFN = "/".join( lfns[0].split( '/' )[:-2] )
+    # return value is dictionary with (directory ID: directory)
+    folders = list(result['Value'].values())
+    # remove the base directory of the production, keep only 000, 001 etc.
+    folders = [folder for folder in folders if not folder.endswith(str(clip.prodid))]
     if not clip.getAllSubdirs:
-      lfns = lfns[:1]
+      folders = folders[:1]
     clip.logD = []
-    for lfn in lfns:
-      subFolderNumber = lfn.split( '/' )[-2]
-      logdir = os.path.join( baseLFN, 'LOG', subFolderNumber ) 
+    # drop the trailing, e.g., 00X
+    baseLFN = folders[0].rsplit('/', 1)[0]
+    for folder in folders:
+      subFolderNumber = folder.rsplit('/', 1)[1]
+      logdir = os.path.join(baseLFN, 'LOG', subFolderNumber)
       if logdir not in clip.logD:
-        gLogger.notice( 'Setting logdir to %s' % logdir )
+        gLogger.notice('Setting logdir to %s' % logdir)
         clip.logD.append(logdir) 
 
   else:
