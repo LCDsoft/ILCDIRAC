@@ -148,7 +148,7 @@ def _getLogFolderFromID( clip ):
     for lfn in lfns:
       subFolderNumber = lfn.split( '/' )[-2]
       logdir = os.path.join( baseLFN, 'LOG', subFolderNumber ) 
-      if lastdir != logdir:
+      if logdir not in clip.logD:
         gLogger.notice( 'Setting logdir to %s' % logdir )
         clip.logD.append(logdir) 
         lastdir=logdir
