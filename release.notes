@@ -1,3 +1,24 @@
+[v29r2p2]
+Release date: 2020-05-18
+
+*Core
+
+NEW: (!300) added lowerFirst function to lower case the first character in a string
+NEW: Based on Dirac v6r22p29
+
+*ILCTransformationSystem
+
+CHANGE: (!304) ``dirac-ilc-get-prod-log`` change default Datatype when looking for Reconstruction transformation log files to DST
+CHANGE: (!304) ``dirac-ilc-get-prod-log`` now uses findDirectoriesByMetadata, should speed up discovery of log folders
+NEW: (!304) ``dirac-ilc-get-prod-log``: add ``--Query`` parameter to change metadata query
+FIX: (!300) Fix the parsing of the "MoveStatus" and "MoveGroupSize" options
+FIX: (!303) ``dirac-ilc-get-prod-log``: Avoid downloading duplicated directory when -A option is used.
+
+*Interfaces
+
+FIX: (!297) Improve docstring for ``Whizard2.setIntegratedProcess``
+
+
 [v29r2p1]
 Release date: 2020-01-08
 
