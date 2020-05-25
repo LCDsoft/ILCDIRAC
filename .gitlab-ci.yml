@@ -434,6 +434,8 @@ docDev:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   when: manual
+  except:
+    - tags
   needs: ["compiledoc", "unittest:SL6"]
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdocDev/"
