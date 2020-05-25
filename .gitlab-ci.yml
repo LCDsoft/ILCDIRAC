@@ -6,23 +6,22 @@ before_script:
 stages:
   - install
   - unittest
-  - manualdeploy
   - integration
   - create
   - deploy
   - deployToCVMFS
 
 variables:
-  LCG_BUNDLE_VERSION: "v14r3"
+  LCG_BUNDLE_VERSION: "v14r3 --dirac-os --dirac-os-version=v1r9"
 
   ILCDIRAC_VERSION: "v29r2"
-  DIRAC_BRANCH: "integration"
-  DIRAC_TAG: "v7r0p3"
+  DIRAC_BRANCH: "rel-v7r0"
+  DIRAC_TAG: "v7r0p11"
   SETUP: "ILC-Production"
-  ILCDIRAC_BRANCH: "master"
+  ILCDIRAC_BRANCH: "Rel-v30r0"
   DIRAC_DEPRECATED_FAIL: "1"
   DIRAC_USE_M2CRYPTO: "no"
-  DIRAC_USE_DIRACOS: "no"
+  DIRAC_USE_DIRACOS: "yes"
   PYTHON_PACKAGES: "psutil"
 
 .retry_template: &retry_policy
@@ -43,7 +42,7 @@ variables:
     - mv ILCDIRAC ILCDIRAC_commit
     - mkdir ILCDIRAC; cd ILCDIRAC
     - mkdir installation; cd installation
-    - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py  --no-check-certificate
+    - wget -O dirac-install -np  https://raw.github.com/DIRACGrid/DIRAC/integration/Core/scripts/dirac-install.py  --no-check-certificate
     - chmod +x dirac-install
     - ./dirac-install -V ILCDIRAC -r $ILCDIRAC_VERSION -g $LCG_BUNDLE_VERSION
     - rm -rf DIRAC
@@ -58,7 +57,7 @@ variables:
     - pip uninstall -y distribute
     - pip install --upgrade setuptools || echo "done"
     - pip install --upgrade setuptools_scm || echo "done scm"
-    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock pytest-timeout flake8 flake8-docstrings flake8-commas caniusepython3 parameterized future
+    - pip install --upgrade pylint mock MySQL-python pytest-cov pytest-randomly pytest-mock pytest-timeout pytest-xdist flake8 flake8-docstrings flake8-commas caniusepython3 parameterized future
     - if [ "${DIRAC_USE_DIRACOS}" == "no" ]; then pip install --upgrade ${PYTHON_PACKAGES} ; fi
     - cd ..
     - tar czf installation.tar.gz installation
@@ -142,32 +141,28 @@ code_quality:
 unittest:SL6:
   <<: *unittest
   <<: *sl6docker
-  dependencies:
-    - install:SL6
+  needs: ["install:SL6"]
 
 unittest:CC7:
   <<: *unittest
   <<: *cc7docker
-  dependencies:
-    - install:CC7
-
+  needs: ["install:CC7"]
 
 checkFormat:
   <<: *sl6docker
   allow_failure: true
   <<: *retry_policy
   stage: unittest
-  dependencies:
-    - install:SL6
+  needs: ["install:SL6"]
   except:
     - tags
   script:
     - export HOME=/root/
     - tar xzf installation.tar.gz
     - cd installation/ILCDIRAC
-    - source ../bashrc
-    - git remote add CLICDP https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC.git
+    - git remote add CLICDP https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC.git
     - git fetch --no-tags CLICDP ${ILCDIRAC_BRANCH}:${ILCDIRAC_BRANCH}
+    - source ../bashrc
     - git diff -U0 $(git merge-base HEAD CLICDP/$ILCDIRAC_BRANCH) | flake8 --diff
     - echo "Formatting correct"
 
@@ -190,15 +185,12 @@ checkFormat:
 pylint:SL6:
   <<: *sl6docker
   <<: *pylint
-  dependencies:
-   - install:SL6
+  needs: ["install:SL6"]
 
 pylint:CC7:
   <<: *cc7docker
   <<: *pylint
-  dependencies:
-    - install:CC7
-
+  needs: ["install:CC7"]
 
 pylint:PY3K:
   <<: *sl6docker
@@ -215,8 +207,7 @@ pylint:PY3K:
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-pylint-py3k.sh
   <<: *retry_policy
-  dependencies:
-   - install:SL6
+  needs: ["install:SL6"]
 
 
 .jobTests_template: &jobTests
@@ -231,6 +222,7 @@ pylint:PY3K:
     - dirac-proxy-init --rfc -x <<< $CERT_PASSPHRASE
     - dirac-configure -S $SETUP -C dips://voilcdirac012.cern.ch:9135/Configuration/Server --SkipCAChecks
     - echo "mysql:x:0:0:MySQL Server:/var/lib/mysql:/bin/bash" >> /etc/passwd
+    - echo "import coverage; coverage.process_startup()" >> sitecustomize.py
     - unset PYTHONOPTIMIZE
     - .gitlab-ci.d/run-cvmfstests.sh
   coverage: '/\d+\%\s*$/'
@@ -280,15 +272,11 @@ pylint:PY3K:
 
 .sl6int: &sl6integration
   <<: *sl6docker
-  dependencies:
-    - install:SL6
-    - unittest:SL6
+  needs: ["install:SL6", "unittest:SL6"]
 
 .cc7: &cc7integration
   <<: *cc7docker
-  dependencies:
-    - install:CC7
-    - unittest:CC7
+  needs: ["install:CC7", "unittest:CC7"]
 
 jobTests:SL6:
   <<: *jobTests
@@ -368,8 +356,7 @@ compiledoc:
   stage: unittest
   variables:
     GIT_STRATEGY: none
-  dependencies:
-    - install:SL6
+  needs: ["install:SL6"]
   script:
     - export HOME=/root/
     - tar xzf installation.tar.gz
@@ -399,8 +386,7 @@ maketarballs:
   stage: create
   only:
     - tags@CLICdp/iLCDirac/ILCDIRAC
-  dependencies:
-    - install:SL6
+  needs: ["install:SL6"]
   script:
     - export HOME=/root/
     - tar xzf installation.tar.gz
@@ -427,8 +413,7 @@ makeILCConfig:
     - tags@CLICdp/iLCDirac/ILCDIRAC
   except:
     - /.*-pre[0-9]*/
-  dependencies:
-    - install:SL6
+  needs: ["install:SL6"]
   script:
     - mkdir -p ILCDIRACTars/defaults;  echo -e "Releases = https://gitlab.cern.ch/CLICdp/iLCDirac/ILCDIRAC/raw/master/releases.cfg\nUploadCommand = ( cd %OUTLOCATION% ; tar -cf - *.tar.gz *.md5 *.cfg *.pdf *.html ) | ssh \`whoami\`@lxplus.cern.ch \'cd  /eos/project/l/lcd-web/www/ILCDIRACTars &&  tar -xvf - && ls *.tar.gz > tars.list\'\nBaseURL = http://lcd-data.web.cern.ch/lcd-data/ILCDIRACTars\nLocalInstallation\n{\n  Project = ILCDIRAC\n  ExternalsType = client\n  PythonVersion = 27\n  Release = $CI_COMMIT_TAG\n  LcgVer = $LCG_BUNDLE_VERSION\n  Setup = ILC-Production\n  ConfigurationServer = dips://voilcdirac01.cern.ch:9135/Configuration/Server, dips://voilcdirac012.cern.ch:9135/Configuration/Server\n}\n" > ILCDIRACTars/defaults/ilc.cfg
   artifacts:
@@ -447,8 +432,7 @@ deploydoc:
     - tags@CLICdp/iLCDirac/ILCDIRAC
   except:
     - /.*-pre[0-9]*/
-  dependencies:
-    - compiledoc
+  needs: ["compiledoc"]
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdoc/"
     CI_OUTPUT_DIR: "ilcdiracdoc"
@@ -460,14 +444,12 @@ deploydoc:
 
 
 docDev:
-  stage: manualdeploy
+  stage: deploy
   tags:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   when: manual
-  dependencies:
-    - compiledoc
-    - unittest:SL6
+  needs: ["compiledoc", "unittest:SL6"]
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdocDev/"
     CI_OUTPUT_DIR: "ilcdiracdoc"
@@ -480,16 +462,14 @@ docDev:
 
 
 docProd:
-  stage: manualdeploy
+  stage: deploy
   tags:
     - docker
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   only:
     - branches@CLICdp/iLCDirac/ILCDIRAC
   when: manual
-  dependencies:
-    - compiledoc
-    - unittest:SL6
+  needs: ["compiledoc", "unittest:SL6"]
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/doc/ilcdiracdoc/"
     CI_OUTPUT_DIR: "ilcdiracdoc"
@@ -509,9 +489,7 @@ deploytag:
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   only:
     - tags@CLICdp/iLCDirac/ILCDIRAC
-  dependencies:
-    - maketarballs
-    - makeILCConfig
+  needs: ["maketarballs", "makeILCConfig"]
   variables:
     EOS_PATH: "/eos/project/l/lcd-web/www/ILCDIRACTars/"
     CI_OUTPUT_DIR: "ILCDIRACTars"
@@ -529,7 +507,7 @@ deployToCVMFS:
     - tags@CLICdp/iLCDirac/ILCDIRAC
   except:
     - /.*-pre[0-9]*/
-  dependencies: []
+  needs: ["deploytag"]
   script:
     - sudo -u cvclicdp -i scripts/installILCDIRAC.sh $CI_COMMIT_TAG $CERT_PASSPHRASE
   before_script: []

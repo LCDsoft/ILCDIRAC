@@ -12,6 +12,7 @@ Options:
    -O, --OutputDir localDir           Output directory (default ./)
    -P, --ProdID prodID                Download the log folder 000 for this production ID
    -A, --All                          Get logs from all sub-directories
+   --Query                            Set the metadata query to use for finding production files: Key1:Val1[,K2:V2,...]
    -N, --NoPrompt                     Do not query before download.
 
 :since: Mar 21, 2013
@@ -33,8 +34,10 @@ class _Params(object):
     self.logF = ''
     self.outputdir = './'
     self.prodid = ''
+    self.query = {}
     self.getAllSubdirs = False
     self.noPromptBeforeDL = False
+
   def setLogFileD(self,opt):
     self.logD = opt
     return S_OK()
@@ -54,15 +57,20 @@ class _Params(object):
     self.noPromptBeforeDL = True
     return S_OK()
 
+  def setQuery(self, query):
+    self.query = dict(q.split(':') for q in query.split(','))
+    return S_OK()
+
   def registerSwitch(self):
     """registers switches"""
     Script.registerSwitch('D:', 'LogFileDir=', 'Production log dir to download', self.setLogFileD)
     Script.registerSwitch('F:', 'LogFile=', 'Production log to download', self.setLogFileF)
     Script.registerSwitch('O:', 'OutputDir=', 'Output directory (default %s)' % self.outputdir, 
                           self.setOutputDir)
-    Script.registerSwitch('P:', 'ProdID=', 'Production ID', self.setProdID)
+    Script.registerSwitch('P:', 'ProdID=', 'Production ID. The folder will be found my metadata query for ProdID', self.setProdID)
     Script.registerSwitch('A', 'All', 'Get logs from all sub-directories', self.setAllGet)
     Script.registerSwitch('N', 'NoPrompt', 'No prompt before download', self.setNoPrompt)
+    Script.registerSwitch('', 'Query=', 'Overwrite Meta query: Key1:Val1[,Key2:Val2...]', self.setQuery)
     Script.setUsageMessage('%s -F /ilc/prod/.../LOG/.../somefile' % Script.scriptName)
 
 
@@ -132,26 +140,30 @@ def _getLogFolderFromID( clip ):
   transType = result['Value']['Type']
   query = { 'ProdID' : clip.prodid }
   if 'Reconstruction' in transType:
-    query['Datatype'] = 'REC'
+    query['Datatype'] = 'DST'
+  if clip.query:
+    query.update(clip.query)
+    gLogger.notice('Using query: %r' % query)
 
-  result = FileCatalogClient().findFilesByMetadata( query, '/' )
+  result = FileCatalogClient().findDirectoriesByMetadata(query, '/')
   if not result['OK']:
     return result
-
   elif result['Value']:
-    lfns = result['Value']
-    baseLFN = "/".join( lfns[0].split( '/' )[:-2] )
+    # return value is dictionary with (directory ID: directory)
+    folders = list(result['Value'].values())
+    # remove the base directory of the production, keep only 000, 001 etc.
+    folders = [folder for folder in folders if not folder.endswith(str(clip.prodid))]
     if not clip.getAllSubdirs:
-      lfns = lfns[:1]
+      folders = folders[:1]
     clip.logD = []
-    lastdir = ""
-    for lfn in lfns:
-      subFolderNumber = lfn.split( '/' )[-2]
-      logdir = os.path.join( baseLFN, 'LOG', subFolderNumber ) 
-      if lastdir != logdir:
-        gLogger.notice( 'Setting logdir to %s' % logdir )
+    # drop the trailing, e.g., 00X
+    baseLFN = folders[0].rsplit('/', 1)[0]
+    for folder in folders:
+      subFolderNumber = folder.rsplit('/', 1)[1]
+      logdir = os.path.join(baseLFN, 'LOG', subFolderNumber)
+      if logdir not in clip.logD:
+        gLogger.notice('Setting logdir to %s' % logdir)
         clip.logD.append(logdir) 
-        lastdir=logdir
 
   else:
     return S_ERROR( "Cannot discover the LogFilePath: No output files yet" )
